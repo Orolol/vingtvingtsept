@@ -7,12 +7,24 @@
 | Source | Couverture | Usage | Notes |
 |---|---|---|---|
 | Wikipédia FR, pages « Liste de sondages sur l'élection présidentielle française de AAAA » | 2002, 2007, 2012, 2017, 2022, 2027 | série historique principale | tableaux hétérogènes d'une page à l'autre : un adaptateur par élection |
-| Commission des sondages (notices) | 2017 à 2027, exhaustif par obligation légale | série live 2027, méthodes, résultats bruts quand publiés | un scraper de notices ; PDF à parser |
-| NSPPolls (GitHub, JSON) | 2017, 2022 | contrôle croisé, hypothèses de second tour | pas de version 2027 connue |
+| Commission des sondages (notices) | 2016 à 2027, exhaustif par obligation légale | série live 2027, méthodes, population, résultats bruts quand publiés | PDF texte sans gabarit commun ; listing par thème `bytag/14/2027-Presidentielle` plus recherche « Pres » |
+| MieuxVoter/presidentielle2027 (GitHub, JSON + CSV, MIT) | 2025 à 2027, environ dix jours de retard | contrôle croisé de couverture et de dates ; sous-échantillons inscrits / certains d'aller voter | successeur de fait de NSPPolls, qui s'arrête en mai 2022 |
 | Sondages de second tour | mêmes pages Wikipédia | reports de voix | hypothèses de duels, série creuse |
 
 Règle : Wikipédia est la source d'enregistrement pour le passé, la Commission pour 2027, et
 toute divergence entre sources sur un même sondage est journalisée dans la curation.
+
+Ce que les notices contiennent réellement (relevé d'octobre 2026) : Cluster17, OpinionWay
+(depuis mars 2026) et YouGov publient brut, redressé et publié pour chaque hypothèse ; Ifop
+seulement pour sa grande enquête de mai 2025 ; Elabe, Toluna Harris, Ipsos BVA et Verian
+le publié seulement ; Odoxa aucun résultat. Les parts sont quasi identiques entre Wikipédia
+et MieuxVoter (aucun écart au-delà de 0,5 point sur 286 hypothèses), signe que les deux
+recopient les notices : le contrôle croisé vaut pour la couverture et les dates, pas pour
+les valeurs. Divergences connues, à traiter par règles de curation et non à la main :
+Elabe 25-27 mars 2026 (colonne décalée sur Wikipédia, Hollande et non Glucksmann à 8,5),
+Ifop Hexagone avril 2025 (duel Philippe–Le Pen inversé chez MieuxVoter), Ifop mars 2025
+(dates fausses sur Wikipédia), deux OpinionWay 2026 et un Cluster17 juillet 2026 absents de
+Wikipédia.
 
 Points de vigilance connus sur Wikipédia :
 
