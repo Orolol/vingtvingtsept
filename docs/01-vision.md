@@ -3,8 +3,8 @@
 ## Objectif
 
 Produire et publier une projection probabiliste de l'élection présidentielle française
-de 2027 (premier tour les 12 ou 19 avril 2027 selon le décret, second tour deux semaines
-plus tard), mise à jour à chaque nouveau sondage, avec :
+de 2027 (premier tour le 18 avril 2027, second tour le 2 mai, dates fixées en Conseil des
+ministres le 1er juillet 2026 ; décret de convocation attendu avant le 7 février 2027), mise à jour à chaque nouveau sondage, avec :
 
 - la probabilité de qualification au second tour de chaque candidat ;
 - la probabilité de victoire finale ;

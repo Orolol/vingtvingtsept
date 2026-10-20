@@ -19,9 +19,14 @@ dès que la 3 fournit un backtest de référence.
 ## Questions ouvertes
 
 - Frontières des blocs (écologistes, Mélenchon avant 2012) : à trancher en phase 1.
-- Identifiant de la collection « France national » de Media Cloud : à retrouver en phase 7.
-- Version 2027 de NSPPolls : vérifier si une communauté la maintient ; sinon, la Commission
-  suffit.
-- État actuel de la course 2027 (candidatures, décision en appel concernant Marine Le Pen) :
-  à établir avant d'écrire `scenarios_2027.yaml`.
-- Dates exactes du scrutin 2027 : à confirmer dès publication du décret de convocation.
+- Dates du scrutin 2027 (18 avril et 2 mai) : à confirmer à la publication du décret.
+- Successeur de NSPPolls : `MieuxVoter/presidentielle2027` (même format, MIT) ; à ingérer en
+  contrôle croisé de la Commission et de Wikipédia.
+- Base Jennings et Wlezien (erreurs de sondages, France depuis 1965) : à ingérer pour la
+  calibration du modèle d'erreur.
+- Comparateurs : modèle France 2022 de *The Economist*, modèle bayésien de Martin Devaux.
+- « Surestimation du RN en 2024 » dans `04-modele.md` : affirmation à vérifier sur les
+  données, aucune étude primaire trouvée.
+
+Voir `notes/veille-2026-10-20.md` pour l'état de la course, Timestral, les archives de presse,
+les reports de voix historiques et la littérature.

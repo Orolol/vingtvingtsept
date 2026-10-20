@@ -10,12 +10,13 @@ Critère principal : profondeur d'archive, pour backtester 2012, 2017 et 2022.
 
 | Source | Profondeur | Contenu | Accès |
 |---|---|---|---|
-| Media Cloud | 2008 pour beaucoup de sources | titres, dates, URL, collection « France national » | gratuit pour la recherche, compte et clé ; identifiant de collection à retrouver dans le Source Manager |
-| GDELT | API DOC depuis 2017 ; fichiers GKG bruts depuis 2015 | titres, ton, thèmes, volume ; filtres langue et pays | gratuit, sans clé, 1 requête par 5 s |
+| Media Cloud | 2008 en théorie, mais les collections par pays datent de 2018 : couverture 2012 et 2017 à mesurer avant d'y compter | titres, dates, URL ; collection « France - National » id `34412146`, 330 sources | gratuit, clé après inscription sur search.mediacloud.org, 4 000 requêtes par semaine, client Python `mediacloud` |
+| GDELT | API DOC depuis le 1er janvier 2017 (`sourcelang:french`, `sourcecountry:FR`, mode liste limité à trois mois par requête, donc interrogation jour par jour) ; fichiers GKG bruts avec titres depuis le 22 septembre 2019 seulement, français dans le flux `translation` | titres, ton, thèmes, volume | gratuit, sans clé, erreurs 429 fréquentes : client avec cache et reprise |
 | NewsCatcher | 2019 | titres et résumés | sur devis, 10 000 appels offerts |
 | WorldNewsAPI | 2022 pour la France | titres, environ 1 560 sources françaises | payant |
 | Europresse, Factiva | antérieur à 2000 | texte intégral | pas d'API individuelle ; export manuel en bibliothèque, pour un contrôle ponctuel |
 | Wayback Machine sur flux RSS (Le Monde, Le Figaro, AFP via sites) | variable depuis 2008 | titres | gratuit, scraping, couverture irrégulière |
+| INA, sujets des journaux télévisés (data.gouv) | 2000 à 2020 | thème et durée de chaque sujet de JT | gratuit ; seule série d'agenda homogène avant 2012 |
 
 Décision : **Media Cloud en colonne vertébrale** (titres historiques), **GDELT en
 complément** (ton, thèmes, volume depuis 2015), NewsCatcher seulement si des résumés
