@@ -257,7 +257,11 @@ def ingest_press(
         else:
             raise typer.BadParameter(f"mode gdelt inconnu : {mode}")
         typer.echo(stats.summary())
-        if stats.failed or stats.rate_limited:
+        for qid, window, err in stats.failed:
+            typer.echo(f"  échec {qid} {window} : {err}", err=True)
+        if stats.rate_limited:  # code 3 : relancer plus tard reprend depuis le cache
+            raise typer.Exit(code=3)
+        if stats.failed:
             raise typer.Exit(code=1)
     elif source == "mediacloud":
         from vvs.ingest.press import mediacloud as mc

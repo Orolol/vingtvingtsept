@@ -25,6 +25,12 @@ donne exactement une variance de multinomiale d'effectif f · n_i. C'est la mult
 « à effectif réduit » de la spec, écrite comme une loi propre sur des comptes entiers.
 Chaque hypothèse pèse 1/H dans la vraisemblance, H étant le nombre d'hypothèses du même
 sondage (mêmes répondants, observations non indépendantes).
+
+Plancher d'erreur non due à l'échantillonnage (option `Priors.n_max`, phase 3). Un sondage de
+13 000 répondants n'est pas treize fois plus précis qu'un sondage de 1 000 : cadre, questionnaire
+et redressement ajoutent une erreur propre à chaque vague qui ne décroît pas avec n. On l'écrit
+1/n_eff = 1/(f·n) + 1/n_max, avec n_max estimé (prior log-normal). Sans plancher, la très grande
+enquête Ipsos/Cevipof écrase les autres et tire le facteur de design f vers le bas.
 """
 
 from __future__ import annotations
@@ -65,6 +71,10 @@ class Priors:
     pop_sd: float = 0.15  # écart-type de l'effet population (par bloc)
     design_a: float = 12.0  # Beta(a, b) du facteur de design, moyenne 0,6
     design_b: float = 8.0
+    # Plancher d'erreur non due à l'échantillonnage : médiane du prior log-normal de n_max
+    # (None : pas de plancher, modèle de la phase 2) et écart-type de log n_max.
+    n_max: float | None = None
+    n_max_sd: float = 0.3
 
 
 # --- entrées statiques
@@ -238,9 +248,24 @@ def hypothesis_probs(lat: dict, inp: ModelInputs) -> jnp.ndarray:
     return jnp.where(inp.mask, jnp.exp(masked_log_softmax(logits, inp.mask)), 0.0)
 
 
-def concentration(f: jnp.ndarray, n: jnp.ndarray) -> jnp.ndarray:
-    """κ tel que la Dirichlet-multinomiale d'effectif n ait la variance d'une multinomiale f·n."""
-    return jnp.maximum(f * n - 1.0, 1e-3) / (1.0 - f)
+def effective_size(f, n, n_max=None):
+    """n_eff = 1 / (1/(f·n) + 1/n_max) ; f·n sans plancher (`n_max` None)."""
+    if n_max is None:
+        return f * n
+    return 1.0 / (1.0 / (f * n) + 1.0 / n_max)
+
+
+def concentration(f: jnp.ndarray, n: jnp.ndarray, n_max=None) -> jnp.ndarray:
+    """κ tel que la Dirichlet-multinomiale d'effectif n ait la variance d'une multinomiale n_eff.
+
+    Variance des parts d'une DM : p(1−p)/n · (n+κ)/(1+κ). En posant r = n/n_eff, l'égalité
+    avec p(1−p)/n_eff donne κ = (n − r)/(r − 1) ; sans plancher r = 1/f et
+    κ = (f n − 1)/(1 − f).
+    """
+    if n_max is None:
+        return jnp.maximum(f * n - 1.0, 1e-3) / (1.0 - f)
+    r = 1.0 / f + n / n_max
+    return jnp.maximum(n - r, 1e-3) / (r - 1.0)
 
 
 def dirmult_loglik(counts, probs, mask, n, kappa) -> jnp.ndarray:
@@ -297,6 +322,11 @@ def model(inp: ModelInputs) -> None:
     sigma_house_bloc = numpyro.sample("sigma_house_bloc", dist.HalfNormal(pr.house_bloc))
     sigma_house_cand = numpyro.sample("sigma_house_cand", dist.HalfNormal(pr.house_cand))
     design = numpyro.sample("design", dist.Beta(pr.design_a, pr.design_b))
+    n_max = (
+        None
+        if pr.n_max is None
+        else numpyro.sample("n_max", dist.LogNormal(jnp.log(pr.n_max), pr.n_max_sd))
+    )
 
     s = {
         "sigma_beta": sigma_beta,
@@ -331,7 +361,7 @@ def model(inp: ModelInputs) -> None:
         )
     lat = latent(s, inp)
     probs = hypothesis_probs(lat, inp)
-    kappa = concentration(design, inp.n_nominal)
+    kappa = concentration(design, inp.n_nominal, n_max)
     ll = dirmult_loglik(inp.counts, probs, inp.mask, inp.n_nominal, kappa)
     numpyro.factor("polls", jnp.sum(inp.weight * ll))
 
@@ -340,12 +370,16 @@ def model(inp: ModelInputs) -> None:
 
 
 def simulate_counts(
-    inp: ModelInputs, lat: dict, design: float, rng: np.random.Generator
+    inp: ModelInputs,
+    lat: dict,
+    design: float,
+    rng: np.random.Generator,
+    n_max: float | None = None,
 ) -> np.ndarray:
     """Tire des comptes de sondages selon la vraisemblance du modèle, à latents donnés."""
     probs = np.asarray(hypothesis_probs(lat, inp))
     n = np.asarray(inp.n_nominal)
-    kappa = np.asarray(concentration(jnp.asarray(design), inp.n_nominal))
+    kappa = np.asarray(concentration(jnp.asarray(design), inp.n_nominal, n_max))
     mask = np.asarray(inp.mask)
     out = np.zeros_like(probs)
     for i in range(probs.shape[0]):

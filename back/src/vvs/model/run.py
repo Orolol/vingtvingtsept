@@ -1,7 +1,9 @@
 """Un ajustement complet : chargement, encodage, inférence, sorties et figures dans un dossier.
 
 Sorties (`out/`) : manifest.json, trajectories.parquet, house_effects.parquet,
-final.parquet, observed.parquet, trajectories.png, house_effects.png, final.png.
+final.parquet, observed.parquet, trajectories.png, house_effects.png, final.png ; avec
+`save_draws`, draws.npz (tirages de θ à la semaine asof et à la semaine du vote, tous les
+candidats, pour le backtest : vvs.eval.backtest).
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ import polars as pl
 
 from vvs import paths
 from vvs.model.data import encode, hypotheses_frame, load_polls
-from vvs.model.first_round import fit
+from vvs.model.first_round import Priors, fit
 from vvs.model.plots import plot_final, plot_house_effects, plot_trajectories
 from vvs.model.posterior import Posterior
 from vvs.registry import default_registry
@@ -65,14 +67,22 @@ def run_fit(
     target_accept: float = 0.9,
     max_tree_depth: int = 10,
     progress_bar: bool = False,
+    reference: list[str] | None = None,
+    priors: Priors | None = None,
+    save_draws: bool = False,
+    figures: bool = True,
 ) -> dict:
-    """Ajuste le modèle de premier tour à la date `asof` et écrit les sorties dans `out`."""
+    """Ajuste le modèle de premier tour à la date `asof` et écrit les sorties dans `out`.
+
+    `reference` : configuration des sorties (défaut : candidats officiels, voir `encode`) ;
+    le backtest passe la configuration connue à la date (vvs.eval.configurations).
+    `priors` : hyperparamètres (défaut `Priors()`)."""
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     started = dt.datetime.now()
     df = load_polls(election, asof)
     source = load_polls.last_source
-    data = encode(df, election, asof, n_weeks=weeks, step_days=step_days)
+    data = encode(df, election, asof, n_weeks=weeks, step_days=step_days, reference=reference)
     data.source = source
 
     res = fit(
@@ -86,6 +96,7 @@ def run_fit(
         target_accept=target_accept,
         max_tree_depth=max_tree_depth,
         progress_bar=progress_bar,
+        priors=priors,
     )
     post = Posterior(data, res)
     official = official_shares(election)
@@ -99,11 +110,20 @@ def run_fit(
     final.write_parquet(out / "final.parquet")
     observed.write_parquet(out / "observed.parquet")
 
-    plot_trajectories(
-        traj, observed, final, data.asof, data.election_date, out / "trajectories.png"
-    )
-    plot_house_effects(house, final, out / "house_effects.png")
-    plot_final(final, out / "final.png", f"Estimation au jour du vote, {election}, au {asof}")
+    if save_draws:
+        np.savez_compressed(
+            out / "draws.npz",
+            theta_asof=post.theta[:, data.asof_week].astype(np.float32),
+            theta_vote=post.theta[:, data.n_weeks - 1].astype(np.float32),
+            candidates=np.array(data.candidates),
+            blocs=np.array([data.blocs[b] for b in data.cand_bloc]),
+        )
+    if figures:
+        plot_trajectories(
+            traj, observed, final, data.asof, data.election_date, out / "trajectories.png"
+        )
+        plot_house_effects(house, final, out / "house_effects.png")
+        plot_final(final, out / "final.png", f"Estimation au jour du vote, {election}, au {asof}")
 
     s = res.samples
     posterior_params = {
@@ -112,7 +132,15 @@ def run_fit(
             "q05": float(np.quantile(s[k], 0.05)),
             "q95": float(np.quantile(s[k], 0.95)),
         }
-        for k in ("sigma_beta", "sigma_delta", "sigma_house_bloc", "sigma_house_cand", "design")
+        for k in (
+            "sigma_beta",
+            "sigma_delta",
+            "sigma_house_bloc",
+            "sigma_house_cand",
+            "design",
+            "n_max",
+        )
+        if k in s
     }
     diag = dict(res.diagnostics)
     diag["derived"] = post.derived_diagnostics()
