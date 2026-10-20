@@ -138,3 +138,34 @@ partagée, et réévaluer le biais RN du second tour par horizon.
 
 Effet sur 2027 (mélange, substitution) : P(Le Pen) 70,1 → 66,1 %, Philippe 13,6 → 16,4 %,
 duel Le Pen–Philippe 68 → 57 % pour Le Pen, Le Pen–Glucksmann 85 → 76 %.
+
+## 2026-10-20 — calibration de η étendue aux scrutins de liste : admise (première admission)
+
+Sondages des européennes 2014, 2019, 2024 et des législatives 2022, 2024 (298 sondages,
+`data/curated/polls_lists.parquet`), rattachés aux blocs par `data/registry/lists.yaml`.
+L'erreur finale de η (σ_Bf, σ_Cf, ρ, poids de bloc) est calibrée sur les présidentielles plus
+ces cinq scrutins pondérés 0,5 ; les mouvements restent calibrés sur les présidentielles (la
+version incluant les mouvements des scrutins de liste fait tomber la couverture à 90 % de
+92 à 81 % à 180 jours : rejetée). Détail dans `runs/2026-10-20-backtest-lists/comparison.md`.
+
+| Horizon | log-score floor → lists (moy. 2012-2022) | CRPS | couverture 50 / 90 % candidats |
+|---|---|---|---|
+| 180 j | −1,326 → −1,325 | 2,648 → 2,637 | 35/92 → 39/92 |
+| 90 j | −0,978 → −0,909 | 2,119 → 2,074 | 55/79 → 48/85 |
+| 30 j | −0,505 → −0,435 | 1,532 → 1,494 | 55/92 → 55/92 |
+| 7 j | −0,375 → −0,344 | 0,904 → 0,875 | 58/92 → 64/92 |
+
+Verdict : **admise, de justesse**, et passée en défaut (`ERROR_WITH_LISTS = True`,
+`vvs simulate --no-lists` pour revenir). Réserves consignées : égalité à 180 jours (recul de
+0,007 en moyenne pondérée), 2002 perd à tous les horizons, couverture des blocs à 50 %
+dégradée (un bloc sur 17 par horizon) ; sous une lecture case par case du critère de
+couverture, elle ne serait pas admise. Paramètres : ν passe de 16 à 8, σ_Bf monte, σ_Cf
+baisse (0,180 → 0,128), le biais de bloc disparaît des plis.
+
+Effet sur 2027 (v2 → v3) : faible, η un peu plus étroit à 180 jours. Le Pen 66,1 → 67,1 % de
+victoire, Philippe 16,4 → 16,1 %, duel Le Pen–Philippe 57,0 → 55,8 % pour Le Pen.
+
+**Biais d'extrême droite depuis 2017** (surestimée en fin de campagne dans les six scrutins
+depuis 2017, μ ≈ −0,055 en logit) : testé comme option, **rejeté** (log-score −0,03 à −0,06
+à tous les horizons, perte sur les trois élections ; en 2017 la médiane s'éloigne du
+résultat).

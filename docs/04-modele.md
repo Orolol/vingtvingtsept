@@ -155,7 +155,10 @@ chaque paire), trajectoire des probabilités au fil des runs.
   sondage : gain net en 2022 et 2027 (erreur absolue de 0,94 à 0,83 et de 1,27 à 1,01),
   légère perte en 2017 (centre : Bayrou). Au backtest, pas de gain admissible (voir
   `backtest-log.md`). Ce que la forme ne capture pas : le report entre blocs voisins.
-- **Erreur (section 2)** : voir `backtest-log.md`, entrée du 2026-10-20.
+- **Erreur (section 2)** : voir `backtest-log.md`. Depuis le 2026-10-20, l'erreur finale est
+  calibrée sur les présidentielles 2002-2022 plus les européennes 2014-2024 et les
+  législatives 2022-2024 pondérées 0,5 (`model/error_lists.py`, option `with_lists`, défaut
+  de la simulation) ; les mouvements restent calibrés sur les présidentielles.
 - **Scénarios (section 3)** : `enumerate_configurations` en mode `marginal` (168
   configurations de dimensions, petits candidats tirés indépendamment par Monte-Carlo) ; les
   39 configurations les plus probables (95 % de la masse) sont portées au second tour une à
