@@ -49,6 +49,22 @@ compilation, et `V ≥ σ0²` borne la concentration de la vraisemblance, donc l
 dégénèrent pas (taille effective rapportée). NUTS n'apporterait rien ici : la postérieure ne
 vit que dans la direction de `part_i`.
 
+Potentiel électoral (option `use_potential`, désactivée par défaut ; étude
+`back/studies/potential.py`). Un plafond c_i est une part des INSCRITS ; il est converti en
+part des exprimés du second tour avec le rapport exprimés / inscrits du second tour de la
+présidentielle précédente τ (`second_round_turnout`), pas avec la participation tirée par le
+modèle, qui n'est pas calibrée (2017 : 78 % d'exprimés parmi les inscrits à la veille du
+second tour, contre 66 % observés). Facteur de poids Φ((c_i / τ − part_i) /
+(`CEILING_SD` / τ)) dans l'échantillonnage d'importance. Deux plafonds, normalisés sur
+l'échelle Kantar (vvs.model.potential) et mesurés au plus `POTENTIAL_MAX_AGE` jours avant la
+date de prévision :
+- rejet : c_i = 100 − « ne voterait jamais pour i », pour tout finaliste ;
+- potentiel : c_i = potentiel de i, pour un finaliste d'extrême droite face à un autre bloc
+  seulement (en 2017 et 2022 son score de second tour est resté sous son potentiel, alors que
+  les sondages de duel placent souvent l'adversaire au-dessus du sien).
+Les reports par électorat ne sont pas touchés : le potentiel par électorat explique moins
+bien les reports observés que la matrice de proximité (étude, partie b).
+
 Horizon. `predict(..., horizon)` prend `horizon` = jours entre la date de prévision et le
 premier tour (négatif après le premier tour : la veille du second tour vaut −(écart − 1)).
 L'âge d'un sondage au second tour vaut horizon + écart entre les tours + (asof − fin de
@@ -124,6 +140,12 @@ MIN_MEAN = 0.005  # plancher des moyennes de Dirichlet (évite des paramètres n
 # Rapport (inscrits − exprimés) / exprimés au premier tour quand aucun scrutin antérieur n'est
 # au registre (2002) : valeur approchée de 1995 (≈ 0,31), arrondie.
 DEFAULT_ABSTAIN_RATIO = 0.30
+
+# --- potentiel électoral (option use_potential)
+
+CEILING_SD = 4.0  # points d'inscrits : incertitude du plafond (mesure et normalisation)
+POTENTIAL_WINDOW = 60  # jours : mesures moyennées avant la dernière disponible
+POTENTIAL_MAX_AGE = 240  # jours avant la date de prévision au-delà desquels on ignore
 
 # --- sondages et erreur
 
@@ -552,6 +574,9 @@ class PairFit:
     notes: list[str] = field(default_factory=list)
     use_polls: bool = True
     use_bias: bool = True
+    # plafonds de la part des inscrits (i, j), en points ; None : pas de plafond
+    ceilings: tuple[float | None, float | None] = (None, None)
+    ceiling_tau: float = 1.0  # exprimés / inscrits du second tour précédent (conversion)
 
     @property
     def bias_sign(self) -> int:
@@ -567,6 +592,7 @@ class PairFit:
             groups={k: g.swapped() for k, g in self.groups.items()},
             polls=self.polls.swapped(),
             notes=list(self.notes),
+            ceilings=self.ceilings[::-1],
         )
 
     def group_of(self, candidate: str) -> str | None:
@@ -701,6 +727,7 @@ def sample_pair(
         else:
             ybar, var, mu = summary
             lw = -0.5 * (ybar - mu - g) ** 2 / var
+        lw = lw + ceiling_log_weight(fit.ceilings, g, fit.ceiling_tau)
         p = np.exp(lw - lw.max())
         p /= p.sum()
         ess = float(1.0 / np.sum(p**2))
@@ -721,6 +748,90 @@ def sample_pair(
         polls=summary,
         horizon=horizon,
     )
+
+
+def registered_shares(weights: np.ndarray, transfers: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """(v_i, v_j) : voix de i et de j en % des inscrits (Σ des poids = inscrits / exprimés du
+    premier tour, abstentionnistes compris)."""
+    tot = weights.sum(-1)
+    vi = (weights * transfers[..., 0]).sum(-1) / tot
+    vj = (weights * transfers[..., 1]).sum(-1) / tot
+    return 100.0 * vi, 100.0 * vj
+
+
+def ceiling_log_weight(
+    ceilings: tuple[float | None, float | None], share_i: np.ndarray, tau: float
+) -> np.ndarray | float:
+    """Log du facteur des plafonds doux sur la part de i parmi les exprimés (points) : plafond
+    des inscrits c (en %) converti en c / τ, écart-type CEILING_SD / τ ; 0 sans plafond."""
+    if ceilings[0] is None and ceilings[1] is None:
+        return 0.0
+    share_i = np.asarray(share_i, dtype=float)
+    out = np.zeros(share_i.shape)
+    for c, s in zip(ceilings, (share_i, 100.0 - share_i)):
+        if c is not None:
+            out += _log_ndtr((c / tau - s) / (CEILING_SD / tau))
+    return out
+
+
+def second_round_turnout(registry: Registry, election: int) -> float:
+    """Exprimés / inscrits du second tour de la dernière présidentielle antérieure au
+    registre (conversion des plafonds) ; 0,70 à défaut."""
+    prev = [
+        y for y, x in registry.elections.items()
+        if y < election and len(x.rounds) > 1 and x.round_(2).registered and x.round_(2).expressed
+    ]
+    if not prev:
+        return 0.70
+    r2 = registry.elections[max(prev)].round_(2)
+    return r2.expressed / r2.registered
+
+
+_ERFC = np.vectorize(math.erfc, otypes=[float])
+
+
+def _log_ndtr(x: np.ndarray) -> np.ndarray:
+    """log Φ(x), stable dans la queue gauche (développement asymptotique sous −5)."""
+    x = np.asarray(x, dtype=float)
+    out = np.empty_like(x)
+    lo = x < -5.0
+    out[~lo] = np.log(0.5 * _ERFC(-x[~lo] / math.sqrt(2.0)))
+    xl = x[lo]
+    out[lo] = -0.5 * xl**2 - np.log(-xl) - 0.5 * math.log(2 * math.pi) + np.log1p(-1.0 / xl**2 + 3.0 / xl**4)
+    return out
+
+
+def potential_ceilings(
+    election: int,
+    asof: dt.date,
+    pair: tuple[str, str],
+    blocs: tuple[str, str],
+    table: pl.DataFrame,
+) -> tuple[tuple[float | None, float | None], list[str]]:
+    """Plafonds (i, j) en % des inscrits d'après la table normalisée des potentiels
+    (`vvs.model.potential.normalize`) ; notes lisibles."""
+    from vvs.model.potential import summary_at
+
+    out: list[float | None] = []
+    notes = []
+    for k, cid in enumerate(pair):
+        s = summary_at(
+            table, election, cid, asof, window_days=POTENTIAL_WINDOW, max_age=POTENTIAL_MAX_AGE
+        )
+        cands = []
+        if s is not None and s.ceiling is not None:
+            cands.append(s.ceiling)
+        rn_vs_other = blocs[k] == "far_right" and blocs[1 - k] != "far_right"
+        if s is not None and s.potential is not None and rn_vs_other:
+            cands.append(s.potential)
+        c = min(cands) if cands else None
+        out.append(c)
+        if c is not None:
+            notes.append(
+                f"plafond {cid} : {c:.1f} % des inscrits (potentiel {s.potential or float('nan'):.1f}, "
+                f"rejet {s.reject or float('nan'):.1f}, {s.n} mesure(s) jusqu'au {s.last_date})"
+            )
+    return (out[0], out[1]), notes
 
 
 # --- données de sondages
@@ -898,8 +1009,13 @@ class SecondRoundModel:
         exclude: Iterable[int] = (),
         use_polls: bool = True,
         use_bias: bool = True,
+        use_potential: bool = False,
+        potential: pl.DataFrame | None = None,
     ) -> None:
         self.registry = registry or default_registry()
+        self.use_potential = use_potential
+        # table normalisée (vvs.model.potential.normalize) ; chargée au premier ajustement
+        self.potential = potential
         self.transfers = default_transfers() if transfers is None else tuple(transfers)
         self.curated = curated
         self.errors = errors
@@ -931,6 +1047,13 @@ class SecondRoundModel:
                 else DuelPolls.empty()
             )
             kind = "inedit" if inedit else "analog"
+            ceilings: tuple[float | None, float | None] = (None, None)
+            if self.use_potential:
+                ceilings, pnotes = potential_ceilings(
+                    election, asof, pair, blocs, self.potential_table()
+                )
+                notes = notes + pnotes
+            tau = second_round_turnout(self.registry, election)
             self.fits[pair] = PairFit(
                 election=election,
                 asof=asof,
@@ -948,8 +1071,19 @@ class SecondRoundModel:
                 notes=notes,
                 use_polls=self.use_polls,
                 use_bias=self.use_bias,
+                ceilings=ceilings,
+                ceiling_tau=tau,
             )
         return self
+
+    def potential_table(self) -> pl.DataFrame:
+        """Table des potentiels normalisée (mesures de vote seulement), mise en cache."""
+        if self.potential is None:
+            from vvs.model import potential as pot
+
+            raw = pot.load(self.curated).filter(pl.col("scale") != "attitude")
+            self.potential = pot.normalize(raw)
+        return self.potential
 
     def pair_fit(self, pair: tuple[str, str]) -> PairFit:
         pair = tuple(pair)  # type: ignore[assignment]
@@ -1074,7 +1208,13 @@ def summarize(fit: PairFit, draws: SecondRoundDraws) -> dict:
         "ess": draws.ess,
         "inedit": fit.inedit,
         "notes": "; ".join(fit.notes),
+        "ceiling_i": fit.ceilings[0],
+        "ceiling_j": fit.ceilings[1],
+        "ceiling_tau": fit.ceiling_tau if any(c is not None for c in fit.ceilings) else None,
     }
+    vi, vj = registered_shares(draws.weights, draws.transfers)
+    out["registered_i_median"] = _q(vi, 0.5)
+    out["registered_j_median"] = _q(vj, 0.5)
     rows = []
     for k, g in enumerate(draws.groups):
         prior = fit.groups[g]
@@ -1130,18 +1270,20 @@ def forecast(
     seed: int = 0,
     first_round_days: int = 14,
     registry: Registry | None = None,
+    use_potential: bool = False,
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
     """Distribution de la part et P(victoire) pour chaque paire, avec des parts de premier tour
     simples : moyenne des `first_round_days` derniers jours (hypothèses contenant la paire),
     bruitée par `noisy_first_round` à l'horizon ; résultats officiels si le premier tour a eu
-    lieu. Rend (une ligne par paire, une ligne par paire × électorat)."""
+    lieu. `use_potential` : plafonds doux du potentiel électoral (docstring du module). Rend
+    (une ligne par paire, une ligne par paire × électorat)."""
     registry = registry or default_registry()
     e = registry.elections[election]
     d1 = e.round_(1).date
     horizon = (d1 - asof).days if horizon is None else horizon
     pairs = pairs or tested_pairs(election, asof)
     rng = np.random.default_rng(seed)
-    model = SecondRoundModel(registry).fit(election, asof, pairs)
+    model = SecondRoundModel(registry, use_potential=use_potential).fit(election, asof, pairs)
     kappa = first_round_concentration(max(horizon, 0), exclude={election})
     rows, tr_rows = [], []
     for pair in pairs:

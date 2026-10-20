@@ -49,6 +49,9 @@ ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 # libellé -> jours avant le premier tour (None : veille du second tour)
 HORIZONS: dict[str, int | None] = {"r2_eve": None, "r1_30": 30, "r1_90": 90, "r1_180": 180}
 METHODS = ("model", "model_no_bias", "transfers_only", "polls_14d")
+# méthode ajoutée par `run(..., with_potential=True)` (plafonds du potentiel électoral)
+POTENTIAL_METHOD = "model_potential"
+PAIRED_METHOD = "model_paired"  # modèle sans option, mêmes tirages que model_potential
 RECENT_DAYS = 14
 
 
@@ -145,13 +148,24 @@ def run(
     n: int = 8000,
     seed: int = 0,
     registry: Registry | None = None,
+    with_potential: bool = False,
 ) -> dict[str, pl.DataFrame]:
-    """Rend `metrics` (une ligne par élection × horizon × méthode), `errors` (paramètres
+    """`with_potential` ajoute la méthode `model_potential` (modèle + plafonds du potentiel
+    électoral, `SecondRoundModel(use_potential=True)`), désactivée par défaut.
+
+    Rend `metrics` (une ligne par élection × horizon × méthode), `errors` (paramètres
     d'erreur par pli), `transfers` (reports a priori, a posteriori et observés à la veille du
     second tour) et `summaries` (résumé du modèle par cas)."""
     registry = registry or default_registry()
     rng = np.random.default_rng(seed)
     rows, err_rows, tr_rows, sum_rows = [], [], [], []
+    potential_table = None
+    if with_potential:
+        from vvs.model import potential as pot
+
+        # normalisation sans résultat électoral (couples de mesures seulement) : pas de fuite
+        raw = pot.load().filter(pl.col("scale") != "attitude")
+        potential_table = pot.normalize(raw)
     for election in elections:
         errors = calibrate_errors(exclude={election}, registry=registry)
         err_rows.append(
@@ -171,6 +185,14 @@ def run(
                 "model_no_bias": SecondRoundModel(registry, errors=errors, use_bias=False),
                 "transfers_only": SecondRoundModel(registry, errors=errors, use_polls=False),
             }
+            if with_potential:
+                variants[POTENTIAL_METHOD] = SecondRoundModel(
+                    registry, errors=errors, use_potential=True, potential=potential_table
+                )
+                # comparaison appariée : le modèle sans option, mêmes tirages du prior que
+                # `model_potential` (même graine), seuls les poids diffèrent
+                variants[PAIRED_METHOD] = SecondRoundModel(registry, errors=errors)
+            case_seed = [seed, election, list(HORIZONS).index(label)]
             base = {
                 "election": election,
                 "horizon": label,
@@ -183,13 +205,19 @@ def run(
             }
             for name, m in variants.items():
                 m.fit(election, c.asof, [c.pair])
-                d = m.sample(c.pair, c.first_round, c.horizon, rng, n)
+                r = np.random.default_rng(case_seed) if name in (POTENTIAL_METHOD, PAIRED_METHOD) else rng
+                d = m.sample(c.pair, c.first_round, c.horizon, r, n)
                 s = summarize(m.pair_fit(c.pair), d)
                 rows.append(
                     base
                     | {"method": name, "n_polls": s["n_polls"], "inedit": s["inedit"], "ess": d.ess}
                     | score(d.share, c.result)
                 )
+                if name == POTENTIAL_METHOD:
+                    sum_rows.append(
+                        base | {"method": name}
+                        | {k: v for k, v in s.items() if k not in ("transfers", "horizon")}
+                    )
                 if name == "model":
                     sum_rows.append(
                         base | {k: v for k, v in s.items() if k not in ("transfers", "horizon")}
