@@ -11,6 +11,9 @@ Appelé par `vvs.eval.backtest.score`. Pour chaque (élection, horizon) ajusté 
 Les parts sont tirées sur la configuration connue à la date puis ramenées aux candidats
 officiels (`configurations.OfficialMap`). Les métriques par candidat ne portent que sur les
 candidats officiels qui reçoivent une part ; les autres sont comptés dans `unforecast_share`.
+Un ajustement avec substitution intra-bloc (tirages portant λ) est évalué sur la configuration
+privée des tenants lieu absorbés (`official_map(..., substitution=True)`), parts du logit
+emboîté (`vvs.model.run.draws_log_shares`).
 """
 
 from __future__ import annotations
@@ -31,6 +34,7 @@ from vvs.eval.baselines import last_by_pollster, poll_mean
 from vvs.eval.configurations import official_map
 from vvs.model.data import load_polls
 from vvs.model.error import ErrorModel
+from vvs.model.run import draws_log_shares
 from vvs.registry import BLOCS, Registry, default_registry
 
 log = logging.getLogger(__name__)
@@ -268,9 +272,14 @@ def score_backtest(
     write: bool = True,
     variants: list[str] | None = None,
     error_kwargs: dict | None = None,
+    absorb_stand_ins: bool = True,
 ) -> ScoreResult:
     """Score des ajustements de `out/fits/<variant>/`. `variants` : plusieurs variantes à
-    scorer ensemble (la première est la référence des tableaux)."""
+    scorer ensemble (la première est la référence des tableaux). `absorb_stand_ins` : pour un
+    ajustement avec substitution, retirer de la configuration les tenants lieu que le modèle
+    redistribue (défaut) ; faux : garder la correspondance par règles de la phase 3 (parts du
+    logit emboîté sur toute la configuration), pour séparer l'effet du modèle de celui de la
+    correspondance."""
     reg = default_registry()
     variants = variants or [variant]
     cal = tuple(calibration_elections or CALIBRATION_ELECTIONS)
@@ -289,21 +298,23 @@ def score_backtest(
                     missing.append((v, e, h))
                     continue
                 conf = json.loads((fd / "configuration.json").read_text())
-                K = conf["candidates"]
                 dr = np.load(fd / "draws.npz")
+                omap = official_map(
+                    conf["candidates"], e, reg,
+                    substitution=absorb_stand_ins and "lam" in dr.files,
+                )
+                K = omap.config
                 cands = [str(c) for c in dr["candidates"]]
                 cblocs = [str(b) for b in dr["blocs"]]
-                kidx = [cands.index(c) for c in K]
-                kblocs = [cblocs[i] for i in kidx]
-                omap = official_map(K, e, reg)
+                kblocs = [cblocs[cands.index(c)] for c in K]
                 rng = np.random.default_rng([seed, e, h])
                 points = {}
                 if v == variants[0]:
                     points["mean14"] = poll_mean(e, asof, K, days=14, registry=reg, polls=polls)
                     points["last_pollster"] = last_by_pollster(e, asof, K, registry=reg, polls=polls)
                 case = score_case(
-                    dr["theta_asof"][:, kidx], dr["theta_vote"][:, kidx], K, kblocs, h, em,
-                    omap, off, points, rng, n_draws,
+                    draws_log_shares(dr, K, "asof"), draws_log_shares(dr, K, "vote"), K, kblocs,
+                    h, em, omap, off, points, rng, n_draws,
                 )
                 key = {"election": e, "horizon": h, "variant": v}
                 m_rows, f_rows, c_rows = case_rows(case, key)

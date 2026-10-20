@@ -35,10 +35,13 @@ log = logging.getLogger(__name__)
 
 # Variantes du modèle de premier tour. `floor` est la référence de la phase 3 : plancher
 # d'erreur non due à l'échantillonnage, n_max ~ LogNormal(log 2500, 0,3) (voir
-# first_round.Priors) ; `phase2` est le modèle sans plancher de la phase 2.
+# first_round.Priors, défaut de Priors depuis la phase 4) ; `phase2` est le modèle sans
+# plancher de la phase 2 ; `subst` ajoute à `floor` la substitution intra-bloc (logit emboîté
+# par bloc, phase 4, voir first_round).
 VARIANTS: dict[str, Priors] = {
     "floor": Priors(n_max=2500.0),
-    "phase2": Priors(),
+    "phase2": Priors(n_max=None),
+    "subst": Priors(n_max=2500.0, substitution=True),
 }
 DEFAULT_VARIANT = "floor"
 DEFAULT_ELECTIONS = (2012, 2017, 2022)
@@ -129,6 +132,7 @@ def _fit_svi(election, asof, out_dir, reference, priors, settings) -> dict:
     from vvs.model.data import encode, load_polls
     from vvs.model.first_round import fit
     from vvs.model.posterior import Posterior
+    from vvs.model.run import substitution_draws
 
     data = encode(load_polls(election, asof), election, asof, n_weeks=settings.weeks,
                   reference=reference)
@@ -141,6 +145,7 @@ def _fit_svi(election, asof, out_dir, reference, priors, settings) -> dict:
         theta_vote=post.theta[:, data.n_weeks - 1].astype(np.float32),
         candidates=np.array(data.candidates),
         blocs=np.array([data.blocs[b] for b in data.cand_bloc]),
+        **substitution_draws(post, data),
     )
     manifest = {
         "election": election,

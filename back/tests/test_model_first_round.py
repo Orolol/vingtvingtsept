@@ -56,10 +56,11 @@ TRUE = {
 }
 
 
-def synthetic(seed: int = 1, n_hyp: int = 160, T: int = 21, P: int = 4):
+def synthetic(seed: int = 1, n_hyp: int = 160, T: int = 21, P: int = 4, lam=None):
     """Tire des latents avec des paramètres connus puis des sondages selon la vraisemblance.
 
     Une hypothèse sur trois omet un candidat (b_fr ou f_l) pour exercer la restriction.
+    `lam` (B,) : sondages tirés avec la substitution intra-bloc (logit emboîté) de ces λ.
     """
     rng = np.random.default_rng(seed)
     week = rng.integers(0, T - 1, n_hyp).astype(np.int32)
@@ -99,8 +100,11 @@ def synthetic(seed: int = 1, n_hyp: int = 160, T: int = 21, P: int = 4):
         prior_bloc_mean=prior_mean,
         reference=CANDS,
     )
-    inp = fr.ModelInputs.from_data(data, centered=False)
+    priors = fr.Priors(n_max=None, substitution=lam is not None)
+    inp = fr.ModelInputs.from_data(data, priors, centered=False)
     s = {k: v for k, v in TRUE.items() if k.startswith("sigma")}
+    if lam is not None:
+        s["lam"] = jnp.asarray(lam)
     B, C = len(BLOCS), K
     s |= {
         "z_beta0": jnp.asarray(rng.normal(size=B) * 0.3),
@@ -133,16 +137,22 @@ def _check_recovery(data, lat, post: Posterior, tol_mean: float, tol_max: float)
     assert (np.sign(alpha_est[big]) == np.sign(alpha_true[big])).mean() > 0.8
 
 
+# Les sondages synthétiques sont tirés sans plancher d'erreur : on ajuste le modèle qui les a
+# générés (`n_max=None`). Avec le plancher, défaut depuis la phase 4, le SVI de la graine 0
+# s'arrête sur un optimum local (ELBO −4289 contre −3482 pour la graine 1).
+GEN_PRIORS = fr.Priors(n_max=None)
+
+
 def test_recovers_synthetic_trajectories_svi():
     data, lat = synthetic()
-    res = fr.fit(data, method="svi", svi_steps=2500, num_samples=400, seed=0)
+    res = fr.fit(data, method="svi", svi_steps=2500, num_samples=400, seed=0, priors=GEN_PRIORS)
     _check_recovery(data, lat, Posterior(data, res), tol_mean=0.8, tol_max=3.0)
 
 
 @pytest.mark.slow
 def test_recovers_synthetic_trajectories_nuts():
     data, lat = synthetic()
-    res = fr.fit(data, num_chains=2, num_warmup=300, num_samples=300, seed=0)
+    res = fr.fit(data, num_chains=2, num_warmup=300, num_samples=300, seed=0, priors=GEN_PRIORS)
     assert res.diagnostics["divergences"] < 10
     post = Posterior(data, res)
     _check_recovery(data, lat, post, tol_mean=0.8, tol_max=3.0)
@@ -184,3 +194,141 @@ def test_model_branches_give_finite_density(centered):
     delta = np.asarray(lat["delta"])
     for b in range(len(BLOCS)):
         assert delta[:, CAND_BLOC == b].sum(1) == pytest.approx(np.zeros(data.n_weeks), abs=1e-4)
+
+
+# --- substitution intra-bloc (logit emboîté par bloc)
+
+
+def _random_hypotheses(seed=0, N=7, K=5, B=3):
+    rng = np.random.default_rng(seed)
+    bloc_term = jnp.asarray(rng.normal(size=(N, B)))
+    cand_term = jnp.asarray(rng.normal(size=(N, K)))
+    slot_bloc = jnp.asarray(rng.integers(0, B, size=(N, K)))
+    mask = jnp.asarray(rng.random((N, K)) < 0.75).at[:, :2].set(True)
+    return bloc_term, cand_term, slot_bloc, mask
+
+
+def test_nested_logit_reduces_to_iia_at_lambda_one():
+    bloc_term, cand_term, slot_bloc, mask = _random_hypotheses()
+    nested = fr.nested_log_probs(bloc_term, cand_term, slot_bloc, mask, jnp.ones(3))
+    theta = jnp.take_along_axis(bloc_term, slot_bloc, axis=1) + cand_term
+    iia = fr.masked_log_softmax(theta, mask)
+    assert np.asarray(nested) == pytest.approx(np.asarray(iia), abs=1e-5)
+    # même chose pour les parts d'une configuration complète (postérieur)
+    beta, delta = np.array([0.3, -0.2, 0.1]), np.array([0.5, -0.5, 0.2, 0.0])
+    cb = np.array([0, 0, 2, 1])
+    ref = beta[cb] + delta
+    ref = ref - np.log(np.exp(ref).sum())
+    assert fr.config_log_shares(beta, delta, cb, np.ones(3)) == pytest.approx(ref)
+    assert fr.config_log_shares(beta, delta, cb, None) == pytest.approx(ref)
+
+
+def test_hypothesis_probs_with_substitution_matches_iia_when_lambda_is_one():
+    """Câblage du modèle : effets maison et population passent par les bons niveaux."""
+    import jax
+    from numpyro import handlers
+
+    data, _ = synthetic(n_hyp=30, T=6)
+    data.populations = ["unknown", "registered"]
+    data.pop_idx = (np.arange(data.n_hyp) % 2).astype(np.int32)
+    inp = fr.ModelInputs.from_data(data)
+    inp_s = fr.ModelInputs.from_data(data, fr.Priors(substitution=True))
+    tr = handlers.trace(handlers.seed(fr.model, jax.random.PRNGKey(1))).get_trace(inp_s)
+    s = {k: v["value"] for k, v in tr.items() if v["type"] == "sample"}
+    assert s["lam"].shape == (len(BLOCS),)
+    p_iia = fr.hypothesis_probs(fr.latent(s, inp), inp)
+    p_one = fr.hypothesis_probs(fr.latent(s | {"lam": jnp.ones(len(BLOCS))}, inp_s), inp_s)
+    assert np.asarray(p_one) == pytest.approx(np.asarray(p_iia), abs=1e-5)
+    p_sub = fr.hypothesis_probs(fr.latent(s, inp_s), inp_s)
+    assert np.asarray(p_sub).sum(1) == pytest.approx(np.ones(data.n_hyp), abs=1e-5)
+
+
+def test_substitution_redistributes_within_bloc():
+    """Bloc A (a1, a2), bloc B (b) ; on retire a2. Parts complètes : a1 0,3, a2 0,2, b 0,5."""
+    full = np.array([0.3, 0.2, 0.5])
+    cb = np.array([0, 0, 1])
+    delta = np.log(full)
+    delta[:2] -= delta[:2].mean()
+    delta[2] = 0.0  # δ centré dans chaque bloc
+    beta = np.array([np.log(full[:2]).mean(), np.log(0.5)])
+    for lam_a, expected_a1 in [
+        (1.0, lambda pf: 0.3 / 0.8),  # IIA : a2 se répartit au prorata de tous
+        (0.0, lambda pf: pf[:2].sum()),  # le bloc A garde toute sa part, a1 la prend
+        (0.5, None),  # entre les deux : forme fermée P^(1−λ) Q^λ ci-dessous
+    ]:
+        lam = np.array([lam_a, 1.0])
+        p_full = np.exp(fr.config_log_shares(beta, delta, cb, lam))
+        if lam_a == 1.0:
+            assert p_full == pytest.approx(full)
+        p = np.exp(fr.config_log_shares(beta, delta[[0, 2]], cb[[0, 2]], lam))
+        assert p.sum() == pytest.approx(1.0)
+        # la forme fermée suppose les parts complètes au λ testé
+        P_A, Q_A = p_full[:2].sum(), p_full[0]
+        w = P_A ** (1 - lam_a) * Q_A**lam_a
+        assert p[0] == pytest.approx(w / (w + p_full[2]))
+        if expected_a1 is not None:
+            assert p[0] == pytest.approx(expected_a1(p_full))
+        if lam_a < 1:  # b gagne moins qu'à l'IIA (rien à λ = 0)
+            assert p_full[2] - 1e-12 <= p[1] < p_full[2] / (1 - p_full[1])
+    # en jax, sur une hypothèse masquée : mêmes parts que la configuration réduite
+    lam = np.array([0.0, 1.0])
+    lp = fr.nested_log_probs(
+        jnp.asarray(beta)[None], jnp.asarray(delta)[None], jnp.asarray(cb)[None],
+        jnp.array([[True, False, True]]), jnp.asarray(lam),
+    )
+    ref = np.exp(fr.config_log_shares(beta, delta[[0, 2]], cb[[0, 2]], lam))
+    assert np.exp(np.asarray(lp))[0, [0, 2]] == pytest.approx(ref, abs=1e-6)
+
+
+LAM_TRUE = np.array([0.15, 1.0, 1.0, 0.25])  # far_right et left substituables
+
+
+def test_posterior_config_shares_arbitrary_configuration():
+    data, _ = synthetic(n_hyp=40, T=8, lam=LAM_TRUE)
+    for subst in (False, True):
+        res = fr.fit(data, method="svi", svi_steps=300, num_samples=50, seed=0,
+                     priors=fr.Priors(substitution=subst))
+        post = Posterior(data, res)
+        assert post.substitution == subst
+        config = ["e_l", "a_fr", "d_c"]
+        sh = post.config_shares(config, week=data.asof_week)
+        assert sh.shape == (50, 3) and sh.sum(1) == pytest.approx(np.ones(50), abs=1e-6)
+        idx = [CANDS.index(c) for c in config]
+        if subst:
+            expected = np.exp(fr.config_log_shares(
+                post.beta[:, data.asof_week], post.delta[:, data.asof_week][:, idx],
+                CAND_BLOC[idx], post.lam,
+            ))
+        else:
+            th = post.theta[:, data.asof_week][:, idx]
+            expected = np.exp(th) / np.exp(th).sum(1, keepdims=True)
+        assert sh == pytest.approx(expected, rel=1e-5)
+        assert post.config_shares(config).shape == (50, data.n_weeks, 3)
+        with pytest.raises(KeyError):
+            post.config_shares(["inconnu"])
+
+
+def test_svi_recovers_known_substitution():
+    """Sondages tirés avec λ connus (far_right et left substituables) : l'ajustement avec
+    substitution retrouve des λ bas pour ces blocs et prédit mieux l'hypothèse réduite que
+    l'IIA."""
+    data, lat = synthetic(n_hyp=240, T=12, lam=LAM_TRUE)
+    res = fr.fit(data, method="svi", svi_steps=2500, num_samples=300, seed=0,
+                 priors=fr.Priors(n_max=None, substitution=True))
+    lam = np.median(res.samples["lam"], axis=0)
+    assert lam[0] < 0.45 and lam[3] < 0.5, lam
+    # parts de la semaine finale sans b_fr ni f_l : substitution contre IIA
+    true_lat = dict(lat) | {"lam": jnp.asarray(LAM_TRUE)}
+    cfg = [0, 2, 3, 4]
+    w = data.n_weeks - 1
+    truth = np.exp(fr.config_log_shares(
+        np.asarray(true_lat["beta"])[w], np.asarray(true_lat["delta"])[w][cfg], CAND_BLOC[cfg],
+        LAM_TRUE,
+    ))
+    sub = np.median(Posterior(data, res).shares(cfg, w), axis=0)
+    res_iia = fr.fit(data, method="svi", svi_steps=2500, num_samples=300, seed=0,
+                     priors=fr.Priors(n_max=None))
+    iia = np.median(Posterior(data, res_iia).shares(cfg, w), axis=0)
+    err_sub, err_iia = np.abs(sub - truth).sum(), np.abs(iia - truth).sum()
+    assert err_sub < 0.03, (sub, truth)
+    assert err_sub < err_iia, (err_sub, err_iia)

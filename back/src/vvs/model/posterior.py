@@ -1,7 +1,9 @@
 """Extraction des quantités d'intérêt du postérieur : trajectoires, effets maison, estimation
 au jour du vote.
 
-Les parts dépendent de la configuration de candidats (softmax restreint). Sauf mention
+Les parts dépendent de la configuration de candidats : softmax restreint, ou logit emboîté par
+bloc si l'ajustement a la substitution (`Priors.substitution`, voir `first_round`). `shares`,
+`log_shares` et `config_shares` les calculent pour une configuration arbitraire. Sauf mention
 contraire, elles sont calculées sur la configuration de référence `data.reference`
 (candidats officiels pour une élection passée). L'« estimation au jour du vote » est le
 soutien latent prolongé jusqu'à la semaine du vote par la seule marche aléatoire : c'est
@@ -17,7 +19,7 @@ import polars as pl
 from numpyro.diagnostics import summary
 
 from vvs.model.data import PollData
-from vvs.model.first_round import FitResult, ModelInputs, Priors, latent
+from vvs.model.first_round import FitResult, ModelInputs, Priors, config_log_shares, latent
 
 QUANTILES = {"q05": 0.05, "q25": 0.25, "median": 0.5, "q75": 0.75, "q95": 0.95}
 
@@ -44,12 +46,51 @@ class Posterior:
         self.alpha = np.asarray(lat["alpha"])  # (S, P, C)
         self.n_draws = self.theta.shape[0]
         self.ref_idx = [data.candidates.index(c) for c in data.reference]
+        self.substitution = priors.substitution
+        if self.substitution:
+            self.beta = np.asarray(lat["beta"])  # (S, T, B)
+            self.delta = np.asarray(lat["delta"])  # (S, T, C)
+            self.lam = np.asarray(lat["lam"])  # (S, B)
+            self.house_bloc = np.asarray(lat["house_bloc"])  # (S, P, B)
+            self.house_cand = np.asarray(lat["house_cand"])  # (S, P, C)
 
     # --- parts
 
+    def log_shares(
+        self, idx: list[int], week: int | slice = slice(None), pollster: int | None = None
+    ) -> np.ndarray:
+        """log-parts (S, [T,] K) sur la configuration d'index candidats `idx`.
+
+        Sans substitution : softmax de θ restreint à `idx` ; avec : logit emboîté par bloc
+        (`first_round.config_log_shares`). `pollster` : ajoute l'effet maison de cet institut."""
+        if not self.substitution:
+            th = self.theta[:, week][..., idx]
+            if pollster is not None:
+                a = self.alpha[:, pollster][:, idx]
+                th = th + (a if th.ndim == 2 else a[:, None])
+            m = th.max(-1, keepdims=True)
+            return th - m - np.log(np.exp(th - m).sum(-1, keepdims=True))
+        beta = self.beta[:, week]
+        delta = self.delta[:, week][..., idx]
+        if pollster is not None:
+            hb, hc = self.house_bloc[:, pollster], self.house_cand[:, pollster][:, idx]
+            beta = beta + (hb if beta.ndim == 2 else hb[:, None])
+            delta = delta + (hc if delta.ndim == 2 else hc[:, None])
+        return config_log_shares(beta, delta, self.data.cand_bloc[idx], self.lam)
+
     def shares(self, idx: list[int], week: int | slice = slice(None)) -> np.ndarray:
         """Parts (S, [T,] K) sur la configuration d'index candidats `idx`."""
-        return _softmax(self.theta[:, week][..., idx])
+        if not self.substitution:
+            return _softmax(self.theta[:, week][..., idx])
+        return np.exp(self.log_shares(idx, week))
+
+    def config_shares(self, candidates: list[str], week: int | slice = slice(None)) -> np.ndarray:
+        """Parts (S, [T,] K) d'une configuration donnée par ses ids de candidats (tous connus
+        de l'ajustement), avec ou sans substitution selon l'ajustement."""
+        missing = [c for c in candidates if c not in self.data.candidates]
+        if missing:
+            raise KeyError(f"candidats absents de l'ajustement : {missing}")
+        return self.shares([self.data.candidates.index(c) for c in candidates], week)
 
     # --- sorties tabulaires
 
@@ -105,9 +146,7 @@ class Posterior:
         }
         rows = []
         for j, p in enumerate(d.pollsters):
-            with_house = _softmax(
-                self.theta[:, w][:, self.ref_idx] + self.alpha[:, j][:, self.ref_idx]
-            )
+            with_house = np.exp(self.log_shares(self.ref_idx, w, pollster=j))
             eff = 100 * (with_house - base)
             qe = _quantiles(eff)
             qa = _quantiles(self.alpha[:, j][:, self.ref_idx])

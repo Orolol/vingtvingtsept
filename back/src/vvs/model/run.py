@@ -3,7 +3,11 @@
 Sorties (`out/`) : manifest.json, trajectories.parquet, house_effects.parquet,
 final.parquet, observed.parquet, trajectories.png, house_effects.png, final.png ; avec
 `save_draws`, draws.npz (tirages de θ à la semaine asof et à la semaine du vote, tous les
-candidats, pour le backtest : vvs.eval.backtest).
+candidats, pour le backtest : vvs.eval.backtest) ; avec `save_trajectories` en plus, draws.npz
+contient aussi θ à toutes les semaines et les effets maison α (simulation 2027 :
+vvs.model.simulate). Avec la substitution intra-bloc (`Priors.substitution`), draws.npz porte en
+plus β, λ et l'ordre des blocs (`substitution_draws`), de quoi recalculer les parts de toute
+configuration (`draws_log_shares`).
 """
 
 from __future__ import annotations
@@ -52,6 +56,46 @@ def _hash_frame(df: pl.DataFrame) -> str:
     return hashlib.sha256(df.write_csv().encode()).hexdigest()[:16]
 
 
+def substitution_draws(post: Posterior, data, trajectories: bool = False) -> dict:
+    """Tirages propres à la substitution pour draws.npz (vide sans substitution) : β à asof et
+    au vote (S, B), λ (S, B), `bloc_ids` (ordre de β) ; avec `trajectories`, β à toutes les
+    semaines (S, T, B) et les effets maison de bloc et de candidat (S, P, B), (S, P, C)."""
+    if not post.substitution:
+        return {}
+    out = {
+        "beta_asof": post.beta[:, data.asof_week].astype(np.float32),
+        "beta_vote": post.beta[:, data.n_weeks - 1].astype(np.float32),
+        "lam": post.lam.astype(np.float32),
+        "bloc_ids": np.array(data.blocs),
+    }
+    if trajectories:
+        out |= {
+            "beta": post.beta.astype(np.float32),
+            "house_bloc": post.house_bloc.astype(np.float32),
+            "house_cand": post.house_cand.astype(np.float32),
+        }
+    return out
+
+
+def draws_log_shares(draws, config: list[str], when: str = "asof") -> np.ndarray:
+    """log-parts (S, K) de la configuration `config` à partir d'un draws.npz (`when` : asof ou
+    vote) : softmax de θ, ou logit emboîté si les tirages portent λ (substitution)."""
+    from vvs.model.first_round import config_log_shares
+
+    cands = [str(c) for c in draws["candidates"]]
+    idx = [cands.index(c) for c in config]
+    theta = np.asarray(draws[f"theta_{when}"], dtype=float)
+    if "lam" not in draws:
+        th = theta[:, idx]
+        m = th.max(1, keepdims=True)
+        return th - m - np.log(np.exp(th - m).sum(1, keepdims=True))
+    bloc_ids = [str(b) for b in draws["bloc_ids"]]
+    cb = np.array([bloc_ids.index(str(b)) for b in draws["blocs"]])
+    beta = np.asarray(draws[f"beta_{when}"], dtype=float)
+    delta = theta - beta[:, cb]
+    return config_log_shares(beta, delta[:, idx], cb[idx], np.asarray(draws["lam"], dtype=float))
+
+
 def run_fit(
     election: int,
     asof: dt.date,
@@ -71,6 +115,7 @@ def run_fit(
     priors: Priors | None = None,
     save_draws: bool = False,
     figures: bool = True,
+    save_trajectories: bool = False,
 ) -> dict:
     """Ajuste le modèle de premier tour à la date `asof` et écrit les sorties dans `out`.
 
@@ -111,12 +156,23 @@ def run_fit(
     observed.write_parquet(out / "observed.parquet")
 
     if save_draws:
+        extra = {}
+        if save_trajectories:
+            extra = {
+                "theta": post.theta.astype(np.float32),  # (S, T, C)
+                "alpha": post.alpha.astype(np.float32),  # (S, P, C)
+                "pollsters": np.array(data.pollsters),
+                "week_dates": np.array([d.isoformat() for d in data.week_date(np.arange(data.n_weeks))]),
+                "asof_week": np.array(data.asof_week),
+            }
         np.savez_compressed(
             out / "draws.npz",
             theta_asof=post.theta[:, data.asof_week].astype(np.float32),
             theta_vote=post.theta[:, data.n_weeks - 1].astype(np.float32),
             candidates=np.array(data.candidates),
             blocs=np.array([data.blocs[b] for b in data.cand_bloc]),
+            **extra,
+            **substitution_draws(post, data, save_trajectories),
         )
     if figures:
         plot_trajectories(
@@ -142,6 +198,15 @@ def run_fit(
         )
         if k in s
     }
+    if "lam" in s:
+        posterior_params["lam"] = {
+            b: {
+                "median": float(np.median(s["lam"][:, j])),
+                "q05": float(np.quantile(s["lam"][:, j], 0.05)),
+                "q95": float(np.quantile(s["lam"][:, j], 0.95)),
+            }
+            for j, b in enumerate(data.blocs)
+        }
     diag = dict(res.diagnostics)
     diag["derived"] = post.derived_diagnostics()
     manifest = {

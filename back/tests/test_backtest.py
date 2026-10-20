@@ -79,6 +79,27 @@ def test_official_map_stand_ins_2017():
     assert not m.forecast[idx["lassalle_jean"]]
 
 
+@needs_curated
+def test_official_map_with_substitution_absorbs_stand_ins_of_present_blocs():
+    from vvs.eval.configurations import official_map
+
+    config = ["le_pen_marine", "juppe_alain", "hollande_francois", "duflot_cecile",
+              "macron_emmanuel", "bayrou_francois", "melenchon_jean_luc"]
+    m = official_map(config, 2017, substitution=True)
+    # Bayrou (bloc du centre, Macron présent) : retiré, le modèle le redistribue lui-même
+    assert m.absorbed == {"bayrou_francois": ["macron_emmanuel"]}
+    assert "bayrou_francois" not in m.config and len(m.config) == len(config) - 1
+    # les tenants lieu d'un candidat officiel absent restent (Juppé -> Fillon)
+    assert m.rules["juppe_alain"] == ("split", ["fillon_francois"])
+    assert m.rules["duflot_cecile"] == ("split", ["hamon_benoit"])
+    out = m.apply(np.array([[0.25, 0.30, 0.10, 0.03, 0.20, 0.12]]))[0]
+    idx = {c: i for i, c in enumerate(m.official)}
+    assert out.sum() == pytest.approx(1.0)
+    assert out[idx["macron_emmanuel"]] == pytest.approx(0.20)
+    # sans substitution, rien ne change
+    assert official_map(config, 2017).absorbed == {}
+
+
 def test_official_map_drop_renormalizes():
     m = OfficialMap(
         config=["a", "b", "x"],

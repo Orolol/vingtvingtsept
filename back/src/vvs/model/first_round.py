@@ -30,7 +30,40 @@ Plancher d'erreur non due à l'échantillonnage (option `Priors.n_max`, phase 3)
 13 000 répondants n'est pas treize fois plus précis qu'un sondage de 1 000 : cadre, questionnaire
 et redressement ajoutent une erreur propre à chaque vague qui ne décroît pas avec n. On l'écrit
 1/n_eff = 1/(f·n) + 1/n_max, avec n_max estimé (prior log-normal). Sans plancher, la très grande
-enquête Ipsos/Cevipof écrase les autres et tire le facteur de design f vers le bas.
+enquête Ipsos/Cevipof écrase les autres et tire le facteur de design f vers le bas. C'est le
+défaut depuis la phase 4 (décision du journal de backtest du 2026-10-20) ; `n_max=None` redonne
+le modèle de la phase 2.
+
+Substitution intra-bloc (option `Priors.substitution`, phase 4, désactivée par défaut). Le
+softmax restreint suppose l'indépendance des alternatives non pertinentes : retirer un candidat
+redistribue ses voix au prorata de tous les autres, et une configuration qui contient plus de
+candidats qu'aucun sondage les dilue tous. L'option remplace l'observation par un logit emboîté
+par bloc, sur la même décomposition θ = β + δ :
+
+    log π_{i,c} = log P_i(b(c)) + log P_i(c | b(c))
+    P_i(c | b)  = softmax_{c' ∈ h_i ∩ b}(D_{i,c'})            D = δ + effet maison candidat
+    P_i(b)      = softmax_{b' présent dans h_i}(U_{i,b'})
+    U_{i,b}     = B_{i,b} + λ_b · log Σ_{c ∈ h_i ∩ b} exp(D_{i,c})
+                                                           B = β + effet maison bloc + γ
+
+λ_b ∈ [0, 1] (prior Beta(lam_a, lam_b)) est le paramètre de dissimilarité du bloc, s_b = 1 − λ_b
+sa substitution. λ_b = 1 redonne exactement le softmax restreint (U_b = log Σ_{c∈b} exp(B_b + D_c)).
+λ_b = 0 : la part du bloc ne dépend pas de ceux de ses candidats qui sont présents, et retirer un
+candidat reporte toutes ses voix sur les candidats présents de son bloc. Entre les deux, retirer
+d'une hypothèse des candidats d'un bloc de part P_b dont il reste une part Q_b ramène le poids du
+bloc à P_b^{1−λ_b} · Q_b^{λ_b} avant renormalisation entre blocs : le bloc garde une partie des
+voix des absents, le reste va aux autres blocs au prorata. Un bloc entièrement absent reporte
+ses voix sur tous les autres au prorata (IIA entre blocs).
+
+Pourquoi un logit emboîté plutôt qu'une « part de bloc conservée » sur un champ complet : le
+modèle n'a pas de champ complet (l'univers des candidats contient des alternatives jamais testées
+ensemble, Juppé et Sarkozy), alors que le logit emboîté donne des parts cohérentes entre elles
+pour toute configuration (modèle d'utilité aléatoire), se réduit au modèle existant à λ = 1 et
+ne change que l'observation. Identification : δ reste centré dans le bloc, β_b est le niveau du
+bloc ; λ_b est identifié par les hypothèses qui diffèrent par la composition d'un bloc, au
+premier chef celles d'un même sondage (mêmes répondants, même date) ; il est sans effet pour un
+bloc d'un seul candidat (prior seul). La substitution entre blocs voisins (centre et droite) n'est
+pas modélisée.
 """
 
 from __future__ import annotations
@@ -73,8 +106,13 @@ class Priors:
     design_b: float = 8.0
     # Plancher d'erreur non due à l'échantillonnage : médiane du prior log-normal de n_max
     # (None : pas de plancher, modèle de la phase 2) et écart-type de log n_max.
-    n_max: float | None = None
+    n_max: float | None = 2500.0
     n_max_sd: float = 0.3
+    # Substitution intra-bloc (logit emboîté, voir le docstring du module) : désactivée par
+    # défaut ; λ_b ~ Beta(lam_a, lam_b) par bloc.
+    substitution: bool = False
+    lam_a: float = 2.0
+    lam_b: float = 2.0
 
 
 # --- entrées statiques
@@ -200,7 +238,9 @@ class ModelInputs:
 def latent(s: dict, inp: ModelInputs) -> dict:
     """Variables latentes à partir des sites échantillonnés (un tirage).
 
-    Rend θ (T, C), β (T, B), α (P, C) et γ (n_pop, C).
+    Rend θ (T, C), β (T, B), δ (T, C), α (P, C) et γ (n_pop, C), ainsi que leurs composantes
+    de bloc et de candidat (`house_bloc` (P, B), `house_cand` (P, C), `gamma_bloc` (n_pop, B))
+    et λ (B,) avec la substitution.
     """
     pr = inp.priors
     if inp.centered:
@@ -222,10 +262,23 @@ def latent(s: dict, inp: ModelInputs) -> dict:
 
     if inp.n_pop > 1:
         g = pr.pop_sd * _center(s["z_pop"], -1)
-        gamma = jnp.concatenate([jnp.zeros((1, inp.B)), g])[:, inp.cand_bloc]
+        gamma_bloc = jnp.concatenate([jnp.zeros((1, inp.B)), g])
     else:
-        gamma = jnp.zeros((1, inp.C))
-    return {"theta": theta, "beta": beta, "alpha": alpha, "gamma": gamma, "delta": delta}
+        gamma_bloc = jnp.zeros((1, inp.B))
+    gamma = gamma_bloc[:, inp.cand_bloc]
+    out = {
+        "theta": theta,
+        "beta": beta,
+        "alpha": alpha,
+        "gamma": gamma,
+        "delta": delta,
+        "house_bloc": house_bloc,
+        "house_cand": house_cand,
+        "gamma_bloc": gamma_bloc,
+    }
+    if pr.substitution:
+        out["lam"] = s["lam"]
+    return out
 
 
 def masked_log_softmax(x: jnp.ndarray, mask: jnp.ndarray) -> jnp.ndarray:
@@ -237,9 +290,82 @@ def masked_log_softmax(x: jnp.ndarray, mask: jnp.ndarray) -> jnp.ndarray:
     return jnp.where(mask, out, 0.0)
 
 
+def nested_log_probs(
+    bloc_term: jnp.ndarray,
+    cand_term: jnp.ndarray,
+    slot_bloc: jnp.ndarray,
+    mask: jnp.ndarray,
+    lam: jnp.ndarray,
+) -> jnp.ndarray:
+    """log π (N, K) du logit emboîté par bloc (docstring du module), cases masquées à 0.
+
+    `bloc_term` (N, B) : B_{i,b} ; `cand_term` (N, K) : D_{i,c} ; `slot_bloc` (N, K) : bloc de
+    chaque case ; `mask` (N, K) ; `lam` (B,) ou (N, B). λ = 1 donne le softmax restreint."""
+    B = bloc_term.shape[-1]
+    member = mask[..., None] & (slot_bloc[..., None] == jnp.arange(B))  # (N, K, B)
+    present = member.any(-2)  # (N, B)
+    x = jnp.where(member, cand_term[..., None], -1e9)
+    m = jax.lax.stop_gradient(jnp.where(present, x.max(-2), 0.0))
+    z = jnp.where(member, jnp.exp(x - m[..., None, :]), 0.0).sum(-2)
+    lse = jnp.where(present, m + jnp.log(jnp.where(present, z, 1.0)), 0.0)  # (N, B)
+    util = bloc_term + lam * lse
+    log_pb = masked_log_softmax(util, present)
+    sb = jnp.where(mask, slot_bloc, 0)
+    out = (
+        jnp.take_along_axis(log_pb, sb, axis=-1)
+        + cand_term
+        - jnp.take_along_axis(lse, sb, axis=-1)
+    )
+    return jnp.where(mask, out, 0.0)
+
+
+def config_log_shares(
+    beta: np.ndarray, delta: np.ndarray, cand_bloc: np.ndarray, lam: np.ndarray | None = None
+) -> np.ndarray:
+    """log-parts d'une configuration de candidats où tous sont présents (numpy, postérieur).
+
+    `beta` (..., B) : niveau des blocs ; `delta` (..., K) : écarts des candidats de la
+    configuration ; `cand_bloc` (K,) : bloc de chaque candidat (index dans B) ; `lam` (S, B)
+    ou (B,) : λ par bloc, aligné sur la première dimension de `beta` (None : softmax de
+    θ = β + δ, modèle sans substitution). Rend (..., K)."""
+    beta = np.asarray(beta, dtype=float)
+    delta = np.asarray(delta, dtype=float)
+    cand_bloc = np.asarray(cand_bloc)
+    theta = beta[..., cand_bloc] + delta
+    if lam is None:
+        return theta - _logsumexp(theta)
+    lam = np.asarray(lam, dtype=float)
+    if lam.ndim == 2:  # (S, B) -> (S, 1, ..., B)
+        lam = lam.reshape(lam.shape[0], *([1] * (beta.ndim - 2)), lam.shape[1])
+    present = np.unique(cand_bloc)
+    lse = np.concatenate([_logsumexp(delta[..., cand_bloc == b]) for b in present], axis=-1)
+    util = beta[..., present] + lam[..., present] * lse
+    log_pb = util - _logsumexp(util)
+    pos = np.searchsorted(present, cand_bloc)
+    return log_pb[..., pos] + delta - lse[..., pos]
+
+
+def _logsumexp(x: np.ndarray) -> np.ndarray:
+    """log Σ exp sur le dernier axe, dimension gardée (…, 1)."""
+    m = x.max(-1, keepdims=True)
+    return m + np.log(np.exp(x - m).sum(-1, keepdims=True))
+
+
 def hypothesis_probs(lat: dict, inp: ModelInputs) -> jnp.ndarray:
-    """π_i (N, K) : softmax restreint aux candidats de chaque hypothèse, effets inclus."""
+    """π_i (N, K) : softmax restreint aux candidats de chaque hypothèse, effets inclus ; logit
+    emboîté par bloc avec la substitution (`Priors.substitution`)."""
     ci = inp.cand_idx
+    if inp.priors.substitution:
+        bloc_term = (
+            lat["beta"][inp.week]
+            + lat["house_bloc"][inp.pollster_idx]
+            + lat["gamma_bloc"][inp.pop_idx]
+        )
+        cand_term = (
+            lat["delta"][inp.week[:, None], ci] + lat["house_cand"][inp.pollster_idx[:, None], ci]
+        )
+        lp = nested_log_probs(bloc_term, cand_term, inp.cand_bloc[ci], inp.mask, lat["lam"])
+        return jnp.where(inp.mask, jnp.exp(lp), 0.0)
     logits = (
         lat["theta"][inp.week[:, None], ci]
         + lat["alpha"][inp.pollster_idx[:, None], ci]
@@ -358,6 +484,10 @@ def model(inp: ModelInputs) -> None:
     if inp.n_pop > 1:
         s["z_pop"] = numpyro.sample(
             "z_pop", dist.Normal(0, 1).expand([inp.n_pop - 1, inp.B]).to_event(2)
+        )
+    if pr.substitution:
+        s["lam"] = numpyro.sample(
+            "lam", dist.Beta(pr.lam_a, pr.lam_b).expand([inp.B]).to_event(1)
         )
     lat = latent(s, inp)
     probs = hypothesis_probs(lat, inp)

@@ -2,8 +2,8 @@
 
 Le backtest (docs/07-evaluation.md) ne doit pas donner au modèle une information qu'il n'avait
 pas. La liste officielle des candidats n'est connue qu'à sa publication par le Conseil
-constitutionnel, environ cinq semaines avant le premier tour (`LIST_PUBLICATION`). Avant cette
-date, la configuration est déduite des seuls sondages publiés.
+constitutionnel, de deux semaines et demie (2002) à six semaines (2022) avant le premier tour
+(`LIST_PUBLICATION`). Avant cette date, la configuration est déduite des seuls sondages publiés.
 
 Règle (`known_configuration`), approximation documentée :
 
@@ -33,6 +33,15 @@ présents, au prorata de leur part dans le tirage (Bayrou 2017 → Macron) ; sin
 redistribuée sur tous (indépendance des alternatives). Un candidat officiel qui ne reçoit
 rien n'a pas de prévision (`forecast` faux) : il n'entre pas dans les scores par candidat, sa
 part de résultat est rapportée à part (« part non prévue »).
+
+Avec la substitution intra-bloc (`official_map(..., substitution=True)`, modèle ajusté avec
+`Priors.substitution`), les deux dernières règles deviennent le modèle lui-même : un tenant
+lieu dont le bloc a des candidats officiels présents (Bayrou 2017, Montebourg et Taubira 2022)
+ou n'a aucun candidat officiel est retiré de la configuration (`absorbed`), et le logit emboîté
+reporte son soutien d'abord sur les candidats présents de son bloc, avec la substitution λ
+estimée au lieu d'un report intégral au prorata, puis sur les autres blocs. Seuls restent les
+tenants lieu d'un candidat officiel absent (Juppé → Fillon, Duflot → Hamon), qui gardent la
+règle `split` : ils tiennent la place d'un candidat que le modèle ne peut pas connaître.
 """
 
 from __future__ import annotations
@@ -46,17 +55,36 @@ import polars as pl
 from vvs.model.data import load_polls
 from vvs.registry import Registry, default_registry
 
-# Décision du Conseil constitutionnel arrêtant la liste des candidats au premier tour. Dates
-# relevées de mémoire, non vérifiées sur conseil-constitutionnel.fr (à reporter dans
-# elections.yaml avec leur source) ; 2002 est la plus incertaine. Seuls les horizons de 31 à
-# 50 jours environ en dépendent : aux horizons du backtest (180, 90, 30, 7), la liste est
-# soit inconnue, soit publiée depuis plusieurs jours.
+# Décision du Conseil constitutionnel arrêtant la liste des candidats au premier tour (date de
+# la décision, rendue publique le même jour, publiée au JO le lendemain ou, en 2017, trois jours
+# après). Vérifiées le 2026-10-20 sur les décisions elles-mêmes (à reporter dans elections.yaml) :
+#   2002 : n° 2002-102 PDR du 4 avril 2002 (JO du 5 avril 2002, p. 5999)
+#          https://www.conseil-constitutionnel.fr/decision/2002/2002102PDR.htm
+#   2007 : n° 2007-133 PDR du 19 mars 2007 (JO du 20 mars 2007, p. 5075)
+#          https://www.conseil-constitutionnel.fr/decision/2007/2007133PDR.htm
+#   2012 : n° 2012-145 PDR du 19 mars 2012 (JO du 20 mars 2012, p. 5025)
+#          https://www.conseil-constitutionnel.fr/decision/2012/2012145PDR.htm
+#   2017 : n° 2017-165 PDR du 18 mars 2017 (JORF n° 0068 du 21 mars 2017)
+#          https://www.conseil-constitutionnel.fr/decision/2017/2017165PDR.htm
+#   2022 : n° 2022-187 PDR du 7 mars 2022 (JORF n° 0056 du 8 mars 2022)
+#          https://www.conseil-constitutionnel.fr/decision/2022/2022187PDR.htm
+# La date de 2002 relevée auparavant de mémoire (21 mars) était fausse : la liste est publiée
+# 17 jours avant le vote, si bien qu'à 30 jours (22 mars 2002) la configuration 2002 vient des
+# sondages et non plus de la liste officielle. Pour les autres élections, aux horizons du
+# backtest (180, 90, 30, 7), la liste est soit inconnue, soit publiée depuis plusieurs jours.
 LIST_PUBLICATION = {
-    2002: dt.date(2002, 3, 21),
+    2002: dt.date(2002, 4, 4),
     2007: dt.date(2007, 3, 19),
     2012: dt.date(2012, 3, 19),
     2017: dt.date(2017, 3, 18),
     2022: dt.date(2022, 3, 7),
+}
+LIST_PUBLICATION_SOURCE = {
+    2002: "https://www.conseil-constitutionnel.fr/decision/2002/2002102PDR.htm",
+    2007: "https://www.conseil-constitutionnel.fr/decision/2007/2007133PDR.htm",
+    2012: "https://www.conseil-constitutionnel.fr/decision/2012/2012145PDR.htm",
+    2017: "https://www.conseil-constitutionnel.fr/decision/2017/2017165PDR.htm",
+    2022: "https://www.conseil-constitutionnel.fr/decision/2022/2022187PDR.htm",
 }
 LIST_LEAD_DAYS = 33  # élections sans date connue : liste publiée ~33 jours avant le vote
 
@@ -186,7 +214,7 @@ def known_configuration(
 
 @dataclass
 class OfficialMap:
-    """Correspondance configuration -> candidats officiels (voir `to_official`)."""
+    """Correspondance configuration -> candidats officiels (voir le docstring du module)."""
 
     config: list[str]
     official: list[str]
@@ -194,6 +222,9 @@ class OfficialMap:
     # pour chaque candidat de la configuration : ("self" | "split" | "prorata" | "drop", cibles)
     rules: dict[str, tuple[str, list[str]]]
     forecast: np.ndarray  # (O,) bool : le candidat officiel reçoit une part
+    # substitution : tenants lieu retirés de la configuration -> candidats officiels présents
+    # de leur bloc (vide : bloc sans candidat officiel) ; `config` ne les contient plus
+    absorbed: dict[str, list[str]] = field(default_factory=dict)
 
     def apply(self, shares: np.ndarray) -> np.ndarray:
         """Parts (S, K) sur la configuration -> parts (S, O) sur les candidats officiels."""
@@ -223,8 +254,14 @@ class OfficialMap:
 
 
 def official_map(
-    config: list[str], election: int, registry: Registry | None = None
+    config: list[str],
+    election: int,
+    registry: Registry | None = None,
+    substitution: bool = False,
 ) -> OfficialMap:
+    """Correspondance de `config` aux candidats officiels. `substitution` : les tenants lieu à
+    règle `prorata` ou `drop` sont retirés de la configuration (`absorbed`), le modèle à
+    substitution intra-bloc les redistribuant lui-même (docstring du module)."""
     reg = registry or default_registry()
     e = reg.elections[election]
     official = [c.candidate_id for c in e.candidates]
@@ -251,12 +288,17 @@ def official_map(
         else:
             rules[c] = ("drop", [])
     receiving = {t for rule, ts in rules.values() if rule != "drop" for t in ts}
+    absorbed: dict[str, list[str]] = {}
+    if substitution:
+        absorbed = {c: r[1] for c, r in rules.items() if r[0] in ("prorata", "drop")}
+        rules = {c: r for c, r in rules.items() if c not in absorbed}
     return OfficialMap(
-        config=list(config),
+        config=[c for c in config if c not in absorbed],
         official=official,
         official_bloc=[obloc[c] for c in official],
         rules=rules,
         forecast=np.array([c in receiving for c in official]),
+        absorbed=absorbed,
     )
 
 
