@@ -1,0 +1,10 @@
+Code du département;Libellé du département;Code de la commune;Libellé de la commune;Etat saisie;Inscrits;Abstentions;% Abs/Ins;Votants;% Vot/Ins;Blancs;% Blancs/Ins;% Blancs/Vot;Nuls;% Nuls/Ins;% Nuls/Vot;Exprimés;% Exp/Ins;% Exp/Vot;N°Panneau;Sexe;Nom;Prénom;Voix;% Voix/Ins;% Voix/Exp
+01;Ain;001;L'Abergement-Clémenciat;Complet;643;146;22,71;497;77,29;42;6,53;8,45;5;0,78;1,01;450;69,98;90,54;1;M;MACRON;Emmanuel;237;36,86;52,67;2;F;LE PEN;Marine;213;33,13;47,33
+01;Ain;002;L'Abergement-de-Varey;Complet;213;45;21,13;168;78,87;23;10,80;13,69;3;1,41;1,79;142;66,67;84,52;1;M;MACRON;Emmanuel;94;44,13;66,20;2;F;LE PEN;Marine;48;22,54;33,80
+2A;Corse-du-Sud;004;Ajaccio;Complet;36635;14835;40,49;21800;59,51;1159;3,16;5,32;541;1,48;2,48;20100;54,87;92,20;1;M;MACRON;Emmanuel;8280;22,60;41,19;2;F;LE PEN;Marine;11820;32,26;58,81
+ZM;Mayotte;601;Acoua;Complet;3170;1628;51,36;1542;48,64;122;3,85;7,91;88;2,78;5,71;1332;42,02;86,38;1;M;MACRON;Emmanuel;334;10,54;25,08;2;F;LE PEN;Marine;998;31,48;74,92
+ZP;Polynésie française;711;Anaa;Complet;714;354;49,58;360;50,42;11;1,54;3,06;7;0,98;1,94;342;47,90;95,00;1;M;MACRON;Emmanuel;226;31,65;66,08;2;F;LE PEN;Marine;116;16,25;33,92
+ZW;Wallis et Futuna;001;Wallis-Et-Futuna;Complet;9514;3674;38,62;5840;61,38;100;1,05;1,71;60;0,63;1,03;5680;59,70;97,26;1;M;MACRON;Emmanuel;3831;40,27;67,45;2;F;LE PEN;Marine;1849;19,43;32,55
+ZX;Saint-Martin/Saint-Barthélemy;701;Saint-Barthélémy;Complet;5270;2289;43,43;2981;56,57;156;2,96;5,23;44;0,83;1,48;2781;52,77;93,29;1;M;MACRON;Emmanuel;1259;23,89;45,27;2;F;LE PEN;Marine;1522;28,88;54,73
+ZX;Saint-Martin/Saint-Barthélemy;801;Saint-Martin;Complet;19165;12818;66,88;6347;33,12;315;1,64;4,96;176;0,92;2,77;5856;30,56;92,26;1;M;MACRON;Emmanuel;2591;13,52;44,25;2;F;LE PEN;Marine;3265;17,04;55,75
+ZZ;Français établis hors de France;001;Abidjan;Complet;12771;8693;68,07;4078;31,93;124;0,97;3,04;26;0,20;0,64;3928;30,76;96,32;1;M;MACRON;Emmanuel;3036;23,77;77,29;2;F;LE PEN;Marine;892;6,98;22,71

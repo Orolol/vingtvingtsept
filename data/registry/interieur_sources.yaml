@@ -1,0 +1,285 @@
+# Sources des résultats électoraux officiels (ministère de l'Intérieur, via data.gouv.fr).
+#
+# Lu par vvs.ingest.interieur : `vvs ingest interieur --election <clé>` télécharge chaque
+# fichier dans data/raw/results/<clé>/<name> (jamais réécrit s'il existe), et
+# `vvs parse interieur --election <clé>` produit data/curated/results_<clé>.parquet
+# (présidentielles) ou data/curated/results_lists_<clé>.parquet (européennes, législatives).
+#
+# Champs par fichier :
+#   name      nom local dans data/raw/results/<clé>/ (le nom d'origine quand il est lisible)
+#   url       ressource data.gouv.fr (relevée le 2026-10-20 via l'API /api/1/datasets/<id>/)
+#   dataset   page du jeu de données
+#   format    clé du parseur dans le module (voir vvs/ingest/interieur/__init__.py)
+#   role      niveau géographique que le fichier alimente : commune, department, national
+#   rounds    tours couverts par le fichier
+#   sha256    empreinte du fichier téléchargé, vérifiée à l'ingestion et au parsing
+#   notes     particularités constatées en lisant le fichier réel
+#
+# Codes géographiques du ministère : départements sur 2 caractères (01…95, 2A, 2B) ; outre-mer
+# en Z* : ZA Guadeloupe (971), ZB Martinique (972), ZC Guyane (973), ZD La Réunion (974),
+# ZS Saint-Pierre-et-Miquelon (975), ZM Mayotte (976), ZX Saint-Martin/Saint-Barthélemy
+# (977 Saint-Barthélemy, commune 701 ; 978 Saint-Martin, commune 801), ZW Wallis-et-Futuna
+# (986), ZP Polynésie française (987), ZN Nouvelle-Calédonie (988), ZZ Français établis hors
+# de France. Le parseur convertit en codes INSEE ; ZZ reste ZZ.
+#
+# Chiffres de contrôle : les totaux nationaux proclamés par le Conseil constitutionnel sont
+# dans back/tests/test_interieur.py, avec les écarts connus documentés.
+
+elections:
+  "2002":
+    kind: presidential
+    year: 2002
+    files:
+      - name: PR02_BVot_T1T2.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-2002-resultats-par-bureaux-de-vote/20150925-110503/PR02_BVot_T1T2.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/56050e14c751df39c98dabf0/
+        format: bvot_long
+        role: commune
+        rounds: [1, 2]
+        sha256: 0c2d26ed5de8a2c16a8a0192a3356f27cbaa47fbf1c56795dd8ba8de77077e25
+        notes: >-
+          Une ligne par candidat et par bureau, tours 1 et 2 dans le même fichier, latin-1,
+          séparateur « ; », sans en-tête mais avec un bloc de commentaires « -- » décrivant les
+          13 champs. Couvre la métropole et ZA, ZB, ZC, ZD seulement : ni Mayotte, ni les
+          collectivités du Pacifique, ni Saint-Pierre-et-Miquelon, ni les Français de
+          l'étranger. Sert donc au seul niveau commune ; le niveau département vient du .xls.
+          Des nombres sont précédés d'espaces (« ␣␣1003 »). Somme des communes = feuille
+          départements partout, sauf la Moselle au T2 (54 voix d'écart au total).
+      - name: PR02_resultats_regions_departements.xls
+        url: https://static.data.gouv.fr/18/ca642c03c03b775fa08c48d200702048e9c68631e6851ffa34014af8195991.xls
+        dataset: https://www.data.gouv.fr/fr/datasets/5369937ba3a729239d2041dc/
+        format: xls_dept
+        role: department
+        rounds: [1, 2]
+        sha256: 18ca642c03c03b775fa08c48d200702048e9c68631e6851ffa34014af8195991
+        notes: >-
+          Classeur Excel 97 (BIFF8), lu par le lecteur interne vvs.ingest.interieur.xls (pas de
+          xlrd). Feuilles « Départements T1 » et « Départements T2 » : une ligne par
+          département, colonnes candidat répétées par blocs de 6 (Sexe, Nom, Prénom, Voix,
+          % ins, % exp). Codes département numériques (1 pour 01), outre-mer en Z*, ZZ pour
+          l'étranger, dernière ligne = total. Chiffres du ministère antérieurs aux
+          rectifications du Conseil constitutionnel. Écarts constatés (ministère - CC) :
+          T1 inscrits +3 275, votants +2 155, exprimés +1 016, candidats de +10 (Gluckstein)
+          à +166 voix (Chirac) ; T2 inscrits +1 103, votants +537, exprimés -60, Chirac -62,
+          Le Pen +2.
+          Téléchargement à faire en série : des téléchargements parallèles ont donné des
+          fichiers tronqués (d'où la vérification sha256).
+
+  "2007":
+    kind: presidential
+    year: 2007
+    files:
+      - name: PR07_Bvot_T1T2.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-2007-resultats-par-bureaux-de-vote/20151001-154056/PR07_Bvot_T1T2.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/560d37b188ee38187e83905b/
+        format: bvot_long
+        role: commune
+        rounds: [1, 2]
+        sha256: 620f93b9531ec2648f3d98d1981e18e0615dfb71825c980a471a3d27732908e4
+        notes: >-
+          Même format que 2002 (champ 12 = code nuance). Couvre la métropole, ZA, ZB, ZC, ZD et
+          ZM ; manquent ZN, ZP, ZS, ZW et ZZ. Saint-Martin et Saint-Barthélemy sont encore des
+          communes de Guadeloupe. Niveau commune seulement. Somme des communes = feuille
+          départements partout sauf l'Ille-et-Vilaine (432 voix d'écart au T1, 419 au T2).
+      - name: PR07_resultats_regions_departements.xls
+        url: https://static.data.gouv.fr/fb/b5de8c5118fab4c029f7289c6a46fcf3ebfa0936d93d43805a734479294899.xls
+        dataset: https://www.data.gouv.fr/fr/datasets/5369937ca3a729239d2041df/
+        format: xls_dept
+        role: department
+        rounds: [1, 2]
+        sha256: fbb5de8c5118fab4c029f7289c6a46fcf3ebfa0936d93d43805a734479294899
+        notes: >-
+          Même structure que 2002. La feuille « France entière » reprend exactement les
+          chiffres du Conseil constitutionnel, mais la somme des départements s'en écarte au T1
+          de -2 voix (Bayrou), +1 (Bové), +1 (Laguiller), totaux identiques ; T2 identique.
+
+  "2012":
+    kind: presidential
+    year: 2012
+    files:
+      - name: PR12_Bvot_T1T2.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-2012-resultats-par-bureaux-de-vote-1/20150925-102751/PR12_Bvot_T1T2.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/5605053fc751df3f0a8dabef/
+        format: bvot_long
+        role: commune
+        rounds: [1, 2]
+        sha256: baf999ed0d5aee3cfa3192e152f34db4b0e77af72bad18af4853c4b7b958448e
+        notes: >-
+          Même format long que 2002-2007 mais sans bloc de commentaires. Couverture complète
+          (outre-mer, ZX, ZZ en 11 circonscriptions de l'étranger codées comme des communes
+          001…011). Les niveaux département et national sont agrégés depuis ce fichier.
+          Champs 5 et 6 non documentés (circonscription législative et canton, d'après les
+          valeurs), absents en 2002-2007. Voix, votants et exprimés identiques au Conseil
+          constitutionnel ; inscrits +29 au T1 et -92 au T2.
+
+  "2017":
+    kind: presidential
+    year: 2017
+    files:
+      - name: PR17_BVot_T1_FE.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-des-23-avril-et-7-mai-2017-resultats-definitifs-du-1er-tour-par-bureaux-de-vote/20170427-100955/PR17_BVot_T1_FE.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/5901a718c751df3f49b29ff8/
+        format: wide_txt
+        role: commune
+        rounds: [1]
+        sha256: 1eb1e4358a8af59ebc86ff7e0e4a2ee175f6cf516e4598cd955193064fc91e6a
+        notes: >-
+          Une ligne par bureau, latin-1, « ; », en-tête qui ne nomme que le premier candidat :
+          21 colonnes fixes puis 11 blocs de 7 (N°Panneau, Sexe, Nom, Prénom, Voix, % ins,
+          % exp). Couverture complète ; ZZ découpé par poste consulaire (codes commune
+          001…052, non INSEE). Identique au Conseil constitutionnel (voix et totaux).
+      - name: PR17_BVot_T2_FE.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-des-23-avril-et-7-mai-2017-resultats-definitifs-du-2nd-tour-par-bureaux-de-vote/20170511-093541/PR17_BVot_T2_FE.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/5914141088ee386741d8d6f1/
+        format: wide_txt
+        role: commune
+        rounds: [2]
+        sha256: 2b6137b64957b9bfff24436cf859aad15e8b155b837b182eebff71c21fc82798
+        notes: Même format que le T1, 2 blocs candidat.
+
+  "2022":
+    kind: presidential
+    year: 2022
+    files:
+      - name: resultats-par-niveau-subcom-t1-france-entiere.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-des-10-et-24-avril-2022-resultats-definitifs-du-1er-tour/20220414-152459/resultats-par-niveau-subcom-t1-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/62581fdf02e05e365ea227a1/
+        format: wide_txt
+        role: commune
+        rounds: [1]
+        sha256: 372243c67c1226c3b0414b2eaae5fa946eed57fa8c786efbc705c78c17888355
+        notes: >-
+          Une ligne par commune (Paris, Lyon, Marseille entiers), latin-1, « ; » : 19 colonnes
+          fixes dont « Etat saisie », puis 12 blocs de 7. Mayotte en communes 6xx et Polynésie
+          en 7xx (5xx et 0xx avant 2022) : le code INSEE se reconstruit avec les deux derniers
+          chiffres. Existe aussi par bureau de vote (burvot, 36 Mo), non utilisé. Identique au
+          Conseil constitutionnel aux deux tours.
+      - name: resultats-par-niveau-subcom-t2-france-entiere.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-des-10-et-24-avril-2022-resultats-definitifs-du-2nd-tour/20220428-142333/resultats-par-niveau-subcom-t2-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/626a86215fb310e32b48b137/
+        format: wide_txt
+        role: commune
+        rounds: [2]
+        sha256: 2f06b7c4c7c606f67816fbac20e33566fabfeb752e27e1e84833b03481bd45e6
+        notes: Même format que le T1, 2 blocs candidat.
+      - name: resultats-par-niveau-fe-t1-france-entiere.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-des-10-et-24-avril-2022-resultats-definitifs-du-1er-tour/20220414-152200/resultats-par-niveau-fe-t1-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/62581fdf02e05e365ea227a1/
+        format: wide_txt
+        role: national
+        rounds: [1]
+        sha256: 6986b74e3d4fd86fdb16c1036e6273c8e5df12ffc53497249e760980a96ec260
+        notes: >-
+          Une ligne « FE France entière ». Sert de contrôle : la somme des communes doit
+          l'égaler exactement, sinon le parsing échoue.
+      - name: resultats-par-niveau-fe-t2-france-entiere.txt
+        url: https://static.data.gouv.fr/resources/election-presidentielle-des-10-et-24-avril-2022-resultats-definitifs-du-2nd-tour/20220428-141900/resultats-par-niveau-fe-t2-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/626a86215fb310e32b48b137/
+        format: wide_txt
+        role: national
+        rounds: [2]
+        sha256: af8ba10aa9209eed1a18247c125fabcd7749b1f2ff380c4bc2d6b95431689859
+        notes: Contrôle national du T2.
+
+  # --- Scrutins de listes et législatives : niveau national seulement --------------------
+  # Table results_lists_<clé> : libellés de liste ou de nuance tels quels ; le rattachement
+  # aux blocs se fait ailleurs.
+
+  euro2014:
+    kind: european
+    year: 2014
+    files:
+      - name: euro-2014-resultats-c.xlsx
+        url: https://www.data.gouv.fr/storage/f/2014-05-30T10-34-25/euro-2014-resultats-c.xlsx
+        dataset: https://www.data.gouv.fr/fr/datasets/53893403a3a7291ffe8c5032/
+        format: euro2014_xlsx
+        role: national
+        rounds: [1]
+        sha256: a61582cc62db769990806f2d70e007aac600ee27bf38a145ecdd252505009dba
+        notes: >-
+          Résultats proclamés (suffixe « -c »). Huit circonscriptions interrégionales : les
+          listes diffèrent d'une circonscription à l'autre, le ministère n'agrège au national
+          que par nuance. On somme la feuille « Départements » par (nuance, libellé abrégé de
+          liste), qui est en fait un libellé de nuance (« Liste Front de Gauche »). La feuille
+          « Résultats » (national par nuance) sert de contrôle dans les tests.
+  euro2019:
+    kind: european
+    year: 2019
+    files:
+      - name: resultats-definitifs-par-departement.txt
+        url: https://static.data.gouv.fr/resources/resultats-des-elections-europeennes-2019/20190531-144401/resultats-definitifs-par-departement.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/5ceba293634f411427c7d613/
+        format: euro_dept_txt
+        role: national
+        rounds: [1]
+        sha256: 28373b949ad63d8b28bee031b7422556c83a796b806cc85aca4f6b661147815a
+        notes: >-
+          Circonscription unique. Une ligne par département, latin-1, 16 colonnes fixes puis
+          34 blocs de 7 (N°Liste, Libellé abrégé, Libellé étendu, Tête de liste, Voix, % ins,
+          % exp). Pas de nuance dans ce fichier : colonne `nuance` vide. National = somme des
+          départements par numéro de liste ; `label` = libellé étendu.
+  euro2024:
+    kind: european
+    year: 2024
+    files:
+      - name: resultats-definitifs-par-departement.csv
+        url: https://static.data.gouv.fr/resources/resultats-des-elections-europeennes-du-9-juin-2024/20240613-154909/resultats-definitifs-par-departement.csv
+        dataset: https://www.data.gouv.fr/fr/datasets/666b1337471f4fe2f19f2573/
+        format: euro_dept_csv
+        role: national
+        rounds: [1]
+        sha256: 6b66a6d98a8a504b1a50fa8bed6812a276ab3d9f96c8df554a97baebfa2fd2dc
+        notes: >-
+          UTF-8, « ; », champs entre guillemets, pourcentages suffixés « % ». 16 colonnes fixes
+          puis 38 blocs de 8 (panneau, nuance, libellé abrégé, libellé, voix, % ins, % exp,
+          sièges). National = somme des départements par numéro de panneau ; `label` =
+          libellé de liste.
+  leg2022:
+    kind: legislative
+    year: 2022
+    files:
+      - name: resultats-par-niveau-fe-t1-france-entiere.txt
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-12-et-19-juin-2022-resultats-definitifs-du-premier-tour/20220614-192550/resultats-par-niveau-fe-t1-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/62a8c3f92b3b572a67d307f4/
+        format: leg_fe_txt
+        role: national
+        rounds: [1]
+        sha256: 581dab1ff9238d26b03c756a2e37f9bdcbd632edfdd59f68ba4acd0f13250fed
+        notes: >-
+          Une ligne France entière, latin-1 ; 17 colonnes fixes puis blocs de 5 (code nuance,
+          voix, % ins, % exp, sièges). `label` = `nuance` = code nuance du ministère (NUP, ENS,
+          RN…).
+      - name: resultats-par-niveau-fe-t2-france-entiere.txt
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-12-et-19-juin-2022-resultats-definitifs-du-second-tour/20220621-175819/resultats-par-niveau-fe-t2-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/62b1e903ee80a47a20129bf2/
+        format: leg_fe_txt
+        role: national
+        rounds: [2]
+        sha256: fd28ed19886304d39658e8d60ac56689a785f75125e9ff6e69efef0a05c5356e
+        notes: Même format que le T1 (seules les circonscriptions ayant un second tour).
+  leg2024:
+    kind: legislative
+    year: 2024
+    # Dans les fichiers France entière du ministère, la somme des voix par nuance diffère
+    # des exprimés : 32 057 944 contre 32 057 946 au T1 (-2), 27 279 714 contre 27 279 713
+    # au T2 (+1). Écart interne à la source, conservé tel quel.
+    vote_sum_gaps: {1: -2, 2: 1}
+    files:
+      - name: resultats-definitifs-france-entiere-t1.xlsx
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-1er-tour/20240710-171253/resultats-definitifs-france-entiere.xlsx
+        dataset: https://www.data.gouv.fr/fr/datasets/6682d0c255dcda5df20b1d90/
+        format: leg_fe_xlsx
+        role: national
+        rounds: [1]
+        sha256: c0872749a0e68ff2a0b6d37cbd26a0c9e603576b88e1c75bace6af9677c5bc7a
+        notes: >-
+          Le T1 France entière n'existe qu'en .xlsx (le jeu ne publie pas de .csv à ce niveau).
+          Une ligne FE : 16 colonnes fixes puis blocs de 4 (nuance, voix, % ins, % exp).
+      - name: resultats-definitifs-france-entiere-t2.xlsx
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170421/resultats-definitifs-france-entiere.xlsx
+        dataset: https://www.data.gouv.fr/fr/datasets/668b4092826ddcf70e9e62cd/
+        format: leg_fe_xlsx
+        role: national
+        rounds: [2]
+        sha256: 3cad38d1120539ddc3fd8eebcd44df9619f946ff5d66d266afaa65d7b26cf743
+        notes: Même format que le T1 (le .csv existe aussi, non utilisé).

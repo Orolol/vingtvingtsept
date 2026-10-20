@@ -21,3 +21,6 @@ runs/
 .env
 .env.*
 !.env.example
+
+# Résultats au niveau commune (1,5 Mo par élection, régénérables depuis les sources sha256)
+data/curated/results_20??.parquet
