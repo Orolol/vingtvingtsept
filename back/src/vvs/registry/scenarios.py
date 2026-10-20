@@ -42,8 +42,14 @@ def _is_url(s: str) -> bool:
 # --- modèles
 
 
+# Longueur maximale d'un libellé court (affiché dans les filtres et les tableaux du site)
+LABEL_MAX_LENGTH = 40
+
+
 class State(_Model):
     id: str
+    # libellé court de l'état (« Bardella »), affiché avec celui de la dimension (« RN »)
+    label: str = Field(min_length=1, max_length=LABEL_MAX_LENGTH)
     probability: float = Field(ge=0, le=1)
     description: str
     candidates: list[str] = Field(default_factory=list)
@@ -54,6 +60,8 @@ class State(_Model):
 
 class Dimension(_Model):
     id: str
+    # libellé court de la dimension (« RN », « Bloc central »)
+    label: str = Field(min_length=1, max_length=LABEL_MAX_LENGTH)
     question: str
     review: list[str] = Field(default_factory=list)
     states: list[State] = Field(min_length=2)
@@ -76,6 +84,10 @@ class Dimension(_Model):
 
     def candidate_ids(self) -> set[str]:
         return {c for s in self.states for c in s.candidates}
+
+    def state_label(self, state_id: str) -> str:
+        """Libellé court d'un état, préfixé par la dimension : « RN : Bardella »."""
+        return f"{self.label} : {self.state(state_id).label}"
 
 
 class SmallCandidate(_Model):

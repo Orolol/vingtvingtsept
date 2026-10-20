@@ -9,6 +9,8 @@
 #   liste les candidate_id présents (data/registry/candidates.yaml) ; `placeholders` désigne un
 #   candidat non identifié, connu seulement par son bloc. Les probabilités d'une dimension
 #   somment à 1. Les dimensions sont indépendantes, sauf `constraints`.
+#   `label` (dimension et état) : libellé court affiché par le site, combiné en « RN : Bardella »
+#   pour un état et en « Le Pen · Philippe seul · … » pour une configuration (vvs export).
 # - `small_candidates` : présence de Bernoulli indépendante (au premier tour officiel, donc
 #   500 parrainages obtenus et candidature maintenue) ; `bloc` = bloc du registre en 2027.
 # - `constraints` : quand tous les états de `when` sont actifs, les candidats de `absent` sont
@@ -30,10 +32,12 @@ references:
 
 dimensions:
   - id: rn
+    label: RN
     question: Qui porte la candidature du RN ?
     review: [2026-12-16 (audience QPC en cassation), 2027-03-12 (clôture des parrainages), arrêt de cassation]
     states:
       - id: le_pen
+        label: Le Pen
         probability: 0.88
         candidates: [le_pen_marine]
         description: >-
@@ -46,6 +50,7 @@ dimensions:
           - https://kohenavocats.com/marine-le-pen-pourvoi-cassation-memoires-15-octobre-arret-avant-avril-2027/
           - https://actu.orange.fr/politique/affaire-des-assistants-parlementaires-du-rn-la-cour-de-cassation-fixera-le-sort-de-marine-le-pen-le-16-decembre-l-express-via-6medias-CNT000002t1bDR.html
       - id: bardella
+        label: Bardella
         probability: 0.12
         candidates: [bardella_jordan]
         description: >-
@@ -55,10 +60,12 @@ dimensions:
           - https://www.franceinfo.fr/politique/front-national/affaire-des-assistants-fn-au-parlement-europeen/il-va-accepter-sans-probleme-la-decision-de-marine-le-pen-comment-jordan-bardella-et-la-candidate-du-rn-vont-ils-faire-campagne-en-binome-en-2027_8098388.html
 
   - id: centre
+    label: Bloc central
     question: Quelle offre pour le bloc central ?
     review: ["chaque mois jusqu'au 2027-03-12"]
     states:
       - id: philippe_only
+        label: Philippe seul
         probability: 0.50
         candidates: [philippe_edouard]
         description: >-
@@ -71,6 +78,7 @@ dimensions:
           - https://touteleurope.eu/vie-politique-des-etats-membres/presidentielle-2027-marine-le-pen-largement-en-tete-dans-les-sondages-a-six-mois-du-premier-tour-trois-candidats-au-coude-a-coude-pour-la-deuxieme-place
           - https://www.rtl.fr/actu/politique/edouard-philippe-peut-incarner-l-ordre-et-le-serieux-laurent-wauquiez-soutient-le-candidat-horizons-et-invite-bruno-retailleau-a-se-retirer-7900651585
       - id: philippe_attal
+        label: Philippe et Attal
         probability: 0.35
         candidates: [philippe_edouard, attal_gabriel]
         description: >-
@@ -80,6 +88,7 @@ dimensions:
         sources:
           - https://lcp.fr/actualites/presidentielle-2027-gabriel-attal-officialise-sa-candidature-436721
       - id: attal_only
+        label: Attal seul
         probability: 0.10
         candidates: [attal_gabriel]
         description: >-
@@ -87,6 +96,7 @@ dimensions:
           probable, Philippe étant en tête du bloc dans tous les sondages.
         sources: []
       - id: other
+        label: Autre candidat
         probability: 0.05
         candidates: []
         placeholders: [centre]
@@ -96,10 +106,12 @@ dimensions:
         sources: [WP_CAND]
 
   - id: left
+    label: Gauche hors LFI
     question: La gauche hors LFI est-elle consolidée derrière Glucksmann ?
     review: [2027-03-12 (clôture des parrainages)]
     states:
       - id: consolidated
+        label: Glucksmann seul
         probability: 0.35
         candidates: [glucksmann_raphael]
         description: >-
@@ -111,6 +123,7 @@ dimensions:
           - https://lcp.fr/actualites/primaire-socialiste-vainqueur-des-le-1er-tour-raphael-glucksmann-sera-le-candidat-de-la
           - https://www.publicsenat.fr/actualites/politique/primaire-de-la-gauche-raphael-glucksmann-plie-le-match-et-remporte-le-scrutin-des-le-premier-tour-avec-66
       - id: fragmented
+        label: Glucksmann et Tondelier
         probability: 0.65
         candidates: [glucksmann_raphael, tondelier_marine]
         description: >-
@@ -124,10 +137,12 @@ dimensions:
           - WP_CAND
 
   - id: lr
+    label: LR
     question: LR présente-t-il Bruno Retailleau ?
     review: [2027-03-12 (clôture des parrainages)]
     states:
       - id: retailleau
+        label: Retailleau
         probability: 0.80
         candidates: [retailleau_bruno]
         description: >-
@@ -135,6 +150,7 @@ dimensions:
           Pécresse et Ménard le soutiennent (WP_CAND).
         sources: [WP_CAND]
       - id: rally
+        label: Ralliement au centre
         probability: 0.20
         candidates: []
         description: >-
@@ -145,10 +161,12 @@ dimensions:
           - https://www.bfmtv.com/politique/elections/presidentielle/le-candidat-lr-est-en-dessous-de-10-laurent-wauquiez-juge-que-bruno-retailleau-doit-savoir-se-retirer-si-c-est-necessaire-et-tend-la-main-a-edouard-philippe-pour-la-presidentielle_AN-202607010735.html
 
   - id: lfi
+    label: LFI
     question: Qui porte la candidature de LFI ?
     review: []
     states:
       - id: melenchon
+        label: Mélenchon
         probability: 0.97
         candidates: [melenchon_jean_luc]
         description: >-
@@ -158,6 +176,7 @@ dimensions:
           - WP_CAND
           - https://www.franceinfo.fr/elections/presidentielle/le-npa-anticapitaliste-renonce-a-presenter-un-candidat-a-l-election-presidentielle-2027-et-annonce-soutenir-jean-luc-melenchon_8084936.html
       - id: substitute
+        label: Remplaçant
         probability: 0.03
         candidates: [bompard_manuel]
         description: >-
@@ -166,10 +185,12 @@ dimensions:
         sources: []
 
   - id: reconquete
+    label: Reconquête
     question: Reconquête présente-t-il un candidat, et lequel ?
     review: [2027-03-12 (clôture des parrainages)]
     states:
       - id: zemmour
+        label: Zemmour
         probability: 0.88
         candidates: [zemmour_eric]
         description: >-
@@ -178,6 +199,7 @@ dimensions:
         sources:
           - https://www.bfmtv.com/politique/elections/presidentielle/je-serai-candidat-eric-zemmour-annonce-sur-bfmtv-qu-il-se-presentera-a-l-election-presidentielle_AV-202609170947.html
       - id: knafo
+        label: Knafo
         probability: 0.02
         candidates: [knafo_sarah]
         description: >-
@@ -186,6 +208,7 @@ dimensions:
         sources:
           - https://www.franceinfo.fr/politique/pas-candidate-a-l-election-presidentielle-de-2027-sarah-knafo-lance-une-grande-consultation-des-francais_7970540.html
       - id: none
+        label: Pas de candidat
         probability: 0.10
         candidates: []
         description: >-

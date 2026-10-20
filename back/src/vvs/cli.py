@@ -436,5 +436,70 @@ def curate_cmd(
         raise typer.Exit(code=1)
 
 
+@app.command("simulate")
+def simulate_cmd(
+    asof: str = typer.Option(..., help="Date de prévision AAAA-MM-JJ (sondages terminés à cette date)"),
+    election: int = typer.Option(2027, help="Année de l'élection"),
+    fit: str = typer.Option(None, help="Ajustement du premier tour (défaut runs/<asof>-fit-<élection>, créé s'il manque)"),
+    out: str = typer.Option(None, help="Dossier de sortie (défaut runs/<aujourd'hui>-simulate)"),
+    draws: int = typer.Option(40_000, help="Tirages Monte-Carlo (10 000 au minimum)"),
+    seed: int = typer.Option(0, help="Graine"),
+    rn_bias: float = typer.Option(
+        None, help="Part du biais RN du second tour appliquée (défaut : atténuation par horizon)"
+    ),
+    refit: bool = typer.Option(False, "--refit", help="Refaire l'ajustement même s'il existe"),
+) -> None:
+    """Simulation de l'élection (docs/04-modele.md § 5) : scénarios, premier tour, second tour."""
+    from datetime import date
+    from pathlib import Path
+
+    import polars as pl
+
+    from vvs import paths
+    from vvs.model.simulate import fit_for_simulation, simulate
+
+    if draws < 10_000:
+        raise typer.BadParameter("au moins 10 000 tirages (docs/04-modele.md § 5)")
+    d = date.fromisoformat(asof)
+    fit_dir = Path(fit) if fit else paths.RUNS / f"{d.isoformat()}-fit-{election}"
+    if refit or not (fit_dir / "draws.npz").exists():
+        typer.echo(f"ajustement du premier tour -> {fit_dir}")
+        m = fit_for_simulation(election, d, fit_dir)
+        typer.echo(f"r_hat max {m['diagnostics'].get('r_hat_max')}, "
+                   f"divergences {m['diagnostics'].get('divergences')}")
+    out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-simulate"
+    res = simulate(fit_dir, d, out_dir, election=election, n_draws=draws, seed=seed, rn_bias=rn_bias)
+    mix = res.summary.filter(pl.col("condition_id") == "mix")
+    for r in mix.filter(pl.col("p_qualify") >= 0.005).iter_rows(named=True):
+        typer.echo(
+            f"{r['candidate_id']:>24s}  présence {r['p_present']:4.2f}  qualif. {r['p_qualify']:5.3f}"
+            f"  victoire {r['p_win']:5.3f}  part {r['q50']:4.1f} [{r['q05']:4.1f}–{r['q95']:4.1f}]"
+        )
+    typer.echo(f"durée {res.manifest['duration_s']} s ; écrit : {out_dir}")
+
+
+@app.command("export")
+def export_cmd(
+    run: str = typer.Option(..., help="Run de simulation (runs/<date>-simulate)"),
+    out: str = typer.Option(None, help="Dossier du site (défaut front/static/data)"),
+) -> None:
+    """Fichiers JSON du site (docs/08-front.md) ; valider ensuite avec `npm run validate-data`."""
+    from pathlib import Path
+
+    from vvs import paths
+    from vvs.export.export import export_run
+
+    out_dir = Path(out) if out else paths.ROOT / "front" / "static" / "data"
+    rep = export_run(Path(run), out_dir)
+    typer.echo(
+        f"{rep['n_polls']} sondages, {rep['n_candidates']} candidats, commit {rep['commit']}, "
+        f"historique {'écrit' if rep['history_written'] else 'inchangé'} "
+        f"({rep['history_entries']} entrées)"
+    )
+    for name, size in sorted(rep["sizes"].items()):
+        typer.echo(f"  {name:20s} {size / 1024:7.1f} Ko")
+    typer.echo(f"écrit : {out_dir}")
+
+
 if __name__ == "__main__":
     app()

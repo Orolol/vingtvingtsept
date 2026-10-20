@@ -25,10 +25,12 @@ def _base() -> dict:
         "dimensions": [
             {
                 "id": "rn",
+                "label": "RN",
                 "question": "?",
                 "states": [
                     {
                         "id": "le_pen",
+                        "label": "Le Pen",
                         "probability": 0.8,
                         "description": "-",
                         "candidates": ["le_pen_marine"],
@@ -36,6 +38,7 @@ def _base() -> dict:
                     },
                     {
                         "id": "bardella",
+                        "label": "Bardella",
                         "probability": 0.2,
                         "description": "-",
                         "candidates": ["bardella_jordan"],
@@ -44,15 +47,17 @@ def _base() -> dict:
             },
             {
                 "id": "lr",
+                "label": "LR",
                 "question": "?",
                 "states": [
                     {
                         "id": "retailleau",
+                        "label": "Retailleau",
                         "probability": 0.7,
                         "description": "-",
                         "candidates": ["retailleau_bruno"],
                     },
-                    {"id": "rally", "probability": 0.3, "description": "-", "candidates": []},
+                    {"id": "rally", "label": "Ralliement", "probability": 0.3, "description": "-", "candidates": []},
                 ],
             },
         ],
