@@ -32,6 +32,11 @@
 # recouvre le thème ; partial = la rubrique contient le thème parmi d'autres sujets ; none =
 # pas de rubrique, le thème est dispersé). Ces listes de mots-clés ne remplacent pas la
 # classification NLP de la phase 7 ; elles donnent un premier volume par thème.
+# Affinées le 2026-10-20 pour les comptages Media Cloud (recherche plein texte) : retrait des
+# mots présents dans une large part de toute l'actualité politique (« gouvernement »,
+# « Premier ministre », « Assemblée nationale », « affaire », « police », « violences »,
+# « guerre », « climat », « santé », « salaires », « Bruxelles », « Chine »), qui mesuraient
+# le volume politique plus que le thème.
 
 defaults:
   gdelt_filters: sourcelang:french sourcecountry:FR
@@ -99,6 +104,83 @@ candidates:
     aliases: [Tondelier]
     rejected:
       Marine: prénom seul (et Marine Le Pen)
+  # --- ajoutés le 2026-10-20 pour l'étude presse par comptages Media Cloud (phase 7) :
+  # candidats sondés au premier tour dans les douze mois avant le vote 2017 et 2022 et depuis
+  # janvier 2025 pour 2027 (poll_results.parquet). Pas de `gdelt_aliases` : ces requêtes ne
+  # servent pas encore à GDELT, à vérifier contre la traduction anglaise avant de le faire.
+  dupont_aignan_nicolas:
+    aliases: [Dupont-Aignan, Dupont Aignan]
+  poutou_philippe:
+    aliases: [Poutou]
+  arthaud_nathalie:
+    aliases: [Nathalie Arthaud]
+    rejected:
+      Arthaud: Florence Arthaud, navigatrice (morte en 2015)
+  asselineau_francois:
+    aliases: [Asselineau]
+  lassalle_jean:
+    aliases: [Jean Lassalle]
+    rejected:
+      Lassalle: patronyme courant
+  cheminade_jacques:
+    aliases: [Cheminade]
+  bayrou_francois:
+    aliases: [Bayrou]
+  juppe_alain:
+    aliases: [Juppé, Juppe]
+  sarkozy_nicolas:
+    aliases: [Sarkozy]
+    notes: >-
+      Attrape aussi Carla Bruni-Sarkozy et Louis Sarkozy ; très majoritairement l'ancien
+      président, accepté comme pour « Macron ».
+  valls_manuel:
+    aliases: [Manuel Valls]
+    rejected:
+      Valls: ville de Catalogne, patronyme espagnol
+  montebourg_arnaud:
+    aliases: [Montebourg]
+  hollande_francois:
+    aliases: [François Hollande, Francois Hollande]
+    rejected:
+      Hollande: les Pays-Bas
+  hidalgo_anne:
+    aliases: [Anne Hidalgo]
+    rejected:
+      Hidalgo: patronyme courant
+  roussel_fabien:
+    aliases: [Fabien Roussel]
+    rejected:
+      Roussel: patronyme courant
+  taubira_christiane:
+    aliases: [Taubira]
+  bertrand_xavier:
+    aliases: [Xavier Bertrand]
+    rejected:
+      Bertrand: prénom et patronyme courants
+  philippot_florian:
+    aliases: [Florian Philippot]
+    rejected:
+      Philippot: patronyme courant
+  barnier_michel:
+    aliases: [Michel Barnier]
+    rejected:
+      Barnier: patronyme
+  de_villepin_dominique:
+    aliases: [Villepin]
+  faure_olivier:
+    aliases: [Olivier Faure]
+    rejected:
+      Faure: patronyme très courant
+  ruffin_francois:
+    aliases: [François Ruffin, Francois Ruffin]
+    rejected:
+      Ruffin: patronyme
+  lisnard_david:
+    aliases: [Lisnard]
+  darmanin_gerald:
+    aliases: [Darmanin]
+  wauquiez_laurent:
+    aliases: [Wauquiez]
 
 themes:
   immigration:
@@ -107,14 +189,14 @@ themes:
     ina_rubrics: {fit: none, rubrics: []}
     notes: Dispersé entre « Société », « Politique France » et « International » à l'INA.
   security:
-    keywords: [insécurité, délinquance, criminalité, attentat, terrorisme, terroriste, police, gendarmerie, violences, narcotrafic, "trafic de drogue"]
+    keywords: [insécurité, délinquance, délinquants, criminalité, attentat, attentats, terrorisme, terroriste, terroristes, narcotrafic, "trafic de drogue", "forces de l'ordre", "sécurité publique"]
     gdelt_themes: [TERROR, SECURITY_SERVICES, CRIME_ILLEGAL_DRUGS, CRIME_COMMON_ROBBERY, UNGP_CRIME_VIOLENCE]
     ina_rubrics: {fit: partial, rubrics: [Faits divers, Justice]}
     notes: >-
       « Faits divers » est le meilleur indicateur INA de la saillance sécuritaire ;
       « Justice » mêle procès ordinaires et affaires politico-judiciaires.
   purchasing_power:
-    keywords: ["pouvoir d'achat", inflation, "prix de l'essence", "prix du carburant", "hausse des prix", "coût de la vie", salaires, "factures d'énergie"]
+    keywords: ["pouvoir d'achat", inflation, "prix de l'essence", "prix du carburant", "prix des carburants", "hausse des prix", "coût de la vie", "factures d'énergie", "augmentation des salaires", "hausse des salaires"]
     gdelt_themes: [ECON_INFLATION, ECON_COST_OF_LIVING, FUELPRICES, ECON_GASOLINEPRICE]
     ina_rubrics: {fit: partial, rubrics: [Economie]}
     notes: La rubrique « Economie » de l'INA ne sépare pas pouvoir d'achat et chômage.
@@ -123,33 +205,33 @@ themes:
     gdelt_themes: [UNEMPLOYMENT]
     ina_rubrics: {fit: partial, rubrics: [Economie]}
   health:
-    keywords: [santé, hôpital, hôpitaux, Covid, épidémie, vaccin, vaccination, "déserts médicaux", Sécurité sociale]
+    keywords: [hôpital, hôpitaux, Covid, "Covid-19", coronavirus, épidémie, vaccin, vaccination, "déserts médicaux", "Sécurité sociale", "système de santé", soignants]
     gdelt_themes: [HEALTH_PANDEMIC, GENERAL_HEALTH, MEDICAL]
     ina_rubrics: {fit: direct, rubrics: [Santé]}
   ecology:
-    keywords: [écologie, écologique, climat, climatique, "transition énergétique", "réchauffement climatique", biodiversité, pollution]
+    keywords: [écologie, écologique, "réchauffement climatique", "changement climatique", "dérèglement climatique", "transition énergétique", "transition écologique", biodiversité, pollution]
     gdelt_themes: [ENV_CLIMATECHANGE, ENV_GREEN]
     ina_rubrics: {fit: direct, rubrics: [Environnement]}
     notes: « Catastrophes » (intempéries, accidents) n'est pas rattaché à l'écologie.
   europe:
-    keywords: ["Union européenne", Bruxelles, "Commission européenne", "Parlement européen", "élections européennes", zone euro, Frexit]
+    keywords: ["Union européenne", "Commission européenne", "Parlement européen", "élections européennes", "zone euro", "Banque centrale européenne", Frexit]
     gdelt_themes: []
     ina_rubrics: {fit: none, rubrics: []}
     notes: >-
       Pas de thème GKG dédié à l'Union européenne dans la table ; pas de rubrique INA (sujets
       européens rangés en « International » ou « Politique France »).
   international:
-    keywords: [Ukraine, Russie, Poutine, "Proche-Orient", Gaza, Israël, "États-Unis", Trump, Chine, diplomatie, guerre]
+    keywords: [Ukraine, Russie, Poutine, "Proche-Orient", Gaza, Israël, Syrie, "Etats-Unis", "États-Unis", Trump, diplomatie]
     gdelt_themes: []
     ina_rubrics: {fit: direct, rubrics: [International]}
   institutions:
-    keywords: [Assemblée nationale, Sénat, "49.3", dissolution, "motion de censure", Constitution, référendum, "Conseil constitutionnel", "Premier ministre", gouvernement, remaniement]
+    keywords: ["49.3", dissolution, "motion de censure", "Conseil constitutionnel", référendum, remaniement, "réforme constitutionnelle", "VIe République", proportionnelle, "cohabitation"]
     gdelt_themes: [CONSTITUTIONAL, LEGISLATION]
     ina_rubrics: {fit: partial, rubrics: [Politique France]}
     notes: >-
       « Politique France » couvre toute la vie politique nationale, campagne comprise : c'est
       un majorant de la saillance institutionnelle, pas une mesure.
   scandals:
-    keywords: [affaire, mise en examen, "emplois fictifs", corruption, "financement illégal", condamnation, inéligibilité, perquisition]
+    keywords: ["mise en examen", "mis en examen", "emplois fictifs", corruption, "financement illégal", inéligibilité, perquisition, "abus de biens sociaux", "détournement de fonds publics", "prise illégale d'intérêts"]
     gdelt_themes: [CORRUPTION, SCANDAL]
     ina_rubrics: {fit: partial, rubrics: [Justice]}
