@@ -214,6 +214,92 @@ def parse_jennings_wlezien(
             typer.echo(f"\n{title} :\n{error_summary(df=df, **kw)}")
 
 
+@ingest_app.command("press")
+def ingest_press(
+    source: str = typer.Option(..., help="gdelt, ina ou mediacloud"),
+    query: Annotated[
+        list[str] | None,
+        typer.Option("--query", help="query_id de press_queries.yaml (répétable ; candidats par défaut)"),
+    ] = None,
+    mode: str = typer.Option("timeline", help="gdelt : timeline ou artlist ; mediacloud : counts ou list"),
+    start: str = typer.Option(None, help="Début AAAA-MM-JJ (gdelt timeline : 2017-01-01 par défaut)"),
+    end: str = typer.Option(None, help="Fin incluse AAAA-MM-JJ (défaut : hier)"),
+    window_months: int = typer.Option(12, help="gdelt timeline : taille des fenêtres en mois"),
+    tone: bool = typer.Option(True, help="gdelt timeline : demander aussi timelinetone"),
+    coverage: str = typer.Option(None, help="mediacloud : années à mesurer, ex. 2012,2017,2022"),
+) -> None:
+    """Presse -> data/raw/press/<source> (cache immuable ; relancer reprend où on s'est arrêté)."""
+    from datetime import date, timedelta
+
+    from vvs.ingest.press.outlets import load_outlets, load_queries
+
+    queries = load_queries()
+    qids = query or list(queries.candidates)
+    d0 = date.fromisoformat(start) if start else None
+    d1 = date.fromisoformat(end) if end else date.today() - timedelta(days=1)
+    if source == "ina":
+        from vvs.ingest.press import ina
+
+        path, status = ina.ingest()
+        typer.echo(f"{status} : {path}")
+    elif source == "gdelt":
+        from vvs.ingest.press import gdelt
+
+        if mode == "timeline":
+            modes = gdelt.TIMELINE_MODES if tone else ("timelinevolraw",)
+            stats = gdelt.ingest_timelines(
+                queries, qids, modes, d0, d1, window_months=window_months, log=typer.echo
+            )
+        elif mode == "artlist":
+            if d0 is None or end is None:
+                raise typer.BadParameter("artlist exige --start et --end (fenêtres ciblées)")
+            stats = gdelt.ingest_articles(queries, qids, d0, d1, log=typer.echo)
+        else:
+            raise typer.BadParameter(f"mode gdelt inconnu : {mode}")
+        typer.echo(stats.summary())
+        if stats.failed or stats.rate_limited:
+            raise typer.Exit(code=1)
+    elif source == "mediacloud":
+        from vvs.ingest.press import mediacloud as mc
+
+        try:
+            client = mc.MediaCloudClient(log=typer.echo)
+        except mc.MediaCloudKeyMissing as e:
+            typer.echo(str(e), err=True)
+            raise typer.Exit(code=2) from None
+        if coverage:
+            years = [int(y) for y in coverage.split(",")]
+            df = mc.measure_coverage(years, client=client, outlets=load_outlets())
+            typer.echo(f"écrit : {mc.write_coverage(df)} ({df.height} lignes)")
+        elif mode == "counts":
+            for qid in qids:
+                q = queries.all_queries()[qid]
+                df = mc.daily_counts(client, q, d0 or date(d1.year, 1, 1), d1)
+                typer.echo(f"{qid} : {df['count'].sum()} titres sur {df.height} jours")
+        elif mode == "list":
+            if d0 is None:
+                raise typer.BadParameter("list exige --start")
+            n = mc.ingest_story_lists(queries, qids, d0, d1, client=client, log=typer.echo)
+            typer.echo(f"{n} titres listés")
+        else:
+            raise typer.BadParameter(f"mode mediacloud inconnu : {mode}")
+    else:
+        raise typer.BadParameter(f"source inconnue : {source}")
+
+
+@parse_app.command("press")
+def parse_press(
+    source: Annotated[
+        list[str] | None,
+        typer.Option("--source", help="gdelt, ina, mediacloud (répétable ; toutes par défaut)"),
+    ] = None,
+) -> None:
+    """data/raw/press -> press_timelines, press_ina et press_items (data/curated)."""
+    from vvs.ingest.press import parse_all
+
+    typer.echo(parse_all(source or None).summary())
+
+
 @app.command("fit")
 def fit_cmd(
     election: int = typer.Option(..., help="Année de l'élection (ex. 2022)"),
@@ -265,6 +351,67 @@ def fit_cmd(
         )
     if d["dropped_candidates"]:
         typer.echo(f"candidats hors registre ignorés : {d['dropped_candidates']}", err=True)
+    typer.echo(f"écrit : {out_dir}")
+
+
+@app.command("backtest")
+def backtest_cmd(
+    elections: str = typer.Option("2012,2017,2022", help="Élections, séparées par des virgules"),
+    horizons: str = typer.Option("180,90,30,7", help="Horizons en jours avant le premier tour"),
+    draws: int = typer.Option(10_000, help="Tirages de parts au jour du vote"),
+    jobs: int = typer.Option(3, help="Ajustements en parallèle (4 chaînes chacun)"),
+    out: str = typer.Option(None, help="Dossier de sortie (défaut runs/<aujourd'hui>-backtest)"),
+    variant: str = typer.Option("floor", help="Variante du modèle (vvs.eval.backtest.VARIANTS)"),
+    stage: str = typer.Option("all", help="fit, score ou all"),
+    method: str = typer.Option("nuts", help="nuts ou svi (essais rapides)"),
+    warmup: int = typer.Option(500, help="Chauffe NUTS par chaîne"),
+    samples: int = typer.Option(500, help="Tirages NUTS conservés par chaîne"),
+) -> None:
+    """Backtest du premier tour (docs/07-evaluation.md) -> runs/<date>-backtest/."""
+    from pathlib import Path
+
+    from vvs.eval import backtest as bt
+
+    out_dir = Path(out) if out else bt.default_out()
+    els = [int(x) for x in elections.split(",") if x]
+    hs = [int(x) for x in horizons.split(",") if x]
+    if stage in ("fit", "all"):
+        plan = bt.plan_fits(out_dir, els, hs, variant)
+        settings = bt.FitSettings(method=method, warmup=warmup, samples=samples)
+        failed = bt.run_fits(plan, out_dir, settings, n_parallel=jobs)
+        if failed:
+            typer.echo(f"{len(failed)} ajustements en échec (voir {out_dir}/backtest.log)", err=True)
+    if stage in ("score", "all"):
+        res = bt.score(out_dir, els, hs, variant=variant, n_draws=draws)
+        typer.echo(res.summary())
+    typer.echo(f"écrit : {out_dir}")
+
+
+@app.command("second-round")
+def second_round_cmd(
+    asof: str = typer.Option(..., help="Date de prévision AAAA-MM-JJ (sondages terminés à cette date)"),
+    election: int = typer.Option(2027, help="Année de l'élection"),
+    horizon: int = typer.Option(None, help="Jours avant le premier tour (défaut : premier tour − asof)"),
+    n: int = typer.Option(10000, help="Tirages par paire"),
+    seed: int = typer.Option(0, help="Graine"),
+    out: str = typer.Option(None, help="Dossier de sortie (défaut runs/<aujourd'hui>-second-round-<élection>)"),
+) -> None:
+    """Second tour par reports de voix (docs/04-modele.md §4) pour chaque paire testée -> runs/…"""
+    from datetime import date
+    from pathlib import Path
+
+    from vvs import paths
+    from vvs.model.second_round import forecast, write_forecast
+
+    out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-second-round-{election}"
+    pairs, transfers = forecast(election, date.fromisoformat(asof), horizon=horizon, n=n, seed=seed)
+    write_forecast(pairs, transfers, out_dir)
+    for r in pairs.sort("p_i_wins", descending=True).iter_rows(named=True):
+        typer.echo(
+            f"{r['candidate_i']:>20s} – {r['candidate_j']:<20s} {r['median']:5.1f} "
+            f"[{r['q05']:4.1f}–{r['q95']:4.1f}]  P={r['p_i_wins']:.2f}  sondages {r['n_polls']}"
+            + ("  (inédit)" if r["inedit"] else "")
+        )
     typer.echo(f"écrit : {out_dir}")
 
 
