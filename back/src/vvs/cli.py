@@ -159,5 +159,31 @@ def parse_macro(
                 typer.echo(f"  PDF {p['month']} {p['mode']:7s} {p['sponsor']:12s} tableaux {p['n_table']:4d} titre {p['n_headline']} {p['file']}")
     typer.echo(f"écrit : {paths.CURATED / OUTPUT_NAME} ({df.height} lignes)")
 
+
+@ingest_app.command("mieuxvoter")
+def ingest_mieuxvoter() -> None:
+    """Dépôt MieuxVoter/presidentielle2027 (JSON + polls.csv) -> data/raw/mieuxvoter/<date>.*"""
+    from vvs.ingest.mieuxvoter import ingest
+
+    path, written = ingest()
+    typer.echo(f"{'écrit' if written else 'déjà présent (non réécrit)'} : {path}")
+
+
+@parse_app.command("mieuxvoter")
+def parse_mieuxvoter(
+    compare: bool = typer.Option(False, "--compare", help="Contrôle croisé avec Wikipédia 2027"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Détail du contrôle croisé"),
+) -> None:
+    """Dernier instantané MieuxVoter -> polls_mieuxvoter.parquet et poll_results_mieuxvoter.parquet."""
+    from vvs.ingest.mieuxvoter import compare_with_wikipedia, run
+
+    polls_path, results_path, report = run()
+    typer.echo(report.summary())
+    typer.echo(f"écrit : {polls_path}")
+    typer.echo(f"écrit : {results_path}")
+    if compare:
+        typer.echo(compare_with_wikipedia().summary(verbose=verbose))
+
+
 if __name__ == "__main__":
     app()

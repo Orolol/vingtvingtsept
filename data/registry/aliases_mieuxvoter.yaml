@@ -1,0 +1,63 @@
+# Alias des libellés de la source MieuxVoter/presidentielle2027 -> ids du registre.
+#
+# Lu par vvs.ingest.mieuxvoter.load_aliases. Les clés sont comparées après normalisation
+# (ASCII minuscule, tirets et apostrophes en espaces, comme pour aliases_wikipedia.yaml) :
+# « Jean-Luc Mélenchon » et « jean luc melenchon » sont la même clé.
+# Un libellé absent fait échouer le parsing : on complète ce fichier, on ne devine pas.
+#
+# candidates : champ `candidat` du JSON (prénom nom, tel que dans candidats.csv du dépôt).
+#   Convention d'id (data/registry/README.md) : nom_prenom ASCII, particule conservée
+#   (de_villepin_dominique, de_villiers_philippe). Le parseur vérifie en plus que l'id vaut
+#   candidate_id_for(surname, name) avec les champs du JSON : une erreur de table ou un
+#   changement de personne derrière un libellé fait échouer le parsing.
+#
+# pollsters : champ `institut` du JSON -> id court de pollsters.yaml. Le commanditaire est
+#   un champ séparé (`commanditaire`) dans cette source, jamais accolé à l'institut.
+#   « Ipsos BVA » : Ipsos depuis l'absorption de BVA en 2024 (voir pollsters.yaml).
+
+candidates:
+  Bruno Le Maire: le_maire_bruno
+  Bruno Retailleau: retailleau_bruno
+  David Lisnard: lisnard_david
+  Dominique de Villepin: de_villepin_dominique
+  Édouard Philippe: philippe_edouard
+  Emmanuel Maurel: maurel_emmanuel
+  Éric Zemmour: zemmour_eric
+  Fabien Roussel: roussel_fabien
+  François Bayrou: bayrou_francois
+  François Hollande: hollande_francois
+  François Ruffin: ruffin_francois
+  Gabriel Attal: attal_gabriel
+  Gérald Darmanin: darmanin_gerald
+  Jean Lassalle: lassalle_jean
+  Jean-Luc Mélenchon: melenchon_jean_luc
+  Jérôme Guedj: guedj_jerome
+  Jordan Bardella: bardella_jordan
+  Karim Bouamrane: bouamrane_karim
+  Laurent Wauquiez: wauquiez_laurent
+  Marine Le Pen: le_pen_marine
+  Marine Tondelier: tondelier_marine
+  Michel Barnier: barnier_michel
+  Nathalie Arthaud: arthaud_nathalie
+  Nicolas Dupont-Aignan: dupont_aignan_nicolas
+  Olivier Faure: faure_olivier
+  Philippe de Villiers: de_villiers_philippe
+  Philippe Poutou: poutou_philippe
+  Raphaël Glucksmann: glucksmann_raphael
+  Sandrine Rousseau: rousseau_sandrine
+  Sarah Knafo: knafo_sarah
+  Sébastien Bonnal: bonnal_sebastien
+  Sébastien Lecornu: lecornu_sebastien
+  Ségolène Royal: royal_segolene
+  Xavier Bertrand: bertrand_xavier
+
+pollsters:
+  Cluster17: cluster17
+  ELABE: elabe
+  Harris Interactive: harris
+  IFOP: ifop
+  Ipsos BVA: ipsos
+  ODOXA: odoxa
+  OpinionWay: opinionway
+  Verian: verian
+  YouGov: yougov
