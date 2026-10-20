@@ -8,6 +8,9 @@ Usage :
 `html` est un HTML brut stocké par `common.store_raw` (avec son en-tête vvs). Ajouter une
 élection : écrire `e<AAAA>.py` avec une sous-classe de `engine.PageAdapter`, l'enregistrer
 dans `ADAPTERS`, compléter `data/registry/aliases_wikipedia.yaml`.
+
+Scrutins de liste et législatives (européennes 2014-2024, législatives 2022-2024) : module
+`scrutins` (élection en texte, entités = listes de `data/registry/lists.yaml`).
 """
 
 from __future__ import annotations

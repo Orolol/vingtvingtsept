@@ -322,6 +322,13 @@ class PageAdapter:
     results_row_pattern: str = r"resultat|\d+ ?(er|e|nd) tour\b"
     # Bornes de la somme des parts exprimées d'une hypothèse ; None désactive le contrôle.
     share_sum_bounds: tuple[float, float] | None = (95.0, 105.0)
+    # Schéma et validation de la table `polls` produite (les scrutins de liste ont une
+    # `election` texte, voir `scrutins.py`).
+    polls_schema: ClassVar[pl.Schema] = schemas.POLLS_SCHEMA
+
+    @classmethod
+    def validate_polls(cls, df: pl.DataFrame) -> pl.DataFrame:
+        return schemas.validate_polls(df)
 
     # --- classement des tableaux -------------------------------------------
 
@@ -688,9 +695,9 @@ def build_frames(
                             "raw_share": None,
                         }
                     )
-    polls_df = pl.DataFrame(poll_rows, schema=schemas.POLLS_SCHEMA)
+    polls_df = pl.DataFrame(poll_rows, schema=adapter.polls_schema)
     results_df = pl.DataFrame(result_rows, schema=schemas.POLL_RESULTS_SCHEMA)
-    polls_df = schemas.validate_polls(polls_df.sort("fieldwork_end", "poll_id"))
+    polls_df = adapter.validate_polls(polls_df.sort("fieldwork_end", "poll_id"))
     results_df = schemas.validate_poll_results(results_df)
     report.counters["sondages"] = polls_df.height
     report.counters["lignes poll_results"] = results_df.height

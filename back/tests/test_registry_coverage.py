@@ -12,7 +12,8 @@ from vvs.ingest.commission.aliases import POLLSTER_ALIASES as COMMISSION_POLLSTE
 from vvs.registry import default_registry
 
 # polls.parquet (fusion) et polls_<source>[_<élection>].parquet
-POLL_TABLES = sorted(paths.CURATED.glob("polls*.parquet"))
+# polls_lists.parquet (scrutins de liste : élections en texte, ids de listes) est couvert par test_wikipedia_lists
+POLL_TABLES = sorted(p for p in paths.CURATED.glob("polls*.parquet") if p.name != "polls_lists.parquet")
 
 
 def _results_path(polls_path):

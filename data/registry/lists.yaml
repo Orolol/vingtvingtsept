@@ -1,0 +1,858 @@
+# Listes (européennes) et nuances ou coalitions (législatives), par scrutin.
+#
+# Sert à rattacher les sondages Wikipédia (`vvs.ingest.wikipedia.scrutins`) et les résultats
+# nationaux du ministère (`results_lists_<scrutin>.parquet`) à un identifiant stable
+# `list_id`, puis à un bloc (`vvs.curate.lists`). Validé par `vvs.curate.lists.load_lists` :
+#
+# - `label` : libellé officiel de la liste (européennes) ou de la coalition (législatives) ;
+#   `head` : tête de liste nationale quand il y en a une (null aux législatives et en 2014,
+#   où les listes sont régionales) ;
+# - `parties` : ids de parties.yaml (partis ou nuances) ;
+# - `bloc` : déduit des partis quand ils sont tous du même bloc ; sinon (alliances) un bloc
+#   dominant, obligatoirement accompagné d'une `note` qui le justifie ; un bloc donné qui
+#   diffère du bloc des partis exige aussi une note ;
+# - `aliases.results` : libellés du ministère (colonne `label`) agrégés dans cette unité. Une
+#   entrée qui en a est une « unité de résultat » : l'erreur des sondages se mesure sur ces
+#   unités, qui forment une partition des suffrages exprimés. Un libellé du ministère absent
+#   d'ici fait échouer la curation ;
+# - `aliases.wikipedia` : en-têtes de colonnes et noms en cellule des pages de sondages
+#   (comparés après `normalize_label` et retrait des parenthèses : « UDC ( LR - UDI ) » se
+#   lit « udc ») ;
+# - `group` : composante sondée à part d'une unité de résultat (Ciotti dans « RN et alliés »,
+#   Agir dans Renaissance) : ses parts s'ajoutent à l'unité pour le calcul des erreurs, et une
+#   cellule de sondage fusionnée sur plusieurs composantes d'un même groupe vaut pour le
+#   groupe ;
+# - ni `results` ni `group` : liste ou parti testé dans des hypothèses qui n'ont pas eu lieu
+#   (liste Lassalle 2019, partis de gauche séparés en 2024) : gardé dans les sondages, compté
+#   comme candidat en trop dans les erreurs (`config_distance`), comme pour les présidentielles ;
+# - `residual: true` : unité « divers » de l'élection ; elle reçoit les petites listes sans
+#   colonne dans les sondages et, côté sondages, la colonne « Autres » (id réservé `other`).
+#
+# Sources des rattachements : résultats du ministère (results_lists_*.parquet) et lignes
+# « Résultats » des pages Wikipédia, qui donnent la correspondance colonne -> score.
+
+elections:
+  # -------------------------------------------------------------------------------------
+  euro2014:
+    fn_2014:
+      label: Liste Front National
+      parties: [fn]
+      aliases:
+        wikipedia: [FN]
+        results: [Liste Front National]
+    ump_2014:
+      label: Liste Union pour un Mouvement Populaire
+      parties: [ump]
+      aliases:
+        wikipedia: [UMP]
+        results: [Liste Union pour un Mouvement Populaire]
+    ps_prg_2014:
+      label: Choisir notre Europe (Liste Union de la Gauche)
+      parties: [ps, prg]
+      aliases:
+        wikipedia: [PS, PRG]
+        results: [Liste Union de la Gauche]
+    udi_modem_2014:
+      label: UDI-MoDem Les Européens (Liste Union du Centre)
+      parties: [udi, modem]
+      bloc: centre
+      note: >-
+        Alliance UDI-MoDem « L'Alternative » hors des deux camps de gouvernement en 2014 :
+        centre, comme Bayrou 2007-2012 ; l'UDI seule serait à droite (parties.yaml).
+      aliases:
+        results: [Liste Union du Centre]
+    modem_2014:
+      label: MoDem (composante de la liste UDI-MoDem)
+      parties: [modem]
+      group: udi_modem_2014
+      aliases:
+        wikipedia: [MoDem]
+    udi_2014:
+      label: UDI (composante de la liste UDI-MoDem)
+      parties: [udi]
+      group: udi_modem_2014
+      aliases:
+        wikipedia: [UDI]
+    eelv_2014:
+      label: Europe Écologie
+      parties: [eelv]
+      aliases:
+        wikipedia: [EELV]
+        results: [Liste Europe-Ecologie-Les Verts]
+    fg_2014:
+      label: Front de gauche
+      parties: [fdg]
+      aliases:
+        wikipedia: [FG]
+        results: [Liste Front de Gauche]
+    exg_2014:
+      label: Extrême gauche (LO, NPA)
+      parties: [lo, npa]
+      aliases:
+        results: [Liste Extrême gauche]
+    lo_2014:
+      label: Lutte ouvrière
+      parties: [lo]
+      group: exg_2014
+      aliases:
+        wikipedia: [LO]
+    npa_2014:
+      label: Nouveau Parti anticapitaliste
+      parties: [npa]
+      group: exg_2014
+      aliases:
+        wikipedia: [NPA]
+    dvd_2014:
+      label: Divers droite (DLR, Nous Citoyens, PCD)
+      parties: [dlr, dvd, pcd]
+      bloc: far_right
+      note: >-
+        Le ministère n'a qu'une nuance LDVD (5,98 %) pour Debout la République (3,82), Nous
+        Citoyens (1,41) et Force Vie du PCD (0,74) : bloc dominant extrême droite (DLR,
+        blocs.yaml), les 2,2 points de droite y sont rangés aussi des deux côtés.
+      aliases:
+        results: [Liste Divers droite]
+    dlr_2014:
+      label: Debout la République
+      parties: [dlr]
+      group: dvd_2014
+      aliases:
+        wikipedia: [DLR]
+    nc_2014:
+      label: Nous Citoyens
+      parties: [dvd]
+      group: dvd_2014
+      note: Parti de Denis Payre, absent de parties.yaml ; nuance divers droite.
+      aliases:
+        wikipedia: [NC]
+    pcd_2014:
+      label: Force Vie (PCD)
+      parties: [pcd]
+      group: dvd_2014
+      aliases:
+        wikipedia: [PCD]
+    divers_2014:
+      label: Divers (LDIV, LDVG, LEXD)
+      parties: [div]
+      residual: true
+      note: >-
+        Nouvelle Donne (2,90) et Cap21 (0,67) sont rangées par le ministère dans LDIV ou LDVG
+        sans qu'on puisse les séparer : elles sont des composantes de l'unité résiduelle, bloc
+        autres, et non de la gauche ou du centre.
+      aliases:
+        results: [Liste Divers, Liste Divers gauche, Liste Extrême droite]
+    nd_2014:
+      label: Nouvelle Donne
+      parties: [nouvelle_donne]
+      group: divers_2014
+      aliases:
+        wikipedia: [ND]
+    cap21_2014:
+      label: Cap21 (Europe citoyenne)
+      parties: [cap21]
+      group: divers_2014
+      aliases:
+        wikipedia: [Cap21]
+
+  # -------------------------------------------------------------------------------------
+  euro2019:
+    rn_2019:
+      label: Prenez le pouvoir, liste soutenue par Marine Le Pen
+      head: Jordan Bardella
+      parties: [rn]
+      aliases:
+        wikipedia: [RN, FN/RN]
+        results: ["PRENEZ LE POUVOIR, LISTE SOUTENUE PAR MARINE LE PEN"]
+    lrem_2019:
+      label: Renaissance soutenue par La République en marche, le MoDem et ses partenaires
+      head: Nathalie Loiseau
+      parties: [lrem, modem, dvc]
+      note: Agir et le Mouvement radical sont classés divers centre (absents de parties.yaml).
+      aliases:
+        wikipedia: [LREM - MoDem Agir - MR, LREM MoDem]
+        results: ["RENAISSANCE SOUTENUE PAR LA RÉPUBLIQUE EN MARCHE, LE MODEM ET SES PARTENAIRES"]
+    agir_2019:
+      label: Agir (composante de la liste Renaissance)
+      parties: [dvc]
+      group: lrem_2019
+      note: Testé à part avant le dépôt des listes, puis membre de la liste Renaissance.
+      aliases:
+        wikipedia: [Agir]
+    eelv_2019:
+      label: Europe Écologie
+      head: Yannick Jadot
+      parties: [eelv]
+      aliases:
+        wikipedia: [EELV, EELV AEI - RPS]
+        results: [EUROPE ÉCOLOGIE]
+    lr_2019:
+      label: Union de la droite et du centre
+      head: François-Xavier Bellamy
+      parties: [lr, nouveau_centre]
+      aliases:
+        wikipedia: [LR LC]
+        results: [UNION DE LA DROITE ET DU CENTRE]
+    lfi_2019:
+      label: La France insoumise
+      head: Manon Aubry
+      parties: [lfi]
+      aliases:
+        wikipedia: [FI]
+        results: [LA FRANCE INSOUMISE]
+    ps_2019:
+      label: Envie d'Europe écologique et sociale
+      head: Raphaël Glucksmann
+      parties: [ps, place_publique, nouvelle_donne, prg]
+      aliases:
+        wikipedia: [PP - PS ND - PRG, PP - PS ND]
+        results: [ENVIE D'EUROPE ÉCOLOGIQUE ET SOCIALE]
+    dlf_2019:
+      label: Le courage de défendre les Français avec Nicolas Dupont-Aignan
+      head: Nicolas Dupont-Aignan
+      parties: [dlf]
+      aliases:
+        wikipedia: [DLF]
+        results: [LE COURAGE DE DÉFENDRE LES FRANÇAIS AVEC NICOLAS DUPONT-AIGNAN. DEBOUT LA FRANCE ! - CNIP]
+    generation_s_2019:
+      label: Liste citoyenne du printemps européen avec Benoît Hamon
+      head: Benoît Hamon
+      parties: [generation_s]
+      aliases:
+        wikipedia: [G·s]
+        results: [LISTE CITOYENNE DU PRINTEMPS EUROPÉEN AVEC BENOÎT HAMON SOUTENUE PAR GÉNÉRATION.S ET DÈME-DIEM 25]
+    udi_2019:
+      label: Les Européens
+      head: Jean-Christophe Lagarde
+      parties: [udi]
+      aliases:
+        wikipedia: [UDI]
+        results: [LES EUROPÉENS]
+    pcf_2019:
+      label: Pour l'Europe des gens contre l'Europe de l'argent
+      head: Ian Brossat
+      parties: [pcf]
+      aliases:
+        wikipedia: [PCF]
+        results: [POUR L'EUROPE DES GENS CONTRE L'EUROPE DE L'ARGENT]
+    pa_2019:
+      label: Parti animaliste
+      head: Hélène Thouy
+      parties: [parti_animaliste]
+      aliases:
+        wikipedia: [PA]
+        results: [PARTI ANIMALISTE]
+    urgence_ecologie_2019:
+      label: Urgence écologie
+      head: Dominique Bourg
+      parties: [eco]
+      aliases:
+        wikipedia: [GÉ MEI - MDP]
+        results: [URGENCE ÉCOLOGIE]
+    upr_2019:
+      label: Ensemble pour le Frexit
+      head: François Asselineau
+      parties: [upr]
+      aliases:
+        wikipedia: [UPR]
+        results: [ENSEMBLE POUR LE FREXIT]
+    lo_2019:
+      label: Lutte ouvrière - contre le grand capital, le camp des travailleurs
+      head: Nathalie Arthaud
+      parties: [lo]
+      aliases:
+        wikipedia: [LO]
+        results: ["LUTTE OUVRIÈRE - CONTRE LE GRAND CAPITAL, LE CAMP DES TRAVAILLEURS"]
+    patriotes_2019:
+      label: Ensemble Patriotes et Gilets jaunes
+      head: Florian Philippot
+      parties: [exd]
+      note: Les Patriotes, absents de parties.yaml ; nuance divers extrême droite.
+      aliases:
+        wikipedia: [LP]
+        results: ["ENSEMBLE PATRIOTES ET GILETS JAUNES : POUR LA FRANCE, SORTONS DE L'UNION EUROPÉENNE !"]
+    alliance_jaune_2019:
+      label: Alliance jaune, la révolte par le vote
+      head: Francis Lalanne
+      parties: [div]
+      aliases:
+        wikipedia: [AJ]
+        results: ["ALLIANCE JAUNE, LA RÉVOLTE PAR LE VOTE"]
+    pirate_2019:
+      label: Parti pirate
+      parties: [div]
+      aliases:
+        wikipedia: [PP]
+        results: [PARTI PIRATE]
+    udmf_2019:
+      label: Une Europe au service des peuples (UDMF)
+      parties: [div]
+      aliases:
+        wikipedia: [UDMF]
+        results: [UNE EUROPE AU SERVICE DES PEUPLES]
+    pace_2019:
+      label: PACE - Parti des citoyens européens
+      parties: [div]
+      aliases:
+        wikipedia: [PACE]
+        results: [PACE - PARTI DES CITOYENS EUROPÉENS]
+    allons_enfants_2019:
+      label: Allons enfants
+      parties: [div]
+      aliases:
+        wikipedia: [AE]
+        results: [ALLONS ENFANTS]
+    prc_2019:
+      label: Parti révolutionnaire Communistes
+      parties: [exg]
+      aliases:
+        wikipedia: [PRC]
+        results: [PARTI RÉVOLUTIONNAIRE COMMUNISTES]
+    neutre_actif_2019:
+      label: Neutre et actif
+      parties: [div]
+      aliases:
+        wikipedia: [NA]
+        results: [NEUTRE ET ACTIF]
+    ligne_claire_2019:
+      label: La Ligne claire (SIEL, Parti de l'In-nocence)
+      parties: [exd]
+      aliases:
+        wikipedia: [SIEL PI]
+        results: [LA LIGNE CLAIRE]
+    npa_2019:
+      label: Nouveau Parti anticapitaliste (pas de liste)
+      parties: [npa]
+      note: Testé avant le dépôt des listes ; le NPA n'a pas présenté de liste.
+      aliases:
+        wikipedia: [NPA]
+    resistons_2019:
+      label: Résistons ! (pas de liste)
+      head: Jean Lassalle
+      parties: [resistons]
+      note: Liste Lassalle testée avant le dépôt, jamais déposée.
+      aliases:
+        wikipedia: [RES]
+    gilets_jaunes_2019:
+      label: Liste « gilets jaunes » générique (avant le dépôt)
+      parties: [div]
+      note: >-
+        Liste hypothétique testée de décembre 2018 à avril 2019, sans correspondance avec une
+        des listes déposées (Alliance jaune, Évolution citoyenne, Patriotes et gilets jaunes).
+      aliases:
+        wikipedia: [GJ]
+    divers_euro2019:
+      label: Autres listes
+      parties: [div]
+      residual: true
+      aliases:
+        results:
+          - "LES OUBLIÉS DE L'EUROPE - ARTISANS, COMMERÇANTS, PROFESSIONS LIBÉRALES ET INDÉPENDANTS - ACPLI -"
+          - "ESPÉRANTO - LANGUE COMMUNE ÉQUITABLE POUR L'EUROPE"
+          - PARTI FÉDÉRALISTE EUROPÉEN - POUR UNE EUROPE QUI PROTÈGE SES CITOYENS
+          - DÉCROISSANCE 2019
+          - À VOIX ÉGALES
+          - MOUVEMENT POUR L'INITIATIVE CITOYENNE
+          - UDLEF (UNION DÉMOCRATIQUE POUR LA LIBERTÉ ÉGALITÉ FRATERNITÉ)
+          - LISTE DE LA RECONQUÊTE
+          - UNE FRANCE ROYALE AU COEUR DE L'EUROPE
+          - DÉMOCRATIE REPRÉSENTATIVE
+          - ÉVOLUTION CITOYENNE
+
+  # -------------------------------------------------------------------------------------
+  euro2024:
+    rn_eu2024:
+      label: La France revient ! Avec Jordan Bardella et Marine Le Pen
+      head: Jordan Bardella
+      parties: [rn]
+      aliases:
+        wikipedia: [RN]
+        results: [LA FRANCE REVIENT ! AVEC JORDAN BARDELLA ET MARINE LE PEN]
+    ensemble_eu2024:
+      label: Besoin d'Europe
+      head: Valérie Hayer
+      parties: [renaissance, modem, horizons, udi]
+      bloc: centre
+      note: Liste de la majorité présidentielle, avec l'UDI (droite par défaut) en partenaire minoritaire.
+      aliases:
+        wikipedia: [ENS, Hayer]
+        results: [BESOIN D'EUROPE]
+    ensemble_alt_eu2024:
+      label: Liste de la majorité avec une autre tête de liste (hypothèse)
+      parties: [renaissance, modem, horizons]
+      note: >-
+        Hypothèses de 2023 et février 2024 nommant une autre tête de liste que Valérie Hayer :
+        liste sans unité de résultat, pour que l'hypothèse Hayer du même sondage soit celle
+        qui est retenue (et non écartée comme doublon).
+      aliases:
+        wikipedia: [Denormandie, Beaune, Le Maire, Séjourné, Breton]
+    ps_pp_eu2024:
+      label: Réveiller l'Europe
+      head: Raphaël Glucksmann
+      parties: [ps, place_publique]
+      aliases:
+        wikipedia: [PS - PP]
+        results: [RÉVEILLER L'EUROPE]
+    lfi_eu2024:
+      label: La France insoumise - Union populaire
+      head: Manon Aubry
+      parties: [lfi]
+      aliases:
+        wikipedia: [LFI]
+        results: [LA FRANCE INSOUMISE - UNION POPULAIRE]
+    lr_eu2024:
+      label: La droite pour faire entendre la voix de la France en Europe
+      head: François-Xavier Bellamy
+      parties: [lr]
+      aliases:
+        wikipedia: [LR]
+        results: [LA DROITE POUR FAIRE ENTENDRE LA VOIX DE LA FRANCE EN EUROPE]
+    eelv_eu2024:
+      label: Europe Écologie
+      head: Marie Toussaint
+      parties: [les_ecologistes]
+      aliases:
+        wikipedia: [EELV]
+        results: [EUROPE ÉCOLOGIE]
+    rec_eu2024:
+      label: La France fière, menée par Marion Maréchal et soutenue par Éric Zemmour
+      head: Marion Maréchal
+      parties: [reconquete]
+      aliases:
+        wikipedia: [REC]
+        results: ["LA FRANCE FIERE, MENEE PAR MARION MARECHAL ET SOUTENUE PAR ÉRIC ZEMMOUR"]
+    pcf_eu2024:
+      label: Gauche unie pour le monde du travail soutenue par Fabien Roussel
+      head: Léon Deffontaines
+      parties: [pcf]
+      aliases:
+        wikipedia: [PCF]
+        results: [GAUCHE UNIE POUR LE MONDE DU TRAVAIL SOUTENUE PAR FABIEN ROUSSEL]
+    alliance_rurale_eu2024:
+      label: Alliance rurale
+      head: Jean Lassalle
+      parties: [cpnt, resistons]
+      note: >-
+        Le ministère la nuance LDVD ; bloc autres par les partis (CPNT, Résistons), comme les
+        candidatures ruralistes des présidentielles (blocs.yaml).
+      aliases:
+        wikipedia: [AR]
+        results: [ALLIANCE RURALE]
+    resistons_eu2024:
+      label: Résistons ! (rallié à Alliance rurale)
+      parties: [resistons]
+      group: alliance_rurale_eu2024
+      note: >-
+        Testé à part de l'Alliance rurale avant le dépôt ; après le dépôt, la colonne « RES »
+        de Wikipédia porte le score d'Alliance rurale (2,35 % au résultat), d'où le regroupement.
+      aliases:
+        wikipedia: [RES]
+    pa_eu2024:
+      label: Parti animaliste - Les animaux comptent, votre voix aussi
+      head: Hélène Thouy
+      parties: [parti_animaliste]
+      aliases:
+        wikipedia: [PA]
+        results: ["PARTI ANIMALISTE - LES ANIMAUX COMPTENT, VOTRE VOIX AUSSI"]
+    eac_eu2024:
+      label: Écologie au centre
+      head: Jean-Marc Governatori
+      parties: [dvc]
+      note: Écologie centriste (nuance ministère LECO), classée au centre comme Cap21.
+      aliases:
+        wikipedia: [EAC]
+        results: [ÉCOLOGIE AU CENTRE]
+    upr_eu2024:
+      label: Liste Asselineau-Frexit, pour le pouvoir d'achat et pour la paix
+      head: François Asselineau
+      parties: [upr]
+      aliases:
+        wikipedia: [UPR]
+        results: ["LISTE ASSELINEAU-FREXIT, POUR LE POUVOIR D'ACHAT ET POUR LA PAIX"]
+    patriotes_eu2024:
+      label: L'Europe ça suffit !
+      head: Florian Philippot
+      parties: [exd]
+      note: Les Patriotes, absents de parties.yaml ; nuance divers extrême droite.
+      aliases:
+        wikipedia: [LP]
+        results: [L'EUROPE CA SUFFIT !]
+    exg_eu2024:
+      label: Extrême gauche (Lutte ouvrière, NPA-Révolutionnaires)
+      parties: [lo, exg]
+      note: >-
+        Unité de mesure : Ifop, Ipsos, Elabe et Cluster17 fusionnent LO et NPA dans une même
+        cellule dans leurs sondages d'avant le dépôt des listes.
+      aliases:
+        results:
+          - LUTTE OUVRIERE - LE CAMP DES TRAVAILLEURS
+          - "POUR UN MONDE SANS FRONTIERES NI PATRONS, URGENCE REVOLUTION !"
+    lo_eu2024:
+      label: Lutte ouvrière - le camp des travailleurs
+      head: Nathalie Arthaud
+      parties: [lo]
+      group: exg_eu2024
+      aliases:
+        wikipedia: [LO]
+    ep_eu2024:
+      label: Écologie positive et territoires
+      parties: [eco]
+      aliases:
+        wikipedia: [EP]
+        results: [ECOLOGIE POSITIVE ET TERRITOIRES]
+    prg_eu2024:
+      label: Europe territoires écologie
+      parties: [prg]
+      aliases:
+        wikipedia: [PRG - RPS, PRG]
+        results: [EUROPE TERRITOIRES ÉCOLOGIE]
+    npa_eu2024:
+      label: Pour un monde sans frontières ni patrons, urgence révolution !
+      parties: [exg]
+      group: exg_eu2024
+      note: NPA-Révolutionnaires, issu de la scission du NPA (2022) ; nuance extrême gauche.
+      aliases:
+        wikipedia: [NPA]
+    udmf_eu2024:
+      label: Free Palestine
+      parties: [div]
+      note: Liste de l'UDMF ; nuance divers (LDIV).
+      aliases:
+        wikipedia: [UDMF]
+        results: [FREE PALESTINE]
+    nd_eu2024:
+      label: Changer l'Europe
+      head: Pierre Larrouturou
+      parties: [nouvelle_donne]
+      aliases:
+        wikipedia: [ND]
+        results: [CHANGER L'EUROPE]
+    tem_ac_eu2024:
+      label: Territoires en mouvement - Alliance centriste (pas de liste)
+      parties: [dvc]
+      note: Testé avant le dépôt ; ces partis renoncent à une liste propre.
+      aliases:
+        wikipedia: [TEM - AC]
+    dlf_eu2024:
+      label: Debout la France (pas de liste)
+      parties: [dlf]
+      note: Debout la France renonce à présenter une liste (26 mars 2024).
+      aliases:
+        wikipedia: [DLF]
+    divers_euro2024:
+      label: Autres listes
+      parties: [div]
+      residual: true
+      aliases:
+        results:
+          - "ÉQUINOXE : ÉCOLOGIE PRATIQUE ET RENOUVEAU DÉMOCRATIQUE"
+          - PARTI PIRATE
+          - NOUS LE PEUPLE
+          - ESPERANTO LANGUE COMMUNE
+          - "PACE - PARTI DES CITOYENS EUROPÉENS, POUR L'ARMÉE EUROPÉENNE, POUR L'EUROPE SOCIALE , POUR LA PLANÈTE !"
+          - FRANCE LIBRE
+          - DEFENDRE LES ENFANTS
+          - "FORTERESSE EUROPE - LISTE D'UNITE NATIONALISTE"
+          - "\"POUR LE PAIN, LA PAIX, LA LIBERTÉ !\" PRÉSENTÉE PAR LE PARTI DES TRAVAILLEURS"
+          - LA RUCHE CITOYENNE
+          - PAIX ET DECROISSANCE
+          - POUR UNE AUTRE EUROPE
+          - "NON À L'UE ET À L'OTAN, COMMUNISTES POUR LA PAIX ET LE PROGRÈS SOCIAL"
+          - NON ! PRENONS-NOUS EN MAINS
+          - PARTI REVOLUTIONNAIRE COMMUNISTES
+          - "POUR UNE DEMOCRATIE REELLE : DECIDONS NOUS-MEMES !"
+          - POUR UNE HUMANITE SOUVERAINE
+          - LIBERTÉ DÉMOCRATIQUE FRANÇAISE
+          - DEMOCRATIE REPRESENTATIVE
+
+  # -------------------------------------------------------------------------------------
+  # Législatives : `label` = coalition ou nuance ; résultats par nuance du ministère.
+  leg2022:
+    exg_2022:
+      label: Extrême gauche (LO, NPA)
+      parties: [lo, npa]
+      aliases:
+        wikipedia: [LO - NPA]
+        results: [DXG]
+    nupes_2022:
+      label: Nouvelle Union populaire écologique et sociale (NUPES)
+      parties: [lfi, ps, eelv, pcf]
+      bloc: far_left
+      note: >-
+        Coalition menée par LFI (Mélenchon), avec PS et EELV (gauche) : bloc dominant gauche
+        radicale. Les blocs gauche et gauche radicale ne se comparent donc pas un à un avec
+        les présidentielles ; l'étude regarde aussi leur somme.
+      aliases:
+        wikipedia: [NUPES]
+        results: [NUP]
+    pcf_2022:
+      note: >-
+        Partis de la NUPES testés séparément (avant l'accord, ou en hypothèse alternative) :
+        pas de regroupement, ce n'est pas la configuration du vote ; une cellule fusionnée
+        sur les quatre colonnes vaut NUPES (en-tête commun).
+      label: PCF seul (hypothèse sans accord NUPES)
+      parties: [pcf]
+      aliases:
+        wikipedia: [NUPES PCF]
+    lfi_2022:
+      label: LFI seul (hypothèse sans accord NUPES)
+      parties: [lfi]
+      aliases:
+        wikipedia: [NUPES LFI]
+    eelv_2022:
+      label: EELV seul (hypothèse sans accord NUPES)
+      parties: [eelv]
+      aliases:
+        wikipedia: [NUPES EELV]
+    ps_2022:
+      label: PS seul (hypothèse sans accord NUPES)
+      parties: [ps]
+      aliases:
+        wikipedia: [NUPES PS]
+    dvg_2022:
+      label: Divers gauche et Fédération de la gauche républicaine (DVG, RDG)
+      parties: [dvg, prg]
+      aliases:
+        wikipedia: [DVG - FGR]
+        results: [DVG, RDG]
+    eco_2022:
+      label: Écologistes hors NUPES (ECO)
+      parties: [eco]
+      aliases:
+        wikipedia: [ECO]
+        results: [ECO]
+    pa_2022:
+      label: Parti animaliste
+      parties: [parti_animaliste]
+      note: >-
+        Le ministère n'a pas de nuance animaliste en 2022 et Wikipédia ne donne pas de
+        résultat PA (ses candidats sont dans ECO ou DIV, on ne sait pas lesquels) : liste
+        sondée sans unité de résultat, comptée comme candidat en trop.
+      aliases:
+        wikipedia: [PA]
+    dvc_2022:
+      label: Divers centre (DVC)
+      parties: [dvc]
+      aliases:
+        wikipedia: [DVC]
+        results: [DVC]
+    ensemble_2022:
+      label: Ensemble (LREM, MoDem, Horizons, Agir)
+      parties: [lrem, modem, horizons, dvc]
+      aliases:
+        wikipedia: [Ensemble]
+        results: [ENS]
+    udc_dvd_2022:
+      label: Union de la droite et du centre et divers droite (LR, UDI, DVD)
+      parties: [lr, udi, dvd]
+      note: >-
+        Unité de mesure : plusieurs instituts fusionnent UDC et DVD dans une même cellule.
+      aliases:
+        results: [LR, UDI, DVD]
+    udc_2022:
+      label: Union de la droite et du centre (LR, UDI)
+      parties: [lr, udi]
+      group: udc_dvd_2022
+      aliases:
+        wikipedia: [UDC]
+    dvd_2022:
+      label: Divers droite (DVD)
+      parties: [dvd]
+      group: udc_dvd_2022
+      aliases:
+        wikipedia: [DVD]
+    upf_2022:
+      label: Union pour la France (DLF, Les Patriotes) et divers extrême droite
+      parties: [dlf, exd]
+      note: Nuances DSV (droite souverainiste) et DXD (0,03 %) du ministère.
+      aliases:
+        wikipedia: [UPF, DSV, DSV - EXD]
+        results: [DSV, DXD]
+    rn_2022:
+      label: Rassemblement national
+      parties: [rn]
+      aliases:
+        wikipedia: [RN]
+        results: [RN]
+    rec_2022:
+      label: Reconquête
+      parties: [reconquete]
+      aliases:
+        wikipedia: [REC]
+        results: [REC]
+    reg_2022:
+      label: Régionalistes (REG)
+      parties: [div]
+      aliases:
+        wikipedia: [REG]
+        results: [REG]
+    div_2022:
+      label: Divers (DIV) et autres
+      parties: [div]
+      residual: true
+      aliases:
+        wikipedia: [DIV]
+        results: [DIV]
+    lmr_2022:
+      label: LMR (cité dans la colonne « Autres » de Cluster17)
+      parties: [div]
+      group: div_2022
+      note: Sigle non résolu (mouvement ruraliste ?) ; rangé dans l'unité divers.
+      aliases:
+        wikipedia: [LMR]
+
+  # -------------------------------------------------------------------------------------
+  leg2024:
+    exg_2024:
+      label: Extrême gauche (EXG)
+      parties: [lo, npa]
+      aliases:
+        wikipedia: [EXG]
+        results: [EXG]
+    nfp_2024:
+      label: Nouveau Front populaire (NFP)
+      parties: [lfi, ps, les_ecologistes, pcf]
+      bloc: far_left
+      note: >-
+        Coalition dont LFI présente le plus de candidats ; bloc dominant gauche radicale, comme
+        la NUPES. Résultats : nuance UG, plus les candidats de ses partis hors accord (FI, SOC,
+        COM, VEC, 0,15 % au total).
+      aliases:
+        wikipedia: [NFP]
+        results: [UG, FI, SOC, COM, VEC]
+    lfi_2024:
+      label: LFI seule (hypothèse de listes séparées)
+      parties: [lfi]
+      note: >-
+        Partis de gauche testés séparément avant l'accord (2022-2024) ou dans des hypothèses
+        de candidatures séparées ; pas de regroupement (ce n'est pas la configuration du vote).
+      aliases:
+        wikipedia: [NFP LFI]
+    pcf_2024:
+      label: PCF seul (hypothèse de listes séparées)
+      parties: [pcf]
+      aliases:
+        wikipedia: [NFP PCF]
+    eelv_2024:
+      label: Les Écologistes seuls (hypothèse de listes séparées)
+      parties: [les_ecologistes]
+      aliases:
+        wikipedia: [NFP EELV]
+    ps_2024:
+      label: PS seul (hypothèse de listes séparées)
+      parties: [ps]
+      aliases:
+        wikipedia: [NFP PS]
+    dvg_2024:
+      label: Divers gauche (DVG, RDG)
+      parties: [dvg, prg]
+      aliases:
+        wikipedia: [DVG]
+        results: [DVG, RDG]
+    eco_2024:
+      label: Écologistes hors NFP (ECO)
+      parties: [eco]
+      aliases:
+        wikipedia: [ECO]
+        results: [ECO]
+    dvc_2024:
+      label: Divers centre (DVC)
+      parties: [dvc]
+      aliases:
+        wikipedia: [DVC]
+        results: [DVC]
+    ensemble_2024:
+      label: Ensemble pour la République (RE, MoDem, Horizons, PRV, UDI)
+      parties: [renaissance, modem, horizons, udi]
+      bloc: centre
+      note: >-
+        Coalition présidentielle ; l'UDI (droite par défaut) y est partenaire minoritaire.
+        Résultats : nuance ENS plus HOR et UDI (0,72 et 0,51 %), nuancés à part par le
+        ministère ; certains instituts fusionnent la colonne UDI avec ENS, d'autres non.
+      aliases:
+        wikipedia: [ENS RE, ENS MoDem, ENS HOR, ENS PRV, ENS UDI]
+        results: [ENS, HOR, UDI]
+    lr_dvd_2024:
+      label: Les Républicains et divers droite (LR, DVD)
+      parties: [lr, dvd]
+      note: >-
+        Unité de mesure : Ipsos, Elabe et Ifop fusionnent LR et DVD dans une même cellule.
+      aliases:
+        results: [LR, DVD]
+    lr_2024:
+      label: Les Républicains (hors Ciotti)
+      parties: [lr]
+      group: lr_dvd_2024
+      aliases:
+        wikipedia: [LR]
+    dvd_2024:
+      label: Divers droite (DVD)
+      parties: [dvd]
+      group: lr_dvd_2024
+      aliases:
+        wikipedia: [DVD]
+    rn_allies_2024:
+      label: RN et alliés (RN, Union de l'extrême droite)
+      head: Jordan Bardella
+      parties: [rn, udr]
+      note: >-
+        Unité de mesure : Ifop, Elabe, OpinionWay et Odoxa ne séparent pas RN et ciottistes
+        (nuance UXD).
+      aliases:
+        wikipedia: [RN et alliés]
+        results: [RN, UXD]
+    rn_2024:
+      label: Rassemblement national
+      parties: [rn]
+      group: rn_allies_2024
+      aliases:
+        wikipedia: [RN et alliés RN]
+    uxd_2024:
+      label: LR ralliés à Éric Ciotti (UXD)
+      parties: [udr]
+      group: rn_allies_2024
+      aliases:
+        wikipedia: [RN et alliés LR ( Ciotti )]
+    upf_2024:
+      label: Union pour la France (DLF, Les Patriotes)
+      parties: [dlf, exd]
+      note: Nuance DSV (droite souverainiste) du ministère.
+      aliases:
+        wikipedia: [UPF]
+        results: [DSV]
+    rec_2024:
+      label: Reconquête
+      parties: [reconquete]
+      aliases:
+        wikipedia: [REC]
+        results: [REC]
+    divers_2024:
+      label: Divers, régionalistes et divers extrême droite (DIV, REG, EXD)
+      parties: [div]
+      residual: true
+      note: Pas de colonne pour ces nuances ; les EXD (0,19 %) sont rangés ici, bloc autres.
+      aliases:
+        results: [DIV, REG, EXD]
+
+# Libellés d'instituts propres à ces pages, en complément de la section `pollsters`
+# d'aliases_wikipedia.yaml (même format). Commanditaire entre parenthèses dans la cellule.
+pollsters:
+  fiducial: {pollster: ifop, sponsor: Fiducial}  # vague Ifop-Fiducial d'avril 2014, libellée « Fiducial »
+  opinonway: opinionway  # coquille de la page 2014
+  opinionway tilder: {pollster: opinionway, sponsor: Tilder}
+  harris interactive epoka: {pollster: harris, sponsor: Epoka}
+  harris interractive epoka: {pollster: harris, sponsor: Epoka}
+  ifop commande par pp: {pollster: ifop, sponsor: Place publique}
+  ipsos commande par lrem: {pollster: ipsos, sponsor: LREM}
+  viavoice commande par eelv: {pollster: viavoice, sponsor: EELV}
+  cluster 17 pour lfi: {pollster: cluster17, sponsor: LFI}
+  harris interactive pour eelv: {pollster: harris, sponsor: EELV}
+  viavoice: viavoice  # absent de la section pollsters d'aliases_wikipedia.yaml
+  stack data strategy: stackdata  # absent de pollsters.yaml (un sondage, février 2024)
+
+# Libellés reconnus qui ne désignent pas une liste unique, par scrutin : l'hypothèse est
+# écartée (journalisée). Européennes 2024, sondages de 2023 : « Royal » et « Toussaint »
+# conduisent des listes d'union sur plusieurs colonnes ; « Aubry » est tantôt la tête de
+# liste LFI (une colonne), tantôt celle d'une liste d'union (trois colonnes), et le moteur
+# rattache un nom à une liste sans regarder l'étendue de la cellule.
+ambiguous:
+  euro2024: [Royal, Toussaint, Aubry]
