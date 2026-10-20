@@ -150,3 +150,8 @@ chaque paire), trajectoire des probabilités au fil des runs.
   campagne ; à raffiner si le backtest montre une volatilité différente avant et après la
   clôture des candidatures.
 - Dérive `μ` nulle : les covariables arrivent par les études de `05` et `06`.
+- Le modèle état-espace est écrit à la main en numpyro. Une alternative à tester en
+  phase 3, en comparaison et non en remplacement : prévoir la trajectoire des agrégats par
+  bloc avec Timestral (séries temporelles de fondation, covariables admises), évaluée au
+  même backtest. Avec cinq élections, l'intérêt attendu est surtout la prolongation des
+  séries exogènes (`05`), pas la prévision du vote lui-même.

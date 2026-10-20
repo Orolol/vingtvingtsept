@@ -55,7 +55,12 @@ série et par mois).
 - Niveau : terme dans le prior structurel de `β_b` au début de la campagne.
 - Dynamique : dérive `μ_b(τ) = γ_b · x_t` dans la projection, où `x_t` sont les variations
   récentes des indicateurs. Prévoir les indicateurs eux-mêmes jusqu'au vote est une autre
-  incertitude, traitée en gardant `x_t` au dernier niveau connu.
+  incertitude : on la traite avec **Timestral** (Mistral, modèles de fondation de séries
+  temporelles sortis le 15 octobre 2026, 5M à 209M de paramètres, prévisions probabilistes
+  à 21 quantiles, covariables passées et futures, CPU suffisant, poids sur Hugging Face
+  sous licence MIT modifiée), choix de Gaétan. Les quantiles de Timestral sur chaque série
+  deviennent la distribution de `x_t` jusqu'au vote. Évaluation d'usage détaillée dans
+  `docs/notes/veille-2026-10-20.md`.
 - Admission selon `07-evaluation.md` : gain de log-score aux horizons 180 et 90 jours, en
   laissant chaque élection de côté. Si le gain est nul ou instable, la variable reste dans le
   tableau de bord explicatif du site et le résultat négatif est consigné ici.
