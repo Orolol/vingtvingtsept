@@ -36,7 +36,10 @@ pondération explicite. On publie le tableau complet, pas seulement la moyenne.
 Une variable (économique, presse, ou autre) entre dans la prévision si, et seulement si :
 
 1. elle améliore le log-score moyen sur les paires de qualifiés et le CRPS des parts aux
-   horizons 180 et 90 jours, en leave-one-election-out ;
+   horizons où elle agit par construction, en leave-one-election-out : 180 et 90 jours pour
+   une variable de niveau ou de dynamique longue (économie, presse, attention), 30 et 7 jours
+   pour un effet de fin de campagne (vote utile, rebond récent), et elle ne dégrade aucun
+   des autres horizons ;
 2. le gain est de même signe sur au moins deux des trois élections de référence ;
 3. elle ne dégrade pas la couverture des intervalles ;
 4. le mécanisme est plausible et documenté dans son fichier de spec.

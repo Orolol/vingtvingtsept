@@ -52,6 +52,14 @@ VARIANTS: dict[str, Priors] = {
     # leur choix, κ calibré sans l'élection ajustée (vvs.model.certainty) ; la mise à l'échelle
     # de v_c dans η se fait au score (studies/certainty_backtest.py)
     "certainty": Priors(n_max=2500.0, certainty=True),
+    # volatilité réalisée : mêmes ajustements que floor, écart type de η mis à l'échelle par
+    # (V / V_ref)^κ à la date de prévision, κ et η recalibrés sans l'élection évaluée
+    # (vvs.model.volatility, au score : studies/volatility.py)
+    "volatility": Priors(n_max=2500.0),
+    # vote utile de fin de campagne : mêmes ajustements que floor, dérive μ_c(τ) de
+    # consolidation d'un camp vers son leader ajoutée à la projection au score
+    # (vvs.model.consolidation.CONSOLIDATION_VARIANTS, studies/consolidation.py)
+    "consolidation": Priors(n_max=2500.0),
 }
 DEFAULT_VARIANT = "floor"
 DEFAULT_ELECTIONS = (2012, 2017, 2022)

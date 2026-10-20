@@ -33,7 +33,7 @@ from vvs.eval.backtest import ELECTION_WEIGHT, asof_for, fit_dir
 from vvs.eval.baselines import last_by_pollster, poll_mean
 from vvs.eval.configurations import official_map
 from vvs.model.data import load_polls
-from vvs.model.bounce import variant_drift
+from vvs.model.consolidation import variant_drift  # rebonds et consolidation
 from vvs.model.error import ErrorModel
 from vvs.model.run import draws_log_shares
 from vvs.registry import BLOCS, Registry, default_registry
@@ -318,7 +318,8 @@ def score_backtest(
                 case = score_case(
                     draws_log_shares(dr, K, "asof"), draws_log_shares(dr, K, "vote"), K, kblocs,
                     h, em, omap, off, points, rng, n_draws,
-                    drift=variant_drift(v, e, asof, h, K, n_draws, seed, reg),
+                    drift=variant_drift(v, e, asof, h, K, n_draws, seed, reg,
+                                        log_shares=draws_log_shares(dr, K, "asof")),
                 )
                 key = {"election": e, "horizon": h, "variant": v}
                 m_rows, f_rows, c_rows = case_rows(case, key)
