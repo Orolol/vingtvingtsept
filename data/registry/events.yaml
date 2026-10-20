@@ -1,0 +1,379 @@
+# Événements de campagne : primaires et désignations, déclarations de candidature, retraits,
+# chocs. Entrée de l'étude des rebonds (back/studies/bounce.py) et de la dérive μ de rebond
+# (back/src/vvs/model/bounce.py, option désactivée par défaut). Validé par
+# `vvs.model.bounce.load_events` (types, dates, candidats et blocs du registre).
+#
+# Champs :
+# - `id` : identifiant stable ; `election` : présidentielle concernée ;
+# - `type` : `primary` (primaire ou désignation par un parti, le candidat est le vainqueur),
+#   `declaration` (déclaration de candidature), `withdrawal` (retrait ou renoncement, le
+#   candidat est celui qui se retire), `shock` (affaire, ralliement, meeting raté…) ;
+# - `date` : jour de l'événement (résultat du dernier tour pour une primaire) ;
+# - `first_round` (primaires à deux tours) : résultat du premier tour ; le niveau d'avant
+#   s'arrête là, les sondages de l'entre-deux-tours sont écartés ;
+# - `candidate` : candidate_id du registre ; `bloc` : bloc du candidat à cette élection
+#   (vérifié contre `Registry.bloc_of`) ;
+# - `sign` (chocs seulement) : effet attendu sur le candidat, +1 ou −1 ;
+# - `beneficiaries` (retraits, ralliements) : candidats qui récupèrent l'électorat ;
+# - `new_entrant` : première candidature présidentielle sous une étiquette ou un parti
+#   nouveau (Montalvo et al. 2019) ;
+# - `sources` : pages consultées le 2026-10-20 (les dates 2026 viennent aussi de
+#   docs/notes/veille-2026-10-20.md) ; `note` : réserves.
+#
+# Dates vérifiées le 2026-10-20 sur les pages citées. Les sondages sont rares avant les six
+# derniers mois de chaque campagne : plusieurs événements anciens n'ont qu'un ou deux
+# sondages dans la fenêtre de l'étude (signalé par l'étude, pas ici).
+
+events:
+  # --- 2007
+  - id: ps_primary_2006
+    election: 2007
+    type: primary
+    date: 2006-11-16
+    candidate: royal_segolene
+    bloc: left
+    note: Vote des militants PS, 60,60 % ; investiture à la Mutualité le 26 novembre.
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2007]
+  - id: sarkozy_declaration_2006
+    election: 2007
+    type: declaration
+    date: 2006-11-29
+    candidate: sarkozy_nicolas
+    bloc: right
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2007]
+  - id: bayrou_declaration_2006
+    election: 2007
+    type: declaration
+    date: 2006-12-02
+    candidate: bayrou_francois
+    bloc: centre
+    new_entrant: true
+    note: >-
+      Troisième candidature de Bayrou, mais la première en centre autonome (UDF hors de la
+      droite) ; traité comme nouvel entrant pour l'étude Montalvo, avec cette réserve.
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2007]
+  - id: ump_designation_2007
+    election: 2007
+    type: primary
+    date: 2007-01-14
+    candidate: sarkozy_nicolas
+    bloc: right
+    note: Désignation sans concurrent par les adhérents UMP (98,1 %).
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2007]
+  - id: hulot_withdrawal_2007
+    election: 2007
+    type: withdrawal
+    date: 2007-01-22
+    candidate: hulot_nicolas
+    bloc: left
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2007]
+
+  # --- 2012
+  - id: dsk_arrest_2011
+    election: 2012
+    type: shock
+    date: 2011-05-14
+    candidate: strauss_kahn_dominique
+    bloc: left
+    sign: -1
+    beneficiaries: [hollande_francois, aubry_martine]
+    note: Arrestation à New York ; quasiment aucun sondage de premier tour autour de la date.
+    sources: [https://fr.wikipedia.org/wiki/Affaire_Dominique_Strauss-Kahn]
+  - id: ps_primary_2011
+    election: 2012
+    type: primary
+    date: 2011-10-16
+    first_round: 2011-10-09
+    candidate: hollande_francois
+    bloc: left
+    note: Primaire citoyenne ouverte, tours les 9 et 16 octobre 2011 (56,57 % au second).
+    sources: [https://fr.wikipedia.org/wiki/Primaire_citoyenne_de_2011]
+  - id: sarkozy_declaration_2012
+    election: 2012
+    type: declaration
+    date: 2012-02-15
+    candidate: sarkozy_nicolas
+    bloc: right
+    sources:
+      - https://www.rtbf.be/article/presidentielle-en-france-nicolas-sarkozy-officiellement-candidat-7579893
+      - https://www.slate.fr/story/49807/france-nicolas-sarkozy-dates-candidature-saga
+
+  # --- 2017
+  - id: melenchon_declaration_2016
+    election: 2017
+    type: declaration
+    date: 2016-02-10
+    candidate: melenchon_jean_luc
+    bloc: far_left
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2017]
+  - id: macron_declaration_2016
+    election: 2017
+    type: declaration
+    date: 2016-11-16
+    candidate: macron_emmanuel
+    bloc: centre
+    new_entrant: true
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2017]
+  - id: lr_primary_2016
+    election: 2017
+    type: primary
+    date: 2016-11-27
+    first_round: 2016-11-20
+    candidate: fillon_francois
+    bloc: right
+    note: Primaire ouverte de la droite et du centre, tours les 20 et 27 novembre 2016 (66,49 %).
+    sources: [https://fr.wikipedia.org/wiki/Primaire_fran%C3%A7aise_de_la_droite_et_du_centre_de_2016]
+  - id: hollande_withdrawal_2016
+    election: 2017
+    type: withdrawal
+    date: 2016-12-01
+    candidate: hollande_francois
+    bloc: left
+    beneficiaries: [valls_manuel, macron_emmanuel, melenchon_jean_luc]
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2017]
+  - id: valls_declaration_2016
+    election: 2017
+    type: declaration
+    date: 2016-12-05
+    candidate: valls_manuel
+    bloc: left
+    sources: [https://fr.le360.ma/monde/video-presidentielle-francaise-valls-annonce-sa-candidature-et-quitte-matignon-98441/]
+  - id: fillon_affair_2017
+    election: 2017
+    type: shock
+    date: 2017-01-25
+    candidate: fillon_francois
+    bloc: right
+    sign: -1
+    note: Premier article du Canard enchaîné (annoncé le 24 au soir) ; mise en examen le 14 mars.
+    sources: [https://fr.wikipedia.org/wiki/Affaire_Fillon]
+  - id: ps_primary_2017
+    election: 2017
+    type: primary
+    date: 2017-01-29
+    first_round: 2017-01-22
+    candidate: hamon_benoit
+    bloc: left
+    new_entrant: true
+    note: >-
+      Primaire de la Belle Alliance populaire, tours les 22 et 29 janvier 2017 (58,69 %).
+      Nouvel entrant comme candidat (première candidature), pas comme parti.
+    sources: [https://fr.wikipedia.org/wiki/Primaire_citoyenne_de_2017]
+  - id: bayrou_rally_2017
+    election: 2017
+    type: shock
+    date: 2017-02-22
+    candidate: macron_emmanuel
+    bloc: centre
+    sign: 1
+    beneficiaries: [macron_emmanuel]
+    note: Bayrou renonce et propose une alliance à Macron, qui l'accepte le jour même.
+    sources:
+      - https://www.publicsenat.fr/actualites/non-classe/bayrou-renonce-a-briguer-l-elysee-macron-accepte-son-offre-d-alliance-55766
+      - https://www.euronews.com/2017/02/22/bayrou-and-macron-seal-a-deal-in-france
+  - id: bayrou_withdrawal_2017
+    election: 2017
+    type: withdrawal
+    date: 2017-02-22
+    candidate: bayrou_francois
+    bloc: centre
+    beneficiaries: [macron_emmanuel]
+    sources: [https://www.publicsenat.fr/actualites/non-classe/bayrou-renonce-a-briguer-l-elysee-macron-accepte-son-offre-d-alliance-55766]
+  - id: juppe_withdrawal_2017
+    election: 2017
+    type: withdrawal
+    date: 2017-03-06
+    candidate: juppe_alain
+    bloc: right
+    beneficiaries: [fillon_francois]
+    note: >-
+      Juppé, battu à la primaire, confirme qu'il ne remplacera pas Fillon ; certains sondages
+      du début mars le testaient comme candidat de substitution.
+    sources:
+      - https://www.publicsenat.fr/actualites/politique/l-intervention-d-alain-juppe-qui-ne-sera-pas-candidat-56671
+      - https://www.euronews.com/2017/03/06/french-election-juppe-rules-himself-out-as-embattled-fillon-fights-on
+
+  # --- 2022
+  - id: hidalgo_declaration_2021
+    election: 2022
+    type: declaration
+    date: 2021-09-12
+    candidate: hidalgo_anne
+    bloc: left
+    sources: [https://www.aljazeera.com/amp/news/2021/9/12/paris-mayor-hidalgo-announces-french-presidential-bid]
+  - id: eelv_primary_2021
+    election: 2022
+    type: primary
+    date: 2021-09-28
+    first_round: 2021-09-19
+    candidate: jadot_yannick
+    bloc: left
+    note: >-
+      Primaire de l'écologie, premier tour clos le 19 septembre (Jadot 27,70 %), second le 28
+      septembre 2021 (51,03 % contre Rousseau).
+    sources: [https://www.letemps.ch/monde/primaire-ecolo-france-modere-favori-yannick-jadot-lemporte]
+  - id: zemmour_declaration_2021
+    election: 2022
+    type: declaration
+    date: 2021-11-30
+    candidate: zemmour_eric
+    bloc: far_right
+    new_entrant: true
+    note: Vidéo de déclaration ; son pic sondagier (16-17 %) précède la déclaration (octobre).
+    sources:
+      - https://www.publicsenat.fr/actualites/politique/eric-zemmour-officialise-sa-candidature-a-l-election-presidentielle-191429
+      - https://www.parismatch.be/actualites/politique/2021/11/30/eric-zemmour-annonce-sans-grande-surprise-sa-candidature-a-lelection-presidentielle-francaise-NEMT57JI7ZDJLC5UZZUFBBEXNA/
+  - id: lr_congress_2021
+    election: 2022
+    type: primary
+    date: 2021-12-04
+    first_round: 2021-12-02
+    candidate: pecresse_valerie
+    bloc: right
+    note: Congrès LR, vote des adhérents, tours du 1er-2 et du 3-4 décembre 2021 (60,95 %).
+    sources: [https://fr.wikipedia.org/wiki/Congr%C3%A8s_des_R%C3%A9publicains_de_2021]
+  - id: popular_primary_2022
+    election: 2022
+    type: primary
+    date: 2022-01-30
+    candidate: taubira_christiane
+    bloc: left
+    note: Primaire populaire, non reconnue par les autres candidats de gauche.
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2022]
+  - id: pecresse_zenith_2022
+    election: 2022
+    type: shock
+    date: 2022-02-13
+    candidate: pecresse_valerie
+    bloc: right
+    sign: -1
+    sources:
+      - https://www.publicsenat.fr/actualites/politique/au-zenith-de-paris-valerie-pecresse-tente-de-faire-oublier-une-semaine-houleuse
+      - https://www.bloomberg.com/news/articles/2022-02-13/france-s-pecresse-raises-great-replacement-in-campaign-gambit
+  - id: ukraine_invasion_2022
+    election: 2022
+    type: shock
+    date: 2022-02-24
+    candidate: macron_emmanuel
+    bloc: centre
+    sign: 1
+    note: Invasion russe de l'Ukraine, effet de ralliement au sortant ; confond la déclaration du 3 mars.
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2022]
+  - id: taubira_withdrawal_2022
+    election: 2022
+    type: withdrawal
+    date: 2022-03-02
+    candidate: taubira_christiane
+    bloc: left
+    beneficiaries: [melenchon_jean_luc]
+    sources:
+      - https://www.lalibre.be/international/europe/2022/03/02/christiane-taubira-annonce-mettre-fin-a-sa-campagne-presidentielle-DOBV5GBGKZCIRD6MF6QY6ZMQFY/
+      - https://reporterre.net/Presidentielle-faute-de-parrainages-Taubira-lache-l-affaire
+  - id: macron_declaration_2022
+    election: 2022
+    type: declaration
+    date: 2022-03-03
+    candidate: macron_emmanuel
+    bloc: centre
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2022]
+
+  # --- 2027 (veille du 2026-10-20 et pages citées)
+  - id: retailleau_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-02-12
+    candidate: retailleau_bruno
+    bloc: right
+    sources: [https://www.publicsenat.fr/actualites/politique/je-suis-pret-bruno-retailleau-se-declare-candidat-a-lelection-presidentielle-2027]
+  - id: lisnard_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-03-31
+    candidate: lisnard_david
+    bloc: right
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027]
+  - id: lr_designation_2026
+    election: 2027
+    type: primary
+    date: 2026-04-19
+    candidate: retailleau_bruno
+    bloc: right
+    note: Consultation des adhérents LR, 73,8 % pour la désignation directe (pas de primaire).
+    sources:
+      - https://www.publicsenat.fr/actualites/politique/presidentielle-bruno-retailleau-designe-candidat-par-les-adherents-lr
+      - https://lcp.fr/actualites/presidentielle-bruno-retailleau-candidat-officiel-des-republicains-435440
+  - id: melenchon_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-05-03
+    candidate: melenchon_jean_luc
+    bloc: far_left
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027]
+  - id: attal_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-05-22
+    candidate: attal_gabriel
+    bloc: centre
+    sources: [https://lcp.fr/actualites/presidentielle-2027-gabriel-attal-officialise-sa-candidature-436721]
+  - id: le_pen_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-07-07
+    candidate: le_pen_marine
+    bloc: far_right
+    note: >-
+      Annoncée le soir de l'arrêt d'appel (inéligibilité ferme déjà purgée) : déclaration et
+      levée d'incertitude judiciaire confondues.
+    sources:
+      - https://lcp.fr/actualites/marine-le-pen-condamnee-dans-l-affaire-des-assistants-parlementaires-reste-eligible-pour
+      - https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027
+  - id: cazeneuve_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-07-16
+    candidate: cazeneuve_bernard
+    bloc: left
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027]
+  - id: pcf_designation_2026
+    election: 2027
+    type: primary
+    date: 2026-09-06
+    candidate: roussel_fabien
+    bloc: far_left
+    note: Consultation interne du PCF.
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027]
+  - id: zemmour_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-09-17
+    candidate: zemmour_eric
+    bloc: far_right
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027]
+  - id: dupont_aignan_declaration_2026
+    election: 2027
+    type: declaration
+    date: 2026-09-19
+    candidate: dupont_aignan_nicolas
+    bloc: far_right
+    sources: [https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027]
+  - id: ecologists_designation_2026
+    election: 2027
+    type: primary
+    date: 2026-09-21
+    candidate: tondelier_marine
+    bloc: left
+    note: Désignée par Les Écologistes après l'abandon de la primaire unitaire du 11 octobre.
+    sources:
+      - https://en.wikipedia.org/wiki/2026_United_Left_primary
+      - https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2027
+  - id: ps_primary_2026
+    election: 2027
+    type: primary
+    date: 2026-10-11
+    candidate: glucksmann_raphael
+    bloc: left
+    note: Primaire fermée du PS et de ses alliés, gagnée dès le premier tour (66 %).
+    sources:
+      - https://lcp.fr/actualites/primaire-socialiste-vainqueur-des-le-1er-tour-raphael-glucksmann-sera-le-candidat-de-la
+      - https://www.publicsenat.fr/actualites/politique/primaire-de-la-gauche-raphael-glucksmann-plie-le-match-et-remporte-le-scrutin-des-le-premier-tour-avec-66
