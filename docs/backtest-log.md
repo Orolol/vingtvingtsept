@@ -121,6 +121,6 @@ Enseignement : avec cinq élections, la ligne « modèle + η » est difficile �
 plupart des signaux plausibles sont soit déjà dans les sondages, soit instables d'une
 élection à l'autre. Les volets explicatifs du site peuvent montrer ces signaux avec la
 mention « n'entre pas dans la prévision ». Pistes restantes jugées les plus utiles :
-corriger la participation simulée (78 % d'exprimés parmi les inscrits en 2017 contre 66 %
-observés), coupler l'erreur de duel et le premier tour par une composante d'extrême droite
+tirer la participation du second tour à part (l'écart 78 % contre 66 % signalé compare un
+premier tour simulé à un second tour observé), coupler l'erreur de duel et le premier tour par une composante d'extrême droite
 partagée, et réévaluer le biais RN du second tour par horizon.

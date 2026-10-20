@@ -23,8 +23,10 @@ choix, attention en ligne : aucune admise (voir `backtest-log.md`). Toutes reste
 options désactivées dans le code et des volets explicatifs possibles du site.
 
 ## Questions ouvertes
-- Participation simulée mal calibrée (78 % d'exprimés parmi les inscrits en 2017 contre
-  66 % observés) : à corriger dans `simulate.py`.
+- Participation simulée : l'écart signalé par l'étude potentiel (78 % contre 66 % en 2017)
+  compare un premier tour simulé à un second tour observé ; la loi logit-normale est ajustée
+  sur les premiers tours (72 à 84 %), c'est le bon tour pour le poids des abstentionnistes.
+  Pas de correction, mais la participation du second tour devrait être tirée à part.
 - Biais RN du second tour : atténuation linéaire provisoire, à réévaluer par horizon.
 - Erreurs corrélées premier tour / duel (composante d'extrême droite partagée) : à faire.
 
