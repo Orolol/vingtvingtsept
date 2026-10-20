@@ -276,6 +276,25 @@ class ErrorParams:
     bias: dict[str, float] = field(default_factory=dict)
 
 
+@dataclass
+class EtaDraws:
+    """Tirages de η avec leur composante de bloc : u_b = `bloc_z` · `bloc_sd` (avant λ),
+    η_c = λ · (u_{b(c)} + v_c) + μ_{b(c)}. `bloc_z` (n, B) est gaussienne réduite, colonnes
+    dans l'ordre de `blocs` (blocs présents, triés) ; `scale` (n,) vaut λ."""
+
+    eta: np.ndarray  # (n, K)
+    blocs: list[str]
+    bloc_z: np.ndarray  # (n, B)
+    bloc_sd: np.ndarray  # (B,)
+    scale: np.ndarray  # (n,)
+
+    def bloc(self, bloc: str) -> np.ndarray | None:
+        """Composante réduite z du bloc (n,), None si le bloc est absent."""
+        if bloc not in self.blocs:
+            return None
+        return self.bloc_z[:, self.blocs.index(bloc)]
+
+
 N_BASE = 5  # σ_Bf, σ_Cf, ρ, a_B, a_C (en log)
 
 
@@ -405,6 +424,9 @@ class ErrorModel:
         # Certitude du choix (vvs.model.certainty.CertaintyScaler), None par défaut : fonction
         # candidats -> (K,) échelle de l'écart type de la composante candidat v_c.
         self.cand_scale = None
+        # Volatilité réalisée (vvs.model.volatility.VolatilityScale), None par défaut : échelle
+        # de l'écart type de η (ou de sa seule part de mouvement) à la date de prévision.
+        self.vol_scale = None
 
     # estimation
 
@@ -492,6 +514,11 @@ class ErrorModel:
         wb = np.array([pr.bloc_weight.get(b, 1.0) for b in blocs])
         vb = wb * (pr.sigma_bloc_final**2 + pr.a_bloc * g)
         vc = pr.sigma_cand_final**2 + pr.a_cand * g + pr.rho / np.maximum(p, 1e-4)
+        if self.vol_scale is not None:
+            vb, vc = self.vol_scale.apply(
+                vb, vc, wb * pr.sigma_bloc_final**2,
+                pr.sigma_cand_final**2 + pr.rho / np.maximum(p, 1e-4), list(blocs),
+            )
         return vb, vc
 
     def covariance(self, horizon: float, blocs: list[str], p: np.ndarray) -> np.ndarray:
@@ -512,6 +539,19 @@ class ErrorModel:
     ) -> np.ndarray:
         """η (n, K) pour des parts de référence p (n, K), une ligne par tirage. `cand_scale` :
         (K,) échelle de l'écart type de v_c (certitude), None : 1."""
+        return self.sample_eta_parts(horizon, blocs, p, rng, cand_scale).eta
+
+    def sample_eta_parts(
+        self,
+        horizon: float,
+        blocs: list[str],
+        p: np.ndarray,
+        rng: np.random.Generator,
+        cand_scale: np.ndarray | None = None,
+    ) -> EtaDraws:
+        """Comme `sample_eta`, en rendant aussi la composante de bloc réduite de chaque tirage
+        (`EtaDraws.bloc_z`, avant l'écart type du bloc et l'échelle λ). Mêmes tirages
+        aléatoires, dans le même ordre : `sample_eta` en est la projection."""
         pr = self.params
         p = np.atleast_2d(p)
         n, K = p.shape
@@ -519,16 +559,18 @@ class ErrorModel:
         ub = sorted(set(blocs))
         bidx = np.array([ub.index(b) for b in blocs])
         sd_b = np.array([math.sqrt(vb[blocs.index(b)]) for b in ub])
-        u = rng.standard_normal((n, len(ub))) * sd_b
+        z = rng.standard_normal((n, len(ub)))
+        u = z * sd_b
         v = rng.standard_normal((n, K)) * np.sqrt(vc)
         if cand_scale is not None:
             v = v * np.asarray(cand_scale, dtype=float)
         eta = u[:, bidx] + v
+        lam = np.ones(n)
         if math.isfinite(pr.nu):
             lam = np.sqrt(pr.nu / rng.chisquare(pr.nu, size=n))
             eta = eta * lam[:, None]
         mu = np.array([pr.bias.get(b, 0.0) for b in blocs])
-        return eta + mu
+        return EtaDraws(eta=eta + mu, blocs=ub, bloc_z=z, bloc_sd=sd_b, scale=lam)
 
     def sample(
         self,

@@ -141,3 +141,25 @@ def test_bias_admitted_only_if_stable_and_shrunk():
     # deux élections seulement : jamais de biais
     bias, _ = er.stable_bias(stable[:2])
     assert bias == {}
+
+
+@pytest.mark.parametrize("nu", [math.inf, 8.0])
+def test_sample_eta_parts_matches_sample_eta_and_exposes_bloc_component(nu):
+    """Mêmes tirages que sample_eta (même graine), plus la composante de bloc réduite."""
+    m = er.ErrorModel(params(nu=nu))
+    n = 50_000
+    p = np.tile(P, (n, 1))
+    eta = m.sample_eta(90, BLOCS, p, np.random.default_rng(3))
+    parts = m.sample_eta_parts(90, BLOCS, p, np.random.default_rng(3))
+    np.testing.assert_array_equal(parts.eta, eta)
+    z = parts.bloc("far_right")
+    assert parts.bloc("other") is None
+    assert z.mean() == pytest.approx(0, abs=0.02) and z.std() == pytest.approx(1, rel=0.02)
+    # η des candidats far_right = λ (u + v) : corrélé à z ; les autres blocs non
+    vb, vc = m.variances(90, BLOCS, P)
+    expected = math.sqrt(vb[0] / (vb[0] + vc[0]))
+    if math.isinf(nu):
+        assert np.corrcoef(eta[:, 0], z)[0, 1] == pytest.approx(expected, abs=0.02)
+    else:
+        assert np.corrcoef(eta[:, 0], z)[0, 1] > 0.5 * expected
+    assert abs(np.corrcoef(eta[:, 2], z)[0, 1]) < 0.02

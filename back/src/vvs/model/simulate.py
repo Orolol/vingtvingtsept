@@ -48,11 +48,26 @@ bruit Monte-Carlo près ; seule la corrélation, à l'intérieur d'une cellule, 
 premier tour d'un tirage et son second tour est perdue. Les configurations hors des plus
 probables (`CONFIG_MASS` de la masse) sont regroupées en une cellule « autres » par paire.
 
-Biais RN du second tour (provisoire). Le backtest (docs/backtest-log.md) montre que la
-correction du biais d'extrême droite des sondages de duel aide à la veille du second tour et
-dégrade à 180 jours. En attendant un biais estimé par horizon, on l'atténue linéairement :
-plein effet à `RN_BIAS_FULL_DAYS` jours ou moins du premier tour, nul à `RN_BIAS_ZERO_DAYS`
-jours ou plus (`rn_bias_scale`, paramètre `rn_bias_scale` de `simulate` pour l'imposer).
+Biais RN du second tour. Option `rn_bias_curve` : biais estimé par âge des sondages de duel
+(`second_round.bias_curve`, leave-one-election-out au backtest, rétréci vers 0 et monotone),
+appliqué sondage par sondage ; `rn_bias` le multiplie (1 par défaut). Sans courbe (option
+désactivée, ou erreurs injectées sans courbe) : atténuation linéaire provisoire du biais
+constant, plein effet à `RN_BIAS_FULL_DAYS` jours ou moins du premier tour, nul à
+`RN_BIAS_ZERO_DAYS` jours ou plus (`rn_bias_scale`), ou part imposée par `rn_bias`. Le mode
+retenu est écrit dans le manifeste (`second_round_model.bias_mode`).
+
+Couplage premier tour / duel (option `couple_far_right`). La composante de bloc far_right de
+η de chaque tirage (`ErrorModel.sample_eta_parts`, réduite, avant λ) est passée au second tour
+(`SecondRoundModel.sample(shared_error=…)`), qui corrèle avec elle l'erreur commune des
+sondages de duel (ρ estimé par `second_round.far_right_coupling` sur 2002, 2017, 2022). Le
+second tour rééchantillonnant les tirages de la cellule, le couplage agit sur la loi de la
+cellule, pas ligne à ligne (même limite que ci-dessus).
+
+Participation. Le poids des abstentionnistes, blancs et nuls du premier tour vient de la part
+d'exprimés du premier tour (point 3). Celle du second tour (exprimés / inscrits) est, sans
+option, implicite : Σ w (t_i + t_j) / Σ w des reports tirés. Option `second_round_turnout` :
+tirée d'une logit-normale ajustée sur les seconds tours 2002-2022 et imposée aux reports
+(`second_round.match_turnout`). Colonne `turnout_second_round` des tirages dans les deux cas.
 
 Point d'extension de la substitution intra-bloc (phase 4) : `ShareRule`. La règle par défaut
 `iia_shares` est le softmax restreint ; une règle de substitution recevra les mêmes logits et
@@ -95,6 +110,10 @@ SPARSE_DEFAULT_SHARE = 1.0  # part médiane (points) d'un petit candidat jamais 
 CONFIG_MASS = 0.95  # masse des configurations portées individuellement au second tour
 RN_BIAS_FULL_DAYS = 30
 RN_BIAS_ZERO_DAYS = 180
+# options du second tour (runs/2026-10-20-second-round-v2) : valeurs par défaut de `simulate`
+RN_BIAS_CURVE = False
+COUPLE_FAR_RIGHT = False
+SECOND_ROUND_TURNOUT = False
 TURNOUT_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 ERROR_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 QUANTILES = (0.05, 0.25, 0.5, 0.75, 0.95)
@@ -585,7 +604,13 @@ def first_round_draws(
     ctx = share_context(fit, uni, s_idx, fit.asof_week)
     ref = share_rule(theta_safe, present, uni.blocs, ctx)
     p_ref = np.where(present, ref, 1.0)  # parts des absents sans effet (η retiré ensuite)
-    eta = error_model.sample_eta(horizon, list(uni.blocs), p_ref, rng)
+    far_right_z = None
+    if hasattr(error_model, "sample_eta_parts"):
+        # mêmes tirages que sample_eta, plus la composante de bloc réduite (couplage)
+        parts = error_model.sample_eta_parts(horizon, list(uni.blocs), p_ref, rng)
+        eta, far_right_z = parts.eta, parts.bloc("far_right")
+    else:
+        eta = error_model.sample_eta(horizon, list(uni.blocs), p_ref, rng)
     shares = perturbed_shares(ref, eta, present)
     return {
         "config": cfg,
@@ -593,6 +618,7 @@ def first_round_draws(
         "present": present,
         "shares": shares,
         "config_counts": counts,
+        "far_right_z": far_right_z,
     }
 
 
@@ -608,6 +634,9 @@ def simulate(
     rn_bias: float | None = None,
     rn_bias_full_days: float = RN_BIAS_FULL_DAYS,
     rn_bias_zero_days: float = RN_BIAS_ZERO_DAYS,
+    rn_bias_curve: bool = RN_BIAS_CURVE,
+    couple_far_right: bool = COUPLE_FAR_RIGHT,
+    second_round_turnout: bool = SECOND_ROUND_TURNOUT,
     min_hypotheses: int = MIN_HYPOTHESES,
     share_rule: ShareRule | None = None,
     scenarios: ScenariosFile | None = None,
@@ -618,7 +647,9 @@ def simulate(
 ) -> SimulationResult:
     """Simulation complète ; écrit les sorties dans `out` si donné.
 
-    `rn_bias` : part du biais RN du second tour appliquée (défaut : `rn_bias_scale` à l'horizon).
+    `rn_bias` : part du biais RN du second tour appliquée (défaut : 1 avec la courbe par
+    horizon, `rn_bias_scale` à l'horizon sinon). `rn_bias_curve`, `couple_far_right`,
+    `second_round_turnout` : options du second tour (docstring du module).
     `n_condition_configs` : configurations résumées individuellement (défaut : celles qui
     couvrent `config_mass`). `error_model`, `second_round_errors`, `scenarios`, `registry` :
     injectables pour les tests (défaut : calibrés sur 2002-2022, fichiers du dépôt)."""
@@ -672,17 +703,34 @@ def simulate(
     a_idx, b_idx = pa[pair_code], pb[pair_code]
 
     # 5. second tour, par cellule (configuration ou « autres », paire)
-    scale = rn_bias if rn_bias is not None else rn_bias_scale(
-        horizon, rn_bias_full_days, rn_bias_zero_days
-    )
+    far_right_z = fr["far_right_z"] if couple_far_right else None
+    if couple_far_right and far_right_z is None:
+        raise ValueError("couple_far_right : le modèle d'erreur ne rend pas la composante de bloc")
     sr_reg = placeholder_registry(reg)
-    base_errors = second_round_errors or calibrate_errors(exclude={election}, registry=reg)
-    errors = replace(base_errors, bias_far_right=base_errors.bias_far_right * scale)
-    model = SecondRoundModel(sr_reg, errors=errors, exclude={election}).fit(
-        election, asof, pair_list
+    base_errors = second_round_errors or calibrate_errors(
+        exclude={election}, registry=reg, bias_by_horizon=rn_bias_curve
     )
+    if rn_bias is not None:
+        scale, bias_mode = float(rn_bias), "manual"
+    elif rn_bias_curve and base_errors.bias_curve:
+        scale, bias_mode = 1.0, "curve"
+    else:
+        scale, bias_mode = rn_bias_scale(horizon, rn_bias_full_days, rn_bias_zero_days), "linear"
+    if bias_mode == "manual" and rn_bias_curve and base_errors.bias_curve:
+        bias_mode = "manual_curve"
+    errors = base_errors.scaled_bias(scale)
+    if not (rn_bias_curve and base_errors.bias_curve):
+        errors = replace(errors, bias_curve=())  # biais constant × part (comportement historique)
+    model = SecondRoundModel(
+        sr_reg,
+        errors=errors,
+        exclude={election},
+        couple_far_right=couple_far_right,
+        second_round_turnout=second_round_turnout,
+    ).fit(election, asof, pair_list)
     cell = np.where(cfg < n_top, cfg, OTHER_CELL)
     share_a = np.full(n_draws, np.nan)
+    turnout2 = np.full(n_draws, np.nan)
     cells: dict[tuple[int, int], list[int]] = {}
     for i, key in enumerate(zip(cell.tolist(), pair_code.tolist())):
         cells.setdefault(key, []).append(i)
@@ -694,8 +742,10 @@ def simulate(
         cols = np.flatnonzero(present[rows].any(0))
         frd = {uni.ids[u]: shares[rows, u] for u in cols}
         frd["abstain"] = abstain[rows]
-        d = model.sample(pair, frd, horizon, rng, n=len(rows))
+        shared = None if far_right_z is None else far_right_z[rows]
+        d = model.sample(pair, frd, horizon, rng, n=len(rows), shared_error=shared)
         share_a[rows] = d.share
+        turnout2[rows] = d.turnout
         pair_ess[pair] = min(pair_ess.get(pair, math.inf), d.ess / len(rows))
         acc = transfer_acc.setdefault(pair, {})
         for g, name in enumerate(d.groups):
@@ -711,6 +761,7 @@ def simulate(
             "config": cfg,
             "posterior_draw": fr["posterior"],
             "turnout": turnout,
+            "turnout_second_round": turnout2,
             "qualified_a": np.array(uni.ids)[a_idx],
             "qualified_b": np.array(uni.ids)[b_idx],
             "share_a_second_round": share_a,
@@ -778,6 +829,16 @@ def simulate(
             "bias_far_right_applied": errors.bias_far_right,
             "rn_bias_full_days": rn_bias_full_days,
             "rn_bias_zero_days": rn_bias_zero_days,
+            "bias_mode": bias_mode,
+            "bias_curve_calibrated": [list(x) for x in base_errors.bias_curve],
+            "bias_curve_applied": [list(x) for x in errors.bias_curve],
+            "couple_far_right": couple_far_right,
+            "coupling": None if model.coupling is None else {
+                k: v for k, v in model.coupling.items() if k != "pairs"
+            },
+            "second_round_turnout": second_round_turnout,
+            "turnout2": model.turnout2,
+            "turnout2_draws": quantile_dict(turnout2),
             "calibrated_on": list(errors.calibrated_on),
             "n_pairs": len(pair_list),
             "n_cells": len(cells),

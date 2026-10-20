@@ -15,6 +15,10 @@ Pour chaque élection de 2002 à 2022 et le duel réellement joué (orienté sur
 
 Métriques : erreur absolue de la médiane, CRPS et couverture 50 et 90 % de `vvs.eval.metrics`
 (module partagé avec le backtest du premier tour) ; log-score du vainqueur ici.
+
+`run_structural` : comparaison appariée des options structurelles du second tour (biais RN par
+horizon, couplage avec l'erreur d'extrême droite du premier tour, participation du second tour
+tirée à part), même graine par cas pour toutes les variantes ; voir son docstring.
 """
 
 from __future__ import annotations
@@ -34,9 +38,11 @@ from vvs.model.second_round import (
     _analog_vector,
     _group_members,
     calibrate_errors,
+    far_right_coupling,
     first_round_concentration,
     first_round_mean,
     noisy_first_round,
+    observed_far_right_error,
     summarize,
 )
 from vvs.registry import BLOCS as BLOCS_ORDER
@@ -98,6 +104,9 @@ class Case:
     result: float  # part du vainqueur
     first_round: dict[str, np.ndarray]
     first_round_note: str
+    # composante d'extrême droite réduite du premier tour par tirage (case_eta), ou observée
+    # (veille du second tour) ; None : pas de couplage possible
+    shared: np.ndarray | float | None = None
 
 
 def case(
@@ -347,3 +356,174 @@ def proximity_check(
                 }
             )
     return pl.DataFrame(rows, infer_schema_length=None)
+
+
+# --- options structurelles du second tour (comparaison appariée)
+
+# variante -> (premier tour : "dirichlet" comme `run` ou "eta" pour le modèle d'erreur η, options)
+STRUCT_VARIANTS: dict[str, tuple[str, dict]] = {
+    "base": ("dirichlet", {}),
+    # atténuation linéaire du biais constant (défaut de la simulation avant la courbe)
+    "bias_linear": ("dirichlet", {"bias_linear": True}),
+    "bias_h": ("dirichlet", {"bias_by_horizon": True}),
+    "turnout2": ("dirichlet", {"second_round_turnout": True}),
+    "bias_h_turnout2": ("dirichlet", {"bias_by_horizon": True, "second_round_turnout": True}),
+    "eta": ("eta", {}),
+    "eta_coupled": ("eta", {"couple_far_right": True}),
+    "eta_all": ("eta", {"bias_by_horizon": True, "couple_far_right": True,
+                        "second_round_turnout": True}),
+}
+
+
+def case_eta(
+    election: int,
+    label: str,
+    rng: np.random.Generator,
+    registry: Registry,
+    error_model,
+    sd_x: float,
+    n_first_round: int = 2000,
+    curated=None,
+) -> Case:
+    """Comme `case`, mais le premier tour avant le vote est bruité par le modèle d'erreur η
+    (`ErrorModel.sample_eta_parts`, calibré hors élection, horizon = âge de la moyenne des
+    14 jours) au lieu de la Dirichlet, ce qui donne la composante d'extrême droite réduite de
+    chaque tirage (`Case.shared`). À la veille du second tour, premier tour officiel et
+    composante observée : z = −x / `sd_x`, x = log(sondages des 14 derniers jours / résultat)
+    du bloc d'extrême droite (`observed_far_right_error`)."""
+    from vvs.model.simulate import perturbed_shares
+
+    e = registry.elections[election]
+    d1, d2 = e.round_(1).date, e.round_(2).date
+    res = sorted(((r.share, r.candidate_id) for r in e.round_(2).results), reverse=True)
+    pair = (res[0][1], res[1][1])
+    days = HORIZONS[label]
+    if days is None:
+        asof = d2 - dt.timedelta(days=1)
+        fr = {r.candidate_id: np.array([r.share / 100]) for r in e.round_(1).results}
+        x = observed_far_right_error(election, curated)
+        shared = None if x is None else -x / sd_x
+        note = "résultats officiels du premier tour" + (
+            "" if shared is None else f", erreur d'extrême droite observée z = {shared:+.2f}"
+        )
+    else:
+        asof = d1 - dt.timedelta(days=days)
+        mean, (start, end), n_hyp = first_round_mean(election, asof, pair, RECENT_DAYS)
+        cands = list(mean)
+        blocs = [registry.bloc_of(c, election) for c in cands]
+        ref = np.tile(np.array([mean[c] for c in cands]), (n_first_round, 1))
+        parts = error_model.sample_eta_parts(days + RECENT_DAYS / 2, blocs, ref, rng)
+        sh = perturbed_shares(ref, parts.eta, np.ones_like(ref, dtype=bool))
+        fr = {c: sh[:, k] for k, c in enumerate(cands)}
+        z = parts.bloc("far_right")
+        shared = z if z is not None else None
+        note = f"{n_hyp} hypothèses du {start + dt.timedelta(days=1)} au {end}, η"
+    return Case(election, label, (d1 - asof).days, asof, pair, res[0][0], fr, note, shared)
+
+
+def run_structural(
+    elections: tuple[int, ...] = ELECTIONS,
+    horizons: tuple[str, ...] = tuple(HORIZONS),
+    n: int = 8000,
+    seed: int = 0,
+    registry: Registry | None = None,
+    variants: tuple[str, ...] = tuple(STRUCT_VARIANTS),
+) -> dict[str, pl.DataFrame]:
+    """Backtest apparié des options structurelles (`STRUCT_VARIANTS`).
+
+    Pour chaque élection et horizon, toutes les variantes d'une même famille de premier tour
+    partagent les mêmes tirages de premier tour (`case` ou `case_eta`, graine du cas) et la
+    même graine d'échantillonnage du second tour ; seules les options diffèrent. Tout ce qui
+    est calibré sur l'histoire exclut l'élection évaluée : erreurs des sondages de duel
+    (constantes ou par horizon), ρ du couplage, loi de participation du second tour, modèle
+    d'erreur η (biais de bloc désactivé, comme la simulation).
+
+    Rend `metrics` (élection × horizon × variante, plus la participation du second tour
+    simulée et observée), `folds` (paramètres par pli : biais constant, courbe, ρ, loi de
+    participation)."""
+    from vvs.model.error import ErrorModel
+    from vvs.model.second_round import turnout2_model
+
+    registry = registry or default_registry()
+    rows, fold_rows = [], []
+    for election in elections:
+        errors = calibrate_errors(exclude={election}, registry=registry)
+        errors_h = calibrate_errors(exclude={election}, registry=registry, bias_by_horizon=True)
+        coupling = far_right_coupling({election}, registry=registry, errors=errors)
+        t2 = turnout2_model(registry, exclude={election})
+        em = ErrorModel.fit(elections=ELECTIONS, exclude=[election], registry=registry,
+                            use_bias=False)
+        fold_rows.append(
+            {
+                "election": election,
+                "sigma0": errors.sigma0,
+                "sigma1": errors.sigma1,
+                "bias_far_right": errors.bias_far_right,
+                "sigma0_h": errors_h.sigma0,
+                "sigma1_h": errors_h.sigma1,
+                **{f"bias_age_{int(a)}": b for a, b in errors_h.bias_curve},
+                "rho": coupling["rho"],
+                "rho_raw": coupling["rho_raw"],
+                "rho_elections": ",".join(map(str, coupling["elections"])),
+                "sd_x": coupling["sd_x"],
+                "turnout2_mean": float(1 / (1 + np.exp(-t2["logit_mean"]))),
+                "turnout2_logit_sd": t2["logit_sd"],
+            }
+        )
+        r2 = registry.elections[election].round_(2)
+        obs_turnout = r2.expressed / r2.registered
+        for h_idx, label in enumerate(horizons):
+            hseed = list(HORIZONS).index(label)
+            cases = {
+                "dirichlet": case(election, label, np.random.default_rng([seed, election, hseed, 1]),
+                                  registry),
+                "eta": case_eta(election, label, np.random.default_rng([seed, election, hseed, 2]),
+                                registry, em, coupling["sd_x"]),
+            }
+            for name in variants:
+                family, opts = STRUCT_VARIANTS[name]
+                c = cases[family]
+                errs = errors_h if opts.get("bias_by_horizon") else errors
+                if opts.get("bias_linear"):
+                    from vvs.model.simulate import rn_bias_scale
+
+                    errs = errors.scaled_bias(rn_bias_scale(c.horizon))
+                m = SecondRoundModel(
+                    registry,
+                    errors=errs,
+                    couple_far_right=opts.get("couple_far_right", False),
+                    coupling_rho=coupling["rho"],
+                    second_round_turnout=opts.get("second_round_turnout", False),
+                )
+                m.fit(election, c.asof, [c.pair])
+                shared = c.shared if opts.get("couple_far_right") else None
+                d = m.sample(c.pair, c.first_round, c.horizon,
+                             np.random.default_rng([seed, election, hseed, 3]), n,
+                             shared_error=shared)
+                s = summarize(m.pair_fit(c.pair), d)
+                rows.append(
+                    {
+                        "election": election,
+                        "horizon": label,
+                        "horizon_days": c.horizon,
+                        "asof": c.asof,
+                        "winner": c.pair[0],
+                        "loser": c.pair[1],
+                        "result": c.result,
+                        "first_round": c.first_round_note,
+                        "method": name,
+                        "family": family,
+                        "n_polls": s["n_polls"],
+                        "poll_bias": s["poll_bias"],
+                        "coupling_kappa": s["coupling_kappa"],
+                        "ess": d.ess,
+                        "turnout2_median": float(np.median(d.turnout)),
+                        "turnout2_q05": float(np.quantile(d.turnout, 0.05)),
+                        "turnout2_q95": float(np.quantile(d.turnout, 0.95)),
+                        "turnout2_obs": obs_turnout,
+                    }
+                    | score(d.share, c.result)
+                )
+            log.info("%s %s fait", election, label)
+    return {"metrics": pl.DataFrame(rows, infer_schema_length=None),
+            "folds": pl.DataFrame(fold_rows, infer_schema_length=None)}

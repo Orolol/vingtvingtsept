@@ -65,6 +65,20 @@ date de prévision :
 Les reports par électorat ne sont pas touchés : le potentiel par électorat explique moins
 bien les reports observés que la matrice de proximité (étude, partie b).
 
+Options structurelles (désactivées par défaut ; étude back/studies/second_round_v2.py,
+runs/2026-10-20-second-round-v2) :
+- `bias_by_horizon` : biais RN par âge des sondages de duel (`bias_curve` : nœuds de
+  poll_errors à 7, 22, 45, 105 et 195 jours du second tour, moyenne pondérée par la précision
+  rétrécie vers 0, |biais| non croissant avec l'âge), appliqué sondage par sondage dans ȳ ;
+  σ0 et σ1 réestimés sur les résidus à la courbe ;
+- `couple_far_right` : la composante commune e de l'erreur des sondages de duel est corrélée
+  (ρ, `far_right_coupling`) à la composante de bloc far_right z du premier tour reçue par
+  tirage : e | z ~ N(κ z, σ_e² − κ²), la loi marginale de e restant inchangée ;
+- `second_round_turnout` : la participation du second tour (exprimés / inscrits), implicite
+  sinon (Σ w (t_i + t_j) / Σ w), est tirée d'une logit-normale ajustée sur les seconds tours
+  (`turnout2_model`) et imposée par un décalage commun des parts « ni l'un ni l'autre »
+  (`match_turnout`) ; le poids des abstentionnistes reste celui du premier tour.
+
 Horizon. `predict(..., horizon)` prend `horizon` = jours entre la date de prévision et le
 premier tour (négatif après le premier tour : la veille du second tour vaut −(écart − 1)).
 L'âge d'un sondage au second tour vaut horizon + écart entre les tours + (asof − fin de
@@ -154,6 +168,21 @@ DESIGN_FACTOR = 0.6  # moyenne du prior Beta(12, 8) du facteur de design du prem
 MAX_POLL_AGE = 730  # jours avant le second tour au-delà desquels un sondage de duel est ignoré
 ERROR_HORIZONS = (7, 30, 90, 180)  # horizons de poll_errors (fenêtres de 30 jours)
 BIAS_PRIOR_N = 1.0  # rétrécissement du biais : moyenne × n / (n + BIAS_PRIOR_N)
+# Biais RN par horizon (option `bias_by_horizon`) : nœuds de la courbe, âge moyen (jours avant
+# le second tour) des fenêtres de poll_errors. `mean_14d` : 14 derniers jours (veille du second
+# tour), `horizon` h : 30 jours avant h jours du second tour.
+BIAS_NODES: dict[tuple[str, int], float] = {
+    ("mean_14d", 14): 7.0,
+    ("horizon", 7): 22.0,
+    ("horizon", 30): 45.0,
+    ("horizon", 90): 105.0,
+    ("horizon", 180): 195.0,
+}
+# Couplage premier tour / duel (option `couple_far_right`) : rétrécissement de la corrélation
+# estimée vers 0, ρ × n / (n + RHO_PRIOR_N) avec n élections ; l'écart type d'échantillonnage
+# d'une corrélation sur n points est de l'ordre de 1/√n.
+RHO_PRIOR_N = 2.0
+TURNOUT2_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 # Plancher de l'écart-type des effets maison : l'estimation par moments sur les sondages
 # d'entre-deux-tours tombe à 0 (la dispersion entre instituts n'excède pas celle de
 # l'échantillonnage avec le facteur de design 0,6) ; on garde un effet faible plutôt que nul.
@@ -189,6 +218,26 @@ class ErrorParams:
     design: float = DESIGN_FACTOR
     calibrated_on: tuple[int, ...] = ()
     points: tuple[dict, ...] = ()
+    # biais par âge du sondage (option `bias_by_horizon`) : nœuds (âge en jours avant le
+    # second tour, biais en points), interpolés linéairement, constants au-delà des extrêmes ;
+    # vide : biais constant `bias_far_right` à tout âge (comportement historique)
+    bias_curve: tuple[tuple[float, float], ...] = ()
+
+    def bias_at(self, age_days: np.ndarray | float) -> np.ndarray:
+        """Biais d'extrême droite (points) d'un sondage terminé `age_days` avant le second tour."""
+        a = np.asarray(age_days, dtype=float)
+        if not self.bias_curve:
+            return np.full(a.shape, self.bias_far_right)
+        x, y = zip(*self.bias_curve)
+        return np.interp(a, x, y)
+
+    def scaled_bias(self, scale: float) -> ErrorParams:
+        """Mêmes paramètres, biais (constant et courbe) multiplié par `scale`."""
+        return replace(
+            self,
+            bias_far_right=self.bias_far_right * scale,
+            bias_curve=tuple((a, b * scale) for a, b in self.bias_curve),
+        )
 
     def variance(self, age_days: np.ndarray | float) -> np.ndarray:
         a = np.maximum(np.asarray(age_days, dtype=float), 0.0)
@@ -268,6 +317,7 @@ def calibrate_errors(
     curated: Path | None = None,
     registry: Registry | None = None,
     horizons: tuple[int, ...] = ERROR_HORIZONS,
+    bias_by_horizon: bool = False,
 ) -> ErrorParams:
     """Calibre l'erreur des sondages de duel sur poll_errors (second tour), hors `exclude`.
 
@@ -281,6 +331,10 @@ def calibrate_errors(
       par élection : Cov = σ0² + σ1² min(a, a') / 30 avec a = h + 15, plus le bruit
       d'échantillonnage de chaque moyenne.
     - σ_h : `_house_variance` sur les mêmes élections, au moins `HOUSE_SD_FLOOR`.
+
+    `bias_by_horizon` : biais estimé par âge des sondages (`bias_curve`, nœuds `BIAS_NODES`),
+    puis (σ0, σ1) réestimés sur les résidus à cette courbe (biais retiré sans l'élection du
+    résidu). Le biais constant reste calculé (`bias_far_right`), pour mémoire.
     """
     registry = registry or default_registry()
     curated = paths.CURATED if curated is None else Path(curated)
@@ -318,6 +372,33 @@ def calibrate_errors(
     # résidus des duels avec l'extrême droite seraient artificiellement petits).
     for p in points:
         p["residual"] = p["error"] - (shrunk_bias(p["election"]) if p["far_right"] else 0.0)
+    s0, s1 = _fit_sigmas(points)
+    curve: tuple[tuple[float, float], ...] = ()
+    if bias_by_horizon:
+        errs = rn_duel_errors(excl, curated, registry)
+
+        def var(a: float, s0=s0, s1=s1) -> float:
+            return s0**2 + s1**2 * a / 30.0
+
+        curve = bias_curve(errs, var)
+        for p in points:
+            if p["far_right"]:
+                own = bias_curve(errs, var, skip={p["election"]})
+                p["residual"] = p["error"] - float(np.interp(p["horizon"] + 15.0, *zip(*own)))
+        s0, s1 = _fit_sigmas(points)
+    return ErrorParams(
+        sigma0=round(s0, 3),
+        sigma1=round(s1, 3),
+        bias_far_right=round(bias, 3),
+        sigma_house=round(max(math.sqrt(_house_variance(elections, registry, curated)), HOUSE_SD_FLOOR), 3),
+        calibrated_on=tuple(elections),
+        points=tuple(points),
+        bias_curve=tuple((a, round(b, 3)) for a, b in curve),
+    )
+
+
+def _fit_sigmas(points: list[dict]) -> tuple[float, float]:
+    """(σ0, σ1) par maximum de vraisemblance sur grille des résidus `residual` des points."""
     # Vraisemblance jointe par élection : les erreurs d'une même élection à plusieurs horizons
     # partagent la composante commune (covariance de `ErrorParams.covariance`), plus le bruit
     # d'échantillonnage de chaque moyenne de fenêtre (effectif nominal 1000, design 0,6).
@@ -340,14 +421,231 @@ def calibrate_errors(
                 ll += -0.5 * (logdet + r @ np.linalg.solve(cov, r))
             if ll > best[0]:
                 best = (ll, float(s0), float(s1))
-    return ErrorParams(
-        sigma0=round(best[1], 3),
-        sigma1=round(best[2], 3),
-        bias_far_right=round(bias, 3),
-        sigma_house=round(max(math.sqrt(_house_variance(elections, registry, curated)), HOUSE_SD_FLOOR), 3),
-        calibrated_on=tuple(elections),
-        points=tuple(points),
+    return best[1], best[2]
+
+
+# --- biais RN par horizon, couplage avec le premier tour, participation du second tour
+
+
+def rn_duel_errors(
+    exclude: Iterable[int] = (), curated: Path | None = None, registry: Registry | None = None
+) -> list[dict]:
+    """Erreurs (sondages − résultat, points) du finaliste d'extrême droite dans les sondages du
+    duel réel, aux nœuds `BIAS_NODES`, pour les élections hors `exclude` où il affronte un
+    autre bloc. Une ligne par (élection, nœud) : election, method, horizon, age, error, n_polls."""
+    registry = registry or default_registry()
+    curated = paths.CURATED if curated is None else Path(curated)
+    excl = set(exclude)
+    pe = pl.read_parquet(curated / "poll_errors.parquet").filter(
+        (pl.col("round") == 2) & (pl.col("level") == "candidate")
     )
+    out = []
+    for e in sorted(pe["election"].unique().to_list()):
+        if e in excl or not registry.elections[e].round_(2).results:
+            continue
+        unit, fr = _orient_unit(e, registry)
+        if not fr:
+            continue
+        sub = pe.filter((pl.col("election") == e) & (pl.col("unit") == unit))
+        for m, h, err, n in sub.select("method", "horizon_days", "error", "n_polls").iter_rows():
+            age = BIAS_NODES.get((m, h))
+            if age is not None:
+                out.append({"election": e, "method": m, "horizon": int(h), "age": age,
+                            "error": float(err), "n_polls": int(n)})
+    return out
+
+
+def _pava_decreasing(y: list[float], w: list[float]) -> list[float]:
+    """Régression isotone décroissante pondérée (algorithme des blocs adjacents)."""
+    blocks: list[list[float]] = []  # [moyenne, poids, effectif]
+    for yi, wi in zip(y, w):
+        blocks.append([yi, wi, 1])
+        while len(blocks) > 1 and blocks[-2][0] < blocks[-1][0]:
+            m2, w2, n2 = blocks.pop()
+            m1, w1, n1 = blocks.pop()
+            blocks.append([(m1 * w1 + m2 * w2) / (w1 + w2), w1 + w2, n1 + n2])
+    out: list[float] = []
+    for m, _, k in blocks:
+        out += [m] * int(k)
+    return out
+
+
+def bias_curve(
+    errors: list[dict], variance: Callable[[float], float], skip: Iterable[int] = ()
+) -> tuple[tuple[float, float], ...]:
+    """Courbe du biais RN par âge des sondages : nœuds (âge, biais) de `BIAS_NODES`.
+
+    À chaque nœud, moyenne des erreurs des élections (hors `skip`) pondérée par la précision
+    1 / (s²(a) + échantillonnage / n_sondages), rétrécie vers 0 par un prior N(0, s²(a)) qui
+    vaut une élection : b(a) = Σ e/v / (Σ 1/v + 1/s²(a)), avec s²(a) = `variance(a)` l'erreur
+    commune d'une élection à cet âge. Peu de sondages ou d'élections : biais proche de 0 ; nœud
+    sans donnée : 0. Puis contrainte de forme : |b| ne croît pas avec l'âge et ne change pas de
+    signe (régression isotone pondérée par la précision) — le biais tient au vote lui-même
+    (mobilisation de barrage tardive), il n'a pas de raison d'être plus fort loin du vote."""
+    skip = set(skip)
+    ages = sorted(set(BIAS_NODES.values()))
+    noise1 = sampling_sd(50.0, DEFAULT_SAMPLE_SIZE) ** 2
+    est, prec = [], []
+    for a in ages:
+        s2 = float(variance(a))
+        pts = [p for p in errors if p["age"] == a and p["election"] not in skip]
+        w = [1.0 / (s2 + noise1 / max(p["n_polls"], 1)) for p in pts]
+        den = sum(w) + 1.0 / s2
+        est.append(sum(wi * p["error"] for wi, p in zip(w, pts)) / den)
+        prec.append(den)
+    sign = 1.0 if sum(e * w for e, w in zip(est, prec)) >= 0 else -1.0
+    mono = _pava_decreasing([sign * e for e in est], prec)
+    return tuple((a, sign * max(v, 0.0)) for a, v in zip(ages, mono))
+
+
+def far_right_coupling(
+    exclude: Iterable[int] = (),
+    curated: Path | None = None,
+    registry: Registry | None = None,
+    errors: ErrorParams | None = None,
+    prior_n: float = RHO_PRIOR_N,
+) -> dict:
+    """Corrélation ρ entre l'erreur du bloc d'extrême droite au premier tour et l'erreur du
+    finaliste d'extrême droite dans les sondages de duel, hors `exclude`.
+
+    Paires (élection, nœud) : premier tour x = log(sondages / résultat) du bloc far_right
+    (poll_errors, round 1, niveau bloc, même méthode et même horizon que le nœud du second
+    tour) ; second tour y = erreur du finaliste RN moins le biais par horizon estimé sans
+    l'élection (`bias_curve`). Corrélation non centrée (η est de moyenne nulle, y est un
+    résidu), chaque élection pesant 1 quel que soit son nombre de nœuds, puis rétrécie vers 0 :
+    ρ = ρ_brut × n / (n + `prior_n`). Convention : ρ > 0 si les sondages surestiment (ou
+    sous-estiment) l'extrême droite aux deux tours à la fois.
+
+    Rend aussi `sd_x`, l'écart quadratique moyen de x sur les élections d'apprentissage (toutes,
+    avec ou sans finaliste RN), qui réduit une erreur de premier tour observée (veille du
+    second tour)."""
+    registry = registry or default_registry()
+    curated = paths.CURATED if curated is None else Path(curated)
+    excl = set(exclude)
+    errors = errors or calibrate_errors(excl, curated, registry)
+    pe = pl.read_parquet(curated / "poll_errors.parquet").filter(
+        (pl.col("round") == 1) & (pl.col("level") == "bloc") & (pl.col("unit") == "far_right")
+        & pl.col("method").is_in(["horizon", "mean_14d"])
+        & ~pl.col("election").is_in(list(excl))
+    )
+    x_of = {
+        (e, m, int(h)): math.log(ps / rs)
+        for e, m, h, ps, rs in pe.select(
+            "election", "method", "horizon_days", "poll_share", "result_share"
+        ).iter_rows()
+        if ps and rs
+    }
+    errs = rn_duel_errors(excl, curated, registry)
+
+    def var(a: float) -> float:
+        return float(errors.variance(a))
+
+    pairs = []
+    for p in errs:
+        x = x_of.get((p["election"], p["method"], p["horizon"]))
+        if x is None:
+            continue
+        own = bias_curve(errs, var, skip={p["election"]})
+        y = p["error"] - float(np.interp(p["age"], *zip(*own)))
+        pairs.append({"election": p["election"], "age": p["age"], "x": x, "y": y})
+    n_by_e: dict[int, int] = {}
+    for q in pairs:
+        n_by_e[q["election"]] = n_by_e.get(q["election"], 0) + 1
+    sxy = sum(q["x"] * q["y"] / n_by_e[q["election"]] for q in pairs)
+    sxx = sum(q["x"] ** 2 / n_by_e[q["election"]] for q in pairs)
+    syy = sum(q["y"] ** 2 / n_by_e[q["election"]] for q in pairs)
+    raw = sxy / math.sqrt(sxx * syy) if sxx > 0 and syy > 0 else 0.0
+    n = len(n_by_e)
+    # écart quadratique de x, toutes élections d'apprentissage, chacune pesant 1
+    xs: dict[int, list[float]] = {}
+    for (e, _, _), x in x_of.items():
+        xs.setdefault(e, []).append(x)
+    sd_x = math.sqrt(np.mean([np.mean(np.square(v)) for v in xs.values()])) if xs else 0.1
+    return {
+        "rho": raw * n / (n + prior_n) if n else 0.0,
+        "rho_raw": raw,
+        "n_elections": n,
+        "elections": sorted(n_by_e),
+        "sd_x": sd_x,
+        "pairs": pairs,
+    }
+
+
+def observed_far_right_error(
+    election: int, curated: Path | None = None
+) -> float | None:
+    """x observé à la veille du second tour : log(sondages des 14 derniers jours / résultat) du
+    bloc d'extrême droite au premier tour (poll_errors `mean_14d`) ; None s'il manque."""
+    curated = paths.CURATED if curated is None else Path(curated)
+    pe = pl.read_parquet(curated / "poll_errors.parquet").filter(
+        (pl.col("election") == election) & (pl.col("round") == 1) & (pl.col("level") == "bloc")
+        & (pl.col("unit") == "far_right") & (pl.col("method") == "mean_14d")
+    )
+    if pe.is_empty():
+        return None
+    return math.log(pe["poll_share"][0] / pe["result_share"][0])
+
+
+def turnout2_model(
+    registry: Registry, elections: Iterable[int] = TURNOUT2_ELECTIONS, exclude: Iterable[int] = ()
+) -> dict:
+    """Participation du second tour (exprimés / inscrits) : moyenne et écart-type sur l'échelle
+    logit des seconds tours `elections` hors `exclude` (loi logit-normale)."""
+    excl = set(exclude)
+    vals = {}
+    for y in elections:
+        e = registry.elections.get(y)
+        if y in excl or e is None or len(e.rounds) < 2:
+            continue
+        r2 = e.round_(2)
+        if r2.registered and r2.expressed:
+            vals[y] = r2.expressed / r2.registered
+    if len(vals) < 2:
+        raise ValueError(f"participation du second tour : moins de deux scrutins hors {sorted(excl)}")
+    x = np.array(list(vals.values()))
+    lx = np.log(x / (1 - x))
+    return {
+        "elections": {str(k): round(v, 4) for k, v in vals.items()},
+        "logit_mean": float(lx.mean()),
+        "logit_sd": float(lx.std(ddof=1)),
+    }
+
+
+def match_turnout(
+    weights: np.ndarray,
+    transfers: np.ndarray,
+    shift: np.ndarray,
+    target: np.ndarray,
+    iters: int = 60,
+) -> np.ndarray:
+    """Reports (m, G, 3) dont la participation du second tour Σ w (t_i + t_j) / Σ w vaut
+    `target` (m,) : décalage commun s, par tirage, du logit de la part « ni l'un ni l'autre »
+    des groupes `shift` (G,), résolu par dichotomie ; la répartition entre i et j de chaque
+    groupe et les reports des groupes non décalés (finalistes) sont inchangés. Une cible hors
+    d'atteinte est ramenée à la borne atteignable."""
+    t = np.asarray(transfers, dtype=float)
+    w = np.asarray(weights, dtype=float)
+    sh = np.asarray(shift, dtype=bool)[None, :]
+    split = t[..., 0] / np.maximum(t[..., 0] + t[..., 1], 1e-300)
+    ln = _logit(t[..., 2])
+    tot = w.sum(-1)
+    fixed = (w * (1 - t[..., 2]) * ~sh).sum(-1)
+
+    def turnout(s: np.ndarray) -> np.ndarray:
+        none = _expit(ln + s[:, None])
+        return (fixed + (w * (1 - none) * sh).sum(-1)) / tot
+
+    m = len(t)
+    lo, hi = np.full(m, -30.0), np.full(m, 30.0)
+    tgt = np.clip(np.asarray(target, dtype=float), turnout(hi) + 1e-9, turnout(lo) - 1e-9)
+    for _ in range(iters):
+        mid = 0.5 * (lo + hi)
+        above = turnout(mid) > tgt  # trop d'exprimés : plus de « ni l'un ni l'autre »
+        lo = np.where(above, mid, lo)
+        hi = np.where(above, hi, mid)
+    s = 0.5 * (lo + hi)
+    none = np.where(sh, _expit(ln + s[:, None]), t[..., 2])
+    return np.stack([(1 - none) * split, (1 - none) * (1 - split), none], axis=-1)
 
 
 # --- prior des reports
@@ -577,6 +875,13 @@ class PairFit:
     # plafonds de la part des inscrits (i, j), en points ; None : pas de plafond
     ceilings: tuple[float | None, float | None] = (None, None)
     ceiling_tau: float = 1.0  # exprimés / inscrits du second tour précédent (conversion)
+    # couplage avec l'erreur d'extrême droite du premier tour (option couple_far_right) :
+    # corrélation ρ entre la composante commune de l'erreur des sondages de duel et la
+    # composante de bloc far_right réduite reçue par tirage (`sample_pair(shared_error=…)`)
+    coupling_rho: float = 0.0
+    # participation du second tour (option second_round_turnout) : (moyenne, écart-type) logit
+    # des exprimés / inscrits ; None : participation implicite des reports
+    turnout2: tuple[float, float] | None = None
 
     @property
     def bias_sign(self) -> int:
@@ -605,9 +910,9 @@ class PairFit:
         except KeyError:
             return None
 
-    def poll_summary(self, horizon: float) -> tuple[float, float, float] | None:
-        """(ȳ moindres carrés généralisés, V, biais μ) des sondages à l'horizon donné ; None
-        sans sondage exploitable."""
+    def _gls(self, horizon: float) -> tuple[np.ndarray, np.ndarray, float, float] | None:
+        """(âges, poids des moindres carrés généralisés, ȳ, V) des sondages retenus ; None sans
+        sondage exploitable."""
         if not self.use_polls or self.polls.n == 0:
             return None
         age = np.array(
@@ -624,8 +929,33 @@ class PairFit:
         sol = np.linalg.solve(cov, np.column_stack([ones, y]))
         prec = float(ones @ sol[:, 0])
         ybar = float(ones @ sol[:, 1]) / prec
-        mu = self.errors.bias_far_right * self.bias_sign if self.use_bias else 0.0
-        return ybar, 1.0 / prec, mu
+        return age[keep], sol[:, 0] / prec, ybar, 1.0 / prec
+
+    def poll_summary(self, horizon: float) -> tuple[float, float, float] | None:
+        """(ȳ moindres carrés généralisés, V, biais μ) des sondages à l'horizon donné ; None
+        sans sondage exploitable. Avec une courbe de biais par âge, μ est la moyenne des biais
+        des sondages pondérée par les poids des moindres carrés (espérance exacte de ȳ)."""
+        g = self._gls(horizon)
+        if g is None:
+            return None
+        age, a, ybar, var = g
+        if not self.use_bias:
+            mu = 0.0
+        elif self.errors.bias_curve:
+            mu = float(a @ self.errors.bias_at(age)) * self.bias_sign
+        else:
+            mu = self.errors.bias_far_right * self.bias_sign
+        return ybar, var, mu
+
+    def common_variance(self, horizon: float) -> float:
+        """Variance de la composante commune (erreur d'horizon σ0² + σ1² min(a, a')/30) dans ȳ,
+        hors effets maison et échantillonnage ; 0 sans sondage."""
+        g = self._gls(horizon)
+        if g is None:
+            return 0.0
+        age, a, _, _ = g
+        c = self.errors.sigma0**2 + self.errors.sigma1**2 * np.minimum.outer(age, age) / 30.0
+        return float(a @ c @ a)
 
 
 @dataclass
@@ -641,6 +971,11 @@ class SecondRoundDraws:
     ess: float
     polls: tuple[float, float, float] | None
     horizon: float
+    # participation du second tour (exprimés / inscrits, fraction) de chaque tirage : tirée
+    # (option second_round_turnout) ou implicite des reports Σ w (t_i + t_j) / Σ w
+    turnout: np.ndarray | None = None
+    coupling: float = 0.0  # κ : décalage de l'erreur de duel par unité de composante partagée
+    shared: np.ndarray | None = None  # composante partagée z des tirages retenus (couplage)
 
 
 def duel_share(weights: np.ndarray, transfers: np.ndarray) -> np.ndarray:
@@ -711,23 +1046,49 @@ def sample_pair(
     rng: np.random.Generator,
     n: int = 4000,
     oversample: int = 8,
+    shared_error: np.ndarray | float | None = None,
 ) -> SecondRoundDraws:
-    """Échantillonnage d'importance du duel (voir le docstring du module)."""
+    """Échantillonnage d'importance du duel (voir le docstring du module).
+
+    `shared_error` : composante d'extrême droite réduite z du premier tour, une valeur par
+    tirage de `first_round` (ou un scalaire), rééchantillonnée avec lui. Avec
+    `fit.coupling_rho` ≠ 0 et un seul finaliste d'extrême droite, l'erreur commune des
+    sondages de duel e (variance σ_e² = `common_variance`) est corrélée à z :
+    e | z ~ N(κ z, σ_e² − κ²), κ = −ρ · signe · σ_e (z > 0 : extrême droite au-dessus des
+    sondages du premier tour ; ρ > 0 : les sondages se trompent dans le même sens aux deux
+    tours). La loi marginale de l'erreur est inchangée ; sans `shared_error`, rien ne change.
+
+    `fit.turnout2` : participation du second tour tirée par tirage (logit-normale) et imposée
+    aux reports par `match_turnout`, au lieu de la participation implicite des reports."""
     groups, w_all = _weights_matrix(fit, first_round)
     priors = [fit.groups[g] for g in groups]
     summary = fit.poll_summary(horizon)
+    kappa, z_all = 0.0, None
+    if shared_error is not None and summary is not None and fit.coupling_rho and fit.bias_sign:
+        z_all = np.broadcast_to(np.asarray(shared_error, dtype=float), (len(w_all),))
+        kappa = -fit.coupling_rho * fit.bias_sign * math.sqrt(fit.common_variance(horizon))
+    shift = np.array([g.shift for g in priors], dtype=bool)
     m = max(n * oversample, 1000)
     while True:
         idx = rng.integers(0, len(w_all), size=m)
         w = w_all[idx]
         t = draw_transfers(priors, fit.sigma_u, fit.sigma_v, rng, m)
+        tau2 = None
+        if fit.turnout2 is not None:
+            z2 = fit.turnout2[0] + fit.turnout2[1] * rng.standard_normal(m)
+            tau2 = 1.0 / (1.0 + np.exp(-z2))
+            t = match_turnout(w, t, shift, tau2)
         g = duel_share(w, t)
         if summary is None:
             lw = np.zeros(m)
         else:
             ybar, var, mu = summary
-            lw = -0.5 * (ybar - mu - g) ** 2 / var
-        lw = lw + ceiling_log_weight(fit.ceilings, g, fit.ceiling_tau)
+            if z_all is not None:
+                lw = -0.5 * (ybar - mu - kappa * z_all[idx] - g) ** 2 / (var - kappa**2)
+            else:
+                lw = -0.5 * (ybar - mu - g) ** 2 / var
+        tau_c = fit.ceiling_tau if tau2 is None else tau2
+        lw = lw + ceiling_log_weight(fit.ceilings, g, tau_c)
         p = np.exp(lw - lw.max())
         p /= p.sum()
         ess = float(1.0 / np.sum(p**2))
@@ -737,16 +1098,21 @@ def sample_pair(
     if ess < n / 4:
         log.warning("%s : taille effective faible (%.0f pour %d tirages)", fit.pair, ess, n)
     pick = rng.choice(m, size=n, replace=True, p=p)
+    wp, tp = w[pick], t[pick]
+    turnout = (wp * (tp[..., 0] + tp[..., 1])).sum(-1) / wp.sum(-1)
     return SecondRoundDraws(
         pair=fit.pair,
         share=g[pick],
         groups=groups,
-        transfers=t[pick],
-        weights=w[pick],
+        transfers=tp,
+        weights=wp,
         prior_share=g,
         ess=ess,
         polls=summary,
         horizon=horizon,
+        turnout=turnout,
+        coupling=kappa,
+        shared=None if z_all is None else z_all[idx][pick],
     )
 
 
@@ -947,7 +1313,8 @@ def first_round_mean(
     sub = sub.with_columns(
         (pl.col("share") / pl.col("share").sum().over("poll_id", "hypothesis_id")).alias("p")
     )
-    mean = sub.group_by("candidate_id").agg(pl.col("p").mean())
+    # ordre fixe : l'ordre de group_by varie d'un processus à l'autre, et avec lui les tirages
+    mean = sub.group_by("candidate_id").agg(pl.col("p").mean()).sort("candidate_id")
     tot = float(mean["p"].sum())
     shares = {c: float(p) / tot for c, p in mean.iter_rows()}
     return shares, (start, end), keep.height
@@ -998,6 +1365,13 @@ class SecondRoundModel:
     Les paramètres calibrés sur l'histoire (analogues de reports, erreur des sondages) excluent
     toujours l'élection ajustée. `use_polls=False` donne le prior seul (reports historiques
     sans sondages de duel) ; `use_bias=False` retire la correction du biais d'extrême droite.
+
+    Options structurelles (désactivées par défaut, voir runs/2026-10-20-second-round-v2) :
+    `bias_by_horizon` (biais RN estimé par âge des sondages, `bias_curve`, si `errors` n'est
+    pas fourni), `couple_far_right` (erreur de duel corrélée à la composante d'extrême droite
+    du premier tour passée à `sample(..., shared_error=…)` ; ρ = `coupling_rho` ou estimé par
+    `far_right_coupling` hors élection ajustée), `second_round_turnout` (participation du
+    second tour tirée d'une loi ajustée sur les seconds tours, hors élection ajustée).
     """
 
     def __init__(
@@ -1011,8 +1385,18 @@ class SecondRoundModel:
         use_bias: bool = True,
         use_potential: bool = False,
         potential: pl.DataFrame | None = None,
+        bias_by_horizon: bool = False,
+        couple_far_right: bool = False,
+        coupling_rho: float | None = None,
+        second_round_turnout: bool = False,
     ) -> None:
         self.registry = registry or default_registry()
+        self.bias_by_horizon = bias_by_horizon
+        self.couple_far_right = couple_far_right
+        self.coupling_rho = coupling_rho
+        self.second_round_turnout = second_round_turnout
+        self.coupling: dict | None = None  # résultat de far_right_coupling (ajustement)
+        self.turnout2: dict | None = None  # résultat de turnout2_model (ajustement)
         self.use_potential = use_potential
         # table normalisée (vvs.model.potential.normalize) ; chargée au premier ajustement
         self.potential = potential
@@ -1030,7 +1414,20 @@ class SecondRoundModel:
         if isinstance(asof, str):
             asof = dt.date.fromisoformat(asof)
         excl = self.exclude | {election}
-        errors = self.errors or calibrate_errors(excl, self.curated, self.registry)
+        errors = self.errors or calibrate_errors(
+            excl, self.curated, self.registry, bias_by_horizon=self.bias_by_horizon
+        )
+        rho = 0.0
+        if self.couple_far_right:
+            if self.coupling_rho is None:
+                self.coupling = far_right_coupling(excl, self.curated, self.registry)
+                rho = self.coupling["rho"]
+            else:
+                rho = float(self.coupling_rho)
+        turnout2 = None
+        if self.second_round_turnout:
+            self.turnout2 = turnout2_model(self.registry, exclude=excl)
+            turnout2 = (self.turnout2["logit_mean"], self.turnout2["logit_sd"])
         e = self.registry.elections[election]
         gap = (e.round_(2).date - e.round_(1).date).days
         abst, _ = abstain_ratio(self.registry, election, asof)
@@ -1073,6 +1470,8 @@ class SecondRoundModel:
                 use_bias=self.use_bias,
                 ceilings=ceilings,
                 ceiling_tau=tau,
+                coupling_rho=rho,
+                turnout2=turnout2,
             )
         return self
 
@@ -1102,8 +1501,13 @@ class SecondRoundModel:
         horizon: float,
         rng: np.random.Generator,
         n: int = 4000,
+        shared_error: np.ndarray | float | None = None,
     ) -> SecondRoundDraws:
-        return sample_pair(self.pair_fit(pair), first_round_draws, horizon, rng, n)
+        """`shared_error` : composante d'extrême droite réduite du premier tour, alignée sur
+        les tirages `first_round_draws` (voir `sample_pair`)."""
+        return sample_pair(
+            self.pair_fit(pair), first_round_draws, horizon, rng, n, shared_error=shared_error
+        )
 
     def predict(
         self,
@@ -1112,9 +1516,10 @@ class SecondRoundModel:
         horizon: float,
         rng: np.random.Generator,
         n: int = 4000,
+        shared_error: np.ndarray | float | None = None,
     ) -> np.ndarray:
         """Tirages (n,) de la part de `pair[0]` au second tour, en points d'exprimés."""
-        return self.sample(pair, first_round_draws, horizon, rng, n).share
+        return self.sample(pair, first_round_draws, horizon, rng, n, shared_error).share
 
     def summary(self, draws: SecondRoundDraws) -> dict:
         return summarize(self.pair_fit(draws.pair), draws)
@@ -1211,6 +1616,9 @@ def summarize(fit: PairFit, draws: SecondRoundDraws) -> dict:
         "ceiling_i": fit.ceilings[0],
         "ceiling_j": fit.ceilings[1],
         "ceiling_tau": fit.ceiling_tau if any(c is not None for c in fit.ceilings) else None,
+        "coupling_rho": fit.coupling_rho,
+        "coupling_kappa": draws.coupling,
+        "turnout2_median": None if draws.turnout is None else _q(draws.turnout, 0.5),
     }
     vi, vj = registered_shares(draws.weights, draws.transfers)
     out["registered_i_median"] = _q(vi, 0.5)

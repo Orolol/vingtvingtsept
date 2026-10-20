@@ -69,6 +69,8 @@ def test_draws_are_coherent(toy):
     assert np.all((w == qa) | (w == qb))
     assert np.all((d["share_a_second_round"].to_numpy() > 50) == (w == qa))
     assert d["turnout"].is_between(0.4, 0.95).all()
+    # participation du second tour (implicite des reports, option désactivée) : une fraction
+    assert d["turnout_second_round"].is_between(0.3, 0.99).all()
     # un placeholder n'est présent que dans l'état qui le porte
     assert d.filter(pl.col("placeholder_centre").is_not_null())["config"].n_unique() > 0
 
@@ -119,7 +121,24 @@ def test_pairs_and_transfers(toy):
     assert set(toy.transfers.select("candidate_a", "candidate_b").iter_rows()) <= pairs
     for k in ("to_a", "to_b", "none"):
         assert toy.transfers[f"{k}_q50"].is_between(0, 1).all()
-    assert toy.manifest["second_round_model"]["rn_bias_scale"] == 0.0
+    srm = toy.manifest["second_round_model"]
+    # erreurs injectées sans courbe : atténuation linéaire, nulle à 180 jours
+    assert srm["rn_bias_scale"] == 0.0 and srm["bias_mode"] == "linear"
+    assert not srm["couple_far_right"] and not srm["second_round_turnout"]
+
+
+def test_coupling_requires_bloc_component(tmp_path):
+    """Couplage demandé avec un modèle d'erreur qui ne rend pas la composante de bloc : échec
+    explicite plutôt qu'un second tour silencieusement découplé."""
+    from toy_run import ASOF, StubErrorModel, make_fit_dir, toy_scenarios
+
+    from vvs.model.second_round import ErrorParams
+    from vvs.model.simulate import simulate
+
+    with pytest.raises(ValueError, match="composante de bloc"):
+        simulate(make_fit_dir(tmp_path), ASOF, n_draws=200, scenarios=toy_scenarios(),
+                 error_model=StubErrorModel(), second_round_errors=ErrorParams(),
+                 couple_far_right=True)
 
 
 def test_trajectories_null_before_first_poll(toy):
