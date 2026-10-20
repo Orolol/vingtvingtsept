@@ -14,11 +14,14 @@ from __future__ import annotations
 
 import polars as pl
 
-from vvs.ingest.wikipedia import e2017, e2022, e2027
+from vvs.ingest.wikipedia import e2002, e2007, e2012, e2017, e2022, e2027
 from vvs.ingest.wikipedia.common import load_aliases, read_meta
 from vvs.ingest.wikipedia.engine import PageAdapter, ParseReport
 
 ADAPTERS: dict[int, PageAdapter] = {
+    2002: e2002.Adapter2002(),
+    2007: e2007.Adapter2007(),
+    2012: e2012.Adapter2012(),
     2017: e2017.Adapter2017(),
     2022: e2022.Adapter2022(),
     2027: e2027.Adapter2027(),

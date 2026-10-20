@@ -83,6 +83,8 @@ def test_aliases_are_scoped_and_strict():
     assert aliases.pollster("Ifop-Fiducial") == ("ifop", "Fiducial")
     with pytest.raises(UnknownLabelError):
         aliases.candidate("Inconnu Total")
-    # « Le Pen » seul n'est pas dans la section commune (Jean-Marie avant 2012)
+    # « Le Pen » seul n'est pas dans la section commune : Jean-Marie avant 2012, Marine après
+    assert load_aliases(2007).candidate("Le Pen") == "le_pen_jean_marie"
+    assert load_aliases(2012).candidate("Le Pen") == "le_pen_marine"
     with pytest.raises(UnknownLabelError):
-        load_aliases(2002).candidate("Le Pen")
+        load_aliases(1995).candidate("Le Pen")

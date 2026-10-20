@@ -24,29 +24,57 @@ candidates:
   common:
     # Nom + prénom
     alain juppe: juppe_alain
+    alain madelin: madelin_alain
+    arlette laguiller: laguiller_arlette
     arnaud montebourg: montebourg_arnaud
     benoit hamon: hamon_benoit
+    bernard tapie: tapie_bernard
+    bertrand delanoe: delanoe_bertrand
     bruno le maire: le_maire_bruno
+    bruno megret: megret_bruno
     cecile duflot: duflot_cecile
+    charles pasqua: pasqua_charles
+    christiane taubira: taubira_christiane
+    christine boutin: boutin_christine
+    corinne lepage: lepage_corinne
+    daniel gluckstein: gluckstein_daniel
+    dominique de villepin: de_villepin_dominique
+    dominique strauss kahn: strauss_kahn_dominique
+    dominique voynet: voynet_dominique
     emmanuel macron: macron_emmanuel
     eva joly: joly_eva
     francois asselineau: asselineau_francois
     francois bayrou: bayrou_francois
     francois fillon: fillon_francois
     francois hollande: hollande_francois
+    frederic nihous: nihous_frederic
+    gerard schivardi: schivardi_gerard
+    herve morin: morin_herve
+    jack lang: lang_jack
     jacques cheminade: cheminade_jacques
+    jacques chirac: chirac_jacques
     jean francois cope: cope_jean_francois
     jean lassalle: lassalle_jean
+    jean louis borloo: borloo_jean_louis
     jean luc melenchon: melenchon_jean_luc
+    jean pierre chevenement: chevenement_jean_pierre
+    jean saint josse: saint_josse_jean
+    jose bove: bove_jose
+    laurent fabius: fabius_laurent
+    lionel jospin: jospin_lionel
     manuel valls: valls_manuel
+    marie george buffet: buffet_marie_george
     martine aubry: aubry_martine
     nathalie arthaud: arthaud_nathalie
     nicolas dupont aignan: dupont_aignan_nicolas
     nicolas hulot: hulot_nicolas
     nicolas sarkozy: sarkozy_nicolas
+    noel mamere: mamere_noel
     olivier besancenot: besancenot_olivier
     philippe de villiers: de_villiers_philippe
     philippe poutou: poutou_philippe
+    robert hue: hue_robert
+    segolene royal: royal_segolene
     sylvia pinel: pinel_sylvia
     vincent peillon: peillon_vincent
     yannick jadot: jadot_yannick
@@ -55,11 +83,13 @@ candidates:
     arthaud: arthaud_nathalie
     asselineau: asselineau_francois
     attal: attal_gabriel
+    aubry: aubry_martine
     bardella: bardella_jordan
     barnier: barnier_michel
     baroin: baroin_francois
     bayrou: bayrou_francois
     bertrand: bertrand_xavier
+    besancenot: besancenot_olivier
     bonnal: bonnal_sebastien
     borne: borne_elisabeth
     bouamrane: bouamrane_karim
@@ -71,6 +101,7 @@ candidates:
     darmanin: darmanin_gerald
     dati: dati_rachida
     delga: delga_carole
+    duflot: duflot_cecile
     dupont aignan: dupont_aignan_nicolas
     faure: faure_olivier
     fillon: fillon_francois
@@ -80,7 +111,9 @@ candidates:
     hamon: hamon_benoit
     hidalgo: hidalgo_anne
     hollande: hollande_francois
+    hulot: hulot_nicolas
     jadot: jadot_yannick
+    joly: joly_eva
     juppe: juppe_alain
     juvin: juvin_philippe
     knafo: knafo_sarah
@@ -108,6 +141,7 @@ candidates:
     roussel: roussel_fabien
     royal: royal_segolene
     ruffin: ruffin_francois
+    strauss kahn: strauss_kahn_dominique
     taubira: taubira_christiane
     thouy: thouy_helene
     tondelier: tondelier_marine
@@ -119,6 +153,21 @@ candidates:
   ambiguous:
     - bardella le pen
   elections:
+    # Avant 2012, « Le Pen » seul désigne Jean-Marie (liens /wiki/Jean-Marie_Le_Pen sur les
+    # pages 2002 et 2007) ; à partir de 2012, Marine.
+    2002:
+      jean marie le pen: le_pen_jean_marie
+      le pen: le_pen_jean_marie
+    2007:
+      jean marie le pen: le_pen_jean_marie
+      le pen: le_pen_jean_marie
+    2012:
+      marine le pen: le_pen_marine
+      le pen: le_pen_marine
+      # tableau « Années 2007-2009 », colonne « Candidat FN » : les deux sont testés ;
+      # liens vérifiés (/wiki/Marine_Le_Pen, /wiki/Jean-Marie_Le_Pen)
+      m le pen: le_pen_marine
+      j m le pen: le_pen_jean_marie
     2017:
       marine le pen: le_pen_marine
       le pen: le_pen_marine
@@ -148,14 +197,18 @@ pollsters:
   ipsos: ipsos
   ipsos rolling: ipsos
   ipsos sopra steria: {pollster: ipsos, sponsor: Sopra Steria}
+  ispos: ipsos  # coquille de la page 2012
   kantar: kantar
   kantar sofres: kantar
   kantar sofres onepoint: {pollster: kantar, sponsor: OnePoint}
+  lh2: lh2
+  louis harris: lh2  # ex-Louis Harris France (2002), renommé LH2 ; distinct de Harris Interactive
   odoxa: odoxa
   opinion way: opinionway
   opinionway: opinionway
   opinionway rolling: opinionway
   scan research le terrain: {pollster: scanresearch, sponsor: Le Terrain}
+  sofres: sofres  # libellé des pages 2002-2012 (TNS Sofres)
   tns sofres: sofres
   verian: verian
   yougov: yougov

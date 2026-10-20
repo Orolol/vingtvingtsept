@@ -26,6 +26,11 @@ Règles appliquées à toutes les pages :
   sur l'institut) ; une note « Sondage commandé par X » renseigne `sponsor` ;
 - les lignes d'évènement (cellule unique sur toute la largeur), les lignes `Résultats` et
   les lignes vides sont sautées sans être comptées comme des sondages ;
+- une hypothèse dont les parts exprimées (candidats et `other`) somment hors de
+  `PageAdapter.share_sum_bounds` (95 à 105 par défaut) est écartée et journalisée : c'est le
+  signe d'une coquille (`38 %` pour `28 %`) ou d'un candidat testé mais perdu par la page ;
+  la bande est plus large que celle de la curation (97 à 103, sondage marqué `suspect`), qui
+  reste seule juge des écarts modérés ;
 - un libellé de candidat ou d'institut inconnu lève `UnknownLabelError` : tout le parsing
   échoue, on complète `data/registry/aliases_wikipedia.yaml`.
 """
@@ -315,6 +320,8 @@ class PageAdapter:
     sponsor_note_pattern: str = r"^sondage commande par (?P<sponsor>[^,.;(]+)"
     # Lignes de résultats officiels insérées dans les tableaux (« Résultats », « 1er tour »).
     results_row_pattern: str = r"resultat|\d+ ?(er|e|nd) tour\b"
+    # Bornes de la somme des parts exprimées d'une hypothèse ; None désactive le contrôle.
+    share_sum_bounds: tuple[float, float] | None = (95.0, 105.0)
 
     # --- classement des tableaux -------------------------------------------
 
@@ -555,6 +562,11 @@ class PageAdapter:
                 add(cid, v, "expressed")
         if not any(base == "expressed" for _, base in shares.values()):
             raise RowSkip("aucune intention de vote")
+        if self.share_sum_bounds is not None:
+            lo, hi = self.share_sum_bounds
+            total = sum(v for v, base in shares.values() if base == "expressed")
+            if not lo <= total <= hi:
+                raise RowSkip(f"somme des intentions hors [{lo:g}, {hi:g}] : {total:g}")
         return shares
 
 
