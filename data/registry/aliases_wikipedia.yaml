@@ -1,0 +1,161 @@
+# Alias des libellés rencontrés dans les listes de sondages Wikipédia FR -> ids du registre.
+#
+# Lu par vvs.ingest.wikipedia.common.load_aliases. Les clés sont comparées après
+# normalisation (ASCII minuscule, parenthèses de parti retirées, tirets et apostrophes en
+# espaces) : « Jean-Luc Mélenchon ( LFI ) » et « jean luc melenchon » sont la même clé.
+# Un libellé absent fait échouer le parsing : on complète ce fichier, on ne devine pas.
+#
+# candidates.common : libellés valables pour toutes les élections.
+# candidates.elections.<AAAA> : libellés propres à une élection, prioritaires sur common.
+#   Les noms seuls qui désignent des personnes différentes selon l'époque (« Le Pen »
+#   père ou fille) ne vont JAMAIS dans common.
+# Convention d'id (data/registry/README.md) : nom_prenom ASCII ; la particule « de » fait
+# partie du nom, comme dans candidates.yaml (de_villepin_dominique, de_villiers_philippe).
+#
+# candidates.ambiguous : libellés reconnus qui ne désignent pas une personne unique
+#   (« 34 Bardella / Le Pen » : candidat RN non tranché) ; l'hypothèse est écartée et
+#   journalisée, sans erreur.
+#
+# pollsters : libellé d'institut -> id court, ou {pollster, sponsor} quand le libellé
+# accole un commanditaire ou partenaire (« Ifop-Fiducial »). « (rolling) » désigne les
+# enquêtes quotidiennes glissantes : même institut, même id.
+
+candidates:
+  common:
+    # Nom + prénom
+    alain juppe: juppe_alain
+    arnaud montebourg: montebourg_arnaud
+    benoit hamon: hamon_benoit
+    bruno le maire: le_maire_bruno
+    cecile duflot: duflot_cecile
+    emmanuel macron: macron_emmanuel
+    eva joly: joly_eva
+    francois asselineau: asselineau_francois
+    francois bayrou: bayrou_francois
+    francois fillon: fillon_francois
+    francois hollande: hollande_francois
+    jacques cheminade: cheminade_jacques
+    jean francois cope: cope_jean_francois
+    jean lassalle: lassalle_jean
+    jean luc melenchon: melenchon_jean_luc
+    manuel valls: valls_manuel
+    martine aubry: aubry_martine
+    nathalie arthaud: arthaud_nathalie
+    nicolas dupont aignan: dupont_aignan_nicolas
+    nicolas hulot: hulot_nicolas
+    nicolas sarkozy: sarkozy_nicolas
+    olivier besancenot: besancenot_olivier
+    philippe de villiers: de_villiers_philippe
+    philippe poutou: poutou_philippe
+    sylvia pinel: pinel_sylvia
+    vincent peillon: peillon_vincent
+    yannick jadot: jadot_yannick
+    # Nom seul (sans homonyme gênant sur 2017-2027)
+    alliot marie: alliot_marie_michele
+    arthaud: arthaud_nathalie
+    asselineau: asselineau_francois
+    attal: attal_gabriel
+    bardella: bardella_jordan
+    barnier: barnier_michel
+    baroin: baroin_francois
+    bayrou: bayrou_francois
+    bertrand: bertrand_xavier
+    bonnal: bonnal_sebastien
+    borne: borne_elisabeth
+    bouamrane: bouamrane_karim
+    braun pivet: braun_pivet_yael
+    castex: castex_jean
+    cazeneuve: cazeneuve_bernard
+    cheminade: cheminade_jacques
+    ciotti: ciotti_eric
+    darmanin: darmanin_gerald
+    dati: dati_rachida
+    delga: delga_carole
+    dupont aignan: dupont_aignan_nicolas
+    faure: faure_olivier
+    fillon: fillon_francois
+    glucksmann: glucksmann_raphael
+    guaino: guaino_henri
+    guedj: guedj_jerome
+    hamon: hamon_benoit
+    hidalgo: hidalgo_anne
+    hollande: hollande_francois
+    jadot: jadot_yannick
+    juppe: juppe_alain
+    juvin: juvin_philippe
+    knafo: knafo_sarah
+    lagarde: lagarde_jean_christophe
+    larrouturou: larrouturou_pierre
+    lassalle: lassalle_jean
+    le maire: le_maire_bruno
+    lecornu: lecornu_sebastien
+    lisnard: lisnard_david
+    macron: macron_emmanuel
+    marchandise: marchandise_charlotte
+    maurel: maurel_emmanuel
+    melenchon: melenchon_jean_luc
+    montebourg: montebourg_arnaud
+    payre: payre_denis
+    pecresse: pecresse_valerie
+    philippe: philippe_edouard
+    philippot: philippot_florian
+    piolle: piolle_eric
+    poisson: poisson_jean_frederic
+    polony: polony_natacha
+    poutou: poutou_philippe
+    retailleau: retailleau_bruno
+    rousseau: rousseau_sandrine
+    roussel: roussel_fabien
+    royal: royal_segolene
+    ruffin: ruffin_francois
+    taubira: taubira_christiane
+    thouy: thouy_helene
+    tondelier: tondelier_marine
+    villepin: de_villepin_dominique
+    villiers: de_villiers_philippe
+    wauquiez: wauquiez_laurent
+    yade: yade_rama
+    zemmour: zemmour_eric
+  ambiguous:
+    - bardella le pen
+  elections:
+    2017:
+      marine le pen: le_pen_marine
+      le pen: le_pen_marine
+    2022:
+      marine le pen: le_pen_marine
+      le pen: le_pen_marine
+    2027:
+      marine le pen: le_pen_marine
+      le pen: le_pen_marine
+
+pollsters:
+  atlas politico: atlasintel
+  bva: bva
+  cevipof ipsos sopra steria: {pollster: ipsos, sponsor: Cevipof}
+  cluster 17: cluster17
+  cluster17: cluster17
+  csa: csa
+  dedicated research: dedicated
+  elabe: elabe
+  future thinking ssi: futurethinking
+  harris: harris
+  harris interactive: harris
+  harris interractive: harris
+  ifop: ifop
+  ifop rolling: ifop
+  ifop fiducial: {pollster: ifop, sponsor: Fiducial}
+  ipsos: ipsos
+  ipsos rolling: ipsos
+  ipsos sopra steria: {pollster: ipsos, sponsor: Sopra Steria}
+  kantar: kantar
+  kantar sofres: kantar
+  kantar sofres onepoint: {pollster: kantar, sponsor: OnePoint}
+  odoxa: odoxa
+  opinion way: opinionway
+  opinionway: opinionway
+  opinionway rolling: opinionway
+  scan research le terrain: {pollster: scanresearch, sponsor: Le Terrain}
+  tns sofres: sofres
+  verian: verian
+  yougov: yougov

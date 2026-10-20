@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import typer
 
 app = typer.Typer(help="vingtvingtsept — prévision de la présidentielle 2027", no_args_is_help=True)
@@ -38,12 +40,20 @@ def ingest_commission(
 
 
 @parse_app.command("commission")
-def parse_commission() -> None:
-    """Notices brutes -> polls_commission.parquet et poll_results_commission.parquet."""
+def parse_commission(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Détail par notice"),
+) -> None:
+    """Notices brutes -> polls_commission.parquet et poll_results_commission.parquet.
+
+    Code de sortie 1 si un tableau d'intentions de vote contient un libellé inconnu (la
+    notice est alors exclue ; compléter la table d'alias de vvs.ingest.commission.aliases).
+    """
     from vvs.ingest.commission.parse import run
 
     report = run()
-    typer.echo(report.summary())
+    typer.echo(report.summary(verbose=verbose))
+    if report.has_unknown_labels:
+        raise typer.Exit(code=1)
 
 
 @ingest_app.command("wikipedia")
@@ -109,7 +119,10 @@ def parse_interieur(
 
 @ingest_app.command("macro")
 def ingest_macro(
-    series: list[str] = typer.Option(None, "--series", help="series_id de data/registry/macro_series.yaml (répétable ; toutes par défaut)"),
+    series: Annotated[
+        list[str] | None,
+        typer.Option("--series", help="series_id de data/registry/macro_series.yaml (répétable ; toutes par défaut)"),
+    ] = None,
 ) -> None:
     """Séries économiques et de popularité -> data/raw/macro/<série>/<date>.<ext>."""
     from vvs.ingest.macro import ingest
@@ -119,7 +132,10 @@ def ingest_macro(
 
 @parse_app.command("macro")
 def parse_macro(
-    series: list[str] = typer.Option(None, "--series", help="series_id à reparser (les autres lignes du parquet sont conservées)"),
+    series: Annotated[
+        list[str] | None,
+        typer.Option("--series", help="series_id à reparser (les autres lignes du parquet sont conservées)"),
+    ] = None,
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Détaille trous, désaccords et PDF Ifop"),
 ) -> None:
     """Derniers fichiers bruts de data/raw/macro -> data/curated/macro.parquet."""
