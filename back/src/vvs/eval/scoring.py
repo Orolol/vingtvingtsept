@@ -29,7 +29,7 @@ import numpy as np
 import polars as pl
 
 from vvs.eval import metrics as mt
-from vvs.eval.backtest import ELECTION_WEIGHT, asof_for, fit_dir
+from vvs.eval.backtest import ELECTION_WEIGHT, VARIANT_ERROR_KWARGS, asof_for, fit_dir
 from vvs.eval.baselines import last_by_pollster, poll_mean
 from vvs.eval.configurations import official_map
 from vvs.model.data import load_polls
@@ -247,6 +247,8 @@ class ScoreResult:
     calibration: pl.DataFrame
     error_models: dict = field(default_factory=dict)
     missing: list = field(default_factory=list)
+    # modèles d'erreur des variantes qui n'ont pas celui de la référence, par (variante, élection)
+    variant_error_models: dict = field(default_factory=dict)
 
     def summary(self) -> str:
         s = self.metrics.filter(pl.col("level") == "summary")
@@ -282,15 +284,24 @@ def score_backtest(
     ajustement avec substitution, retirer de la configuration les tenants lieu que le modèle
     redistribue (défaut) ; faux : garder la correspondance par règles de la phase 3 (parts du
     logit emboîté sur toute la configuration), pour séparer l'effet du modèle de celui de la
-    correspondance."""
+    correspondance. Une variante de `backtest.VARIANT_ERROR_KWARGS` a son propre modèle
+    d'erreur (options ajoutées à `error_kwargs`) ; les autres partagent celui de la
+    référence."""
     reg = default_registry()
     variants = variants or [variant]
     cal = tuple(calibration_elections or CALIBRATION_ELECTIONS)
     metric_rows, fc_rows, cal_rows, missing = [], [], [], []
     error_models = {}
+    variant_models: dict[tuple[str, int], ErrorModel] = {}
     for e in elections:
-        em = ErrorModel.fit(elections=cal, exclude=[e], registry=reg, **(error_kwargs or {}))
-        error_models[e] = em
+        fitted: dict[str, ErrorModel] = {}
+        for v in variants:
+            kw = (error_kwargs or {}) | VARIANT_ERROR_KWARGS.get(v, {})
+            key = repr(sorted(kw.items()))
+            if key not in fitted:
+                fitted[key] = ErrorModel.fit(elections=cal, exclude=[e], registry=reg, **kw)
+            variant_models[(v, e)] = fitted[key]
+        error_models[e] = variant_models[(variants[0], e)]
         off = official(reg, e)
         for h in horizons:
             asof = asof_for(e, h)
@@ -317,7 +328,7 @@ def score_backtest(
                     points["last_pollster"] = last_by_pollster(e, asof, K, registry=reg, polls=polls)
                 case = score_case(
                     draws_log_shares(dr, K, "asof"), draws_log_shares(dr, K, "vote"), K, kblocs,
-                    h, em, omap, off, points, rng, n_draws,
+                    h, variant_models[(v, e)], omap, off, points, rng, n_draws,
                     drift=variant_drift(v, e, asof, h, K, n_draws, seed, reg,
                                         log_shares=draws_log_shares(dr, K, "asof")),
                 )
@@ -333,6 +344,8 @@ def score_backtest(
         calibration=pl.DataFrame(cal_rows),
         error_models=error_models,
         missing=missing,
+        variant_error_models={k: m for k, m in variant_models.items()
+                              if m is not error_models[k[1]]},
     )
     if write and not res.metrics.is_empty():
         write_outputs(res, variants)
@@ -406,6 +419,10 @@ def write_outputs(res: ScoreResult, variants: list[str]) -> None:
     edir.mkdir(exist_ok=True)
     for e, em in res.error_models.items():
         (edir / f"exclude_{e}.json").write_text(
+            json.dumps(em.to_dict(), indent=2, ensure_ascii=False, default=str)
+        )
+    for (v, e), em in res.variant_error_models.items():
+        (edir / f"exclude_{e}_{v}.json").write_text(
             json.dumps(em.to_dict(), indent=2, ensure_ascii=False, default=str)
         )
     s = res.metrics.filter(pl.col("level") == "summary")

@@ -163,3 +163,102 @@ def test_sample_eta_parts_matches_sample_eta_and_exposes_bloc_component(nu):
     else:
         assert np.corrcoef(eta[:, 0], z)[0, 1] > 0.5 * expected
     assert abs(np.corrcoef(eta[:, 2], z)[0, 1]) < 0.02
+
+
+# --- scrutins de liste (extra_items, with_lists) et biais d'extrême droite depuis 2017
+
+
+def _toy_with_extra(weight: float, seed: int = 0):
+    """Présidentielles jouets 0..19 et dix « scrutins de liste » dont l'erreur finale propre
+    est quatre fois plus dispersée."""
+    true = params()
+    true.bloc_weight = {}
+    items = toy_items(20, true, seed=seed)
+    rng = np.random.default_rng(seed + 1)
+    extra = []
+    for k in range(10):
+        cov = np.diag(np.full(len(P), (2 * true.sigma_cand_final) ** 2))
+        extra.append(er.Item(f"euro{2000 + k}", "final", 0.0, list(map(str, range(len(P)))),
+                             BLOCS, P, rng.multivariate_normal(np.zeros(len(P)), cov),
+                             weight=weight))
+    return true, items, extra
+
+
+def test_extra_items_weighted_and_never_excluded():
+    true, items, extra = _toy_with_extra(1.0)
+    kw = dict(elections=range(20), items=items, nu=math.inf, gamma=true.gamma, use_bias=False)
+    base = er.ErrorModel.fit(**kw)
+    sc = {}
+    for w in (0.0, 0.5, 1.0):
+        for it in extra:
+            it.weight = w
+        m = er.ErrorModel.fit(**kw, exclude=[3], extra_items=extra)
+        # leave-one-election-out : la présidentielle exclue part, les scrutins de liste restent
+        assert m.info["train"] == [e for e in range(20) if e != 3]
+        assert m.info["extra_elections"] == [it.election for it in extra]
+        sc[w] = m.params.sigma_cand_final
+    # poids nul : comme sans les items (à l'exclusion près) ; poids croissant : σ_Cf croît
+    no_extra = er.ErrorModel.fit(**kw, exclude=[3])
+    assert sc[0.0] == pytest.approx(no_extra.params.sigma_cand_final, rel=1e-6)
+    assert sc[0.0] < sc[0.5] < sc[1.0]
+    assert base.info["extra_elections"] == [] and not base.info["with_lists"]
+    # un item supplémentaire ne peut pas porter une élection évaluable
+    clash = [er.Item(5, "final", 0.0, ["a", "b", "c"], ["left", "right", "centre"],
+                     np.array([0.3, 0.3, 0.4]), np.zeros(3))]
+    with pytest.raises(ValueError):
+        er.ErrorModel.fit(**kw, extra_items=clash)
+
+
+def test_with_lists_false_is_current_behaviour_and_true_adds_list_finals():
+    true, items, _ = _toy_with_extra(1.0)
+    kw = dict(elections=range(20), items=items, nu=math.inf, gamma=true.gamma, use_bias=False)
+    a = er.ErrorModel.fit(**kw)
+    b = er.ErrorModel.fit(**kw, with_lists=False, extra_items=None,
+                          far_right_bias_since_2017=False)
+    assert a.to_dict()["params"] == b.to_dict()["params"]
+    m = er.ErrorModel.fit(**kw, with_lists=True)
+    from vvs.model.error_lists import LIST_KEYS, default_list_items
+
+    lst = default_list_items()
+    assert [it.election for it in lst] == list(LIST_KEYS)
+    assert all(it.kind == "final" and it.weight == 0.5 for it in lst)
+    assert m.info["extra_elections"] == list(LIST_KEYS)
+    assert m.info["n_items"] == len(items) + len(LIST_KEYS)
+    assert m.to_dict()["params"] != a.to_dict()["params"]
+
+
+def _fr_final(e, d_fr, weight=1.0):
+    blocs = ["far_right", "far_right", "right", "left"]
+    p = np.array([0.25, 0.05, 0.3, 0.4])
+    d = np.array([d_fr, d_fr, 0.0, 0.0])
+    return er.Item(e, "final", 0.0, ["a", "b", "c", "d"], blocs, p, d, weight=weight)
+
+
+def test_far_right_bias_since_2017_estimate_and_shift():
+    items = [_fr_final(2012, 0.2), _fr_final(2017, -0.10), _fr_final(2022, -0.12),
+             _fr_final("euro2019", -0.08, weight=0.5), _fr_final("euro2014", 0.3, weight=0.5)]
+    errs = er.far_right_final_errors(items)
+    # log-rapport −0,10 sur un bloc de 30 % : en logit, plus fort en valeur absolue
+    assert errs[2017][0] < -0.10
+    mu, diag = er.far_right_bias_since(items)
+    assert set(diag["errors"]) == {"2017", "2022", "euro2019"}  # rien d'avant 2017
+    assert diag["same_sign"] and 0 < diag["shrink"] < 1
+    assert mu == pytest.approx(diag["mean"] * diag["shrink"]) and mu < 0
+    shifted = er.shift_far_right(items, mu)
+    assert np.allclose(shifted[0].d, items[0].d) and np.allclose(shifted[4].d, items[4].d)
+    assert np.allclose(shifted[1].d, items[1].d - mu * np.array([1, 1, 0, 0]))
+    assert items[1].d[0] == -0.10  # copies : les items d'origine ne bougent pas
+
+
+def test_far_right_bias_applied_only_to_elections_since_2017():
+    items = [_fr_final(e, x) for e, x in ((2007, 0.2), (2012, 0.15), (2017, -0.1), (2022, -0.12))]
+    kw = dict(elections=(2007, 2012, 2017, 2022), items=items, nu=math.inf, gamma=0.4,
+              use_bias=False, far_right_bias_since_2017=True)
+    m22 = er.ErrorModel.fit(**kw, exclude=[2022])
+    d = m22.info["far_right_bias_since_2017"]
+    assert d["applied"] and "2022" not in d["errors"] and "2017" in d["errors"]
+    assert m22.params.bias["far_right"] == pytest.approx(d["mu"]) and d["mu"] < 0
+    m12 = er.ErrorModel.fit(**kw, exclude=[2012])
+    assert not m12.info["far_right_bias_since_2017"]["applied"]
+    assert "far_right" not in m12.params.bias
+    assert er.ErrorModel.fit(**kw).info["far_right_bias_since_2017"]["applied"]  # prévision

@@ -560,6 +560,10 @@ def simulate_cmd(
     substitution: bool = typer.Option(
         False, "--substitution", help="Substitution intra-bloc (logit emboîté) dans l'ajustement"
     ),
+    lists: bool = typer.Option(
+        None, "--lists/--no-lists",
+        help="η calibré aussi sur les scrutins de liste (défaut : ERROR_WITH_LISTS de simulate.py)",
+    ),
 ) -> None:
     """Simulation de l'élection (docs/04-modele.md § 5) : scénarios, premier tour, second tour.
 
@@ -611,8 +615,9 @@ def simulate_cmd(
     else:
         typer.echo(f"ajustement réutilisé, sondages inchangés (empreinte {polls_hash}) : {fit_dir}")
     out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-simulate"
+    kw_sim = {} if lists is None else {"error_with_lists": lists}
     res = simulate(fit_dir, d, out_dir, election=election, n_draws=draws, seed=seed, rn_bias=rn_bias,
-                   rn_bias_curve=rn_bias_curve)
+                   rn_bias_curve=rn_bias_curve, **kw_sim)
     manifest_path = out_dir / "manifest.json"
     if manifest_path.exists():
         m = json.loads(manifest_path.read_text())

@@ -116,6 +116,9 @@ COUPLE_FAR_RIGHT = False
 SECOND_ROUND_TURNOUT = False
 TURNOUT_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 ERROR_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
+# η calibré aussi sur les erreurs finales des scrutins de liste (ErrorModel.fit(with_lists=…),
+# vvs.model.error_lists ; backtest : runs/2026-10-20-backtest-lists)
+ERROR_WITH_LISTS = True
 QUANTILES = (0.05, 0.25, 0.5, 0.75, 0.95)
 QNAMES = ("q05", "q25", "q50", "q75", "q95")
 OTHER_CELL = -1  # cellule de second tour des configurations hors des plus probables
@@ -637,6 +640,7 @@ def simulate(
     rn_bias_curve: bool = RN_BIAS_CURVE,
     couple_far_right: bool = COUPLE_FAR_RIGHT,
     second_round_turnout: bool = SECOND_ROUND_TURNOUT,
+    error_with_lists: bool = ERROR_WITH_LISTS,
     min_hypotheses: int = MIN_HYPOTHESES,
     share_rule: ShareRule | None = None,
     scenarios: ScenariosFile | None = None,
@@ -650,6 +654,7 @@ def simulate(
     `rn_bias` : part du biais RN du second tour appliquée (défaut : 1 avec la courbe par
     horizon, `rn_bias_scale` à l'horizon sinon). `rn_bias_curve`, `couple_far_right`,
     `second_round_turnout` : options du second tour (docstring du module).
+    `error_with_lists` : η calibré aussi sur les scrutins de liste (`ErrorModel.fit`).
     `n_condition_configs` : configurations résumées individuellement (défaut : celles qui
     couvrent `config_mass`). `error_model`, `second_round_errors`, `scenarios`, `registry` :
     injectables pour les tests (défaut : calibrés sur 2002-2022, fichiers du dépôt)."""
@@ -678,7 +683,8 @@ def simulate(
 
     # 1-3. premier tour
     if error_model is None:
-        error_model = ErrorModel.fit(elections=ERROR_ELECTIONS, registry=reg, use_bias=False)
+        error_model = ErrorModel.fit(elections=ERROR_ELECTIONS, registry=reg, use_bias=False,
+                                     with_lists=error_with_lists)
     fr = first_round_draws(fit, uni, enum, error_model, horizon, n_draws, rng, share_rule)
     cfg, present, shares = fr["config"], fr["present"], fr["shares"]
     turnout_params = turnout_model(reg)
@@ -820,6 +826,7 @@ def simulate(
         "universe": uni.table(),
         "error_model": error_model.to_dict()["params"] if hasattr(error_model, "to_dict") else None,
         "error_model_nu_scores": getattr(error_model, "info", {}).get("nu_scores"),
+        "error_model_extra_elections": getattr(error_model, "info", {}).get("extra_elections"),
         "second_round_model": {
             "sigma0": errors.sigma0,
             "sigma1": errors.sigma1,

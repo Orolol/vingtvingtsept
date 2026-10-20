@@ -56,6 +56,24 @@ Données, par élection d'apprentissage :
 Biais de bloc μ_b : admis seulement si l'erreur finale du bloc (log résultat − log agrégat) a le
 même signe sur toutes les élections d'apprentissage (au moins trois), puis rétréci vers 0 par un
 prior N(0, 0,05²) ; nul sinon.
+
+Scrutins de liste (`extra_items`, `with_lists`, `vvs.model.error_lists`) : items d'autres
+scrutins (européennes, législatives) ajoutés à l'apprentissage sous leur propre clé
+(`Item.election`, par exemple "euro2019"), pondérés par `Item.weight`, jamais laissés de côté
+par `exclude` (ils ne sont jamais l'élection évaluée). Dans la validation croisée interne de ν,
+chacun compte comme une élection d'apprentissage (pli laissé de côté à son tour).
+`with_lists=True` ajoute le défaut de `error_lists` : erreurs finales seules, poids 0,5.
+
+Biais d'extrême droite depuis 2017 (option `far_right_bias_since_2017`, non admise par défaut) :
+l'extrême droite est surestimée par les sondages de fin de campagne dans les scrutins depuis 2017
+(présidentielles 2017 et 2022, européennes 2019 et 2024, législatives 2022 et 2024) alors
+qu'elle était sous-estimée avant. Le biais est un décalage μ des logits des candidats du bloc
+far_right, μ = logit(part du bloc au résultat) − logit(part dans l'agrégat final), moyenne
+pondérée (`Item.weight`) sur les erreurs finales d'apprentissage depuis 2017, scrutins de liste
+compris même sans `with_lists`, rétrécie vers 0 comme le biais de bloc (prior N(0, 0,05²)). Les
+erreurs finales depuis 2017 sont décalées de μ avant l'estimation des variances ; μ n'est
+appliqué aux tirages que si l'élection prévue est dans le régime (aucune élection exclue, ou
+toutes de 2017 ou après) : au backtest, il n'agit que sur 2017 et 2022.
 """
 
 from __future__ import annotations
@@ -97,7 +115,7 @@ JW_ELECTION_ID = {
 class Item:
     """Un vecteur d'erreurs en log-parts sur des candidats officiels d'une élection."""
 
-    election: int
+    election: int | str  # année d'une présidentielle, ou clé d'un scrutin de liste ("euro2019")
     kind: str  # final ou move
     h: float  # jours entre l'estimation et l'agrégat final (0 pour final)
     units: list[str]
@@ -414,6 +432,64 @@ def stable_bias(items: list[Item], prior_sd: float = BIAS_PRIOR_SD) -> tuple[dic
     return bias, diag
 
 
+FAR_RIGHT_REGIME_START = 2017
+
+
+def far_right_final_errors(items: list[Item]) -> dict:
+    """(logit(résultat du bloc far_right) − logit(agrégat final), poids) par élection."""
+    out = {}
+    for it in items:
+        if it.kind != "final" or "far_right" not in it.blocs:
+            continue
+        r = np.exp(it.d) * it.p
+        r = r / r.sum()
+        m = np.array([b == "far_right" for b in it.blocs])
+        pr, rr = float(it.p[m].sum()), float(r[m].sum())
+        out[it.election] = (math.log(rr / (1 - rr)) - math.log(pr / (1 - pr)), float(it.weight))
+    return out
+
+
+def far_right_bias_since(
+    items: list[Item], start: int = FAR_RIGHT_REGIME_START, prior_sd: float = BIAS_PRIOR_SD
+) -> tuple[float, dict]:
+    """Biais μ du bloc far_right (logit) sur les erreurs finales des élections depuis `start`."""
+    from vvs.model.error_lists import election_year
+
+    errs = {e: v for e, v in far_right_final_errors(items).items() if election_year(e) >= start}
+    diag = {"errors": {str(e): x for e, (x, _) in errs.items()}, "start": start}
+    if not errs:
+        return 0.0, diag | {"mean": 0.0, "shrink": 0.0, "same_sign": False}
+    x = np.array([v[0] for v in errs.values()])
+    w = np.array([v[1] for v in errs.values()])
+    mean = float((w * x).sum() / w.sum())
+    n_eff = float(w.sum() ** 2 / (w**2).sum())
+    if n_eff > 1.0 + 1e-9:
+        var = float((w * (x - mean) ** 2).sum() / w.sum() * n_eff / (n_eff - 1))
+    else:
+        var = prior_sd**2
+    shrink = n_eff / (n_eff + var / prior_sd**2)
+    diag |= {"mean": mean, "shrink": shrink, "n_eff": n_eff,
+             "same_sign": bool(np.all(x > 0) or np.all(x < 0))}
+    return mean * shrink, diag
+
+
+def shift_far_right(items: list[Item], mu: float, start: int = FAR_RIGHT_REGIME_START) -> list[Item]:
+    """Erreurs finales depuis `start` privées du biais μ du bloc far_right (copies)."""
+    from dataclasses import replace
+
+    from vvs.model.error_lists import election_year
+
+    if mu == 0.0:
+        return list(items)
+    out = []
+    for it in items:
+        if it.kind == "final" and election_year(it.election) >= start and "far_right" in it.blocs:
+            shift = np.array([mu if b == "far_right" else 0.0 for b in it.blocs])
+            it = replace(it, d=it.d - shift)
+        out.append(it)
+    return out
+
+
 # --- modèle
 
 
@@ -440,12 +516,20 @@ class ErrorModel:
         gamma: float | None = None,
         items: list[Item] | None = None,
         use_bias: bool = True,
+        extra_items: list[Item] | None = None,
+        with_lists: bool = False,
+        far_right_bias_since_2017: bool = False,
     ) -> ErrorModel:
         """Calibre η sur `elections` privées de `exclude` (leave-one-election-out).
 
         `nu` : degrés de liberté de l'échelle commune, ou "auto" (validation croisée interne
         sur `NU_GRID`). `gamma` : forme en τ, estimée sur Jennings–Wlezien si None (sans
-        l'élection française exclue). `items` : données de calibration déjà calculées (tests)."""
+        l'élection française exclue). `items` : données de calibration déjà calculées (tests).
+        `extra_items` : items d'autres scrutins (scrutins de liste) ajoutés à l'apprentissage,
+        jamais exclus, pondérés par `Item.weight` ; `with_lists` : y ajoute le défaut de
+        `vvs.model.error_lists` (erreurs finales des scrutins de liste, poids 0,5).
+        `far_right_bias_since_2017` : biais d'extrême droite des scrutins depuis 2017
+        (docstring du module)."""
         reg = registry or default_registry()
         excl = {int(e) for e in np.atleast_1d(exclude)} if exclude is not None else set()
         train = [e for e in elections if e not in excl]
@@ -453,21 +537,44 @@ class ErrorModel:
             items = calibration_items(train, reg)
         else:
             items = [it for it in items if it.election in train]
+        extra = list(extra_items or [])
+        if with_lists or far_right_bias_since_2017:
+            from vvs.model.error_lists import default_list_items
+
+            lists_default = default_list_items()
+            if with_lists:
+                extra += lists_default
+        clash = {it.election for it in extra} & set(elections)
+        if clash:
+            raise ValueError(f"extra_items : élections déjà dans `elections` : {sorted(clash, key=str)}")
+        groups = train + list(dict.fromkeys(it.election for it in extra))
+        items = items + extra
         jw = None
         if gamma is None:
             jw = jw_shape(exclude=tuple(JW_ELECTION_ID[e] for e in excl if e in JW_ELECTION_ID))
             gamma = jw["gamma"]
         bias, bias_diag = stable_bias(items) if use_bias else ({}, {})
 
+        # biais d'extrême droite depuis 2017 : estimé sur les erreurs finales d'apprentissage,
+        # scrutins de liste compris (même sans with_lists)
+        def fr_bias(tr: list[Item], held=None) -> float:
+            if not far_right_bias_since_2017:
+                return 0.0
+            present = {it.election for it in tr} | {held}
+            pool = tr + [it for it in lists_default if it.election not in present]
+            return far_right_bias_since(pool)[0]
+
         nu_scores = {}
         if nu == "auto":
-            if len(train) >= 3:
+            if len(groups) >= 3:
                 for cand in NU_GRID:
                     s = 0.0
-                    for held in train:
+                    for held in groups:
                         tr = [it for it in items if it.election != held]
                         te = [it for it in items if it.election == held]
                         b_in, _ = stable_bias(tr) if use_bias else ({}, {})
+                        mu_in = fr_bias(tr, held)
+                        tr, te = shift_far_right(tr, mu_in), shift_far_right(te, mu_in)
                         x = _fit_params(tr, gamma, cand, b_in)
                         s -= _neg_objective(x, te, gamma, cand, b_in) - _neg_objective(
                             x, [], gamma, cand, b_in
@@ -476,9 +583,20 @@ class ErrorModel:
                 nu = max(nu_scores, key=nu_scores.get)
             else:
                 nu = 8.0
-        x = _fit_params(items, gamma, float(nu), bias)
+        mu_fr = fr_bias(items)
+        fr_diag = None
+        if far_right_bias_since_2017:
+            present = {it.election for it in items}
+            pool = items + [it for it in lists_default if it.election not in present]
+            fr_diag = far_right_bias_since(pool)[1]
+            fr_diag["mu"] = mu_fr
+            fr_diag["applied"] = all(e >= FAR_RIGHT_REGIME_START for e in excl)
+        x = _fit_params(shift_far_right(items, mu_fr), gamma, float(nu), bias)
         sb2, sc2, rho, aB, aC, w = _unpack(x)
         finals = [it.final_age for it in items if it.kind == "move"]
+        applied = dict(bias)
+        if fr_diag is not None and fr_diag["applied"]:
+            applied["far_right"] = applied.get("far_right", 0.0) + mu_fr
         params = ErrorParams(
             sigma_bloc_final=math.sqrt(sb2),
             sigma_cand_final=math.sqrt(sc2),
@@ -489,14 +607,17 @@ class ErrorModel:
             nu=float(nu),
             final_age=float(np.mean(finals)) if finals else FINAL_WINDOW_DAYS / 2,
             bloc_weight={b: float(v) for b, v in zip(BLOCS, w)},
-            bias=bias,
+            bias=applied,
         )
         info = {
             "train": train,
             "exclude": sorted(excl),
+            "extra_elections": groups[len(train):],
+            "with_lists": bool(with_lists),
             "n_items": len(items),
             "nu_scores": {str(k): v for k, v in nu_scores.items()},
             "bias_diagnostics": bias_diag,
+            "far_right_bias_since_2017": fr_diag,
             "jw": jw,
         }
         return cls(params, info)

@@ -60,6 +60,22 @@ VARIANTS: dict[str, Priors] = {
     # consolidation d'un camp vers son leader ajoutée à la projection au score
     # (vvs.model.consolidation.CONSOLIDATION_VARIANTS, studies/consolidation.py)
     "consolidation": Priors(n_max=2500.0),
+    # η calibré aussi sur les erreurs finales des scrutins de liste (européennes 2014-2024,
+    # législatives 2022-2024, poids 0,5) : mêmes ajustements que floor, seul le modèle
+    # d'erreur change au score (`VARIANT_ERROR_KWARGS`, vvs.model.error_lists)
+    "lists": Priors(n_max=2500.0),
+    # biais d'extrême droite des scrutins depuis 2017 dans l'erreur finale, sans puis avec les
+    # scrutins de liste dans la calibration : mêmes ajustements que floor, modèle d'erreur au
+    # score (option `far_right_bias_since_2017` de ErrorModel.fit)
+    "fr2017": Priors(n_max=2500.0),
+    "lists_fr2017": Priors(n_max=2500.0),
+}
+# Options de `ErrorModel.fit` propres à une variante, appliquées au score par
+# `vvs.eval.scoring.score_backtest` (en plus de `error_kwargs`).
+VARIANT_ERROR_KWARGS: dict[str, dict] = {
+    "lists": {"with_lists": True},
+    "fr2017": {"far_right_bias_since_2017": True},
+    "lists_fr2017": {"with_lists": True, "far_right_bias_since_2017": True},
 }
 DEFAULT_VARIANT = "floor"
 DEFAULT_ELECTIONS = (2012, 2017, 2022)

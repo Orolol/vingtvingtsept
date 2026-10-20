@@ -23,10 +23,10 @@ Questions, fixées avant de lire les résultats :
     corrélation intra-bloc, et corrélation empirique des erreurs de bloc entre élections.
     γ (forme en τ) est estimé sur Jennings–Wlezien et ne dépend pas de ces données.
 
-    Entrée des scrutins de liste dans `ErrorModel.fit` : son argument `items` accepte une
-    liste de `vvs.model.error.Item` ; on construit ces items ici, sans modifier error.py.
-    Un scrutin de liste reçoit un code entier (`LIST_CODES`) qui tient lieu d'élection, et
-    la pondération passe par `Item.weight` (final : w ; mouvements : w / nombre d'horizons).
+    Entrée des scrutins de liste dans `ErrorModel.fit` : argument `extra_items`, items
+    construits par `vvs.model.error_lists.list_items` (déplacé de cette étude dans le paquet),
+    sous la clé du scrutin (`Item.election`, par exemple "euro2019"), jamais exclus ; la
+    pondération passe par `Item.weight` (final : w ; mouvements : w / nombre d'horizons).
     Unités : les unités de résultat de lists.yaml dont la part finale dans les sondages est
     d'au moins `MIN_SHARE` points (les petites listes, parfois sondées à 0 ou « <0,5 »,
     donneraient des log-rapports dominés par l'arrondi). Erreur finale : log(résultat) −
@@ -55,17 +55,15 @@ import numpy as np
 import polars as pl
 
 from vvs import paths
-from vvs.curate import derived, lists
 from vvs.model import error as er
+from vvs.model import error_lists as el
 from vvs.registry import BLOCS, default_registry
 
 log = logging.getLogger("calibration_extension")
 
 PRESIDENTIALS = (2002, 2007, 2012, 2017, 2022)
-LIST_KEYS = ("euro2014", "euro2019", "euro2024", "leg2022", "leg2024")
-LIST_CODES = {"euro2014": 12014, "euro2019": 12019, "euro2024": 12024, "leg2022": 22022, "leg2024": 22024}
-CODE_KEYS = {v: k for k, v in LIST_CODES.items()}
-MIN_SHARE = 1.0  # points
+LIST_KEYS = el.LIST_KEYS
+LIST_KINDS = ("final", "move")  # l'étude compare aussi la variante avec mouvements
 BLOC_LABEL = {
     "far_left": "gauche rad.", "left": "gauche", "centre": "centre", "right": "droite",
     "far_right": "ext. droite", "other": "autres", "left_union": "gauches (somme)",
@@ -164,97 +162,11 @@ def list_level_errors(keys=("euro2019", "leg2024", "leg2022", "euro2024", "euro2
 # ---------------------------------------------------------------------------
 
 
-def _chosen_polls(key: str, reg: lists.ListRegistry, polls: pl.DataFrame, poll_results: pl.DataFrame,
-                  official: dict[str, float]) -> list[dict]:
-    """Sondages du scrutin avec l'hypothèse retenue (règles de derived.poll_errors), privée
-    des unités incomplètes (`lists.unit_poll_results`)."""
-    vote = lists.vote_date(key)
-    p = polls.filter((pl.col("election") == key) & (pl.col("fieldwork_end") < vote))
-    r = lists.unit_poll_results(polls, poll_results, reg, key).filter(~pl.col("suspect"))
-    hyps: dict[str, dict[str, dict[str, float]]] = {}
-    incomplete: set[tuple[str, str, str]] = set()
-    for pid, hid, cid, share, ok in r.select(
-        "poll_id", "hypothesis_id", "candidate_id", "share", "complete"
-    ).iter_rows():
-        hyps.setdefault(pid, {}).setdefault(hid, {})[cid] = share
-        if not ok:
-            incomplete.add((pid, hid, cid))
-    out = []
-    for m in p.iter_rows(named=True):
-        if m["poll_id"] not in hyps:
-            continue
-        pick = derived._choose(hyps[m["poll_id"]], official, 1)
-        if pick is None:
-            continue
-        hid = pick[0]
-        shares = {u: s for u, s in hyps[m["poll_id"]][hid].items() if (m["poll_id"], hid, u) not in incomplete}
-        out.append({**m, "shares": shares})
-    return out
-
-
-def _window_mean(group: list[dict], vote: dt.date) -> tuple[dict[str, float], float]:
-    sums: dict[str, list[float]] = {}
-    ages = []
-    for p in derived._thin_rolling(group):
-        for u, s in p["shares"].items():
-            sums.setdefault(u, []).append(s)
-        mid = p["fieldwork_start"] + (p["fieldwork_end"] - p["fieldwork_start"]) / 2
-        ages.append((vote - mid).days)
-    return {u: float(np.mean(v)) for u, v in sums.items()}, float(np.mean(ages))
-
-
-def list_items(weight: float = 0.5, min_share: float = MIN_SHARE, keys=LIST_KEYS) -> list[er.Item]:
-    """Items (final + mouvements) des scrutins de liste, au format de `ErrorModel.fit`."""
-    reg = lists.load_lists()
-    polls = lists.polls_with_rolling(pl.read_parquet(paths.CURATED / "polls_lists.parquet"))
-    poll_results = pl.read_parquet(paths.CURATED / "poll_results_lists.parquet")
-    res = pl.read_parquet(paths.CURATED / "results_lists_by_bloc.parquet").filter(
-        (pl.col("level") == "list") & (pl.col("round") == 1)
-    )
-    items: list[er.Item] = []
-    for key in keys:
-        code = LIST_CODES[key]
-        vote = lists.vote_date(key)
-        official = dict(res.filter(pl.col("election") == key).select("unit", "share").iter_rows())
-        chosen = _chosen_polls(key, reg, polls, poll_results, official)
-        final = [p for p in chosen if p["fieldwork_end"] >= vote - dt.timedelta(days=derived.RECENT_DAYS)]
-        fin, fin_age = _window_mean(final, vote)
-        units = [u for u in official if fin.get(u, 0.0) >= min_share]
-        p = np.array([fin[u] for u in units])
-        r = np.array([official[u] for u in units])
-        p, r = p / p.sum(), r / r.sum()
-        blocs = [reg.bloc_of(key, u) for u in units]
-        items.append(er.Item(code, "final", 0.0, units, blocs, p, np.log(r) - np.log(p),
-                             weight=weight, final_age=er.FINAL_WINDOW_DAYS / 2))
-        moves = []
-        for h in er.MOVE_HORIZONS:
-            hi = vote - dt.timedelta(days=h)
-            lo = hi - dt.timedelta(days=er.MOVE_WINDOW_DAYS)
-            window = [q for q in chosen if lo < q["fieldwork_end"] <= hi]
-            if not window:
-                continue
-            mv, age = _window_mean(window, vote)
-            keep = [i for i, u in enumerate(units) if mv.get(u, 0.0) > 0]
-            if len(keep) < 3:
-                continue
-            a = np.array([mv[units[i]] for i in keep])
-            f = np.array([fin[units[i]] for i in keep])
-            a, f = a / a.sum(), f / f.sum()
-            moves.append(er.Item(code, "move", max(age - fin_age, 1.0), [units[i] for i in keep],
-                                 [blocs[i] for i in keep], a, np.log(f) - np.log(a), final_age=fin_age))
-        for it in moves:
-            it.weight = weight / len(moves)
-        items += moves
-        log.info("%s : %d unités, %d mouvements (h = %s)", key, len(units), len(moves),
-                 [round(it.h) for it in moves])
-    return items
-
-
 def fit_pair(pres_items, lst_items, exclude):
     t0 = time.time()
     a = er.ErrorModel.fit(elections=PRESIDENTIALS, exclude=exclude, items=pres_items)
-    b = er.ErrorModel.fit(elections=PRESIDENTIALS + tuple(LIST_CODES.values()), exclude=exclude,
-                          items=pres_items + lst_items)
+    b = er.ErrorModel.fit(elections=PRESIDENTIALS, exclude=exclude, items=pres_items,
+                          extra_items=lst_items)
     log.info("ajustements sans %s : %.1f s", exclude, time.time() - t0)
     return a, b
 
@@ -277,7 +189,7 @@ def bloc_error_correlation(items: list[er.Item]) -> tuple[np.ndarray, list[str],
     """Corrélation empirique, entre élections, des erreurs finales de bloc (log, centrées
     par élection sur les blocs présents) ; blocs présents partout."""
     errs = er.bloc_final_errors(items)
-    elections = sorted({it.election for it in items if it.kind == "final"})
+    elections = sorted({it.election for it in items if it.kind == "final"}, key=str)
     blocs = [b for b in BLOCS if b in errs and all(e in errs[b] for e in elections)]
     m = np.array([[errs[b][e] for b in blocs] for e in elections])
     m = m - m.mean(1, keepdims=True)
@@ -295,15 +207,16 @@ def calibrations(pres_items, lst_items) -> dict[str, tuple[tuple[int, ...], list
     stabilité admet parfois sur les présidentielles seules et jamais avec les scrutins de
     liste ; « finales seules » n'utilise des scrutins de liste que l'erreur finale (pas les
     mouvements, dont la dynamique de campagne diffère)."""
-    ext = PRESIDENTIALS + tuple(LIST_CODES.values())
+    P = PRESIDENTIALS
     finals = [it for it in lst_items if it.kind == "final"]
     return {
-        "présidentielles": (PRESIDENTIALS, pres_items, {}),
-        "étendue": (ext, pres_items + lst_items, {}),
-        "étendue, finales seules": (ext, pres_items + finals, {}),
-        "présidentielles, sans biais": (PRESIDENTIALS, pres_items, {"use_bias": False}),
-        "étendue, sans biais": (ext, pres_items + lst_items, {"use_bias": False}),
-        "étendue, finales seules, sans biais": (ext, pres_items + finals, {"use_bias": False}),
+        "présidentielles": (P, pres_items, {}),
+        "étendue": (P, pres_items, {"extra_items": lst_items}),
+        "étendue, finales seules": (P, pres_items, {"extra_items": finals}),
+        "présidentielles, sans biais": (P, pres_items, {"use_bias": False}),
+        "étendue, sans biais": (P, pres_items, {"extra_items": lst_items, "use_bias": False}),
+        "étendue, finales seules, sans biais": (P, pres_items, {"extra_items": finals,
+                                                                "use_bias": False}),
     }
 
 
@@ -370,9 +283,9 @@ def main() -> None:
 
     reg = default_registry()
     pres_items = er.calibration_items(PRESIDENTIALS, reg)
-    lst_items = list_items(args.weight)
-    n_units = {CODE_KEYS[it.election]: len(it.units) for it in lst_items if it.kind == "final"}
-    n_moves = Counter(CODE_KEYS[it.election] for it in lst_items if it.kind == "move")
+    lst_items = el.list_items(args.weight, kinds=LIST_KINDS)
+    n_units = {it.election: len(it.units) for it in lst_items if it.kind == "final"}
+    n_moves = Counter(it.election for it in lst_items if it.kind == "move")
 
     rows = []
     fits = {}
@@ -383,8 +296,8 @@ def main() -> None:
         rows += params_rows(a, "présidentielles", tag) + params_rows(b, "étendue", tag)
     # sensibilité au poids, ajustement complet
     for w in (0.25, 1.0):
-        b = er.ErrorModel.fit(elections=PRESIDENTIALS + tuple(LIST_CODES.values()),
-                              items=pres_items + list_items(w))
+        b = er.ErrorModel.fit(elections=PRESIDENTIALS, items=pres_items,
+                              extra_items=el.list_items(w, kinds=LIST_KINDS))
         rows += params_rows(b, f"étendue w={w:g}", "aucune")
     configs = calibrations(pres_items, lst_items)
     for calib, (cal, items, kw) in configs.items():
