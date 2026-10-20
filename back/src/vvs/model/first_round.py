@@ -87,6 +87,8 @@ from numpyro.diagnostics import summary
 from numpyro.infer import MCMC, NUTS, SVI, Trace_ELBO, init_to_uniform
 from numpyro.infer.autoguide import AutoNormal
 
+from vvs.model import certainty
+from vvs.model import pollster_ratings as ratings
 from vvs.model.data import PollData
 
 
@@ -113,6 +115,13 @@ class Priors:
     substitution: bool = False
     lam_a: float = 2.0
     lam_b: float = 2.0
+    # Palmarès des instituts (vvs.model.pollster_ratings), désactivé par défaut : prior appris
+    # des effets maison institut × bloc et facteur de précision sur n_eff, sans l'élection.
+    pollster_ratings: bool = False
+    # Certitude du choix (vvs.model.certainty), désactivée par défaut : volatilité de δ mise à
+    # l'échelle par candidat, σ_δ · exp(−κ x_c) ; κ calibré sans l'élection si None.
+    certainty: bool = False
+    certainty_kappa: float | None = None
 
 
 # --- entrées statiques
@@ -191,6 +200,10 @@ class ModelInputs:
     centered: bool = False
     step_scale: float = 1.0  # sqrt(step_days / 7)
     priors: Priors = field(default_factory=Priors)
+    rating_mu: jnp.ndarray | None = None  # (P, B) palmarès : moyenne du prior des effets maison
+    rating_sd: jnp.ndarray | None = None  # (P, B) écart-type de ce prior
+    rating_q: jnp.ndarray | None = None  # (P,) facteur de précision sur n_eff
+    delta_scale: jnp.ndarray | None = None  # (C,) certitude : échelle de la volatilité de δ
 
     @classmethod
     def from_data(
@@ -225,6 +238,8 @@ class ModelInputs:
             centered=centered,
             step_scale=float(np.sqrt(data.step_days / 7)),
             priors=priors or Priors(),
+            **ratings.ratings_inputs(data, priors),
+            **certainty.certainty_inputs(data, priors),
         )
 
     @property
@@ -251,12 +266,15 @@ def latent(s: dict, inp: ModelInputs) -> dict:
         beta_steps = s["sigma_beta"] * inp.step_scale * _center(s["z_beta"], -1)
         beta = beta0 + jnp.concatenate([jnp.zeros((1, inp.B)), jnp.cumsum(beta_steps, axis=0)])
         delta0 = pr.delta0_sd * (inp.M @ s["z_delta0"])
-        delta_steps = s["sigma_delta"] * inp.step_scale * (s["z_delta"] @ inp.M.T)
+        z_delta = s["z_delta"] * inp.delta_scale if pr.certainty else s["z_delta"]
+        delta_steps = s["sigma_delta"] * inp.step_scale * (z_delta @ inp.M.T)
         delta = delta0 + jnp.concatenate([jnp.zeros((1, inp.C)), jnp.cumsum(delta_steps, axis=0)])
 
     theta = beta[:, inp.cand_bloc] + delta
 
     house_bloc = s["sigma_house_bloc"] * _center(_center(s["z_house_bloc"], 0), 1)
+    if pr.pollster_ratings:
+        house_bloc = ratings.rated_house_bloc(s["z_house_bloc"], inp)
     house_cand = s["sigma_house_cand"] * _center(s["z_house_cand"] @ inp.M.T, 0)
     alpha = house_bloc[:, inp.cand_bloc] + house_cand
 
@@ -492,6 +510,10 @@ def model(inp: ModelInputs) -> None:
     lat = latent(s, inp)
     probs = hypothesis_probs(lat, inp)
     kappa = concentration(design, inp.n_nominal, n_max)
+    if pr.pollster_ratings:
+        kappa = ratings.rated_concentration(
+            design, inp.n_nominal, n_max, inp.rating_q[inp.pollster_idx]
+        )
     ll = dirmult_loglik(inp.counts, probs, inp.mask, inp.n_nominal, kappa)
     numpyro.factor("polls", jnp.sum(inp.weight * ll))
 

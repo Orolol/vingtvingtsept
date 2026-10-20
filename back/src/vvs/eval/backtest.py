@@ -42,6 +42,16 @@ VARIANTS: dict[str, Priors] = {
     "floor": Priors(n_max=2500.0),
     "phase2": Priors(n_max=None),
     "subst": Priors(n_max=2500.0, substitution=True),
+    # palmarès des instituts : prior appris des effets maison et facteur de précision sur n_eff
+    # (vvs.model.pollster_ratings), calibrés sans l'élection ajustée
+    "ratings": Priors(n_max=2500.0, pollster_ratings=True),
+    # rebonds de primaire : mêmes ajustements que floor, dérive μ_c(τ) ajoutée à la projection
+    # au score (vvs.model.bounce.BOUNCE_VARIANTS)
+    "bounce": Priors(n_max=2500.0),
+    # certitude du choix : volatilité de δ par candidat selon la part de ses électeurs sûrs de
+    # leur choix, κ calibré sans l'élection ajustée (vvs.model.certainty) ; la mise à l'échelle
+    # de v_c dans η se fait au score (studies/certainty_backtest.py)
+    "certainty": Priors(n_max=2500.0, certainty=True),
 }
 DEFAULT_VARIANT = "floor"
 DEFAULT_ELECTIONS = (2012, 2017, 2022)

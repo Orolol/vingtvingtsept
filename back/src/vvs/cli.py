@@ -56,6 +56,32 @@ def parse_commission(
         raise typer.Exit(code=1)
 
 
+@ingest_app.command("commission-archive")
+def ingest_commission_archive(
+    election: int = typer.Option(..., help="Présidentielle passée : 2017 ou 2022"),
+) -> None:
+    """Notices d'une présidentielle passée -> data/raw/commission/<élection> (certitude)."""
+    from vvs.ingest.commission.listing import ingest_archive
+
+    stats = ingest_archive(election)
+    typer.echo(
+        f"{stats['listed']} notices listées, {stats['kept']} dans la fenêtre {election} : "
+        f"{stats['downloaded']} téléchargées, {stats['skipped']} déjà présentes, "
+        f"{len(stats['failed'])} en échec"
+    )
+
+
+@parse_app.command("certainty")
+def parse_certainty() -> None:
+    """Notices 2017, 2022 et 2027 -> poll_certainty.parquet (électeurs sûrs de leur choix)."""
+    from vvs.ingest.certainty import OUT_PATH, run
+
+    report = run()
+    t = report.table
+    typer.echo(f"{t.height} lignes, {t['poll_id'].n_unique()} sondages dans {OUT_PATH.name}")
+    typer.echo(str(report.coverage()))
+
+
 @ingest_app.command("wikipedia")
 def ingest_wikipedia(
     election: int = typer.Option(..., help="Année de l'élection (ex. 2022)"),
@@ -224,7 +250,9 @@ def ingest_press(
     mode: str = typer.Option("timeline", help="gdelt : timeline ou artlist ; mediacloud : counts ou list"),
     start: str = typer.Option(None, help="Début AAAA-MM-JJ (gdelt timeline : 2017-01-01 par défaut)"),
     end: str = typer.Option(None, help="Fin incluse AAAA-MM-JJ (défaut : hier)"),
-    window_months: int = typer.Option(12, help="gdelt timeline : taille des fenêtres en mois"),
+    window_months: int = typer.Option(
+        120, help="gdelt timeline : fenêtres en mois (120 : 2017-2026 en une requête, rendue au jour)"
+    ),
     tone: bool = typer.Option(True, help="gdelt timeline : demander aussi timelinetone"),
     coverage: str = typer.Option(None, help="mediacloud : années à mesurer, ex. 2012,2017,2022"),
 ) -> None:
@@ -399,6 +427,9 @@ def second_round_cmd(
     n: int = typer.Option(10000, help="Tirages par paire"),
     seed: int = typer.Option(0, help="Graine"),
     out: str = typer.Option(None, help="Dossier de sortie (défaut runs/<aujourd'hui>-second-round-<élection>)"),
+    potential: bool = typer.Option(
+        False, "--potential", help="Plafonds du potentiel électoral (option use_potential, non admise)"
+    ),
 ) -> None:
     """Second tour par reports de voix (docs/04-modele.md §4) pour chaque paire testée -> runs/…"""
     from datetime import date
@@ -408,7 +439,9 @@ def second_round_cmd(
     from vvs.model.second_round import forecast, write_forecast
 
     out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-second-round-{election}"
-    pairs, transfers = forecast(election, date.fromisoformat(asof), horizon=horizon, n=n, seed=seed)
+    pairs, transfers = forecast(
+        election, date.fromisoformat(asof), horizon=horizon, n=n, seed=seed, use_potential=potential
+    )
     write_forecast(pairs, transfers, out_dir)
     for r in pairs.sort("p_i_wins", descending=True).iter_rows(named=True):
         typer.echo(
@@ -417,6 +450,27 @@ def second_round_cmd(
             + ("  (inédit)" if r["inedit"] else "")
         )
     typer.echo(f"écrit : {out_dir}")
+
+
+@ingest_app.command("potential")
+def ingest_potential() -> None:
+    """Bruts des sources de data/registry/potential.yaml -> data/raw/potential (jamais réécrits)."""
+    from vvs.ingest.potential import ingest
+
+    stats = ingest(log=typer.echo)
+    typer.echo(", ".join(f"{k} {len(v)}" for k, v in stats.items()))
+    if stats["failed"]:
+        raise typer.Exit(code=1)
+
+
+@parse_app.command("potential")
+def parse_potential() -> None:
+    """data/registry/potential.yaml + bruts -> data/curated/electoral_potential.parquet."""
+    from vvs.ingest.potential import parse
+
+    out, df, report = parse()
+    typer.echo(report.summary())
+    typer.echo(f"écrit : {out} ({df.height} lignes)")
 
 
 @app.command("curate")
@@ -510,6 +564,58 @@ def export_cmd(
     for name, size in sorted(rep["sizes"].items()):
         typer.echo(f"  {name:20s} {size / 1024:7.1f} Ko")
     typer.echo(f"écrit : {out_dir}")
+
+
+@ingest_app.command("attention")
+def ingest_attention(
+    source: str = typer.Option(..., help="wikipedia ou trends"),
+    candidate: Annotated[
+        list[str] | None,
+        typer.Option("--candidate", help="candidate_id de attention_queries.yaml (répétable ; tous par défaut)"),
+    ] = None,
+    end: str = typer.Option(None, help="Dernier jour AAAA-MM-JJ (défaut : avant-hier pour wikipedia, hier pour trends)"),
+) -> None:
+    """Pages vues Wikipédia ou Google Trends -> data/raw/attention/<source> (cache immuable)."""
+    from datetime import date
+
+    from vvs.ingest.attention import load_registry
+
+    reg = load_registry()
+    d1 = date.fromisoformat(end) if end else None
+    if source == "wikipedia":
+        from vvs.ingest.attention import wikipedia_pageviews as wp
+
+        stats = wp.ingest(reg, candidate or None, end=d1, log=typer.echo)
+        typer.echo(stats.summary())
+        if stats.failed:
+            raise typer.Exit(code=1)
+    elif source == "trends":
+        from vvs.ingest.attention import google_trends as gt
+
+        if candidate:
+            raise typer.BadParameter("trends : les lots dépendent de tout le registre, pas de --candidate")
+        stats = gt.ingest(reg, end=d1, log=typer.echo)
+        typer.echo(stats.summary())
+        if stats.rate_limited:  # code 3 : relancer plus tard reprend depuis le cache
+            raise typer.Exit(code=3)
+        if stats.failed:
+            raise typer.Exit(code=1)
+    else:
+        raise typer.BadParameter(f"source inconnue : {source}")
+
+
+@parse_app.command("attention")
+def parse_attention(
+    source: Annotated[
+        list[str] | None,
+        typer.Option("--source", help="wikipedia, trends (répétable ; les deux par défaut)"),
+    ] = None,
+) -> None:
+    """data/raw/attention -> data/curated/attention.parquet."""
+    from vvs.ingest.attention import parse_all
+
+    _, report = parse_all(source or None)
+    typer.echo(report.summary())
 
 
 if __name__ == "__main__":

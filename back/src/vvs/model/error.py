@@ -402,6 +402,9 @@ class ErrorModel:
     def __init__(self, params: ErrorParams, info: dict | None = None):
         self.params = params
         self.info = info or {}
+        # Certitude du choix (vvs.model.certainty.CertaintyScaler), None par défaut : fonction
+        # candidats -> (K,) échelle de l'écart type de la composante candidat v_c.
+        self.cand_scale = None
 
     # estimation
 
@@ -505,8 +508,10 @@ class ErrorModel:
         blocs: list[str],
         p: np.ndarray,
         rng: np.random.Generator,
+        cand_scale: np.ndarray | None = None,
     ) -> np.ndarray:
-        """η (n, K) pour des parts de référence p (n, K), une ligne par tirage."""
+        """η (n, K) pour des parts de référence p (n, K), une ligne par tirage. `cand_scale` :
+        (K,) échelle de l'écart type de v_c (certitude), None : 1."""
         pr = self.params
         p = np.atleast_2d(p)
         n, K = p.shape
@@ -516,6 +521,8 @@ class ErrorModel:
         sd_b = np.array([math.sqrt(vb[blocs.index(b)]) for b in ub])
         u = rng.standard_normal((n, len(ub))) * sd_b
         v = rng.standard_normal((n, K)) * np.sqrt(vc)
+        if cand_scale is not None:
+            v = v * np.asarray(cand_scale, dtype=float)
         eta = u[:, bidx] + v
         if math.isfinite(pr.nu):
             lam = np.sqrt(pr.nu / rng.chisquare(pr.nu, size=n))
@@ -531,19 +538,25 @@ class ErrorModel:
         blocs: list[str],
         rng: np.random.Generator,
         n: int = 10_000,
+        drift: np.ndarray | None = None,
     ) -> np.ndarray:
         """Tirages de parts au jour du vote (n, K), fractions.
 
         `theta_draws` : (S, K) logits de la configuration `candidates` (tirages du postérieur à
         la date de prévision, ou une seule ligne pour une estimation ponctuelle), rééchantillonnés
-        avec remise à n tirages ; `horizon` : âge de l'estimation en jours avant le vote."""
+        avec remise à n tirages ; `horizon` : âge de l'estimation en jours avant le vote.
+        `drift` : dérive μ_c(τ) optionnelle sur les logits, (n, K) ou (K,), ajoutée avec η sans
+        changer η (rebonds : `vvs.model.bounce`) ; None (défaut) : μ = 0."""
         theta = np.atleast_2d(np.asarray(theta_draws, dtype=float))
         if theta.shape[1] != len(candidates) or len(blocs) != len(candidates):
             raise ValueError("theta_draws, candidates et blocs de tailles incompatibles")
         idx = rng.integers(0, theta.shape[0], size=n)
         th = theta[idx]
         p = _softmax(th)
-        eta = self.sample_eta(horizon, list(blocs), p, rng)
+        scale = None if self.cand_scale is None else self.cand_scale(list(candidates))
+        eta = self.sample_eta(horizon, list(blocs), p, rng, cand_scale=scale)
+        if drift is not None:
+            eta = eta + np.asarray(drift, dtype=float)
         return _softmax(th + eta)
 
     # résumés

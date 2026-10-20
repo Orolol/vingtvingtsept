@@ -272,3 +272,100 @@ def ingest(since: date, client: Client | None = None, raw_dir: Path = RAW_DIR) -
                 out.flush()
                 index[e.file_id] = row
     return stats
+
+
+# ------------------------------------------------------------ archives 2017 et 2022
+#
+# Les thèmes « 2022 - 1er tour présidentielle » et « 2022 - 2 tour présidentielle » du site
+# répondent vides (relevé du 2026-10-20) et les pages par année répondent 500 ; les titres de
+# 2021-2022 portent rarement le jeton « Pres » (« RDP Ifop PM », « OpinionWay - Kea Partners -
+# Les Echos »). La recherche par titre étant une recherche de sous-chaîne, l'union des
+# recherches sur quelques voyelles donne la quasi-totalité du catalogue (2 135 notices sur
+# environ 2 340 identifiants) ; on garde ensuite la fenêtre de dépôt de l'élection, moins les
+# notices explicitement d'une autre élection ou d'une sous-population régionale. Le tri entre
+# intentions de vote présidentielles et autres enquêtes se fait à la lecture du PDF.
+
+ARCHIVE_WINDOWS: dict[int, tuple[date, date]] = {
+    2017: (date(2016, 4, 1), date(2017, 4, 30)),
+    2022: (date(2021, 1, 1), date(2022, 4, 30)),
+}
+ARCHIVE_SEARCH_TERMS = ("e", "a", "o", "i", "Pres")
+# Autres élections et sondages régionaux (dont les présidentielles par région d'Ipsos pour
+# France 3 en 2017) : jetons du titre normalisé.
+_OTHER_ELECTION = re.compile(
+    r"\b(reg|regionales?|regiotrack|leg|legislatives?|municipales?|europeennes?|circo"
+    r"|circonscription|idf|hdf|paca|aura|ara|bfc|pdll|pdl|occ|occitanie|normandie|bretagne"
+    r"|grand est|centre|nouvelle aquitaine|nouvele aquitaine|auvergne|bourgogne|hauts de france"
+    r"|haut de france|pays de la loire|ile de france|corse|var|eure)\b"
+)
+
+
+def archive_dir(election: int, raw_dir: Path = RAW_DIR) -> Path:
+    """Dossier des notices d'une présidentielle passée : data/raw/commission/<élection>/."""
+    return raw_dir / str(election)
+
+
+def is_archive_candidate(entry: NoticeEntry, election: int) -> bool:
+    start, end = ARCHIVE_WINDOWS[election]
+    month = month_start(entry.month)
+    if month is None or not (start.replace(day=1) <= month <= end):
+        return False
+    return not _OTHER_ELECTION.search(_norm(entry.title))
+
+
+def fetch_full_listing(client: Client) -> list[NoticeEntry]:
+    by_id: dict[int, NoticeEntry] = {}
+    for term in ARCHIVE_SEARCH_TERMS:
+        page = client.post(SEARCH_URL, {"_method": "POST", "searchterm": term}).text
+        for e in parse_listing(page, tagged=False):
+            by_id.setdefault(e.file_id, e)
+    return sorted(by_id.values(), key=lambda e: e.file_id)
+
+
+def ingest_archive(
+    election: int, client: Client | None = None, raw_dir: Path = RAW_DIR, limit: int | None = None
+) -> dict:
+    """Télécharge les notices de la présidentielle `election` (2017 ou 2022).
+
+    Même discipline que `ingest` : délai entre requêtes, idempotent, index en ajout seul, mais
+    dans `data/raw/commission/<élection>/` pour ne pas mêler les élections.
+    """
+    if election not in ARCHIVE_WINDOWS:
+        raise ValueError(f"élection d'archive non gérée : {election}")
+    client = client or Client()
+    out_dir = archive_dir(election, raw_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    index_path = out_dir / "index.jsonl"
+    index = load_index(index_path)
+    entries = fetch_full_listing(client)
+    kept = [e for e in entries if is_archive_candidate(e, election)][:limit]
+    stats = {"listed": len(entries), "kept": len(kept), "downloaded": 0, "skipped": 0, "failed": []}
+    with index_path.open("a") as out:
+        for e in kept:
+            path = existing_file(e.file_id, out_dir)
+            if path is None:
+                try:
+                    resp = client.get(e.url)
+                    ext = _extension(resp)
+                except (httpx.HTTPError, ValueError) as exc:
+                    code = getattr(getattr(exc, "response", None), "status_code", str(exc))
+                    stats["failed"].append((e.file_id, e.title, code))
+                    continue
+                path = out_dir / f"{e.file_id}{ext}"
+                path.write_bytes(resp.content)
+                stats["downloaded"] += 1
+                file_url = str(resp.url)
+            else:
+                stats["skipped"] += 1
+                file_url = index.get(e.file_id, {}).get("file_url")
+            if e.file_id not in index:
+                row = asdict(e) | {
+                    "election": election,
+                    "file_url": file_url,
+                    "file": path.name,
+                    "ingested_at": datetime.now(UTC).replace(tzinfo=None).isoformat(),
+                }
+                out.write(json.dumps(row, ensure_ascii=False) + "\n")
+                out.flush()
+                index[e.file_id] = row
+    return stats

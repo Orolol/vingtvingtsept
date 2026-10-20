@@ -33,6 +33,7 @@ from vvs.eval.backtest import ELECTION_WEIGHT, asof_for, fit_dir
 from vvs.eval.baselines import last_by_pollster, poll_mean
 from vvs.eval.configurations import official_map
 from vvs.model.data import load_polls
+from vvs.model.bounce import variant_drift
 from vvs.model.error import ErrorModel
 from vvs.model.run import draws_log_shares
 from vvs.registry import BLOCS, Registry, default_registry
@@ -199,13 +200,15 @@ def score_case(
     points: dict,
     rng: np.random.Generator,
     n_draws: int = 10_000,
+    drift: np.ndarray | None = None,
 ) -> dict:
     """Tirages et métriques d'un cas (élection, horizon) pour chaque modèle.
 
     `theta_asof`, `theta_vote` : (S, K) logits de la configuration ; `points` : estimations
-    ponctuelles des baselines (`baselines.PointForecast`) par nom de modèle. Rend
+    ponctuelles des baselines (`baselines.PointForecast`) par nom de modèle ; `drift` : dérive
+    μ (n_draws, K) de la projection du modèle (variantes de rebond), None par défaut. Rend
     {modèle: (résumé, lignes candidats, lignes blocs, lignes de calibration)}."""
-    sims = {"model": em.sample(theta_asof, horizon, config, blocs, rng, n_draws)}
+    sims = {"model": em.sample(theta_asof, horizon, config, blocs, rng, n_draws, drift=drift)}
     idx = rng.integers(0, theta_vote.shape[0], n_draws)
     sims["model_noerror"] = _softmax(np.asarray(theta_vote, dtype=float)[idx])
     for name, pf in points.items():
@@ -315,6 +318,7 @@ def score_backtest(
                 case = score_case(
                     draws_log_shares(dr, K, "asof"), draws_log_shares(dr, K, "vote"), K, kblocs,
                     h, em, omap, off, points, rng, n_draws,
+                    drift=variant_drift(v, e, asof, h, K, n_draws, seed, reg),
                 )
                 key = {"election": e, "horizon": h, "variant": v}
                 m_rows, f_rows, c_rows = case_rows(case, key)

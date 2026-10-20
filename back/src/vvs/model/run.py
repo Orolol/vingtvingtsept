@@ -129,6 +129,10 @@ def run_fit(
     source = load_polls.last_source
     data = encode(df, election, asof, n_weeks=weeks, step_days=step_days, reference=reference)
     data.source = source
+    if priors is not None and priors.pollster_ratings:
+        from vvs.model.pollster_ratings import attach_ratings
+
+        attach_ratings(data, out)  # notes calibrées sans l'élection ajustée
 
     res = fit(
         data,

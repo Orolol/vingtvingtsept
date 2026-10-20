@@ -191,6 +191,8 @@ class PollData:
     source: str | None = None
     prior_election: int | None = None
     step_days: int = 7
+    # Palmarès des instituts calibré sans l'élection (vvs.model.pollster_ratings.attach_ratings)
+    pollster_ratings: dict | None = None
 
     @property
     def n_hyp(self) -> int:
