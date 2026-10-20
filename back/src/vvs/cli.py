@@ -153,6 +153,8 @@ def parse_macro(
                 typer.echo(f"  désaccord Ifop : {c}")
             for r in report.ifop.report.rows_out_of_tenure:
                 typer.echo(f"  hors mandat : {r}")
+            for r in report.ifop.report.headlines_unreadable:
+                typer.echo(f"  chiffre du mois illisible : {r}")
             for p in report.ifop.publications:
                 typer.echo(f"  PDF {p['month']} {p['mode']:7s} {p['sponsor']:12s} tableaux {p['n_table']:4d} titre {p['n_headline']} {p['file']}")
     typer.echo(f"écrit : {paths.CURATED / OUTPUT_NAME} ({df.height} lignes)")

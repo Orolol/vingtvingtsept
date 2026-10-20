@@ -1,0 +1,241 @@
+# Séries économiques et de popularité (docs/05-economie.md).
+#
+# Lu par vvs.ingest.macro : `vvs ingest macro [--series X]` télécharge chaque série dans
+# data/raw/macro/<raw_dir>/<AAAA-MM-JJ>.<ext> (jamais réécrit ; une empreinte et l'heure de
+# téléchargement sont dans <AAAA-MM-JJ>.meta.json), et `vvs parse macro` produit
+# data/curated/macro.parquet (series_id, date, value, freq, source, retrieved_at) à partir du
+# dernier fichier brut de chaque série, sur la période 2000 à aujourd'hui.
+#
+# Champs par série :
+#   series_id  identifiant snake_case anglais, clé de la table curated
+#   label      libellé français
+#   source     insee (API SDMX de la BDM, sans clé), dares (portail Opendatasoft de la DARES),
+#              mte (base des prix des produits pétroliers du ministère de la Transition
+#              écologique), ifop (baromètre mensuel des indices de popularité)
+#   source_id  identifiant dans la source : idbank INSEE, jeu de données DARES, code carburant
+#              du formulaire du ministère, rôle pour Ifop
+#   url        point d'accès réellement interrogé (vérifié le 2026-10-20)
+#   freq       M (mensuel), Q (trimestriel), W (hebdomadaire) ; la date curated est le premier
+#              jour de la période (lundi de la semaine pour W)
+#   unit       unité de `value`
+#   since      première période disponible dans la source (on n'en garde que 2000 et après)
+#   raw_dir    dossier sous data/raw/macro/ (par défaut series_id) ; les deux séries Ifop
+#              partagent la même collection de PDF
+#   params     paramètres propres à la source (filtres, colonnes)
+#   notes      ruptures et particularités constatées dans les données réelles
+
+series:
+  - series_id: unemployment_rate_ilo
+    label: Taux de chômage au sens du BIT, ensemble, France hors Mayotte, CVS
+    source: insee
+    source_id: "001688527"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/001688527
+    freq: Q
+    unit: percent
+    since: 1975-Q1
+    notes: >-
+      Enquête Emploi en continu, moyenne trimestrielle. Dernière valeur relevée : 8,3 % au
+      deuxième trimestre 2026. Série révisée à chaque publication (révisions des coefficients
+      CVS) : on relit l'historique complet à chaque ingestion.
+
+  - series_id: jobseekers_cat_a
+    label: Demandeurs d'emploi inscrits à France Travail en catégorie A, France hors Mayotte, CVS-CJO, fin de mois
+    source: dares
+    source_id: dares_defm_stock_france_cvs
+    url: https://data.dares.travail-emploi.gouv.fr/api/explore/v2.1/catalog/datasets/dares_defm_stock_france_cvs/exports/csv
+    freq: M
+    unit: persons
+    since: 1996-01
+    params:
+      where: "categorie='A' and sexe='Total' and tranche_d_age='Total' and anciennete='Total' and tranche_d_heures_travaillees='Total'"
+      champ: France
+    notes: >-
+      Jeu « Inscrits à France Travail - Stock - France (mensuelles, CVS-CJO) » de la DARES, aussi
+      référencé sur data.gouv.fr. Le champ « France » exclut Mayotte ; « France métropolitaine »
+      est aussi dans le fichier brut. Rupture de janvier 2025 : la loi pour le plein emploi
+      inscrit automatiquement les bénéficiaires du RSA et les jeunes suivis par les missions
+      locales ; la DARES a suspendu la labellisation des séries 2025-2026 et créé de nouvelles
+      catégories (dont F). Saut visible dans la série : +207 000 entre décembre 2024 et janvier
+      2025. Les niveaux avant et après 2025 ne sont pas directement comparables.
+      Changement de nom Pôle emploi -> France Travail au 1er janvier 2024, sans rupture.
+      L'INSEE ne diffuse plus que des moyennes trimestrielles depuis 2019 (idbank 010598384) :
+      la DARES reste la seule source mensuelle.
+
+  - series_id: cpi_all
+    label: Indice des prix à la consommation, ensemble des ménages, France, ensemble (base 2025)
+    source: insee
+    source_id: "011814630"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/011814630
+    freq: M
+    unit: index_2025_100
+    since: 1996-01
+    notes: >-
+      Base 2025 = 100, rétropolée par l'INSEE jusqu'en janvier 1996 : pas de chaînage à faire.
+      Les séries base 2015 (dataflow IPC-2015) sont arrêtées. Données brutes, non CVS.
+
+  - series_id: cpi_energy
+    label: Indice des prix à la consommation, ensemble des ménages, France, énergie (base 2025)
+    source: insee
+    source_id: "011813864"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/011813864
+    freq: M
+    unit: index_2025_100
+    since: 1996-01
+    notes: >-
+      Regroupement « Énergie » (carburants, électricité, gaz, fioul). Données brutes. Glissement
+      annuel de +21,3 % en septembre 2026 (idbank 011813866).
+
+  - series_id: cpi_food
+    label: Indice des prix à la consommation, ensemble des ménages, France, alimentation (base 2025)
+    source: insee
+    source_id: "011813717"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/011813717
+    freq: M
+    unit: index_2025_100
+    since: 1996-01
+    notes: >-
+      Regroupement « Alimentation » hors tabac, hors restauration (l'agrégat avec restaurants
+      est 011814107). Données brutes.
+
+  - series_id: consumer_confidence
+    label: Indicateur synthétique de confiance des ménages, CVS
+    source: insee
+    source_id: "001587668"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/001587668
+    freq: M
+    unit: index_mean_100
+    since: 1972-10
+    notes: >-
+      Premier facteur des soldes d'opinion de l'enquête mensuelle de conjoncture auprès des
+      ménages (Camme), normalisé à moyenne 100 et écart type 10 sur longue période ; à ne pas
+      confondre avec l'ancien indicateur résumé 000857199, arrêté en 2010. Série CVS complète
+      (aucun mois manquant depuis 2000).
+
+  - series_id: consumer_confidence_future_living
+    label: Opinion des ménages sur le niveau de vie futur en France, solde, CVS
+    source: insee
+    source_id: "000857189"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/000857189
+    freq: M
+    unit: balance_points
+    since: 1970-01
+    notes: >-
+      Solde « amélioration moins détérioration » de l'enquête Camme.
+
+  - series_id: consumer_confidence_unemployment_expectations
+    label: Opinion des ménages sur l'évolution future du chômage, solde, CVS
+    source: insee
+    source_id: "000857190"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/000857190
+    freq: M
+    unit: balance_points
+    since: 1970-01
+    notes: >-
+      Solde « augmentation moins diminution » : une hausse signale un pessimisme accru.
+
+  - series_id: business_climate
+    label: Indicateur du climat des affaires, tous secteurs, France métropolitaine
+    source: insee
+    source_id: "001565530"
+    url: https://bdm.insee.fr/series/sdmx/data/SERIES_BDM/001565530
+    freq: M
+    unit: index_mean_100
+    since: 1977-01
+    notes: >-
+      Synthèse des enquêtes de conjoncture (industrie, services, commerce, bâtiment), moyenne
+      100 et écart type 10. Les derniers points sont révisés d'une publication à l'autre : on
+      relit l'historique complet à chaque ingestion.
+
+  - series_id: fuel_price_sp95
+    label: Prix moyen à la pompe du supercarburant sans plomb 95 (E5), TTC, France métropolitaine hors Corse
+    source: mte
+    source_id: sp95
+    url: https://www.ecologie.gouv.fr/politiques-publiques/prix-produits-petroliers
+    freq: W
+    unit: eur_per_litre
+    since: 1985
+    params:
+      sheet: Carburants - hebdo TTC
+    notes: >-
+      Base de données DGEC des prix des produits pétroliers, interrogée par le formulaire
+      « Suivre l'évolution » de la page (webform Drupal en AJAX) ; l'export xlsx contient les
+      feuilles hebdo, mensuel, semestriel, annuel en HTT et TTC. Prix du vendredi, déclarés le
+      lundi par les distributeurs : la date curated est le lundi de la semaine du vendredi
+      relevé. Le SP95-E10 (code sp95_e10 du formulaire) est une autre série, plus courte ; on
+      garde le SP95 pour la profondeur historique.
+
+  - series_id: fuel_price_diesel
+    label: Prix moyen à la pompe du gazole, TTC, France métropolitaine hors Corse
+    source: mte
+    source_id: gazole
+    url: https://www.ecologie.gouv.fr/politiques-publiques/prix-produits-petroliers
+    freq: W
+    unit: eur_per_litre
+    since: 1985
+    params:
+      sheet: Carburants - hebdo TTC
+    notes: >-
+      Même base et même méthode que fuel_price_sp95. Remise carburant de l'État (avril à
+      décembre 2022) incluse dans le prix TTC publié.
+
+  - series_id: approval_president
+    label: Part des Français satisfaits du président de la République (baromètre Ifop)
+    source: ifop
+    source_id: president
+    url: https://www.ifopgroup.com/wp-json/wp/v2/posts?search=indices%20de%20popularit%C3%A9
+    freq: M
+    unit: percent
+    since: 1958-12
+    raw_dir: ifop_popularity
+    notes: >-
+      Question « Êtes-vous satisfait ou mécontent de X comme président de la République ? »,
+      total satisfaits. Même question depuis 1958 ; commanditaire Le Journal du Dimanche
+      jusqu'en février 2026, L'Opinion (Ifop-Endrix) depuis mars 2026. Mode de recueil lu dans
+      les PDF (`vvs parse macro -v`) : téléphone jusqu'en mars 2014 au moins, mixte (en ligne et
+      téléphone) de novembre 2016 au plus tard jusqu'en janvier 2024, en ligne seul depuis
+      février 2024 (et pour les vagues d'été 2022 et 2023). Jusqu'en décembre 2020, chaque PDF
+      contient le tableau « L'évolution depuis <début du mandat> » ; on ne télécharge que le
+      dernier PDF avant chaque changement de titulaire. Ensuite, un document par mois (avril
+      2021 n'existe qu'en pptx). Mois absents des archives en ligne d'Ifop, laissés vides :
+      2007-02 à 2007-04, 2023-07, 2024-07, 2024-08, 2025-02, 2025-12.
+
+  - series_id: approval_prime_minister
+    label: Part des Français satisfaits du Premier ministre (baromètre Ifop)
+    source: ifop
+    source_id: prime_minister
+    url: https://www.ifopgroup.com/wp-json/wp/v2/posts?search=indices%20de%20popularit%C3%A9
+    freq: M
+    unit: percent
+    since: 1958-12
+    raw_dir: ifop_popularity
+    notes: >-
+      Question « … comme Premier ministre ? », total satisfaits. La valeur d'un mois porte sur
+      le Premier ministre en poste pendant le terrain (voir `officeholders`). Les archives Ifop
+      en ligne commencent en janvier 2006 : Lionel Jospin (jusqu'en mai 2002) et Jean-Pierre
+      Raffarin (2002-2005) n'y figurent pas, la série commence avec Dominique de Villepin en
+      juin 2005. Le mois de prise de fonction est mesuré pour le nouveau titulaire (mai 2007,
+      mai 2012, juillet 2020, mai 2022, janvier 2024, septembre 2024, décembre 2024, septembre
+      2025) ; Manuel Valls (nommé le 31 mars 2014) commence en avril 2014.
+
+# Titulaires de l'exécutif, pour rattacher les tableaux Ifop à un rôle et contrôler qu'un mois
+# tombe dans le mandat. Identifiants `nom_prenom` (convention de data/registry/README.md).
+# Lecornu : démission le 6 octobre 2025 et reconduction le 10 octobre, traité comme continu.
+officeholders:
+  - {person_id: chirac_jacques, name: Jacques Chirac, role: president, start: 1995-05-17, end: 2007-05-16}
+  - {person_id: sarkozy_nicolas, name: Nicolas Sarkozy, role: president, start: 2007-05-16, end: 2012-05-15}
+  - {person_id: hollande_francois, name: François Hollande, role: president, start: 2012-05-15, end: 2017-05-14}
+  - {person_id: macron_emmanuel, name: Emmanuel Macron, role: president, start: 2017-05-14, end: null}
+  - {person_id: jospin_lionel, name: Lionel Jospin, role: prime_minister, start: 1997-06-02, end: 2002-05-06}
+  - {person_id: raffarin_jean_pierre, name: Jean-Pierre Raffarin, role: prime_minister, start: 2002-05-06, end: 2005-05-31}
+  - {person_id: de_villepin_dominique, name: Dominique de Villepin, role: prime_minister, start: 2005-05-31, end: 2007-05-17}
+  - {person_id: fillon_francois, name: François Fillon, role: prime_minister, start: 2007-05-17, end: 2012-05-15}
+  - {person_id: ayrault_jean_marc, name: Jean-Marc Ayrault, role: prime_minister, start: 2012-05-15, end: 2014-03-31}
+  - {person_id: valls_manuel, name: Manuel Valls, role: prime_minister, start: 2014-03-31, end: 2016-12-06}
+  - {person_id: cazeneuve_bernard, name: Bernard Cazeneuve, role: prime_minister, start: 2016-12-06, end: 2017-05-15}
+  - {person_id: philippe_edouard, name: Édouard Philippe, role: prime_minister, start: 2017-05-15, end: 2020-07-03}
+  - {person_id: castex_jean, name: Jean Castex, role: prime_minister, start: 2020-07-03, end: 2022-05-16}
+  - {person_id: borne_elisabeth, name: Élisabeth Borne, role: prime_minister, start: 2022-05-16, end: 2024-01-09}
+  - {person_id: attal_gabriel, name: Gabriel Attal, role: prime_minister, start: 2024-01-09, end: 2024-09-05}
+  - {person_id: barnier_michel, name: Michel Barnier, role: prime_minister, start: 2024-09-05, end: 2024-12-13}
+  - {person_id: bayrou_francois, name: François Bayrou, role: prime_minister, start: 2024-12-13, end: 2025-09-09}
+  - {person_id: lecornu_sebastien, name: Sébastien Lecornu, role: prime_minister, start: 2025-09-09, end: null}
