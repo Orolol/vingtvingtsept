@@ -111,10 +111,32 @@ Une ligne par candidat, par élection, par tour, par niveau géographique.
 | `election` | int |
 | `round` | int |
 | `geo_level` | enum `national`, `department`, `commune`, `polling_station` |
-| `geo_code` | str |
+| `geo_code` | str : `FE` au national ; code INSEE sur 2 ou 3 caractères au département, `ZZ` pour les Français de l'étranger ; code INSEE sur 5 caractères à la commune, `ZW001`/`ZZ001`… pour Wallis-et-Futuna et les postes à l'étranger qui n'en ont pas ; Saint-Martin et Saint-Barthélemy séparés en 978 et 977 |
 | `candidate_id` | str |
 | `votes` | int |
 | `registered`, `voters`, `expressed` | int |
+
+Les fichiers du ministère sont lus au bureau de vote puis agrégés à la commune ; le niveau
+bureau n'est pas conservé. Paris, Lyon et Marseille sont des communes entières. En 2002 et
+2007, les fichiers par bureau ne couvrent ni l'étranger ni le Pacifique : le niveau
+département vient des classeurs récapitulatifs et le niveau commune est partiel. Le fichier
+2002 précède les rectifications du Conseil constitutionnel (écarts de quelques dizaines à
+quelques centaines de voix, figés dans les tests). Les parquets `results_<election>.parquet`
+(1,5 Mo chacun à cause des communes) ne sont pas versionnés ; ils se régénèrent depuis les
+sources dont l'empreinte sha256 est dans `data/registry/interieur_sources.yaml`.
+
+### `results_lists`
+
+Scrutins de liste et législatives, au national seulement pour l'instant, libellés
+conservés tels quels ; le rattachement aux blocs se fait dans la curation.
+
+| Colonne | Type |
+|---|---|
+| `election` | str : `euro2014`, `euro2019`, `euro2024`, `leg2022`, `leg2024` |
+| `round`, `geo_level`, `geo_code` | comme `results` |
+| `label` | str, libellé de liste ou de nuance tel que publié |
+| `nuance` | str, nullable (vide pour les européennes 2019, le fichier n'en a pas) |
+| `votes`, `registered`, `voters`, `expressed` | int |
 
 ### Tables dérivées
 
@@ -122,6 +144,30 @@ Une ligne par candidat, par élection, par tour, par niveau géographique.
   prior structurel et les études.
 - `poll_errors` : pour chaque élection, écart entre le dernier sondage de chaque institut
   (et l'agrégat) et le résultat, par candidat et par bloc. Entrée du modèle d'erreur.
+
+## Ce que l'ingestion Wikipédia a révélé (2017, 2022, 2027)
+
+- Les pages n'indiquent ni la population interrogée ni le mode : `population` et `mode`
+  valent `unknown` partout. Les notices de la Commission les fournissent ; la curation
+  complétera par jointure quand le sondage est présent dans les deux sources.
+- Les candidats sont en base exprimés ; `abstention` et `undecided` sont stockés en base
+  `all_respondents`. La colonne « Abstention, blanc ou nul » de 2017 est rangée sous
+  `abstention`, approximation assumée.
+- « <0,5 % » est stocké comme 0,25 ; « — » signifie non testé, pas zéro.
+- Un même institut avec les mêmes dates de terrain et des échantillons différents (second
+  tour posé à un sous-échantillon, coquille sur l'effectif) est fusionné en un seul sondage
+  si les hypothèses ne se recouvrent pas et que les commanditaires ne se contredisent pas ;
+  `sample_size` garde le plus grand. Un rolling et une vague Cevipof du même jour restent
+  distincts.
+- Les rollings (« Ifop (rolling) ») sont des sondages ordinaires de l'institut. **À faire en
+  curation** : une colonne `is_rolling` booléenne, parce que les vagues d'un rolling ne sont
+  pas indépendantes et le modèle doit en tenir compte (effectif effectif réduit).
+- Les hypothèses avec un candidat non nommé (« candidat LR », « Bardella / Le Pen »,
+  « un candidat écologiste ») sont ignorées et journalisées, jamais devinées.
+- Les tableaux de reports de voix et de sous-échantillons sociologiques sont sautés ; les
+  reports sont une source à part pour le modèle de second tour (`04-modele.md`).
+- Les sondages 2027 testant Emmanuel Macron (2022-2023) sont conservés ; le registre de
+  scénarios les écartera.
 
 ## Curation : règles explicites
 
