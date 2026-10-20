@@ -185,5 +185,34 @@ def parse_mieuxvoter(
         typer.echo(compare_with_wikipedia().summary(verbose=verbose))
 
 
+@ingest_app.command("jennings-wlezien")
+def ingest_jennings_wlezien() -> None:
+    """Base Jennings et Wlezien (Dataverse) -> data/raw/jennings_wlezien (idempotent)."""
+    from vvs.ingest.jennings_wlezien import ingest
+
+    for name, status, digest in ingest():
+        typer.echo(f"{status:10s} {name} sha256={digest}")
+
+
+@parse_app.command("jennings-wlezien")
+def parse_jennings_wlezien(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Liste les partis sans libellé"),
+    summary: bool = typer.Option(False, "--summary", help="Affiche l'erreur par horizon"),
+) -> None:
+    """data/raw/jennings_wlezien -> data/curated/jw_polls.parquet (+ erreur par horizon)."""
+    from vvs.ingest.jennings_wlezien import error_summary, parse
+
+    out, df, report = parse()
+    typer.echo(report.summary(verbose=verbose))
+    typer.echo(f"écrit : {out} ({df.height} lignes)")
+    if summary:
+        for title, kw in [
+            ("tous pays, toutes élections", {}),
+            ("France, premier tour", {"country": "FR", "round": 1}),
+            ("France, second tour", {"country": "FR", "round": 2}),
+        ]:
+            typer.echo(f"\n{title} :\n{error_summary(df=df, **kw)}")
+
+
 if __name__ == "__main__":
     app()
