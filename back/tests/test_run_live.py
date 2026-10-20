@@ -44,7 +44,7 @@ def test_dry_run_lists_commands_without_running_them(tmp_path):
         "uv run vvs parse wikipedia --election 2027",
         "uv run vvs parse mieuxvoter",
         "uv run vvs curate",
-        f"uv run vvs simulate --asof 2027-01-05 --draws 20000 --out {run_dir}",
+        f"uv run vvs simulate --asof 2027-01-05 --rn-bias-curve --draws 20000 --out {run_dir}",
     ]
     assert cmds[9] == f"uv run vvs export --run {run_dir}"
     assert cmds[10:12] == ["npm run validate-data", "npm run build"]

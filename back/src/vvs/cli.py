@@ -554,6 +554,9 @@ def simulate_cmd(
         None, help="Part du biais RN du second tour appliquée (défaut : atténuation par horizon)"
     ),
     refit: bool = typer.Option(False, "--refit", help="Refaire l'ajustement même s'il existe"),
+    rn_bias_curve: bool = typer.Option(
+        False, "--rn-bias-curve", help="Biais RN du second tour par horizon (courbe estimée) au lieu de l'atténuation linéaire"
+    ),
     substitution: bool = typer.Option(
         False, "--substitution", help="Substitution intra-bloc (logit emboîté) dans l'ajustement"
     ),
@@ -608,7 +611,8 @@ def simulate_cmd(
     else:
         typer.echo(f"ajustement réutilisé, sondages inchangés (empreinte {polls_hash}) : {fit_dir}")
     out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-simulate"
-    res = simulate(fit_dir, d, out_dir, election=election, n_draws=draws, seed=seed, rn_bias=rn_bias)
+    res = simulate(fit_dir, d, out_dir, election=election, n_draws=draws, seed=seed, rn_bias=rn_bias,
+                   rn_bias_curve=rn_bias_curve)
     manifest_path = out_dir / "manifest.json"
     if manifest_path.exists():
         m = json.loads(manifest_path.read_text())

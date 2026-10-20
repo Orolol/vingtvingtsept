@@ -8,6 +8,7 @@
 #
 # Variables d'environnement :
 #   VVS_SUBSTITUTION=1|0   substitution intra-bloc (1 par défaut : choix publié actuel)
+#   VVS_RN_BIAS_CURVE=1|0  biais RN du second tour par horizon (1 par défaut : choix publié)
 #   VVS_ASOF=AAAA-MM-JJ    date de prévision (défaut : aujourd'hui)
 #   VVS_DRAWS=N            tirages Monte-Carlo (défaut : celui de `vvs simulate`)
 #   VVS_ENV_FILE=chemin    fichier d'environnement lu s'il existe (défaut
@@ -66,6 +67,14 @@ case "${VVS_SUBSTITUTION:-1}" in
 0 | false | no) SUBST_FLAG="" SUFFIX="" SUBST_LABEL="non" ;;
 *)
 	echo "VVS_SUBSTITUTION invalide : ${VVS_SUBSTITUTION} (1 ou 0)" >&2
+	exit 2
+	;;
+esac
+case "${VVS_RN_BIAS_CURVE:-1}" in
+1 | true | yes) CURVE_FLAG="--rn-bias-curve" ;;
+0 | false | no) CURVE_FLAG="" ;;
+*)
+	echo "VVS_RN_BIAS_CURVE invalide : ${VVS_RN_BIAS_CURVE} (1 ou 0)" >&2
 	exit 2
 	;;
 esac
@@ -132,7 +141,7 @@ step "$BACK" uv run vvs parse wikipedia --election 2027
 step "$BACK" uv run vvs parse mieuxvoter
 step "$BACK" uv run vvs curate
 # shellcheck disable=SC2086
-step "$BACK" uv run vvs simulate --asof "$ASOF" $SUBST_FLAG $DRAWS_FLAG --out "$RUN_DIR"
+step "$BACK" uv run vvs simulate --asof "$ASOF" $SUBST_FLAG $CURVE_FLAG $DRAWS_FLAG --out "$RUN_DIR"
 step "$ROOT" cp -a "$DATA/." "$PREV/"
 step "$BACK" uv run vvs export --run "$RUN_DIR"
 step "$FRONT" npm run validate-data

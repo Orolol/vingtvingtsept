@@ -121,6 +121,20 @@ Enseignement : avec cinq élections, la ligne « modèle + η » est difficile �
 plupart des signaux plausibles sont soit déjà dans les sondages, soit instables d'une
 élection à l'autre. Les volets explicatifs du site peuvent montrer ces signaux avec la
 mention « n'entre pas dans la prévision ». Pistes restantes jugées les plus utiles :
-tirer la participation du second tour à part (l'écart 78 % contre 66 % signalé compare un
-premier tour simulé à un second tour observé), coupler l'erreur de duel et le premier tour par une composante d'extrême droite
+tirer la participation du second tour à part (implicite et mal calibrée : 78,6 % contre
+66 % en 2017), coupler l'erreur de duel et le premier tour par une composante d'extrême droite
 partagée, et réévaluer le biais RN du second tour par horizon.
+
+## 2026-10-20 — second tour, trois corrections de structure
+
+Évaluation appariée sur cinq élections et trois graines
+(`runs/2026-10-20-second-round-v2/report.md`).
+
+| Correction | Résultat | Décision |
+|---|---|---|
+| Biais RN par horizon (courbe isotone rétrécie : 2,97 à la veille, 2,93 à 22 j, 1,64 à 45 j, 1,36 à 105 j, 1,26 à 195 j) | contre l'atténuation linéaire provisoire : CRPS −0,23 à 180 j (stable sur 3 graines, 2 élections sur 3), −0,01 à 90 j ; contre le biais constant : +0,11 à 30 j ; log-score −0,001 à −0,004 (2007 et 2012, par réestimation de σ) ; couverture 90 % +0,13 à 90 j | non admise strictement ; **retenue pour la publication** à 180 j parce qu'elle remplace un jugement jamais évalué et fait mieux à l'horizon actuel ; à réévaluer avant 30 jours |
+| Couplage erreur premier tour / duel (ρ sur far_right) | ρ non identifiable : 0,70 sans 2002, −0,36 sans 2017 ; l'historique contredit un biais commun (2002 : FN sous-estimé de 5 au premier tour, surestimé de 3 aux duels) ; CRPS +0,01 | désactivé |
+| Participation du second tour tirée | erreur de participation 7,8 → 6,9 points avant le premier tour mais 4,0 → 6,7 à la veille ; CRPS +0,10 à 180 j | désactivée |
+
+Effet sur 2027 (mélange, substitution) : P(Le Pen) 70,1 → 66,1 %, Philippe 13,6 → 16,4 %,
+duel Le Pen–Philippe 68 → 57 % pour Le Pen, Le Pen–Glucksmann 85 → 76 %.

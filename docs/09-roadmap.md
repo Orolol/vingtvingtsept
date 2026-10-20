@@ -23,12 +23,13 @@ choix, attention en ligne : aucune admise (voir `backtest-log.md`). Toutes reste
 options désactivées dans le code et des volets explicatifs possibles du site.
 
 ## Questions ouvertes
-- Participation simulée : l'écart signalé par l'étude potentiel (78 % contre 66 % en 2017)
-  compare un premier tour simulé à un second tour observé ; la loi logit-normale est ajustée
-  sur les premiers tours (72 à 84 %), c'est le bon tour pour le poids des abstentionnistes.
-  Pas de correction, mais la participation du second tour devrait être tirée à part.
-- Biais RN du second tour : atténuation linéaire provisoire, à réévaluer par horizon.
-- Erreurs corrélées premier tour / duel (composante d'extrême droite partagée) : à faire.
+- Participation du second tour : elle était implicite, déduite des reports, et mal calibrée
+  (78,6 % à la veille de 2017 contre 66 % observés ; ma note précédente qui parlait d'une
+  confusion de tours était fausse). Option `second_round_turnout` codée, non admise au
+  backtest (CRPS +0,10 à 180 j) : désactivée.
+- Biais RN du second tour : courbe par horizon estimée et **retenue pour la publication**
+  (remplace l'atténuation linéaire, CRPS −0,23 à 180 j) ; à réévaluer avant 30 jours du vote.
+- Couplage premier tour / duel : codé, ρ non identifiable (signe changeant par pli), désactivé.
 
 - Page Wikipédia 2012 : le tableau « second trimestre 2011 » est corrompu (colonne
   Chevènement contenant les scores de Hulot, sondages perdus). Écarté pour l'instant ; la
