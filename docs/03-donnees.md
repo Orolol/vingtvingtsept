@@ -183,6 +183,61 @@ conservés tels quels ; le rattachement aux blocs se fait dans la curation.
 
 ## Curation : règles explicites
 
+État au 2026-10-20 : `vvs curate` produit `polls.parquet` (colonnes ajoutées `sources`,
+`is_rolling`), `poll_results.parquet` (`source`, `suspect`, `suspect_reason`),
+`poll_sources.parquet` (correspondance `canonical_poll_id` → identifiants par source),
+`curation_log.jsonl` (une ligne par conflit : clé, champ, valeurs par source, valeur
+retenue, règle), `poll_results_by_bloc.parquet` et `poll_errors.parquet`. 983 sondages
+fusionnés, 206 conflits journalisés, dont 125 écarts de parts de 0,25 à 0,5 point dus aux
+« <0,5 % ».
+
+Règles nommées de `curate/rules.py` :
+
+- appariement : même institut, terrains à un jour près ; le commanditaire ne sert qu'à
+  départager ; deux sondages d'une même source ne fusionnent jamais ;
+- `same_results` : résultats identiques, dates différentes → dates de la source prioritaire
+  (Ifop mars 2025) ;
+- `multi_wave_split` : une notice contenant deux vagues de terrain donne deux sondages
+  (Ifop Hexagone, avril 2025) ;
+- `label_swap` : nom de candidat décalé dans une hypothèse (Elabe mars 2026) ;
+- `sibling_wave` : hypothèse rattachée à la mauvaise vague (duel Philippe–Le Pen inversé
+  chez MieuxVoter) ;
+- `swap_consistency` : seule exception à la précédence ; dans les notices OpinionWay
+  Presitrack de septembre et octobre 2026, une page inverse Le Pen (4 %) et Zemmour (34 %),
+  on retient la version cohérente avec les autres hypothèses du sondage ;
+- population : une hypothèse sans population prend la population unique des hypothèses
+  Commission du même sondage ; la population de MieuxVoter est écartée pour Ifop et Elabe,
+  qu'elle contredit ;
+- `is_rolling` : libellé « (rolling) » ou « Presitrack », ou au moins trois vagues aux
+  terrains chevauchants espacées de un à quatre jours ; les rollings OpinionWay 2017 ne sont
+  pas détectés (point ouvert) ;
+- suspect : somme hors 97-103 (9 hypothèses, toutes avant 2017), hypothèse incomplète
+  (moins de 5 candidats au premier tour, ou deux candidats officiels manquants à moins de
+  14 jours), candidat non déclaré.
+
+Points ouverts : Le Maire 2017 classé au centre par le parti de l'année alors qu'il était
+candidat à la primaire LR (cas limite à ajouter dans `blocs.yaml`) ; Pasqua 2002 (RPF) en
+extrême droite, GRS en gauche radicale, Poisson 2022 en droite malgré le ralliement à
+Zemmour, à valider ; 66 hypothèses 2027 sans population.
+
+### Premières erreurs par bloc (sondages moins résultat, premier tour, points)
+
+Fenêtre de 30 jours avant l'horizon, configuration réelle quand elle existe.
+
+| À 7 jours | gauche radicale | gauche | centre | droite | FN/RN |
+|---|---|---|---|---|---|
+| 2002 | +2,3 | +5,5 | −0,8 | −0,9 | −5,4 |
+| 2007 | +1,4 | −1,8 | +1,0 | −2,6 | +2,1 |
+| 2012 | +1,6 | −0,9 | +2,1 | +0,9 | −3,4 |
+| 2017 | −2,9 | +3,3 | +0,3 | −1,7 | +1,7 |
+| 2022 | −6,8 | +1,1 | +1,0 | +5,8 | −0,2 |
+
+Lecture : le signe de l'erreur sur le FN/RN n'est pas stable (sous-estimé en 2002 et 2012,
+surestimé en 2007 et 2017), biais moyen faible ; la gauche radicale est nettement
+sous-estimée en 2017 et 2022, compensée par une gauche surestimée. Au second tour, le score
+de l'extrême droite est surestimé à 7 jours à chaque fois : +3,2 en 2002, +4,1 en 2017,
++4,5 en 2022. Ces tableaux sont l'entrée du modèle d'erreur (`04-modele.md`, section 2).
+
 - Déduplication entre sources sur (`pollster`, `fieldwork_start`, `fieldwork_end`,
   `sponsor`), tolérance d'un jour sur les dates ; en cas de conflit sur une valeur, la
   Commission l'emporte sur Wikipédia, qui l'emporte sur NSPPolls, et l'écart est journalisé.
