@@ -1,0 +1,287 @@
+# Élections présidentielles : dates, candidats officiels (parti, bloc), résultats nationaux.
+#
+# Résultats : décisions du Conseil constitutionnel (déclaration des résultats du premier tour,
+# proclamation des résultats du second), relevées le 2026-10-20 sur conseil-constitutionnel.fr.
+# `votes`, `registered`, `voters`, `expressed`, `blank_ballots`, `null_ballots` sont recopiés
+# tels quels ; le CC ne publie pas de pourcentages : `share` = 100 * votes / expressed,
+# arrondi à deux décimales (convention du ministère). Les blancs et nuls ne sont détaillés par
+# le CC qu'à partir de 2017 (blancs) et 2022 (nuls) ; absents = non publiés dans la décision.
+#
+# `date` = dimanche du scrutin en métropole. Les blocs suivent data/registry/blocs.yaml.
+
+elections:
+  2002:
+    date_note: >-
+      Dates fixées par le décret n° 2002-346 du 13 mars 2002 portant convocation des électeurs
+      (21 avril et 5 mai 2002, d'après maire-info.com, texte du décret non consulté) ; la
+      déclaration du CC confirme « le 21 avril 2002 » pour le premier tour.
+    date_source_url: https://maire-info.com/publication-au-journal-officiel-du-decret-de-convocation-des-electeurs-pour-lelection-du-president-de-la-republique-article2-1626
+    candidates:
+      - {candidate_id: megret_bruno, party: mnr, bloc: far_right}
+      - {candidate_id: lepage_corinne, party: cap21, bloc: centre}
+      - {candidate_id: gluckstein_daniel, party: pt, bloc: far_left}
+      - {candidate_id: bayrou_francois, party: udf, bloc: right}
+      - {candidate_id: chirac_jacques, party: rpr, bloc: right}
+      - {candidate_id: le_pen_jean_marie, party: fn, bloc: far_right}
+      - {candidate_id: taubira_christiane, party: prg, bloc: left}
+      - {candidate_id: saint_josse_jean, party: cpnt, bloc: other}
+      - {candidate_id: mamere_noel, party: verts, bloc: left}
+      - {candidate_id: jospin_lionel, party: ps, bloc: left}
+      - {candidate_id: boutin_christine, party: frs, bloc: right}
+      - {candidate_id: hue_robert, party: pcf, bloc: far_left}
+      - {candidate_id: chevenement_jean_pierre, party: mdc, bloc: left}
+      - {candidate_id: madelin_alain, party: dl, bloc: right}
+      - {candidate_id: laguiller_arlette, party: lo, bloc: far_left}
+      - {candidate_id: besancenot_olivier, party: lcr, bloc: far_left}
+    rounds:
+      - round: 1
+        date: 2002-04-21
+        date_status: official
+        source: "Conseil constitutionnel, Déclaration n° 2002-109 PDR du 24 avril 2002"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2002/2002109PDR.htm
+        registered: 41194689
+        voters: 29495733
+        expressed: 28498471
+        results:
+          - {candidate_id: chirac_jacques, votes: 5665855, share: 19.88}
+          - {candidate_id: le_pen_jean_marie, votes: 4804713, share: 16.86}
+          - {candidate_id: jospin_lionel, votes: 4610113, share: 16.18}
+          - {candidate_id: bayrou_francois, votes: 1949170, share: 6.84}
+          - {candidate_id: laguiller_arlette, votes: 1630045, share: 5.72}
+          - {candidate_id: chevenement_jean_pierre, votes: 1518528, share: 5.33}
+          - {candidate_id: mamere_noel, votes: 1495724, share: 5.25}
+          - {candidate_id: besancenot_olivier, votes: 1210562, share: 4.25}
+          - {candidate_id: saint_josse_jean, votes: 1204689, share: 4.23}
+          - {candidate_id: madelin_alain, votes: 1113484, share: 3.91}
+          - {candidate_id: hue_robert, votes: 960480, share: 3.37}
+          - {candidate_id: megret_bruno, votes: 667026, share: 2.34}
+          - {candidate_id: taubira_christiane, votes: 660447, share: 2.32}
+          - {candidate_id: lepage_corinne, votes: 535837, share: 1.88}
+          - {candidate_id: boutin_christine, votes: 339112, share: 1.19}
+          - {candidate_id: gluckstein_daniel, votes: 132686, share: 0.47}
+      - round: 2
+        date: 2002-05-05
+        date_status: official
+        source: "Conseil constitutionnel, Décision n° 2002-111 PDR du 8 mai 2002"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2002/2002111PDR.htm
+        registered: 41191169
+        voters: 32832295
+        expressed: 31062988
+        results:
+          - {candidate_id: chirac_jacques, votes: 25537956, share: 82.21}
+          - {candidate_id: le_pen_jean_marie, votes: 5525032, share: 17.79}
+  2007:
+    date_note: >-
+      Le CC indique « les 21 et 22 avril 2007 » et « les 5 et 6 mai 2007 » : certains
+      territoires d'outre-mer et centres à l'étranger votent la veille. On retient le dimanche
+      (métropole).
+    candidates:
+      - {candidate_id: besancenot_olivier, party: lcr, bloc: far_left}
+      - {candidate_id: buffet_marie_george, party: pcf, bloc: far_left}
+      - {candidate_id: schivardi_gerard, party: pt, bloc: far_left}
+      - {candidate_id: bayrou_francois, party: udf, bloc: centre}
+      - {candidate_id: bove_jose, party: exg, bloc: far_left}
+      - {candidate_id: voynet_dominique, party: verts, bloc: left}
+      - {candidate_id: de_villiers_philippe, party: mpf, bloc: far_right}
+      - {candidate_id: royal_segolene, party: ps, bloc: left}
+      - {candidate_id: nihous_frederic, party: cpnt, bloc: other}
+      - {candidate_id: le_pen_jean_marie, party: fn, bloc: far_right}
+      - {candidate_id: laguiller_arlette, party: lo, bloc: far_left}
+      - {candidate_id: sarkozy_nicolas, party: ump, bloc: right}
+    rounds:
+      - round: 1
+        date: 2007-04-22
+        date_status: official
+        source: "Conseil constitutionnel, Déclaration n° 2007-139 PDR du 25 avril 2007"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2007/2007139PDR.htm
+        registered: 44472834
+        voters: 37254242
+        expressed: 36719396
+        results:
+          - {candidate_id: sarkozy_nicolas, votes: 11448663, share: 31.18}
+          - {candidate_id: royal_segolene, votes: 9500112, share: 25.87}
+          - {candidate_id: bayrou_francois, votes: 6820119, share: 18.57}
+          - {candidate_id: le_pen_jean_marie, votes: 3834530, share: 10.44}
+          - {candidate_id: besancenot_olivier, votes: 1498581, share: 4.08}
+          - {candidate_id: de_villiers_philippe, votes: 818407, share: 2.23}
+          - {candidate_id: buffet_marie_george, votes: 707268, share: 1.93}
+          - {candidate_id: voynet_dominique, votes: 576666, share: 1.57}
+          - {candidate_id: laguiller_arlette, votes: 487857, share: 1.33}
+          - {candidate_id: bove_jose, votes: 483008, share: 1.32}
+          - {candidate_id: nihous_frederic, votes: 420645, share: 1.15}
+          - {candidate_id: schivardi_gerard, votes: 123540, share: 0.34}
+      - round: 2
+        date: 2007-05-06
+        date_status: official
+        source: "Conseil constitutionnel, Décision n° 2007-141 PDR du 10 mai 2007"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2007/2007141PDR.htm
+        registered: 44472733
+        voters: 37342004
+        expressed: 35773578
+        results:
+          - {candidate_id: sarkozy_nicolas, votes: 18983138, share: 53.06}
+          - {candidate_id: royal_segolene, votes: 16790440, share: 46.94}
+  2012:
+    date_note: >-
+      Le CC indique « les 21 et 22 avril 2012 » et « les 5 et 6 mai 2012 » ; on retient le
+      dimanche (métropole).
+    candidates:
+      - {candidate_id: joly_eva, party: eelv, bloc: left}
+      - {candidate_id: le_pen_marine, party: fn, bloc: far_right}
+      - {candidate_id: sarkozy_nicolas, party: ump, bloc: right}
+      - {candidate_id: melenchon_jean_luc, party: fdg, bloc: far_left}
+      - {candidate_id: poutou_philippe, party: npa, bloc: far_left}
+      - {candidate_id: arthaud_nathalie, party: lo, bloc: far_left}
+      - {candidate_id: cheminade_jacques, party: sp, bloc: other}
+      - {candidate_id: bayrou_francois, party: modem, bloc: centre}
+      - {candidate_id: dupont_aignan_nicolas, party: dlr, bloc: far_right}
+      - {candidate_id: hollande_francois, party: ps, bloc: left}
+    rounds:
+      - round: 1
+        date: 2012-04-22
+        date_status: official
+        source: "Conseil constitutionnel, Déclaration n° 2012-152 PDR du 25 avril 2012"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2012/2012152PDR.htm
+        registered: 46028542
+        voters: 36584399
+        expressed: 35883209
+        results:
+          - {candidate_id: hollande_francois, votes: 10272705, share: 28.63}
+          - {candidate_id: sarkozy_nicolas, votes: 9753629, share: 27.18}
+          - {candidate_id: le_pen_marine, votes: 6421426, share: 17.90}
+          - {candidate_id: melenchon_jean_luc, votes: 3984822, share: 11.10}
+          - {candidate_id: bayrou_francois, votes: 3275122, share: 9.13}
+          - {candidate_id: joly_eva, votes: 828345, share: 2.31}
+          - {candidate_id: dupont_aignan_nicolas, votes: 643907, share: 1.79}
+          - {candidate_id: poutou_philippe, votes: 411160, share: 1.15}
+          - {candidate_id: arthaud_nathalie, votes: 202548, share: 0.56}
+          - {candidate_id: cheminade_jacques, votes: 89545, share: 0.25}
+      - round: 2
+        date: 2012-05-06
+        date_status: official
+        source: "Conseil constitutionnel, Décision n° 2012-154 PDR du 10 mai 2012"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2012/2012154PDR.htm
+        registered: 46066307
+        voters: 37016309
+        expressed: 34861353
+        results:
+          - {candidate_id: hollande_francois, votes: 18000668, share: 51.64}
+          - {candidate_id: sarkozy_nicolas, votes: 16860685, share: 48.36}
+  2017:
+    date_note: >-
+      Le CC indique « les 22 et 23 avril 2017 » et « les 6 et 7 mai 2017 » ; on retient le
+      dimanche (métropole).
+    candidates:
+      - {candidate_id: dupont_aignan_nicolas, party: dlf, bloc: far_right}
+      - {candidate_id: le_pen_marine, party: fn, bloc: far_right}
+      - {candidate_id: macron_emmanuel, party: em, bloc: centre}
+      - {candidate_id: hamon_benoit, party: ps, bloc: left}
+      - {candidate_id: arthaud_nathalie, party: lo, bloc: far_left}
+      - {candidate_id: poutou_philippe, party: npa, bloc: far_left}
+      - {candidate_id: cheminade_jacques, party: sp, bloc: other}
+      - {candidate_id: lassalle_jean, party: resistons, bloc: other}
+      - {candidate_id: melenchon_jean_luc, party: lfi, bloc: far_left}
+      - {candidate_id: asselineau_francois, party: upr, bloc: other}
+      - {candidate_id: fillon_francois, party: lr, bloc: right}
+    rounds:
+      - round: 1
+        date: 2017-04-23
+        date_status: official
+        source: "Conseil constitutionnel, Déclaration n° 2017-169 PDR du 26 avril 2017"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2017/2017169PDR.htm
+        registered: 47582183
+        voters: 37003728
+        blank_ballots: 659997
+        expressed: 36054394
+        results:
+          - {candidate_id: macron_emmanuel, votes: 8656346, share: 24.01}
+          - {candidate_id: le_pen_marine, votes: 7678491, share: 21.30}
+          - {candidate_id: fillon_francois, votes: 7212995, share: 20.01}
+          - {candidate_id: melenchon_jean_luc, votes: 7059951, share: 19.58}
+          - {candidate_id: hamon_benoit, votes: 2291288, share: 6.36}
+          - {candidate_id: dupont_aignan_nicolas, votes: 1695000, share: 4.70}
+          - {candidate_id: lassalle_jean, votes: 435301, share: 1.21}
+          - {candidate_id: poutou_philippe, votes: 394505, share: 1.09}
+          - {candidate_id: asselineau_francois, votes: 332547, share: 0.92}
+          - {candidate_id: arthaud_nathalie, votes: 232384, share: 0.64}
+          - {candidate_id: cheminade_jacques, votes: 65586, share: 0.18}
+      - round: 2
+        date: 2017-05-07
+        date_status: official
+        source: "Conseil constitutionnel, Décision n° 2017-171 PDR du 10 mai 2017"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2017/2017171PDR.htm
+        registered: 47568693
+        voters: 35467327
+        blank_ballots: 3021499
+        expressed: 31381603
+        results:
+          - {candidate_id: macron_emmanuel, votes: 20743128, share: 66.10}
+          - {candidate_id: le_pen_marine, votes: 10638475, share: 33.90}
+  2022:
+    date_note: >-
+      Le CC indique « les 9 et 10 avril 2022 » et « les 23 et 24 avril 2022 » ; on retient le
+      dimanche (métropole).
+    candidates:
+      - {candidate_id: arthaud_nathalie, party: lo, bloc: far_left}
+      - {candidate_id: roussel_fabien, party: pcf, bloc: far_left}
+      - {candidate_id: macron_emmanuel, party: lrem, bloc: centre}
+      - {candidate_id: lassalle_jean, party: resistons, bloc: other}
+      - {candidate_id: le_pen_marine, party: rn, bloc: far_right}
+      - {candidate_id: zemmour_eric, party: reconquete, bloc: far_right}
+      - {candidate_id: melenchon_jean_luc, party: lfi, bloc: far_left}
+      - {candidate_id: hidalgo_anne, party: ps, bloc: left}
+      - {candidate_id: jadot_yannick, party: eelv, bloc: left}
+      - {candidate_id: pecresse_valerie, party: lr, bloc: right}
+      - {candidate_id: poutou_philippe, party: npa, bloc: far_left}
+      - {candidate_id: dupont_aignan_nicolas, party: dlf, bloc: far_right}
+    rounds:
+      - round: 1
+        date: 2022-04-10
+        date_status: official
+        source: "Conseil constitutionnel, Déclaration n° 2022-195 PDR du 13 avril 2022"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2022/2022195PDR.htm
+        registered: 48747876
+        voters: 35923707
+        blank_ballots: 543609
+        null_ballots: 247151
+        expressed: 35132947
+        results:
+          - {candidate_id: macron_emmanuel, votes: 9783058, share: 27.85}
+          - {candidate_id: le_pen_marine, votes: 8133828, share: 23.15}
+          - {candidate_id: melenchon_jean_luc, votes: 7712520, share: 21.95}
+          - {candidate_id: zemmour_eric, votes: 2485226, share: 7.07}
+          - {candidate_id: pecresse_valerie, votes: 1679001, share: 4.78}
+          - {candidate_id: jadot_yannick, votes: 1627853, share: 4.63}
+          - {candidate_id: lassalle_jean, votes: 1101387, share: 3.13}
+          - {candidate_id: roussel_fabien, votes: 802422, share: 2.28}
+          - {candidate_id: dupont_aignan_nicolas, votes: 725176, share: 2.06}
+          - {candidate_id: hidalgo_anne, votes: 616478, share: 1.75}
+          - {candidate_id: poutou_philippe, votes: 268904, share: 0.77}
+          - {candidate_id: arthaud_nathalie, votes: 197094, share: 0.56}
+      - round: 2
+        date: 2022-04-24
+        date_status: official
+        source: "Conseil constitutionnel, Décision n° 2022-197 PDR du 27 avril 2022"
+        source_url: https://www.conseil-constitutionnel.fr/decision/2022/2022197PDR.htm
+        registered: 48752339
+        voters: 35096478
+        blank_ballots: 2233904
+        null_ballots: 805249
+        expressed: 32057325
+        results:
+          - {candidate_id: macron_emmanuel, votes: 18768639, share: 58.55}
+          - {candidate_id: le_pen_marine, votes: 13288686, share: 41.45}
+  2027:
+    date_note: >-
+      Dates annoncées par le Gouvernement au Conseil des ministres du 1er juillet 2026
+      (service-public.gouv.fr, 2 juillet 2026) : 18 avril et 2 mai 2027, la veille (samedis
+      17 avril et 1er mai) aux Antilles, en Guyane, à Saint-Pierre-et-Miquelon,
+      Saint-Barthélemy, Saint-Martin et en Polynésie. INCERTAIN : le texte du décret de
+      convocation (numéro, date de publication au JO) n'a pas été retrouvé au 2026-10-20 ;
+      à confirmer sur Légifrance. Liste officielle des candidats : publiée par le CC après la
+      clôture des parrainages, vide d'ici là.
+    date_source_url: https://www.service-public.gouv.fr/particuliers/actualites/A15053
+    candidates: []
+    rounds:
+      - {round: 1, date: 2027-04-18, date_status: announced}
+      - {round: 2, date: 2027-05-02, date_status: announced}

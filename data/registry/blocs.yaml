@@ -1,0 +1,200 @@
+# Blocs politiques : définitions et cas limites tranchés (voir docs/03-donnees.md).
+#
+# Le bloc d'un candidat à une élection passée est porté par elections.yaml ; ce fichier en
+# donne la doctrine. Chaque cas limite cite le candidat (ou le parti) et les élections
+# concernées : le loader vérifie que elections.yaml applique bien la décision, et
+# `bloc_of` l'utilise pour les élections sans liste officielle (2027).
+#
+# Ordre de résolution de `bloc_of(candidate_id, election)` : 1) liste officielle de
+# elections.yaml, 2) cas limite ci-dessous visant ce candidat et cette élection, 3) bloc par
+# défaut du parti du candidat cette année-là (parties.yaml).
+
+blocs:
+  far_right:
+    label: Extrême droite et droite nationaliste
+    definition: >-
+      FN puis RN, MNR, Reconquête, et la droite souverainiste-identitaire hors de la droite de
+      gouvernement (MPF, Debout la République / Debout la France).
+  right:
+    label: Droite
+    definition: >-
+      Droite de gouvernement : RPR, UMP puis LR, Démocratie libérale, et les centristes alliés
+      quand ils sont dans la majorité de droite (UDF 2002, UDI hors majorité présidentielle).
+  centre:
+    label: Centre
+    definition: >-
+      Centre autonome des deux camps : Bayrou 2007-2012 (UDF puis MoDem), Macron et la majorité
+      présidentielle (EM, LREM, Renaissance, MoDem, Horizons), Cap21.
+  left:
+    label: Gauche
+    definition: >-
+      Gauche de gouvernement : PS, PRG, MDC/MRC, écologistes (Verts, EELV, Les Écologistes),
+      Place publique, Génération.s.
+  far_left:
+    label: Gauche radicale et extrême gauche
+    definition: >-
+      PCF, Front de gauche, Parti de gauche puis LFI, LCR puis NPA, LO, PT/POI, et les
+      candidatures altermondialistes ou anticapitalistes.
+  other:
+    label: Autres
+    definition: >-
+      Candidats non rattachables à un des cinq blocs : ruralistes (CPNT, Lassalle),
+      Cheminade, UPR, et les candidatures transversales sans ancrage partisan établi.
+
+boundary_cases:
+  - id: ecologists
+    candidate_ids: [mamere_noel, voynet_dominique, joly_eva, jadot_yannick]
+    elections: [2002, 2007, 2012, 2022]
+    bloc: left
+    rationale: >-
+      Les Verts puis EELV gouvernent avec le PS (gauche plurielle, 2012-2014, accords
+      législatifs) et leurs électeurs se reportent comme ceux du PS : bloc gauche, pas gauche
+      radicale.
+  - id: melenchon
+    candidate_ids: [melenchon_jean_luc]
+    elections: [2012, 2017, 2022, 2027]
+    bloc: far_left
+    rationale: >-
+      Depuis sa sortie du PS (2008), Mélenchon porte la gauche de rupture (Front de gauche avec
+      le PCF, puis LFI) et capte l'électorat PCF et d'extrême gauche : far_left dès 2012.
+  - id: pcf
+    party: pcf
+    candidate_ids: [hue_robert, buffet_marie_george, roussel_fabien]
+    elections: [2002, 2007, 2022]
+    bloc: far_left
+    rationale: >-
+      Le PCF reste classé dans la gauche radicale même quand il gouverne (Hue 2002) ou se
+      démarque de LFI (Roussel 2022), pour garder un bloc stable sur toute la série.
+  - id: bayrou_2002
+    candidate_ids: [bayrou_francois]
+    elections: [2002]
+    bloc: right
+    rationale: >-
+      En 2002 l'UDF appartient à l'opposition de droite à Jospin et rejoint la majorité de
+      Chirac au second tour et aux législatives : droite.
+  - id: bayrou_2007_2012
+    candidate_ids: [bayrou_francois]
+    elections: [2007, 2012]
+    bloc: centre
+    rationale: >-
+      En 2007 Bayrou fait campagne « ni droite ni gauche » et refuse de soutenir Sarkozy, puis
+      fonde le MoDem ; en 2012 il vote Hollande au second tour : centre autonome.
+  - id: lepage_2002
+    candidate_ids: [lepage_corinne]
+    elections: [2002]
+    bloc: centre
+    rationale: >-
+      Cap21, écologie centriste issue d'un ministère Juppé, hors gauche plurielle et hors
+      majorité de droite : centre.
+  - id: chevenement_2002
+    candidate_ids: [chevenement_jean_pierre]
+    elections: [2002]
+    bloc: left
+    rationale: >-
+      Malgré le « ni droite ni gauche » du Pôle républicain, le MDC sort de la gauche plurielle
+      et du gouvernement Jospin, et son électorat est surtout de gauche : gauche.
+  - id: taubira_2002
+    candidate_ids: [taubira_christiane]
+    elections: [2002]
+    bloc: left
+    rationale: >-
+      Candidate du PRG, composante de la gauche plurielle alliée au PS : gauche.
+  - id: bove_2007
+    candidate_ids: [bove_jose]
+    elections: [2007]
+    bloc: far_left
+    rationale: >-
+      Candidature altermondialiste soutenue par une partie de la gauche antilibérale (collectifs
+      unitaires du « non » de 2005), concurrente du PCF et de la LCR : gauche radicale.
+  - id: schivardi_gluckstein
+    candidate_ids: [gluckstein_daniel, schivardi_gerard]
+    elections: [2002, 2007]
+    bloc: far_left
+    rationale: >-
+      Candidats du Parti des travailleurs (trotskiste lambertiste), Schivardi se présentant en
+      « candidat des maires » : extrême gauche.
+  - id: villiers_2007
+    candidate_ids: [de_villiers_philippe]
+    elections: [2007]
+    bloc: far_right
+    rationale: >-
+      Le MPF porte un souverainisme identitaire hors de l'UMP, au plus près du FN sur
+      l'immigration et l'Europe ; classé comme Debout la France pour la cohérence.
+  - id: dupont_aignan
+    candidate_ids: [dupont_aignan_nicolas]
+    elections: [2012, 2017, 2022, 2027]
+    bloc: far_right
+    rationale: >-
+      Debout la République / Debout la France, souverainiste hors de la droite de
+      gouvernement, allié à Marine Le Pen au second tour 2017 : extrême droite (docs/03).
+  - id: boutin_2002
+    candidate_ids: [boutin_christine]
+    elections: [2002]
+    bloc: right
+    rationale: >-
+      Députée UDF, conservatrice catholique, ralliée ensuite à l'UMP et ministre de Sarkozy :
+      droite.
+  - id: rural_cpnt
+    candidate_ids: [saint_josse_jean, nihous_frederic]
+    elections: [2002, 2007]
+    bloc: other
+    rationale: >-
+      CPNT défend un ruralisme sans affiliation gauche-droite stable (Nihous rallie Sarkozy en
+      2007, mais l'électorat est transpartisan) : autres.
+  - id: lassalle
+    candidate_ids: [lassalle_jean]
+    elections: [2017, 2022, 2027]
+    bloc: other
+    rationale: >-
+      Ex-MoDem, candidat ruraliste et protestataire de Résistons!, électorat transversal sans
+      ancrage dans un bloc : autres.
+  - id: cheminade
+    candidate_ids: [cheminade_jacques]
+    elections: [2012, 2017]
+    bloc: other
+    rationale: >-
+      Solidarité et progrès (mouvance LaRouche) n'appartient à aucune famille politique
+      française identifiable : autres.
+  - id: asselineau
+    candidate_ids: [asselineau_francois]
+    elections: [2017, 2022, 2027]
+    bloc: other
+    rationale: >-
+      L'UPR se revendique ni de droite ni de gauche autour du seul Frexit et ne s'allie à
+      personne ; à reclasser en far_right seulement si une étude de reports le justifie.
+  - id: zemmour
+    candidate_ids: [zemmour_eric, knafo_sarah]
+    elections: [2022, 2027]
+    bloc: far_right
+    rationale: >-
+      Reconquête dispute au RN le même électorat national-identitaire et appelle à voter
+      Le Pen au second tour 2022 : extrême droite.
+  - id: macron_majority
+    candidate_ids: [macron_emmanuel]
+    elections: [2017, 2022]
+    bloc: centre
+    rationale: >-
+      Majorité présidentielle (EM puis LREM, MoDem, Horizons), positionnée entre PS et LR :
+      centre, même quand sa politique et son électorat glissent à droite en 2022.
+  - id: hollande_2027
+    candidate_ids: [hollande_francois]
+    elections: [2027]
+    bloc: left
+    rationale: >-
+      Ancien président PS, il se présenterait comme social-démocrate dans l'espace du PS :
+      gauche, comme en 2012.
+  - id: ruffin_autain_2027
+    candidate_ids: [ruffin_francois, autain_clementine]
+    elections: [2027]
+    bloc: far_left
+    rationale: >-
+      Sortis de LFI en 2024 mais issus de la gauche de rupture (Debout!, L'Après) : gauche
+      radicale par défaut, à réexaminer s'ils rejoignent une candidature commune avec le PS.
+  - id: villepin_2027
+    candidate_ids: [de_villepin_dominique]
+    elections: [2027]
+    bloc: other
+    rationale: >-
+      PROVISOIRE : ex-Premier ministre UMP sorti du parti en 2010, il lance La France
+      humaniste (2025) sur une ligne gaulliste transversale, hors LR et hors majorité ; aucun
+      bloc ne le décrit bien, à trancher avant la phase 2 au vu des reports sondés.

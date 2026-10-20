@@ -1,0 +1,491 @@
+# Personnes : candidats officiels aux présidentielles 2002-2022, candidats déclarés ou
+# plausibles pour 2027. Clé = candidate_id (voir README.md).
+#
+# `parties` : affiliations successives, `from` / `to` en années incluses, `null` = inconnu
+# (pour `from`) ou en cours (pour `to`). Une affiliation peut en chevaucher une autre
+# (alliance Front de gauche et Parti de gauche). Le loader vérifie que le parti de chaque
+# candidature dans elections.yaml figure ici, actif l'année de l'élection.
+# Affiliations relevées de mémoire : les années anciennes et les mouvements récents (2024-2026)
+# sont à recouper avant tout usage fin ; les notes signalent les points douteux.
+
+candidates:
+  # --- candidats officiels 2002-2022
+  arthaud_nathalie:
+    name: Nathalie Arthaud
+    first_name: Nathalie
+    last_name: Arthaud
+    parties:
+      - {party: lo, from: null, to: null}
+    notes: Porte-parole de LO, candidate 2012, 2017, 2022.
+  asselineau_francois:
+    name: François Asselineau
+    first_name: François
+    last_name: Asselineau
+    parties:
+      - {party: upr, from: 2007, to: null}
+    notes: Fondateur de l'UPR, candidat 2017.
+  bayrou_francois:
+    name: François Bayrou
+    first_name: François
+    last_name: Bayrou
+    parties:
+      - {party: udf, from: null, to: 2007}
+      - {party: modem, from: 2007, to: null}
+    notes: Candidat 2002, 2007, 2012 ; allié de Macron depuis 2017, Premier ministre 2024-2025.
+  besancenot_olivier:
+    name: Olivier Besancenot
+    first_name: Olivier
+    last_name: Besancenot
+    parties:
+      - {party: lcr, from: null, to: 2009}
+      - {party: npa, from: 2009, to: null}
+    notes: Candidat 2002, 2007.
+  bove_jose:
+    name: José Bové
+    first_name: José
+    last_name: Bové
+    parties:
+      - {party: exg, from: 2007, to: 2007}
+      - {party: eelv, from: 2009, to: null}
+    notes: >-
+      Candidat altermondialiste sans parti en 2007 (nuance exg) ; élu européen sur les listes
+      Europe Écologie en 2009, appartenance ultérieure non vérifiée.
+  boutin_christine:
+    name: Christine Boutin
+    first_name: Christine
+    last_name: Boutin
+    parties:
+      - {party: udf, from: null, to: 2002}
+      - {party: frs, from: 2001, to: 2009}
+      - {party: pcd, from: 2009, to: null}
+    notes: Candidate 2002 (Forum des républicains sociaux) ; candidature 2012 retirée.
+  buffet_marie_george:
+    name: Marie-George Buffet
+    first_name: Marie-George
+    last_name: Buffet
+    parties:
+      - {party: pcf, from: null, to: null}
+    notes: Secrétaire nationale du PCF, candidate 2007.
+  cheminade_jacques:
+    name: Jacques Cheminade
+    first_name: Jacques
+    last_name: Cheminade
+    parties:
+      - {party: sp, from: 1996, to: null}
+    notes: Candidat 1995, 2012, 2017.
+  chevenement_jean_pierre:
+    name: Jean-Pierre Chevènement
+    first_name: Jean-Pierre
+    last_name: Chevènement
+    parties:
+      - {party: ps, from: null, to: 1993}
+      - {party: mdc, from: 1993, to: 2003}
+      - {party: mrc, from: 2003, to: null}
+    notes: Candidat 2002 (Pôle républicain).
+  chirac_jacques:
+    name: Jacques Chirac
+    first_name: Jacques
+    last_name: Chirac
+    parties:
+      - {party: rpr, from: 1976, to: 2002}
+      - {party: ump, from: 2002, to: null}
+    notes: Président 1995-2007, réélu en 2002 ; décédé en 2019.
+  de_villiers_philippe:
+    name: Philippe de Villiers
+    first_name: Philippe
+    last_name: de Villiers
+    parties:
+      - {party: mpf, from: 1994, to: null}
+    notes: Candidat 1995, 2007. Particule rangée en tête de l'id (voir README.md).
+  dupont_aignan_nicolas:
+    name: Nicolas Dupont-Aignan
+    first_name: Nicolas
+    last_name: Dupont-Aignan
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2007}
+      - {party: dlr, from: 2008, to: 2014}
+      - {party: dlf, from: 2014, to: null}
+    notes: >-
+      Candidat 2012, 2017, 2022 ; rallié à Marine Le Pen au second tour 2017. Plausible en 2027
+      (déclaration non vérifiée).
+  fillon_francois:
+    name: François Fillon
+    first_name: François
+    last_name: Fillon
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Candidat 2017 après la primaire de la droite ; retiré de la vie politique.
+  gluckstein_daniel:
+    name: Daniel Gluckstein
+    first_name: Daniel
+    last_name: Gluckstein
+    parties:
+      - {party: pt, from: null, to: 2008}
+      - {party: poi, from: 2008, to: null}
+    notes: Candidat 2002 (Parti des travailleurs).
+  hamon_benoit:
+    name: Benoît Hamon
+    first_name: Benoît
+    last_name: Hamon
+    parties:
+      - {party: ps, from: null, to: 2017}
+      - {party: generation_s, from: 2017, to: null}
+    notes: Candidat PS 2017 après la primaire de la gauche ; retiré de la vie politique depuis 2021.
+  hidalgo_anne:
+    name: Anne Hidalgo
+    first_name: Anne
+    last_name: Hidalgo
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Candidate 2022, maire de Paris.
+  hollande_francois:
+    name: François Hollande
+    first_name: François
+    last_name: Hollande
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: >-
+      Président 2012-2017 ; député de Corrèze depuis 2024. Candidature 2027 plausible, non
+      déclarée à la connaissance du registre.
+  hue_robert:
+    name: Robert Hue
+    first_name: Robert
+    last_name: Hue
+    parties:
+      - {party: pcf, from: null, to: 2009}
+    notes: Candidat 1995, 2002 ; quitte le PCF en 2009 (Mouvement unitaire progressiste).
+  jadot_yannick:
+    name: Yannick Jadot
+    first_name: Yannick
+    last_name: Jadot
+    parties:
+      - {party: eelv, from: 2010, to: 2023}
+      - {party: les_ecologistes, from: 2023, to: null}
+    notes: Candidat 2022 après la primaire écologiste.
+  joly_eva:
+    name: Eva Joly
+    first_name: Eva
+    last_name: Joly
+    parties:
+      - {party: eelv, from: 2010, to: null}
+    notes: Candidate 2012 après la primaire écologiste.
+  jospin_lionel:
+    name: Lionel Jospin
+    first_name: Lionel
+    last_name: Jospin
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Premier ministre 1997-2002, candidat 1995 et 2002.
+  laguiller_arlette:
+    name: Arlette Laguiller
+    first_name: Arlette
+    last_name: Laguiller
+    parties:
+      - {party: lo, from: null, to: null}
+    notes: Candidate de 1974 à 2007.
+  lassalle_jean:
+    name: Jean Lassalle
+    first_name: Jean
+    last_name: Lassalle
+    parties:
+      - {party: udf, from: null, to: 2007}
+      - {party: modem, from: 2007, to: 2016}
+      - {party: resistons, from: 2016, to: null}
+    notes: Candidat 2017, 2022 ; candidature 2027 plausible, non vérifiée.
+  le_pen_jean_marie:
+    name: Jean-Marie Le Pen
+    first_name: Jean-Marie
+    last_name: Le Pen
+    parties:
+      - {party: fn, from: 1972, to: 2015}
+    notes: Candidat de 1974 à 2007 (sauf 1981), qualifié au second tour 2002 ; exclu du FN en 2015, décédé en 2025.
+  le_pen_marine:
+    name: Marine Le Pen
+    first_name: Marine
+    last_name: Le Pen
+    parties:
+      - {party: fn, from: null, to: 2018}
+      - {party: rn, from: 2018, to: null}
+    notes: >-
+      Candidate 2012, 2017, 2022. Condamnée en première instance (mars 2025) à cinq ans
+      d'inéligibilité avec exécution provisoire ; en appel (7 juillet 2026, d'après la presse)
+      la part ferme est ramenée à 15 mois, déjà purgés : éligible en 2027 sauf fait nouveau.
+      À recouper sur l'arrêt et suivre dans scenarios_2027.yaml.
+  lepage_corinne:
+    name: Corinne Lepage
+    first_name: Corinne
+    last_name: Lepage
+    parties:
+      - {party: cap21, from: 1996, to: null}
+    notes: Candidate 2002, ministre de l'Environnement 1995-1997.
+  macron_emmanuel:
+    name: Emmanuel Macron
+    first_name: Emmanuel
+    last_name: Macron
+    parties:
+      - {party: ps, from: 2006, to: 2009}
+      - {party: em, from: 2016, to: 2017}
+      - {party: lrem, from: 2017, to: 2022}
+      - {party: renaissance, from: 2022, to: null}
+    notes: Président élu en 2017 et 2022 ; ne peut pas se représenter en 2027.
+  madelin_alain:
+    name: Alain Madelin
+    first_name: Alain
+    last_name: Madelin
+    parties:
+      - {party: dl, from: 1997, to: 2002}
+      - {party: ump, from: 2002, to: null}
+    notes: Candidat 2002 (Démocratie libérale).
+  mamere_noel:
+    name: Noël Mamère
+    first_name: Noël
+    last_name: Mamère
+    parties:
+      - {party: verts, from: null, to: 2010}
+      - {party: eelv, from: 2010, to: 2013}
+    notes: Candidat 2002 ; quitte EELV en 2013.
+  megret_bruno:
+    name: Bruno Mégret
+    first_name: Bruno
+    last_name: Mégret
+    parties:
+      - {party: fn, from: null, to: 1999}
+      - {party: mnr, from: 1999, to: null}
+    notes: Candidat 2002 (MNR).
+  melenchon_jean_luc:
+    name: Jean-Luc Mélenchon
+    first_name: Jean-Luc
+    last_name: Mélenchon
+    parties:
+      - {party: ps, from: null, to: 2008}
+      - {party: pg, from: 2008, to: null}
+      - {party: fdg, from: 2009, to: 2016}
+      - {party: lfi, from: 2016, to: null}
+    notes: Candidat 2012 (Front de gauche), 2017, 2022 (LFI) ; candidature 2027 probable.
+  nihous_frederic:
+    name: Frédéric Nihous
+    first_name: Frédéric
+    last_name: Nihous
+    parties:
+      - {party: cpnt, from: null, to: null}
+    notes: Candidat 2007 (CPNT).
+  pecresse_valerie:
+    name: Valérie Pécresse
+    first_name: Valérie
+    last_name: Pécresse
+    parties:
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: 2019}
+      - {party: lr, from: 2021, to: null}
+    notes: Candidate LR 2022 ; quitte LR en 2019 (Libres !) et y revient en 2021.
+  poutou_philippe:
+    name: Philippe Poutou
+    first_name: Philippe
+    last_name: Poutou
+    parties:
+      - {party: npa, from: 2009, to: null}
+    notes: >-
+      Candidat 2012, 2017, 2022 ; reste au NPA-L'Anticapitaliste après la scission de 2022.
+      Candidature 2027 plausible, non vérifiée.
+  roussel_fabien:
+    name: Fabien Roussel
+    first_name: Fabien
+    last_name: Roussel
+    parties:
+      - {party: pcf, from: null, to: null}
+    notes: Secrétaire national du PCF, candidat 2022.
+  royal_segolene:
+    name: Ségolène Royal
+    first_name: Ségolène
+    last_name: Royal
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Candidate 2007.
+  saint_josse_jean:
+    name: Jean Saint-Josse
+    first_name: Jean
+    last_name: Saint-Josse
+    parties:
+      - {party: cpnt, from: null, to: null}
+    notes: Candidat 2002 (CPNT).
+  sarkozy_nicolas:
+    name: Nicolas Sarkozy
+    first_name: Nicolas
+    last_name: Sarkozy
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Président 2007-2012, candidat 2007 et 2012.
+  schivardi_gerard:
+    name: Gérard Schivardi
+    first_name: Gérard
+    last_name: Schivardi
+    parties:
+      - {party: pt, from: null, to: 2008}
+      - {party: poi, from: 2008, to: null}
+    notes: Candidat 2007 « des maires », soutenu par le Parti des travailleurs.
+  taubira_christiane:
+    name: Christiane Taubira
+    first_name: Christiane
+    last_name: Taubira
+    parties:
+      - {party: prg, from: null, to: null}
+    notes: >-
+      Candidate PRG 2002 ; candidature 2022 retirée faute de parrainages (non officielle).
+  voynet_dominique:
+    name: Dominique Voynet
+    first_name: Dominique
+    last_name: Voynet
+    parties:
+      - {party: verts, from: null, to: 2010}
+      - {party: eelv, from: 2010, to: null}
+    notes: Candidate 1995 et 2007.
+  zemmour_eric:
+    name: Éric Zemmour
+    first_name: Éric
+    last_name: Zemmour
+    parties:
+      - {party: reconquete, from: 2021, to: null}
+    notes: Candidat 2022 ; candidature 2027 déclarée ou plausible, à vérifier.
+
+  # --- candidats déclarés ou plausibles pour 2027 (statut à suivre dans scenarios_2027.yaml)
+  attal_gabriel:
+    name: Gabriel Attal
+    first_name: Gabriel
+    last_name: Attal
+    parties:
+      - {party: ps, from: null, to: 2016}
+      - {party: em, from: 2016, to: 2017}
+      - {party: lrem, from: 2017, to: 2022}
+      - {party: renaissance, from: 2022, to: null}
+    notes: Premier ministre 2024, secrétaire général de Renaissance depuis fin 2024.
+  autain_clementine:
+    name: Clémentine Autain
+    first_name: Clémentine
+    last_name: Autain
+    parties:
+      - {party: fdg, from: 2009, to: 2016}
+      - {party: lfi, from: 2016, to: 2024}
+      - {party: lapres, from: 2025, to: null}
+    notes: >-
+      Issue d'Ensemble ! (composante du Front de gauche) ; rompt avec LFI en 2024 et
+      co-fonde L'Après. Dates à vérifier.
+  bardella_jordan:
+    name: Jordan Bardella
+    first_name: Jordan
+    last_name: Bardella
+    parties:
+      - {party: fn, from: null, to: 2018}
+      - {party: rn, from: 2018, to: null}
+    notes: Président du RN ; candidat RN si Marine Le Pen est inéligible.
+  bertrand_xavier:
+    name: Xavier Bertrand
+    first_name: Xavier
+    last_name: Bertrand
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: 2017}
+      - {party: lr, from: 2021, to: null}
+    notes: >-
+      Quitte LR fin 2017, y revient en 2021 pour le congrès de désignation ; affiliation après
+      2021 à vérifier.
+  bompard_manuel:
+    name: Manuel Bompard
+    first_name: Manuel
+    last_name: Bompard
+    parties:
+      - {party: pg, from: null, to: null}
+      - {party: lfi, from: 2016, to: null}
+    notes: Coordinateur de LFI ; candidat plausible si Mélenchon ne se présente pas.
+  darmanin_gerald:
+    name: Gérald Darmanin
+    first_name: Gérald
+    last_name: Darmanin
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: 2017}
+      - {party: lrem, from: 2017, to: 2022}
+      - {party: renaissance, from: 2022, to: null}
+    notes: Ministre de l'Intérieur puis de la Justice.
+  de_villepin_dominique:
+    name: Dominique de Villepin
+    first_name: Dominique
+    last_name: de Villepin
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2010}
+      - {party: la_france_humaniste, from: 2025, to: null}
+    notes: >-
+      Premier ministre 2005-2007 ; fonde République solidaire en 2010 (hors registre), puis
+      La France humaniste en juin 2025. Candidature 2027 annoncée comme probable (août 2026),
+      non formalisée.
+  faure_olivier:
+    name: Olivier Faure
+    first_name: Olivier
+    last_name: Faure
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Premier secrétaire du PS ; candidat à la désignation socialiste (2026).
+  glucksmann_raphael:
+    name: Raphaël Glucksmann
+    first_name: Raphaël
+    last_name: Glucksmann
+    parties:
+      - {party: place_publique, from: 2018, to: null}
+    notes: Cofondateur de Place publique, tête de liste PS-PP aux européennes 2019 et 2024.
+  knafo_sarah:
+    name: Sarah Knafo
+    first_name: Sarah
+    last_name: Knafo
+    parties:
+      - {party: reconquete, from: 2021, to: null}
+    notes: Députée européenne Reconquête depuis 2024 ; plausible si Zemmour ne se présente pas.
+  philippe_edouard:
+    name: Édouard Philippe
+    first_name: Édouard
+    last_name: Philippe
+    parties:
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: 2017}
+      - {party: horizons, from: 2021, to: null}
+    notes: Premier ministre 2017-2020, président d'Horizons ; candidature 2027 annoncée (2024).
+  retailleau_bruno:
+    name: Bruno Retailleau
+    first_name: Bruno
+    last_name: Retailleau
+    parties:
+      - {party: mpf, from: null, to: 2010}
+      - {party: ump, from: 2012, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Président de LR depuis mai 2025, ministre de l'Intérieur 2024-2025.
+  ruffin_francois:
+    name: François Ruffin
+    first_name: François
+    last_name: Ruffin
+    parties:
+      - {party: lfi, from: 2017, to: 2024}
+      - {party: debout, from: 2025, to: null}
+    notes: >-
+      Élu en 2017 avec Picardie debout et apparenté au groupe LFI ; rompt avec LFI en 2024.
+      Candidature 2027 annoncée en 2026 (date exacte à vérifier).
+  tondelier_marine:
+    name: Marine Tondelier
+    first_name: Marine
+    last_name: Tondelier
+    parties:
+      - {party: eelv, from: null, to: 2023}
+      - {party: les_ecologistes, from: 2023, to: null}
+    notes: Secrétaire nationale des Écologistes.
+  wauquiez_laurent:
+    name: Laurent Wauquiez
+    first_name: Laurent
+    last_name: Wauquiez
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Président de LR 2017-2019, président du groupe LR à l'Assemblée depuis 2024.

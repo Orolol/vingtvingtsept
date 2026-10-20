@@ -1,0 +1,120 @@
+# Instituts de sondage et libellés rencontrés dans les sources.
+#
+# `pollster_of(label)` normalise le libellé (unidecode, minuscules, ponctuation et tirets
+# remplacés par des espaces) et le compare à l'id, au `name` et aux `aliases`. Un libellé
+# inconnu lève une erreur : on ajoute l'alias ici, on ne devine pas (docs/03-donnees.md).
+# Le commanditaire (« pour Le Figaro ») n'est pas un alias : le parseur l'isole avant.
+#
+# `mode` : mode de collecte dominant pour les sondages présidentiels récents de l'institut
+# (`online`, `phone`, `mixed`) ; l'historique connu est dans `notes`. Le mode d'un sondage
+# donné est porté par la table `polls` et prime sur cette valeur par défaut.
+# `successor` : id de l'institut qui reprend la marque (rachat ou changement de nom).
+
+pollsters:
+  ifop:
+    name: Ifop
+    aliases: [Ifop-Fiducial]
+    mode: online
+    notes: >-
+      Téléphone dans les années 2000, en ligne ensuite (date de bascule à vérifier). Le
+      rolling quotidien 2017 et 2022 est un partenariat Ifop-Fiducial.
+  ipsos:
+    name: Ipsos
+    aliases:
+      - Ipsos France
+      - Ipsos-Steria
+      - Ipsos Sopra Steria
+      - Ipsos bva
+      - Ipsos-Cevipof
+    mode: online
+    notes: >-
+      Téléphone puis en ligne (date de bascule à vérifier). Partenariat Steria puis Sopra Steria (après la
+      fusion de 2014). Absorbe BVA en 2024 : les sondages signés « Ipsos bva » vont ici, les
+      sondages BVA antérieurs restent sous `bva`. L'enquête électorale du Cevipof est réalisée
+      par Ipsos : le Cevipof est un commanditaire, pas un institut.
+  elabe:
+    name: Elabe
+    aliases: []
+    mode: online
+    notes: Fondé en 2015 ; présent à partir de la présidentielle 2017.
+  harris:
+    name: Harris Interactive
+    aliases:
+      - Toluna Harris Interactive
+      - Harris Interactive-Toluna
+      - Harris Interactive France
+      - Toluna Harris
+    mode: online
+    notes: >-
+      Filiale française de Harris Interactive, rachetée par Toluna (libellé « Toluna Harris
+      Interactive »). Distinct de LH2, héritier de l'ex-Louis Harris France.
+  opinionway:
+    name: OpinionWay
+    aliases: [Opinion Way, OpinionWay-Square]
+    mode: online
+    notes: Panel en ligne dès 2007 ; rolling quotidien en 2022.
+  odoxa:
+    name: Odoxa
+    aliases: [Odoxa-Dentsu Consulting, Odoxa-Backbone Consulting, Odoxa-Mascaret]
+    mode: online
+    notes: Fondé en 2014 ; alias de partenaires à compléter au fil des sources.
+  cluster17:
+    name: Cluster17
+    aliases: [Cluster 17]
+    mode: online
+    notes: Institut récent, actif à partir de 2022.
+  verian:
+    name: Verian
+    aliases: [Verian Group, Verian (ex-Kantar Public)]
+    mode: online
+    notes: Nouveau nom de Kantar Public depuis 2023 (voir `kantar`).
+  kantar:
+    name: Kantar Public
+    aliases:
+      - Kantar Sofres
+      - Kantar Sofres-OnePoint
+      - Kantar Public-Onepoint
+      - Kantar Public-Epoka
+    mode: online
+    successor: verian
+    notes: >-
+      Héritier de TNS Sofres (renommé Kantar Sofres vers 2016, puis Kantar Public) ; les
+      sondages 2017 associent souvent OnePoint. Mode à vérifier par sondage (téléphone et
+      en ligne selon les vagues).
+  sofres:
+    name: TNS Sofres
+    aliases: [Taylor Nelson Sofres, TNS]
+    mode: phone
+    successor: kantar
+    notes: >-
+      Libellés antérieurs à Kantar Sofres (2002-2012 environ) : téléphone et face-à-face. La
+      frontière sofres / kantar suit le libellé publié, pas la structure capitalistique.
+  bva:
+    name: BVA
+    aliases: [BVA Opinion, Institut BVA, BVA Group]
+    mode: online
+    successor: ipsos
+    notes: >-
+      Téléphone en 2002-2012, en ligne ensuite (à vérifier par sondage). Racheté par Ipsos en
+      2024 : voir `ipsos` pour le libellé « Ipsos bva ».
+  csa:
+    name: CSA
+    aliases: [CSA Research, Institut CSA, CSA Opinion]
+    mode: online
+    notes: Téléphone dans les années 2000, en ligne ensuite (date de bascule à vérifier).
+  lh2:
+    name: LH2
+    aliases: [Louis Harris, Louis Harris France, LH2 Opinion]
+    mode: phone
+    notes: >-
+      Ex-Louis Harris France, renommé LH2 au milieu des années 2000 ; actif sur 2002-2012.
+      Distinct de Harris Interactive.
+  viavoice:
+    name: Viavoice
+    aliases: [Via Voice, Institut Viavoice]
+    mode: online
+  yougov:
+    name: YouGov
+    aliases: [YouGov France]
+    mode: online
+    notes: Peu présent sur les intentions de vote présidentielles françaises.

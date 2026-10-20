@@ -1,0 +1,349 @@
+# Partis et nuances, avec leur bloc par défaut et leurs filiations.
+#
+# - `kind` : `party` (organisation) ou `nuance` (étiquette générique pour un candidat sans
+#   parti ou soutenu par une coalition, sur le modèle des nuances du ministère).
+# - `bloc` : bloc par défaut, utilisé pour les élections sans liste officielle. Le bloc d'un
+#   candidat à une élection passée est fixé dans elections.yaml et peut différer (UDF 2007).
+# - `from` / `to` : années de fondation et de disparition (ou de changement de nom), incluses ;
+#   `to: null` = actif. `successor` : id du parti qui lui succède (renommage ou fusion).
+# Années de fondation relevées de mémoire, sans vérification sur sources primaires.
+
+parties:
+  # --- far_right
+  fn:
+    name: Front national
+    short: FN
+    bloc: far_right
+    from: 1972
+    to: 2018
+    successor: rn
+  rn:
+    name: Rassemblement national
+    short: RN
+    bloc: far_right
+    from: 2018
+  mnr:
+    name: Mouvement national républicain
+    short: MNR
+    bloc: far_right
+    from: 1999
+    notes: Scission du FN menée par Bruno Mégret.
+  reconquete:
+    name: Reconquête
+    short: REC
+    bloc: far_right
+    from: 2021
+  mpf:
+    name: Mouvement pour la France
+    short: MPF
+    bloc: far_right
+    from: 1994
+    to: 2018
+    notes: Parti de Philippe de Villiers ; mis en sommeil puis dissous vers 2018.
+  dlr:
+    name: Debout la République
+    short: DLR
+    bloc: far_right
+    from: 2008
+    to: 2014
+    successor: dlf
+    notes: Club de Nicolas Dupont-Aignan dans l'UMP, devenu parti autonome en 2008.
+  dlf:
+    name: Debout la France
+    short: DLF
+    bloc: far_right
+    from: 2014
+  # --- right
+  rpr:
+    name: Rassemblement pour la République
+    short: RPR
+    bloc: right
+    from: 1976
+    to: 2002
+    successor: ump
+  dl:
+    name: Démocratie libérale
+    short: DL
+    bloc: right
+    from: 1997
+    to: 2002
+    successor: ump
+  ump:
+    name: Union pour un mouvement populaire
+    short: UMP
+    bloc: right
+    from: 2002
+    to: 2015
+    successor: lr
+    notes: >-
+      Créée en avril 2002 comme « Union pour la majorité présidentielle », parti en novembre
+      2002 (fusion RPR, DL, une partie de l'UDF).
+  lr:
+    name: Les Républicains
+    short: LR
+    bloc: right
+    from: 2015
+  frs:
+    name: Forum des républicains sociaux
+    short: FRS
+    bloc: right
+    from: 2001
+    to: 2009
+    successor: pcd
+    notes: Mouvement de Christine Boutin, associé à l'UDF puis à l'UMP.
+  pcd:
+    name: Parti chrétien-démocrate
+    short: PCD
+    bloc: right
+    from: 2009
+  udi:
+    name: Union des démocrates et indépendants
+    short: UDI
+    bloc: right
+    from: 2012
+    notes: Classée à droite tant qu'elle reste hors de la majorité présidentielle (docs/03).
+  # --- centre
+  udf:
+    name: Union pour la démocratie française
+    short: UDF
+    bloc: right
+    from: 1978
+    to: 2007
+    successor: modem
+    notes: >-
+      Bloc par défaut `right` (allié du RPR jusqu'en 2002) ; Bayrou 2007 est classé `centre`
+      dans elections.yaml (voir blocs.yaml).
+  modem:
+    name: Mouvement démocrate
+    short: MoDem
+    bloc: centre
+    from: 2007
+  cap21:
+    name: Cap21
+    short: CAP21
+    bloc: centre
+    from: 1996
+    notes: Mouvement de Corinne Lepage, écologie centriste.
+  em:
+    name: En marche
+    short: EM
+    bloc: centre
+    from: 2016
+    to: 2017
+    successor: lrem
+  lrem:
+    name: La République en marche
+    short: LREM
+    bloc: centre
+    from: 2017
+    to: 2022
+    successor: renaissance
+  renaissance:
+    name: Renaissance
+    short: RE
+    bloc: centre
+    from: 2022
+  horizons:
+    name: Horizons
+    short: HOR
+    bloc: centre
+    from: 2021
+    notes: Parti d'Édouard Philippe, membre de la majorité présidentielle.
+  # --- left
+  ps:
+    name: Parti socialiste
+    short: PS
+    bloc: left
+    from: 1969
+  prg:
+    name: Parti radical de gauche
+    short: PRG
+    bloc: left
+    from: 1972
+    notes: Composante de la gauche plurielle (candidate Taubira 2002).
+  mdc:
+    name: Mouvement des citoyens
+    short: MDC
+    bloc: left
+    from: 1993
+    to: 2003
+    successor: mrc
+    notes: Parti de Jean-Pierre Chevènement ; « Pôle républicain » en 2002.
+  mrc:
+    name: Mouvement républicain et citoyen
+    short: MRC
+    bloc: left
+    from: 2003
+  verts:
+    name: Les Verts
+    short: Verts
+    bloc: left
+    from: 1984
+    to: 2010
+    successor: eelv
+  eelv:
+    name: Europe Écologie Les Verts
+    short: EELV
+    bloc: left
+    from: 2010
+    to: 2023
+    successor: les_ecologistes
+  les_ecologistes:
+    name: Les Écologistes
+    short: LE
+    bloc: left
+    from: 2023
+  place_publique:
+    name: Place publique
+    short: PP
+    bloc: left
+    from: 2018
+  generation_s:
+    name: Génération.s
+    short: G.s
+    bloc: left
+    from: 2017
+    notes: Mouvement de Benoît Hamon après sa sortie du PS.
+  # --- far_left
+  pcf:
+    name: Parti communiste français
+    short: PCF
+    bloc: far_left
+    from: 1920
+  pg:
+    name: Parti de gauche
+    short: PG
+    bloc: far_left
+    from: 2008
+    notes: Fondé par Mélenchon à sa sortie du PS ; s'efface derrière LFI après 2016.
+  fdg:
+    name: Front de gauche
+    short: FDG
+    bloc: far_left
+    from: 2009
+    to: 2016
+    successor: lfi
+    notes: >-
+      Alliance PCF, PG et autres (candidat Mélenchon 2012) ; LFI reprend son espace en 2016
+      sans être une fusion formelle.
+  lfi:
+    name: La France insoumise
+    short: LFI
+    bloc: far_left
+    from: 2016
+  lapres:
+    name: L'Après
+    short: APRES
+    bloc: far_left
+    from: 2025
+    notes: >-
+      Association puis parti d'anciens de LFI (Autain, Corbière, Garrido…) ; date de
+      fondation à vérifier.
+  debout:
+    name: Debout !
+    short: DEBOUT
+    bloc: far_left
+    from: 2025
+    notes: >-
+      Mouvement national de François Ruffin, prolongement de Picardie debout ; nom et date de
+      fondation à vérifier.
+  lcr:
+    name: Ligue communiste révolutionnaire
+    short: LCR
+    bloc: far_left
+    from: 1974
+    to: 2009
+    successor: npa
+  npa:
+    name: Nouveau Parti anticapitaliste
+    short: NPA
+    bloc: far_left
+    from: 2009
+    notes: Scission en 2022 ; Poutou reste dans le NPA-L'Anticapitaliste.
+  lo:
+    name: Lutte ouvrière
+    short: LO
+    bloc: far_left
+    from: 1968
+  pt:
+    name: Parti des travailleurs
+    short: PT
+    bloc: far_left
+    from: 1991
+    to: 2008
+    successor: poi
+  poi:
+    name: Parti ouvrier indépendant
+    short: POI
+    bloc: far_left
+    from: 2008
+  # --- other
+  cpnt:
+    name: Chasse, pêche, nature et traditions
+    short: CPNT
+    bloc: other
+    from: 1989
+    notes: Rapprochements ultérieurs avec la droite ; bloc `other` pour 2002-2007 (blocs.yaml).
+  resistons:
+    name: Résistons !
+    short: RES
+    bloc: other
+    from: 2016
+    notes: Mouvement de Jean Lassalle.
+  sp:
+    name: Solidarité et progrès
+    short: S&P
+    bloc: other
+    from: 1996
+    notes: Parti de Jacques Cheminade (mouvance LaRouche).
+  upr:
+    name: Union populaire républicaine
+    short: UPR
+    bloc: other
+    from: 2007
+    notes: Parti de François Asselineau.
+  la_france_humaniste:
+    name: La France humaniste
+    short: LFH
+    bloc: other
+    from: 2025
+    notes: >-
+      Parti lancé par Dominique de Villepin en juin 2025 ; bloc provisoire, voir blocs.yaml
+      (villepin_2027).
+  # --- nuances (étiquettes génériques)
+  exg:
+    name: Divers extrême gauche
+    short: EXG
+    kind: nuance
+    bloc: far_left
+    notes: Utilisée pour José Bové 2007 (candidature altermondialiste sans parti).
+  dvg:
+    name: Divers gauche
+    short: DVG
+    kind: nuance
+    bloc: left
+  eco:
+    name: Divers écologiste
+    short: ECO
+    kind: nuance
+    bloc: left
+  dvc:
+    name: Divers centre
+    short: DVC
+    kind: nuance
+    bloc: centre
+  dvd:
+    name: Divers droite
+    short: DVD
+    kind: nuance
+    bloc: right
+  exd:
+    name: Divers extrême droite
+    short: EXD
+    kind: nuance
+    bloc: far_right
+  div:
+    name: Divers
+    short: DIV
+    kind: nuance
+    bloc: other
