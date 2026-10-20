@@ -879,7 +879,27 @@ const pollsJson = {
 					n_polls: pollCount[p]
 				};
 			})
-	)
+	),
+	pollster_ratings: {
+		in_forecast: false,
+		note: "Classement non reproductible d'une élection à l'autre, n'entre pas dans la prévision.",
+		elections: [2012, 2017, 2022],
+		rows: pollsterIds.map((p) => ({
+			pollster: p,
+			name: pollstersYaml[p]?.name ?? p,
+			elections: [2017, 2022],
+			n_polls: 20,
+			n_final: 5,
+			mae_candidate: round(1 + 0.2 * normal(), 2),
+			mae_bloc: round(2 + 0.3 * normal(), 2),
+			relative_error: round(0.2 * normal(), 2),
+			bias: { far_right: 0, right: 0, centre: 0, left: 0, far_left: 0 },
+			precision: round(0.2 * normal(), 2),
+			n_better: 1,
+			n_rated: 2
+		})),
+		stability: [{ id: 'precision', label: 'Précision relative', n_pairs: 24, pearson: 0.1, p: 0.6 }]
+	}
 };
 
 // --- history/
@@ -964,8 +984,28 @@ const economy = {
 			points: monthlySeries('2025-01-01', 21, (i) => 24 - 0.15 * i + 1.5 * normal())
 		}
 	],
-	correlations: []
+	correlations: ['far_right', 'right', 'centre'].map((b, i) => ({
+		series_id: 'unemployment_rate_ilo',
+		series_label: 'Chômage BIT',
+		target: b,
+		target_label: { far_right: 'Extrême droite', right: 'Droite', centre: 'Centre' }[b],
+		lag_months: i + 1,
+		effect: { q05: -0.6, q25: -0.3, q50: 0, q75: 0.3, q95: 0.6 },
+		p_placebo: 0.5,
+		n: 80,
+		n_cycles: 6
+	})),
+	correlations_note: 'Données factices.',
+	study: {
+		date: RUN_DATE,
+		verdict: 'negative',
+		summary: 'Données factices : aucune étude publiée.',
+		findings: [],
+		reference: 'docs/05-economie.md'
+	}
 };
+const mockWeeks = Array.from({ length: 12 }, (_, i) => addDays('2026-07-27', 7 * i));
+const mockMonths = Array.from({ length: 6 }, (_, i) => `2026-0${4 + i}-01`);
 const press = {
 	asof: ASOF,
 	in_forecast: false,
@@ -974,7 +1014,39 @@ const press = {
 	weeks: [],
 	share_of_voice: [],
 	tone: [],
-	agenda: []
+	agenda: [],
+	attention: {
+		in_forecast: false,
+		note: 'Données factices.',
+		source: 'Wikipédia (pages vues)',
+		weeks: mockWeeks,
+		tracks: roster.slice(0, 5).map((id) => ({
+			candidate_id: id,
+			values: mockWeeks.map(() => round(Math.max(0, 10 + 4 * normal()), 2))
+		}))
+	},
+	ina: {
+		in_forecast: false,
+		note: 'Données factices.',
+		source: 'INA',
+		years: [2002, 2007, 2012, 2017],
+		all_years_label: '2000-2020',
+		topics: ['Société', 'International', 'Politique France'].map((label) => ({
+			label,
+			shares: [2002, 2007, 2012, 2017].map(() => round(15 + 3 * normal(), 1)),
+			share_all_years: 15
+		}))
+	},
+	gdelt: {
+		in_forecast: false,
+		note: 'Données factices.',
+		source: 'GDELT',
+		months: mockMonths,
+		tracks: roster.slice(0, 2).map((id) => ({
+			candidate_id: id,
+			values: mockMonths.map(() => round(Math.max(0, 0.02 + 0.005 * normal()), 3))
+		}))
+	}
 };
 const backtestModels = [
 	{
@@ -1009,6 +1081,17 @@ const backtest = {
 	elections: [2012, 2017, 2022],
 	horizons_days: [180, 90, 30, 7],
 	models: backtestModels,
+	variables_tested: [
+		{
+			id: 'mock',
+			label: 'Variable factice',
+			verdict: 'non admise',
+			admitted: false,
+			published: false,
+			summary: 'Données factices.'
+		}
+	],
+	variables_tested_reference: 'docs/backtest-log.md',
 	rows: backtestModels.flatMap((m, mi) =>
 		[2012, 2017, 2022].flatMap((e) =>
 			[180, 90, 30, 7].map((h) => {
@@ -1041,6 +1124,7 @@ const manifest = {
 	commit: null,
 	last_poll_date: polls[0].fieldwork_end,
 	n_polls: polls.length,
+	polls_hash: null,
 	n_draws: N_DRAWS,
 	mock: true,
 	election: { year: 2027, first_round: FIRST_ROUND, second_round: SECOND_ROUND },

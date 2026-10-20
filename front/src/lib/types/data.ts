@@ -77,6 +77,10 @@ export interface Manifest {
 	 */
 	n_polls: number;
 	/**
+	 * Empreinte des sondages de premier tour vus par l'ajustement (data.rows_hash du manifest de l'ajustement) : l'ajustement n'est refait que si elle change.
+	 */
+	polls_hash: string | null;
+	/**
 	 * Nombre de tirages Monte-Carlo.
 	 */
 	n_draws: number;
@@ -393,6 +397,7 @@ export interface Polls {
 	 */
 	polls: Poll[];
 	house_effects: HouseEffect[];
+	pollster_ratings: PollsterRatings;
 }
 export interface Pollster {
 	id: PollsterId;
@@ -459,6 +464,75 @@ export interface HouseEffect {
 	n_polls: number;
 }
 /**
+ * Palmarès des instituts et stabilité du classement d'une élection à la suivante. Volet explicatif : le palmarès a été testé et n'est pas admis (docs/backtest-log.md).
+ */
+export interface PollsterRatings {
+	in_forecast: boolean;
+	note: string;
+	elections: number[];
+	rows: PollsterRating[];
+	/**
+	 * Corrélation poolée entre élections consécutives.
+	 */
+	stability: {
+		id: string;
+		label: string;
+		n_pairs: number;
+		pearson: number | null;
+		p: Probability | null;
+	}[];
+}
+/**
+ * Ligne du palmarès 2002-2022 (runs/<date>-pollster-ratings/palmares.parquet), par lignée d'instituts.
+ */
+export interface PollsterRating {
+	pollster: PollsterId;
+	name: string;
+	elections: number[];
+	/**
+	 * Sondages de premier tour des campagnes.
+	 */
+	n_polls: number;
+	/**
+	 * Sondages des 21 derniers jours.
+	 */
+	n_final: number;
+	/**
+	 * Erreur absolue moyenne par candidat du dernier sondage, en points.
+	 */
+	mae_candidate: number | null;
+	/**
+	 * Erreur absolue moyenne par bloc du dernier sondage, en points.
+	 */
+	mae_bloc: number | null;
+	/**
+	 * Écart d'erreur à l'institut moyen de l'élection, en points (négatif = meilleur).
+	 */
+	relative_error: number | null;
+	/**
+	 * Biais signé moyen par bloc du dernier sondage (sondage − résultat), en points.
+	 */
+	bias: {
+		far_right: number | null;
+		right: number | null;
+		centre: number | null;
+		left: number | null;
+		far_left: number | null;
+	};
+	/**
+	 * Précision relative x, moyenne sur les élections (négatif = plus précis).
+	 */
+	precision: number | null;
+	/**
+	 * Élections où l'institut bat l'institut moyen.
+	 */
+	n_better: number;
+	/**
+	 * Élections notées.
+	 */
+	n_rated: number;
+}
+/**
  * Volet explicatif économie et popularité (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.
  */
 export interface Economy {
@@ -473,6 +547,11 @@ export interface Economy {
 	in_forecast_note: string;
 	series: EconomySeries[];
 	correlations: EconomyCorrelation[];
+	/**
+	 * Lecture du tableau des corrélations, avec le nombre de paires qui passent le placebo.
+	 */
+	correlations_note: string;
+	study: EconomyStudy;
 }
 export interface EconomySeries {
 	/**
@@ -496,17 +575,52 @@ export interface EconomySeries {
 	}[];
 }
 /**
- * Résultat d'étude : corrélation d'une série avec une cible (part d'un bloc, popularité) à un horizon donné.
+ * Résultat de l'étude économie (runs/<date>-economy/coef_pairs.parquet) pour une paire indicateur × bloc : effet d'une variation mensuelle d'un écart type de l'indicateur sur la part du bloc, au retard où il est le plus net.
  */
 export interface EconomyCorrelation {
+	/**
+	 * Id de macro_series.yaml.
+	 */
 	series_id: string;
-	target: string;
-	horizon_days: number;
-	estimate: Interval;
+	/**
+	 * Libellé court de l'indicateur.
+	 */
+	series_label: string;
+	/**
+	 * Bloc dont la part est expliquée ; `incumbent` = bloc du président sortant.
+	 */
+	target: 'far_right' | 'right' | 'centre' | 'incumbent' | 'left' | 'far_left';
+	target_label: string;
+	/**
+	 * Retard retenu (0 à 6 mois), choisi après coup.
+	 */
+	lag_months: number;
+	effect: Interval;
+	p_placebo: Probability;
+	/**
+	 * Variations mensuelles utilisées.
+	 */
 	n: number;
+	/**
+	 * Cycles électoraux représentés.
+	 */
+	n_cycles: number;
 }
 /**
- * Volet explicatif presse (docs/06-presse.md) : part de voix, ton, agenda. N'entre dans la prévision que si `in_forecast` est vrai.
+ * Résultat de l'étude économie (docs/05-economie.md).
+ */
+export interface EconomyStudy {
+	date: IsoDate;
+	verdict: 'negative' | 'positive' | 'inconclusive';
+	summary: string;
+	findings: string[];
+	/**
+	 * Document du dépôt qui détaille l'étude.
+	 */
+	reference: string;
+}
+/**
+ * Volet explicatif presse (docs/06-presse.md) : part de voix, ton, agenda (classification à venir), attention Wikipédia, rubriques des JT (INA), volume GDELT. N'entre dans la prévision que si `in_forecast` est vrai.
  */
 export interface Press {
 	asof: IsoDate;
@@ -522,9 +636,12 @@ export interface Press {
 	 */
 	tone: PressCandidateTrack[];
 	agenda: PressAgendaWeek[];
+	attention: PressAttention;
+	ina: PressIna;
+	gdelt: PressGdelt;
 }
 /**
- * Une valeur par semaine, alignée sur `weeks`.
+ * Une valeur par période, alignée sur la liste de dates du bloc qui la porte (`weeks` ou `months`).
  */
 export interface PressCandidateTrack {
 	candidate_id: CandidateId;
@@ -538,6 +655,59 @@ export interface PressAgendaWeek {
 	}[];
 }
 /**
+ * Témoin d'actualité : part hebdomadaire des pages vues Wikipédia de chaque candidat parmi les candidats suivis pour 2027 (data/curated/attention.parquet), en %.
+ */
+export interface PressAttention {
+	in_forecast: boolean;
+	note: string;
+	source: string;
+	/**
+	 * Lundi de chaque semaine complète.
+	 */
+	weeks: IsoDate[];
+	/**
+	 * Une valeur par semaine (%), alignée sur `weeks`.
+	 */
+	tracks: PressCandidateTrack[];
+}
+/**
+ * Rubriques des sujets de JT (INA, data/curated/press_ina.parquet) : part de chaque rubrique dans les sujets de chaque année électorale, en %.
+ */
+export interface PressIna {
+	in_forecast: boolean;
+	note: string;
+	source: string;
+	years: number[];
+	/**
+	 * Période de référence de `share_all_years` (« 2000-2020 »).
+	 */
+	all_years_label: string;
+	topics: {
+		label: string;
+		/**
+		 * Une part (%) par année de `years`.
+		 */
+		shares: Share[];
+		share_all_years: Share;
+	}[];
+}
+/**
+ * Part mensuelle des articles surveillés par GDELT qui citent le candidat (data/curated/press_timelines.parquet, volume sur volume surveillé), en %.
+ */
+export interface PressGdelt {
+	in_forecast: boolean;
+	note: string;
+	source: string;
+	/**
+	 * Premier jour de chaque mois.
+	 */
+	months: IsoDate[];
+	/**
+	 * Une valeur par mois (%), alignée sur `months`.
+	 */
+	tracks: PressCandidateTrack[];
+}
+/**
  * Résultats du backtest (docs/07-evaluation.md) : métriques par modèle, élection et horizon, tableau complet.
  */
 export interface Backtest {
@@ -547,6 +717,11 @@ export interface Backtest {
 	horizons_days: number[];
 	models: BacktestModel[];
 	rows: BacktestRow[];
+	variables_tested: TestedVariable[];
+	/**
+	 * Journal qui détaille les tests.
+	 */
+	variables_tested_reference: string;
 }
 export interface BacktestModel {
 	id: string;
@@ -589,6 +764,26 @@ export interface BacktestRow {
 	 * Part des résultats dans l'intervalle à 90 %.
 	 */
 	coverage_90: Probability | null;
+}
+/**
+ * Variable candidate testée contre la référence du backtest (docs/backtest-log.md).
+ */
+export interface TestedVariable {
+	id: string;
+	label: string;
+	/**
+	 * « non admise » (échec au backtest) ou « non retenue » (écartée dès l'étude).
+	 */
+	verdict: string;
+	admitted: boolean;
+	/**
+	 * Vrai si la projection publiée l'utilise malgré tout (choix éditorial).
+	 */
+	published: boolean;
+	/**
+	 * Une ligne.
+	 */
+	summary: string;
 }
 /**
  * history/index.json : concaténation des history/<date>.json par run_date croissante, pour que le site trace l'évolution sans lister le dossier (impossible sur un hébergement statique).

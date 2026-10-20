@@ -2,14 +2,14 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://schemas.vingtvingtsept.invalid/v1/press.json",
 	"title": "Press",
-	"description": "Volet explicatif presse (docs/06-presse.md) : part de voix, ton, agenda. N'entre dans la prévision que si `in_forecast` est vrai.",
+	"description": "Volet explicatif presse (docs/06-presse.md) : part de voix, ton, agenda (classification à venir), attention Wikipédia, rubriques des JT (INA), volume GDELT. N'entre dans la prévision que si `in_forecast` est vrai.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "in_forecast", "in_forecast_note", "weeks", "share_of_voice", "tone", "agenda"],
+	"required": ["asof", "in_forecast", "in_forecast_note", "weeks", "share_of_voice", "tone", "agenda", "attention", "ina", "gdelt"],
 	"$defs": {
 		"candidate_track": {
 			"title": "PressCandidateTrack",
-			"description": "Une valeur par semaine, alignée sur `weeks`.",
+			"description": "Une valeur par période, alignée sur la liste de dates du bloc qui la porte (`weeks` ou `months`).",
 			"type": "object",
 			"additionalProperties": false,
 			"required": ["candidate_id", "values"],
@@ -38,6 +38,77 @@
 					}
 				}
 			}
+		},
+		"attention": {
+			"title": "PressAttention",
+			"description": "Témoin d'actualité : part hebdomadaire des pages vues Wikipédia de chaque candidat parmi les candidats suivis pour 2027 (data/curated/attention.parquet), en %.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "source", "weeks", "tracks"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string" },
+				"source": { "type": "string" },
+				"weeks": {
+					"type": "array",
+					"description": "Lundi de chaque semaine complète.",
+					"items": { "$ref": "common.json#/$defs/date" }
+				},
+				"tracks": {
+					"type": "array",
+					"description": "Une valeur par semaine (%), alignée sur `weeks`.",
+					"items": { "$ref": "#/$defs/candidate_track" }
+				}
+			}
+		},
+		"ina": {
+			"title": "PressIna",
+			"description": "Rubriques des sujets de JT (INA, data/curated/press_ina.parquet) : part de chaque rubrique dans les sujets de chaque année électorale, en %.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "source", "years", "all_years_label", "topics"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string" },
+				"source": { "type": "string" },
+				"years": { "type": "array", "items": { "type": "integer" } },
+				"all_years_label": { "type": "string", "description": "Période de référence de `share_all_years` (« 2000-2020 »)." },
+				"topics": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["label", "shares", "share_all_years"],
+						"properties": {
+							"label": { "type": "string" },
+							"shares": {
+								"type": "array",
+								"description": "Une part (%) par année de `years`.",
+								"items": { "$ref": "common.json#/$defs/share" }
+							},
+							"share_all_years": { "$ref": "common.json#/$defs/share" }
+						}
+					}
+				}
+			}
+		},
+		"gdelt": {
+			"title": "PressGdelt",
+			"description": "Part mensuelle des articles surveillés par GDELT qui citent le candidat (data/curated/press_timelines.parquet, volume sur volume surveillé), en %.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "source", "months", "tracks"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string" },
+				"source": { "type": "string" },
+				"months": { "type": "array", "description": "Premier jour de chaque mois.", "items": { "$ref": "common.json#/$defs/date" } },
+				"tracks": {
+					"type": "array",
+					"description": "Une valeur par mois (%), alignée sur `months`.",
+					"items": { "$ref": "#/$defs/candidate_track" }
+				}
+			}
 		}
 	},
 	"properties": {
@@ -55,6 +126,9 @@
 			"description": "Ton moyen des articles qui citent le candidat, de −1 (négatif) à +1 (positif).",
 			"items": { "$ref": "#/$defs/candidate_track" }
 		},
-		"agenda": { "type": "array", "items": { "$ref": "#/$defs/agenda_week" } }
+		"agenda": { "type": "array", "items": { "$ref": "#/$defs/agenda_week" } },
+		"attention": { "$ref": "#/$defs/attention" },
+		"ina": { "$ref": "#/$defs/ina" },
+		"gdelt": { "$ref": "#/$defs/gdelt" }
 	}
 }

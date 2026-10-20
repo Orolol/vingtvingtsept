@@ -43,6 +43,31 @@ Produit par `vvs export`, versionné avec le site. Un fichier par page plus un m
 - `history/<date>.json` : résumé de chaque run, jamais réécrit, et `history/index.json`
   (concaténation triée, parce qu'un site statique ne peut pas lister un dossier).
 
+Volets explicatifs (ajoutés le 2026-10-20, phase 8) ; chacun porte `in_forecast: false` et sa
+phrase de statut, affichée sur la page :
+
+- `manifest.polls_hash` : empreinte des sondages de premier tour vus par l'ajustement
+  (`data.rows_hash`), recopiée par `vvs simulate` ; l'ajustement n'est refait que si elle change.
+- `economy.correlations` : une ligne par paire indicateur × bloc de l'étude
+  (`runs/<date>-economy/coef_pairs.parquet`) : effet d'un écart type de variation mensuelle de
+  l'indicateur, en points de part du bloc par mois, au meilleur retard (`lag_months`), intervalle
+  à 90 % (`effect`) et `p_placebo` ; `correlations_note` donne la lecture et le nombre de paires
+  qui passent le placebo ; `economy.study` : verdict (`negative`), résumé et constats de
+  `05-economie.md`.
+- `press.attention` : part hebdomadaire des pages vues Wikipédia des candidats de l'univers 2027
+  (`attention.parquet`, semaines complètes, 78 dernières, douze candidats les plus vus sur douze
+  semaines) ; `press.ina` : part des rubriques INA dans les sujets de JT de 2002, 2007, 2012 et
+  2017, et sur 2000-2020 ; `press.gdelt` : part mensuelle des articles GDELT citant chaque
+  candidat suivi depuis 2017 (volume sur volume surveillé). `share_of_voice`, `tone` et
+  `agenda` restent vides tant que les titres ne sont pas classés.
+- `polls.pollster_ratings` : palmarès 2002-2022 par lignée (`runs/<date>-pollster-ratings/`) :
+  erreur du dernier sondage, écart à l'institut moyen, biais par bloc, précision, et stabilité
+  du classement entre élections consécutives (corrélations poolées), avec la phrase « classement
+  non reproductible d'une élection à l'autre, n'entre pas dans la prévision ».
+- `backtest.variables_tested` : les six variables de la vague du 2026-10-20 (une ligne chacune,
+  `published` vrai pour la substitution, utilisée par la projection publiée), affichées sur
+  `/methode`.
+
 Les schémas sont décrits en JSON Schema dans `back/src/vvs/export/schemas/` et validés à
 l'export ; le front les type via génération TypeScript (`npm run types`) et les valide avec
 ajv plus des invariants hors schéma (`npm run validate-data`) : quantiles croissants, somme

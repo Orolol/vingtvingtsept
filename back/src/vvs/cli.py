@@ -490,6 +490,58 @@ def curate_cmd(
         raise typer.Exit(code=1)
 
 
+def polls_fingerprint(election: int, asof) -> str:
+    """Empreinte des sondages de premier tour vus par l'ajustement à `asof` : même calcul que
+    `data.rows_hash` du manifest d'un ajustement (vvs.model.run)."""
+    from vvs.model.data import load_polls
+    from vvs.model.run import _hash_frame
+
+    return _hash_frame(load_polls(election, asof))
+
+
+def reusable_fit(fit_dir, election: int, asof, polls_hash: str, substitution: bool) -> bool:
+    """Vrai si l'ajustement de `fit_dir` vaut celui qu'on referait : tirages présents, même
+    élection, mêmes sondages (empreinte), même semaine de la grille pour `asof` (l'ajustement
+    ne dépend de la date que par elle) et même choix de substitution. Une modification du code
+    ou des registres n'est pas détectée : `--refit` dans ce cas."""
+    import json
+    from datetime import date
+    from pathlib import Path
+
+    from vvs.model.data import election_date, weeks_before_vote
+    from vvs.registry import default_registry
+
+    fit_dir = Path(fit_dir)
+    if not (fit_dir / "draws.npz").exists() or not (fit_dir / "manifest.json").exists():
+        return False
+    try:
+        m = json.loads((fit_dir / "manifest.json").read_text())
+        priors = m["parameters"].get("priors") or {}
+        same = (
+            m["election"] == election
+            and m["data"]["rows_hash"] == polls_hash
+            and bool(priors.get("substitution", False)) == substitution
+            and m["parameters"].get("weeks", 78) == 78
+            and m["parameters"].get("step_days", 7) == 7
+        )
+        fit_asof = date.fromisoformat(m["asof"])
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+    if not same:
+        return False
+    edate = election_date(default_registry(), election)
+    return weeks_before_vote(fit_asof, edate) == weeks_before_vote(asof, edate)
+
+
+def find_reusable_fit(runs, election: int, asof, polls_hash: str, substitution: bool):
+    """Ajustement réutilisable le plus récent parmi `runs/*-fit-<élection>[-subst]`, ou None."""
+    suffix = "-subst" if substitution else ""
+    for d in sorted(runs.glob(f"????-??-??-fit-{election}{suffix}"), reverse=True):
+        if reusable_fit(d, election, asof, polls_hash, substitution):
+            return d
+    return None
+
+
 @app.command("simulate")
 def simulate_cmd(
     asof: str = typer.Option(..., help="Date de prévision AAAA-MM-JJ (sondages terminés à cette date)"),
@@ -506,7 +558,13 @@ def simulate_cmd(
         False, "--substitution", help="Substitution intra-bloc (logit emboîté) dans l'ajustement"
     ),
 ) -> None:
-    """Simulation de l'élection (docs/04-modele.md § 5) : scénarios, premier tour, second tour."""
+    """Simulation de l'élection (docs/04-modele.md § 5) : scénarios, premier tour, second tour.
+
+    L'ajustement n'est refait que si les sondages ont changé : sans `--fit`, on réutilise
+    runs/<asof>-fit-<élection>[-subst] ou, à défaut, le plus récent ajustement de même empreinte
+    des sondages et de même semaine de grille (`reusable_fit`). L'empreinte est recopiée dans le
+    manifest de la simulation (`polls_hash`)."""
+    import json
     from datetime import date
     from pathlib import Path
 
@@ -519,9 +577,24 @@ def simulate_cmd(
         raise typer.BadParameter("au moins 10 000 tirages (docs/04-modele.md § 5)")
     d = date.fromisoformat(asof)
     suffix = "-subst" if substitution else ""
-    fit_dir = Path(fit) if fit else paths.RUNS / f"{d.isoformat()}-fit-{election}{suffix}"
-    if refit or not (fit_dir / "draws.npz").exists():
-        typer.echo(f"ajustement du premier tour -> {fit_dir}")
+    polls_hash = polls_fingerprint(election, d)
+    if fit:
+        fit_dir = Path(fit)
+        do_fit = refit or not (fit_dir / "draws.npz").exists()
+        if not do_fit and not reusable_fit(fit_dir, election, d, polls_hash, substitution):
+            typer.echo(f"attention : {fit_dir} ne correspond pas aux sondages actuels "
+                       f"(empreinte {polls_hash}) ; --refit pour le refaire", err=True)
+    else:
+        fit_dir = paths.RUNS / f"{d.isoformat()}-fit-{election}{suffix}"
+        do_fit = refit
+        if not refit and not reusable_fit(fit_dir, election, d, polls_hash, substitution):
+            found = find_reusable_fit(paths.RUNS, election, d, polls_hash, substitution)
+            if found is None:
+                do_fit = True
+            else:
+                fit_dir = found
+    if do_fit:
+        typer.echo(f"ajustement du premier tour (empreinte des sondages {polls_hash}) -> {fit_dir}")
         kw = {}
         if substitution:
             from dataclasses import replace
@@ -532,8 +605,16 @@ def simulate_cmd(
         m = fit_for_simulation(election, d, fit_dir, **kw)
         typer.echo(f"r_hat max {m['diagnostics'].get('r_hat_max')}, "
                    f"divergences {m['diagnostics'].get('divergences')}")
+    else:
+        typer.echo(f"ajustement réutilisé, sondages inchangés (empreinte {polls_hash}) : {fit_dir}")
     out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-simulate"
     res = simulate(fit_dir, d, out_dir, election=election, n_draws=draws, seed=seed, rn_bias=rn_bias)
+    manifest_path = out_dir / "manifest.json"
+    if manifest_path.exists():
+        m = json.loads(manifest_path.read_text())
+        m["polls_hash"] = polls_hash
+        m["fit_reused"] = not do_fit
+        manifest_path.write_text(json.dumps(m, indent=2, ensure_ascii=False))
     mix = res.summary.filter(pl.col("condition_id") == "mix")
     for r in mix.filter(pl.col("p_qualify") >= 0.005).iter_rows(named=True):
         typer.echo(
@@ -564,6 +645,21 @@ def export_cmd(
     for name, size in sorted(rep["sizes"].items()):
         typer.echo(f"  {name:20s} {size / 1024:7.1f} Ko")
     typer.echo(f"écrit : {out_dir}")
+
+
+@app.command("live-summary")
+def live_summary_cmd(
+    current: str = typer.Option(None, help="Export du jour (défaut front/static/data)"),
+    previous: str = typer.Option(None, help="Copie de l'export précédent, prise avant `vvs export`"),
+) -> None:
+    """Résumé d'un run live : nouveaux sondages, probabilités du mélange, écart au précédent."""
+    from pathlib import Path
+
+    from vvs import paths
+    from vvs.export.live import live_summary
+
+    cur = Path(current) if current else paths.ROOT / "front" / "static" / "data"
+    typer.echo(live_summary(Path(previous) if previous else None, cur))
 
 
 @ingest_app.command("attention")

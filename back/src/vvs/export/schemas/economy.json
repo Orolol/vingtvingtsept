@@ -5,7 +5,7 @@
 	"description": "Volet explicatif économie et popularité (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "in_forecast", "in_forecast_note", "series", "correlations"],
+	"required": ["asof", "in_forecast", "in_forecast_note", "series", "correlations", "correlations_note", "study"],
 	"$defs": {
 		"series": {
 			"title": "EconomySeries",
@@ -35,16 +35,44 @@
 		},
 		"correlation": {
 			"title": "EconomyCorrelation",
-			"description": "Résultat d'étude : corrélation d'une série avec une cible (part d'un bloc, popularité) à un horizon donné.",
+			"description": "Résultat de l'étude économie (runs/<date>-economy/coef_pairs.parquet) pour une paire indicateur × bloc : effet d'une variation mensuelle d'un écart type de l'indicateur sur la part du bloc, au retard où il est le plus net.",
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["series_id", "target", "horizon_days", "estimate", "n"],
+			"required": ["series_id", "series_label", "target", "target_label", "lag_months", "effect", "p_placebo", "n", "n_cycles"],
 			"properties": {
-				"series_id": { "type": "string" },
-				"target": { "type": "string" },
-				"horizon_days": { "type": "integer", "minimum": 0 },
-				"estimate": { "$ref": "common.json#/$defs/interval" },
-				"n": { "type": "integer", "minimum": 0 }
+				"series_id": { "type": "string", "description": "Id de macro_series.yaml." },
+				"series_label": { "type": "string", "description": "Libellé court de l'indicateur." },
+				"target": {
+					"type": "string",
+					"enum": ["far_right", "right", "centre", "incumbent", "left", "far_left"],
+					"description": "Bloc dont la part est expliquée ; `incumbent` = bloc du président sortant."
+				},
+				"target_label": { "type": "string" },
+				"lag_months": { "type": "integer", "minimum": 0, "description": "Retard retenu (0 à 6 mois), choisi après coup." },
+				"effect": {
+					"$ref": "common.json#/$defs/interval",
+					"description": "Points de part du bloc par mois : médiane et intervalles à 50 et 90 % (régression HAC)."
+				},
+				"p_placebo": {
+					"$ref": "common.json#/$defs/probability",
+					"description": "p du test placebo (séries décalées), qui corrige le choix du retard."
+				},
+				"n": { "type": "integer", "minimum": 0, "description": "Variations mensuelles utilisées." },
+				"n_cycles": { "type": "integer", "minimum": 0, "description": "Cycles électoraux représentés." }
+			}
+		},
+		"study": {
+			"title": "EconomyStudy",
+			"description": "Résultat de l'étude économie (docs/05-economie.md).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["date", "verdict", "summary", "findings", "reference"],
+			"properties": {
+				"date": { "$ref": "common.json#/$defs/date" },
+				"verdict": { "type": "string", "enum": ["negative", "positive", "inconclusive"] },
+				"summary": { "type": "string" },
+				"findings": { "type": "array", "items": { "type": "string" } },
+				"reference": { "type": "string", "description": "Document du dépôt qui détaille l'étude." }
 			}
 		}
 	},
@@ -53,6 +81,11 @@
 		"in_forecast": { "type": "boolean", "description": "Vrai si au moins une variable économique est admise dans la prévision." },
 		"in_forecast_note": { "type": "string", "description": "Phrase affichée en tête de page." },
 		"series": { "type": "array", "items": { "$ref": "#/$defs/series" } },
-		"correlations": { "type": "array", "items": { "$ref": "#/$defs/correlation" } }
+		"correlations": { "type": "array", "items": { "$ref": "#/$defs/correlation" } },
+		"correlations_note": {
+			"type": "string",
+			"description": "Lecture du tableau des corrélations, avec le nombre de paires qui passent le placebo."
+		},
+		"study": { "$ref": "#/$defs/study" }
 	}
 }

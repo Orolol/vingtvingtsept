@@ -8,6 +8,26 @@
 	let { data }: PageProps = $props();
 	const eco = $derived(data.economy);
 	const FREQ = { monthly: 'mensuelle', quarterly: 'trimestrielle', weekly: 'hebdomadaire' };
+	const VERDICT = {
+		negative: 'Résultat négatif',
+		positive: 'Résultat positif',
+		inconclusive: 'Non concluant'
+	};
+
+	// Tableau indicateur × bloc, dans l'ordre de l'export.
+	const indicators = $derived([
+		...new Map(eco.correlations.map((c) => [c.series_id, c.series_label])).entries()
+	]);
+	const targets = $derived([
+		...new Map(eco.correlations.map((c) => [c.target, c.target_label])).entries()
+	]);
+	const cell = $derived(new Map(eco.correlations.map((c) => [`${c.series_id}|${c.target}`, c])));
+	const maxEffect = $derived(Math.max(0.1, ...eco.correlations.map((c) => Math.abs(c.effect.q50))));
+	const POS = 'light-dark(#2a78d6, #3987e5)';
+	const NEG = 'light-dark(#eb6834, #d95926)';
+	const tint = (v: number) =>
+		`color-mix(in oklab, ${v >= 0 ? POS : NEG} ${Math.round((50 * Math.abs(v)) / maxEffect)}%, transparent)`;
+	const pval = (p: number) => (p < 0.001 ? '< 0,001' : fmt.decimal(p, p < 0.1 ? 3 : 2));
 </script>
 
 <PageTitle title="Économie et popularité">
@@ -18,6 +38,19 @@
 </PageTitle>
 
 <ForecastNote inForecast={eco.in_forecast} note={eco.in_forecast_note} />
+
+<section aria-labelledby="titre-etude" class="mb-10 max-w-3xl">
+	<h2 id="titre-etude" class="mb-2 text-lg font-semibold">
+		L'étude du {fmt.date(eco.study.date)} : {VERDICT[eco.study.verdict].toLowerCase()}
+	</h2>
+	<p class="mb-3 leading-relaxed">{eco.study.summary}</p>
+	{#if eco.study.findings.length}
+		<ul class="list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-ink-2">
+			{#each eco.study.findings as f (f)}<li>{f}</li>{/each}
+		</ul>
+	{/if}
+	<p class="mt-2 text-xs text-muted">Détail : {eco.study.reference} dans le dépôt.</p>
+</section>
 
 {#if eco.series.length}
 	<div class="mb-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -40,39 +73,69 @@
 {/if}
 
 <section aria-labelledby="titre-correlations">
-	<h2 id="titre-correlations" class="mb-3 text-lg font-semibold">Études</h2>
+	<h2 id="titre-correlations" class="mb-1 text-lg font-semibold">
+		Corrélations : indicateur et intentions de vote par bloc
+	</h2>
 	{#if eco.correlations.length}
+		<p class="mb-3 max-w-3xl text-sm text-ink-2">{eco.correlations_note}</p>
 		<div class="overflow-x-auto rounded-md border border-line bg-surface">
 			<table class="w-full text-sm">
 				<caption class="sr-only"
-					>Corrélations des séries économiques avec les intentions de vote</caption
+					>Effet d'une variation typique de chaque indicateur sur la part de chaque bloc, en points
+					par mois</caption
 				>
 				<thead class="border-b border-line text-left text-xs text-muted">
 					<tr>
-						<th scope="col" class="px-3 py-2 font-medium">Série</th>
-						<th scope="col" class="px-3 py-2 font-medium">Cible</th>
-						<th scope="col" class="px-3 py-2 text-right font-medium">Horizon</th>
-						<th scope="col" class="px-3 py-2 font-medium">Estimation (90 %)</th>
-						<th scope="col" class="px-3 py-2 text-right font-medium">n</th>
+						<th scope="col" class="sticky left-0 bg-surface px-3 py-2 font-medium">Indicateur</th>
+						{#each targets as [id, label] (id)}
+							<th scope="col" class="px-2 py-2 text-right font-medium">{label}</th>
+						{/each}
 					</tr>
 				</thead>
 				<tbody>
-					{#each eco.correlations as c (c.series_id + c.target + c.horizon_days)}
+					{#each indicators as [sid, slabel] (sid)}
 						<tr class="border-b border-line last:border-0">
-							<td class="px-3 py-2">{c.series_id}</td>
-							<td class="px-3 py-2">{c.target}</td>
-							<td class="tabular px-3 py-2 text-right">{c.horizon_days} j</td>
-							<td class="tabular px-3 py-2">{fmt.interval(c.estimate, (x) => fmt.decimal(x, 2))}</td
+							<th
+								scope="row"
+								class="sticky left-0 bg-surface px-3 py-1.5 text-left font-normal whitespace-nowrap"
+								>{slabel}</th
 							>
-							<td class="tabular px-3 py-2 text-right">{c.n}</td>
+							{#each targets as [tid] (tid)}
+								{@const c = cell.get(`${sid}|${tid}`)}
+								<td class="tabular px-1 py-1 text-right">
+									{#if c}
+										<span
+											class={[
+												'inline-block min-w-14 rounded px-1.5 py-0.5',
+												c.p_placebo < 0.05 && 'font-semibold ring-1 ring-ink/50'
+											]}
+											style:background={tint(c.effect.q50)}
+											title="{fmt.points(c.effect.q50)} pt/mois ({fmt.decimal(
+												c.effect.q05,
+												2
+											)} à {fmt.decimal(
+												c.effect.q95,
+												2
+											)}), retard {c.lag_months} mois, p placebo {pval(c.p_placebo)}, n = {c.n}"
+											>{fmt.decimal(c.effect.q50, 2)}{#if c.p_placebo < 0.05}<span class="sr-only">
+													(passe le placebo)</span
+												>{/if}</span
+										>
+									{:else}<span class="text-muted">—</span>{/if}
+								</td>
+							{/each}
 						</tr>
 					{/each}
 				</tbody>
 			</table>
 		</div>
-	{:else}
-		<p class="text-sm text-muted">
-			L'étude économique (phase 6 de la feuille de route) n'a pas encore de résultat publié.
+		<p class="mt-1 max-w-3xl text-xs text-muted">
+			Bleu : le bloc monte quand l'indicateur monte ; orange : il baisse. Cases encadrées : paires
+			qui passent le placebo à 5 %. Survoler une case pour l'intervalle à 90 %, le retard et le p du
+			placebo. « Bloc du président sortant » : droite en 2002, 2007 et 2012, gauche en 2017, centre
+			en 2022 et 2027.
 		</p>
+	{:else}
+		<p class="text-sm text-muted">Pas de résultat d'étude publié.</p>
 	{/if}
 </section>

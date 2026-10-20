@@ -5,7 +5,7 @@
 	"description": "Résultats du backtest (docs/07-evaluation.md) : métriques par modèle, élection et horizon, tableau complet.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["generated_at", "model_version", "elections", "horizons_days", "models", "rows"],
+	"required": ["generated_at", "model_version", "elections", "horizons_days", "models", "rows", "variables_tested", "variables_tested_reference"],
 	"$defs": {
 		"model": {
 			"title": "BacktestModel",
@@ -48,6 +48,24 @@
 				"coverage_50": { "anyOf": [{ "$ref": "common.json#/$defs/probability" }, { "type": "null" }], "description": "Part des résultats dans l'intervalle à 50 %." },
 				"coverage_90": { "anyOf": [{ "$ref": "common.json#/$defs/probability" }, { "type": "null" }], "description": "Part des résultats dans l'intervalle à 90 %." }
 			}
+		},
+		"variable": {
+			"title": "TestedVariable",
+			"description": "Variable candidate testée contre la référence du backtest (docs/backtest-log.md).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "label", "verdict", "admitted", "published", "summary"],
+			"properties": {
+				"id": { "type": "string" },
+				"label": { "type": "string" },
+				"verdict": {
+					"type": "string",
+					"description": "« non admise » (échec au backtest) ou « non retenue » (écartée dès l'étude)."
+				},
+				"admitted": { "type": "boolean" },
+				"published": { "type": "boolean", "description": "Vrai si la projection publiée l'utilise malgré tout (choix éditorial)." },
+				"summary": { "type": "string", "description": "Une ligne." }
+			}
 		}
 	},
 	"properties": {
@@ -56,6 +74,8 @@
 		"elections": { "type": "array", "items": { "type": "integer" } },
 		"horizons_days": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
 		"models": { "type": "array", "items": { "$ref": "#/$defs/model" } },
-		"rows": { "type": "array", "items": { "$ref": "#/$defs/row" } }
+		"rows": { "type": "array", "items": { "$ref": "#/$defs/row" } },
+		"variables_tested": { "type": "array", "items": { "$ref": "#/$defs/variable" } },
+		"variables_tested_reference": { "type": "string", "description": "Journal qui détaille les tests." }
 	}
 }

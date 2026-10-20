@@ -195,6 +195,55 @@ scenarios.configurations.forEach((c, i, all) => {
 const configMass = scenarios.configurations.reduce((a, c) => a + c.probability, 0);
 if (configMass > 1 + EPS) fail('scenarios/configurations', `masse ${configMass} > 1`);
 
+// volets explicatifs : séries alignées sur leurs dates, candidats connus, ids uniques
+const { economy, press, backtest } = data;
+const seriesIds = new Set(economy.series.map((x) => x.id));
+for (const c of economy.correlations)
+	if (!seriesIds.has(c.series_id))
+		fail('economy/correlations', `série absente de economy.series : ${c.series_id}`);
+function checkTracks(where, dates, tracks) {
+	dates.forEach((d, i) => {
+		if (i > 0 && d <= dates[i - 1]) fail(where, 'dates non strictement croissantes');
+	});
+	if (dates.at(-1) > manifest.asof) fail(where, 'dernière date > asof');
+	const ids = new Set();
+	for (const t of tracks) {
+		knownCandidate(where, t.candidate_id);
+		if (ids.has(t.candidate_id)) fail(where, `candidat en double ${t.candidate_id}`);
+		ids.add(t.candidate_id);
+		if (t.values.length !== dates.length) fail(`${where}/${t.candidate_id}`, 'longueur ≠ dates');
+	}
+}
+checkTracks('press/attention', press.attention.weeks, press.attention.tracks);
+checkTracks('press/gdelt', press.gdelt.months, press.gdelt.tracks);
+checkTracks('press', press.weeks, [...press.share_of_voice, ...press.tone]);
+for (const t of press.ina.topics)
+	if (t.shares.length !== press.ina.years.length) fail(`press/ina/${t.label}`, 'longueur ≠ years');
+const unique = (where, ids) => {
+	const seen = new Set();
+	for (const id of ids) {
+		if (seen.has(id)) fail(where, `id en double ${id}`);
+		seen.add(id);
+	}
+};
+unique(
+	'polls/pollster_ratings',
+	polls.pollster_ratings.rows.map((r) => r.pollster)
+);
+unique(
+	'backtest/variables_tested',
+	backtest.variables_tested.map((v) => v.id)
+);
+if (
+	backtest.variables_tested.some((v) => v.admitted) ||
+	[economy, press, polls.pollster_ratings, press.attention, press.ina, press.gdelt].some(
+		(x) => x.in_forecast
+	)
+)
+	console.warn(
+		'attention : une variable explicative est marquée admise ; vérifier docs/backtest-log.md'
+	);
+
 // historique
 const indexDates = history.entries.map((e) => e.run_date);
 if (indexDates.join() !== historyEntries.map((e) => e.run_date).join())

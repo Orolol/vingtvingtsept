@@ -117,6 +117,11 @@
 			}))
 			.filter((p) => p.effects.size)
 	);
+
+	const ratings = $derived(data.polls.pollster_ratings);
+	const RATING_BLOCS = ['far_right', 'right', 'centre', 'left', 'far_left'] as const;
+	const num = (x: number | null, d = 2) => (x === null ? '—' : fmt.decimal(x, d));
+	const signed = (x: number | null) => (x === null ? '—' : fmt.points(x));
 </script>
 
 <PageTitle title="Sondages">
@@ -282,4 +287,80 @@
 			</tbody>
 		</table>
 	</div>
+</section>
+
+<section aria-labelledby="titre-palmares" class="mt-10">
+	<h2 id="titre-palmares" class="mb-1 text-lg font-semibold">
+		Palmarès des instituts, {ratings.elections[0]}-{ratings.elections.at(-1)}
+	</h2>
+	<p
+		class="mb-3 max-w-3xl rounded-md border border-line bg-surface px-4 py-3 text-sm"
+		data-testid="forecast-note"
+	>
+		<strong>{ratings.note}</strong>
+	</p>
+	<p class="mb-3 max-w-3xl text-sm text-ink-2">
+		Erreur du dernier sondage de chaque institut avant le premier tour, par lignée (Sofres, Kantar
+		et Verian ensemble). « Écart » : erreur par candidat moins celle de l'institut moyen de la même
+		élection (négatif = plus juste). Biais : sondage moins résultat, en points, par bloc. Précision
+		: dispersion des sondages des trois dernières semaines autour de l'institut moyen (négatif =
+		plus précis). « Élections » : nombre de présidentielles couvertes ; un institut qui n'en a
+		couvert qu'une n'a qu'un point de comparaison.
+	</p>
+	<div class="overflow-x-auto rounded-md border border-line bg-surface">
+		<table class="w-full text-sm">
+			<caption class="sr-only"
+				>Palmarès des instituts de sondage aux présidentielles passées</caption
+			>
+			<thead class="border-b border-line text-left text-xs text-muted">
+				<tr>
+					<th scope="col" class="sticky left-0 bg-surface px-3 py-2 font-medium">Institut</th>
+					<th scope="col" class="px-2 py-2 text-right font-medium">Élections</th>
+					<th scope="col" class="px-2 py-2 text-right font-medium">Erreur cand. (pts)</th>
+					<th scope="col" class="px-2 py-2 text-right font-medium">Écart</th>
+					{#each RATING_BLOCS as b (b)}
+						<th scope="col" class="px-2 py-2 text-right font-medium">Biais {BLOC_LABELS[b]}</th>
+					{/each}
+					<th scope="col" class="px-2 py-2 text-right font-medium">Précision</th>
+					<th scope="col" class="px-2 py-2 text-right font-medium">Mieux que la moyenne</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each ratings.rows as r (r.pollster)}
+					<tr class="border-b border-line last:border-0">
+						<th
+							scope="row"
+							class="sticky left-0 bg-surface px-3 py-1.5 text-left font-normal whitespace-nowrap"
+							>{r.name}</th
+						>
+						<td class="tabular px-2 py-1.5 text-right" title={r.elections.join(', ')}
+							>{r.elections.length}</td
+						>
+						<td class="tabular px-2 py-1.5 text-right">{num(r.mae_candidate)}</td>
+						<td class="tabular px-2 py-1.5 text-right">{signed(r.relative_error)}</td>
+						{#each RATING_BLOCS as b (b)}
+							<td class="tabular px-2 py-1.5 text-right">{signed(r.bias[b])}</td>
+						{/each}
+						<td class="tabular px-2 py-1.5 text-right">{signed(r.precision)}</td>
+						<td class="tabular px-2 py-1.5 text-right">{r.n_better} sur {r.n_rated}</td>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+	<h3 class="mt-5 mb-2 font-medium">Le classement tient-il d'une élection à l'autre ?</h3>
+	<ul class="max-w-3xl space-y-1 text-sm text-ink-2">
+		{#each ratings.stability as st (st.id)}
+			<li>
+				{st.label} : corrélation
+				<span class="tabular font-medium text-ink">{num(st.pearson)}</span>
+				entre élections consécutives ({st.n_pairs} paires{#if st.p !== null}, p = {num(st.p)}{/if}).
+			</li>
+		{/each}
+	</ul>
+	<p class="mt-2 max-w-3xl text-sm text-ink-2">
+		Une corrélation proche de zéro veut dire qu'être bien classé à une élection ne dit presque rien
+		de la suivante : les écarts entre instituts sont petits devant l'erreur que tous commettent
+		ensemble, déjà comptée dans le modèle d'erreur.
+	</p>
 </section>

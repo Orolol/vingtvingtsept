@@ -5,7 +5,7 @@
 	"description": "Tous les sondages intégrés au run (premier et second tour) et effets maison estimés par institut.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "pollsters", "polls", "house_effects"],
+	"required": ["asof", "pollsters", "polls", "house_effects", "pollster_ratings"],
 	"$defs": {
 		"pollster": {
 			"title": "Pollster",
@@ -84,6 +84,82 @@
 				"effect": { "$ref": "common.json#/$defs/interval" },
 				"n_polls": { "type": "integer", "minimum": 0 }
 			}
+		},
+		"pollster_rating": {
+			"title": "PollsterRating",
+			"description": "Ligne du palmarès 2002-2022 (runs/<date>-pollster-ratings/palmares.parquet), par lignée d'instituts.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["pollster", "name", "elections", "n_polls", "n_final", "mae_candidate", "mae_bloc", "relative_error", "bias", "precision", "n_better", "n_rated"],
+			"properties": {
+				"pollster": { "$ref": "common.json#/$defs/pollster_id" },
+				"name": { "type": "string" },
+				"elections": { "type": "array", "items": { "type": "integer" } },
+				"n_polls": { "type": "integer", "minimum": 0, "description": "Sondages de premier tour des campagnes." },
+				"n_final": { "type": "integer", "minimum": 0, "description": "Sondages des 21 derniers jours." },
+				"mae_candidate": {
+					"type": ["number", "null"],
+					"minimum": 0,
+					"description": "Erreur absolue moyenne par candidat du dernier sondage, en points."
+				},
+				"mae_bloc": {
+					"type": ["number", "null"],
+					"minimum": 0,
+					"description": "Erreur absolue moyenne par bloc du dernier sondage, en points."
+				},
+				"relative_error": {
+					"type": ["number", "null"],
+					"description": "Écart d'erreur à l'institut moyen de l'élection, en points (négatif = meilleur)."
+				},
+				"bias": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Biais signé moyen par bloc du dernier sondage (sondage − résultat), en points.",
+					"required": ["far_right", "right", "centre", "left", "far_left"],
+					"properties": {
+						"far_right": { "type": ["number", "null"] },
+						"right": { "type": ["number", "null"] },
+						"centre": { "type": ["number", "null"] },
+						"left": { "type": ["number", "null"] },
+						"far_left": { "type": ["number", "null"] }
+					}
+				},
+				"precision": {
+					"type": ["number", "null"],
+					"description": "Précision relative x, moyenne sur les élections (négatif = plus précis)."
+				},
+				"n_better": { "type": "integer", "minimum": 0, "description": "Élections où l'institut bat l'institut moyen." },
+				"n_rated": { "type": "integer", "minimum": 0, "description": "Élections notées." }
+			}
+		},
+		"pollster_ratings": {
+			"title": "PollsterRatings",
+			"description": "Palmarès des instituts et stabilité du classement d'une élection à la suivante. Volet explicatif : le palmarès a été testé et n'est pas admis (docs/backtest-log.md).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "elections", "rows", "stability"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string" },
+				"elections": { "type": "array", "items": { "type": "integer" } },
+				"rows": { "type": "array", "items": { "$ref": "#/$defs/pollster_rating" } },
+				"stability": {
+					"type": "array",
+					"description": "Corrélation poolée entre élections consécutives.",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id", "label", "n_pairs", "pearson", "p"],
+						"properties": {
+							"id": { "type": "string" },
+							"label": { "type": "string" },
+							"n_pairs": { "type": "integer", "minimum": 0 },
+							"pearson": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+							"p": { "anyOf": [{ "$ref": "common.json#/$defs/probability" }, { "type": "null" }] }
+						}
+					}
+				}
+			}
 		}
 	},
 	"properties": {
@@ -94,6 +170,7 @@
 			"description": "Par fin de terrain décroissante.",
 			"items": { "$ref": "#/$defs/poll" }
 		},
-		"house_effects": { "type": "array", "items": { "$ref": "#/$defs/house_effect" } }
+		"house_effects": { "type": "array", "items": { "$ref": "#/$defs/house_effect" } },
+		"pollster_ratings": { "$ref": "#/$defs/pollster_ratings" }
 	}
 }

@@ -14,6 +14,7 @@
 		"commit",
 		"last_poll_date",
 		"n_polls",
+		"polls_hash",
 		"n_draws",
 		"mock",
 		"election",
@@ -41,6 +42,10 @@
 			"description": "Fin de terrain du sondage intégré le plus récent."
 		},
 		"n_polls": { "type": "integer", "minimum": 0, "description": "Nombre de sondages intégrés (premier et second tour)." },
+		"polls_hash": {
+			"type": ["string", "null"],
+			"description": "Empreinte des sondages de premier tour vus par l'ajustement (data.rows_hash du manifest de l'ajustement) : l'ajustement n'est refait que si elle change."
+		},
 		"n_draws": { "type": "integer", "minimum": 1, "description": "Nombre de tirages Monte-Carlo." },
 		"mock": {
 			"type": "boolean",

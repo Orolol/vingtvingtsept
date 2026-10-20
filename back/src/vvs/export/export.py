@@ -11,7 +11,10 @@
   sont retirées au premier export réel.
 
 Sources en plus du run : registres (candidats, instituts, scénarios), sondages curated 2027,
-macro.parquet, et les runs de backtest (premier et second tour). La validation contre les
+macro.parquet, attention.parquet, press_ina.parquet, press_timelines.parquet, les runs de
+backtest (premier et second tour) et deux études : économie (`runs/<date>-economy/`,
+corrélations) et palmarès des instituts (`runs/<date>-pollster-ratings/`). Ces volets sont
+explicatifs : tous portent `in_forecast: false`. La validation contre les
 schémas se fait côté front (`npm run validate-data`, ajv) : jsonschema n'est pas une
 dépendance du back.
 
@@ -21,6 +24,7 @@ Arrondis : probabilités à 4 décimales, parts et quantiles à 0,1 point, repor
 from __future__ import annotations
 
 import datetime as dt
+import itertools
 import json
 import logging
 import subprocess
@@ -38,7 +42,7 @@ from vvs.registry.scenarios import ScenariosFile, enumerate_configurations, load
 log = logging.getLogger(__name__)
 
 SCHEMA_VERSION = "1"
-MODEL_VERSION = "0.4.0-iia"  # phase 4 : mélange de scénarios, softmax restreint (IIA)
+MODEL_VERSION = "0.4.1"  # phase 4 : mélange de scénarios ; règle de parts selon l'ajustement (IIA ou substitution, voir manifest)
 QNAMES = ("q05", "q25", "q50", "q75", "q95")
 EXPORT_CONFIGS = 10  # configurations résumées dans summary.json
 SCENARIO_CONFIGS = 12  # configurations listées dans scenarios.json
@@ -51,6 +55,20 @@ TRANSFER_MIN_SHARE = 1.5  # points : électorats affichés dans les reports
 ECONOMY_SINCE = dt.date(2012, 1, 1)
 BACKTEST_FIRST_ROUND = "2026-10-20-backtest"
 BACKTEST_SECOND_ROUND = "2026-10-20-second-round"
+ECONOMY_STUDY = "2026-10-20-economy"
+POLLSTER_RATINGS = "2026-10-20-pollster-ratings"
+ATTENTION_WEEKS = 78  # profondeur du témoin d'actualité, comme la grille du premier tour
+ATTENTION_MAX_CANDIDATES = 12
+INA_ELECTIONS = (2002, 2007, 2012, 2017)  # sujets de JT disponibles de 2000 à 2020
+GDELT_SINCE = dt.date(2017, 1, 1)
+Z90 = {"q05": -1.6449, "q25": -0.6745, "q50": 0.0, "q75": 0.6745, "q95": 1.6449}
+STUDY_BLOCS = ("far_right", "right", "centre", "incumbent", "left", "far_left")
+STUDY_BLOC_LABELS = {
+    "far_right": "Extrême droite", "right": "Droite", "centre": "Centre",
+    "incumbent": "Bloc du président sortant", "left": "Gauche", "far_left": "Gauche radicale",
+    "other": "Autres",
+}
+MAIN_BLOCS = ("far_right", "right", "centre", "left", "far_left")
 
 ECONOMY_NOTE = (
     "Ces séries n'entrent pas dans la prévision. L'étude du 20 octobre 2026 "
@@ -58,9 +76,68 @@ ECONOMY_NOTE = (
     "intentions de vote par bloc de façon distinguable du hasard, et la popularité du "
     "président est liée aux sondages sans les précéder. Elles sont montrées à titre explicatif."
 )
+ECONOMY_STUDY_SUMMARY = (
+    "Sur 80 variations mensuelles par bloc (six cycles, de 2002 à 2027), aucune "
+    "variable économique ne fait bouger les intentions de vote par bloc de façon distinguable "
+    "du hasard une fois corrigés le choix du retard et l'autocorrélation des séries (placebo "
+    "par décalage circulaire). Critères fixés avant lecture."
+)
+ECONOMY_STUDY_FINDINGS = (
+    ("Chômage BIT, la question de départ : quand il monte, la droite baisse trois mois plus tard "
+     "et l'extrême droite monte, mais l'effet s'efface en niveau, le profil par retard est "
+     "instable et ne se retrouve pas d'une élection à l'autre (placebos p = 0,08 et 0,13)."),
+    ("Prix, carburants, confiance des ménages, climat des affaires : rien. La seule paire qui "
+     "passe formellement (inflation alimentaire et extrême droite) a un signe contre-intuitif, "
+     "compatible avec les faux positifs attendus sur 78 paires."),
+    ("Popularité du président : liée au niveau du bloc sortant (+0,32 point par point de "
+     "satisfaits, même signe sur six élections), mais elle ne précède pas les sondages "
+     "(placebo p = 0,59) : lien contemporain, pas prédictif."),
+)
 PRESS_NOTE = (
-    "La presse n'entre pas dans la prévision : le volet presse (part de voix, ton, agenda) "
-    "arrive en phase 7, et une variable n'est admise qu'après un gain au backtest."
+    "La presse et l'attention en ligne n'entrent pas dans la prévision. L'attention Wikipédia "
+    "a été testée (docs/06-presse.md) : elle précède les sondages d'une à quatre semaines "
+    "autour des événements, mais l'effet disparaît hors événements et la causalité inverse est "
+    "aussi significative ; elle n'est pas retenue. La classification des titres (part de voix, "
+    "ton, agenda) reste à faire."
+)
+ATTENTION_NOTE = (
+    "Témoin d'actualité, n'entre pas dans la prévision : pages vues des articles Wikipédia des "
+    "candidats suivis pour 2027, en part du total de la semaine. Un pic signale un événement, "
+    "pas un mouvement d'opinion."
+)
+INA_NOTE = (
+    "Contexte d'agenda, n'entre pas dans la prévision : sujets des journaux télévisés (TF1, "
+    "France 2, France 3, Arte, M6) classés par rubrique par l'INA, de 2000 à 2020. Part des "
+    "sujets de l'année. Pas de 2022, pas de titres de sujets, sécurité mal isolée."
+)
+GDELT_NOTE = (
+    "N'entre pas dans la prévision. GDELT cherche dans une traduction anglaise automatique des "
+    "articles et le volume surveillé s'effondre (624 000 articles par jour en 2017, 103 000 en "
+    "2026) : seule la part du volume est comparable d'une année à l'autre. Trois candidats "
+    "seulement, faute de débit (une requête réussie toutes les 10 à 20 minutes)."
+)
+RATINGS_NOTE = "Classement non reproductible d'une élection à l'autre, n'entre pas dans la prévision."
+RATINGS_LABELS = {"verian": "Verian (Sofres, Kantar)"}
+VARIABLES_TESTED = (
+    # (id, libellé, verdict, publiée, une ligne) : docs/backtest-log.md, vague du 2026-10-20
+    ("substitution", "Substitution intra-bloc (logit emboîté)", "non admise", True,
+     ("Meilleure sur les hypothèses emboîtées de 2022 et 2027, moins bonne en 2017 ; log-score "
+      "inchangé à 90 jours, en baisse à 180. Utilisée par la projection publiée par choix "
+      "éditorial, la variante sans substitution reste calculée.")),
+    ("bounce", "Rebonds de primaire et d'annonce", "non admise", False,
+     ("Seules les primaires ont une forme commune (saut de 2 à 10 points, entièrement érodé au "
+      "vote) ; le gain à 90 jours tient au seul cas Pécresse 2022.")),
+    ("pollster_ratings", "Palmarès des instituts", "non admise", False,
+     ("Précision et effets maison non reproductibles d'une élection à l'autre (r ≈ 0,1) ; gain "
+      "sur une élection sur trois.")),
+    ("potential", "Potentiel électoral et rejet (second tour)", "non admise", False,
+     "Pas un plafond : les votes de barrage le dépassent ; CRPS inchangé à 180 et 90 jours."),
+    ("certainty", "Électeurs sûrs de leur choix", "non admise", False,
+     ("Lien avec le mouvement ultérieur de signe opposé en 2017 et en 2022 ; CRPS et couverture "
+      "dégradés au backtest.")),
+    ("attention", "Attention en ligne (Wikipédia, Google Trends)", "non retenue", False,
+     ("Wikipédia précède les sondages autour des événements seulement, effet nul hors événements "
+      "et aux horizons de la règle ; Trends ne réplique pas.")),
 )
 UNIT_LABELS = {
     "percent": "%",
@@ -511,7 +588,7 @@ def build_scenarios(f: ScenariosFile) -> dict:
 
 def build_polls(
     run_manifest: dict, polls: pl.DataFrame, results: pl.DataFrame, house: pl.DataFrame,
-    reg: Registry,
+    reg: Registry, ratings: dict | None = None,
 ) -> dict:
     out = []
     for r in polls.sort("fieldwork_end", "poll_id", descending=[True, False]).iter_rows(named=True):
@@ -565,14 +642,60 @@ def build_polls(
             }
             for h in house.sort("pollster", "bloc").iter_rows(named=True)
         ],
+        "pollster_ratings": ratings,
     }
 
 
-def build_economy(asof: str) -> dict:
+def build_correlations(study: Path) -> tuple[list[dict], str]:
+    """Une ligne par (indicateur, bloc) de l'étude économie (`coef_pairs.parquet`) : effet au
+    meilleur retard d'un écart type de variation mensuelle de l'indicateur, en points de part
+    du bloc par mois, avec l'intervalle à 90 % de la régression (HAC) et le p du placebo,
+    seul test qui corrige le choix du retard."""
+    from vvs.studies.panel import INDICATORS
+
+    pairs = pl.read_parquet(study / "coef_pairs.parquet")
+    order = {k: i for i, k in enumerate(INDICATORS)}
+    border = {b: i for i, b in enumerate(STUDY_BLOCS)}
+    pairs = pairs.with_columns(
+        pl.col("indicator").replace_strict(order, default=len(order)).alias("_i"),
+        pl.col("bloc").replace_strict(border, default=len(border)).alias("_b"),
+    ).sort("_i", "_b")
+    out = []
+    for r in pairs.iter_rows(named=True):
+        sd, b, se = r["sd_d1"], r["best_beta"], r["best_se"]
+        q = [(b + z * se) * sd for z in Z90.values()]
+        ind = INDICATORS.get(r["indicator"])
+        out.append(
+            {
+                "series_id": r["indicator"],
+                "series_label": ind.label if ind else r["indicator"],
+                "target": r["bloc"],
+                "target_label": STUDY_BLOC_LABELS.get(r["bloc"], r["bloc"]),
+                "lag_months": int(r["best_lag"]),
+                "effect": {k: round(float(v), 2) for k, v in zip(QNAMES, q)},
+                "p_placebo": round(float(r["p_placebo"]), 3),
+                "n": int(r["best_n"]),
+                "n_cycles": int(r["best_n_cycles"]),
+            }
+        )
+    n = len(out)
+    n_pass = sum(c["p_placebo"] < 0.05 for c in out)
+    note = (
+        f"Effet d'une variation mensuelle typique (un écart type) de l'indicateur sur la part du "
+        f"bloc, en points par mois, au retard (0 à 6 mois) où il est le plus net, avec son "
+        f"intervalle à 90 %. Ce retard est choisi après coup : seul le test placebo (séries "
+        f"décalées dans le temps) corrige ce choix. {n_pass} paire{'s' if n_pass > 1 else ''} "
+        f"sur {n} passe{'nt' if n_pass > 1 else ''} le placebo à 5 % ; le hasard en donnerait "
+        f"environ {round(0.05 * n)}."
+    )
+    return out, note
+
+
+def build_economy(asof: str, study: Path | None = None, curated: Path | None = None) -> dict:
     import yaml
 
     reg = yaml.safe_load((paths.REGISTRY / "macro_series.yaml").read_text(encoding="utf-8"))
-    macro = pl.read_parquet(paths.CURATED / "macro.parquet")
+    macro = pl.read_parquet((curated or paths.CURATED) / "macro.parquet")
     series = []
     for s in reg["series"]:
         sub = macro.filter(
@@ -596,16 +719,127 @@ def build_economy(asof: str) -> dict:
                 ],
             }
         )
+    study = study or paths.RUNS / ECONOMY_STUDY
+    correlations, note = build_correlations(study)
     return {
         "asof": asof,
         "in_forecast": False,
         "in_forecast_note": ECONOMY_NOTE,
         "series": series,
-        "correlations": [],
+        "correlations": correlations,
+        "correlations_note": note,
+        "study": {
+            "date": run_date_of(study, {"created_at": asof}),
+            "verdict": "negative",
+            "summary": ECONOMY_STUDY_SUMMARY,
+            "findings": list(ECONOMY_STUDY_FINDINGS),
+            "reference": "docs/05-economie.md",
+        },
     }
 
 
-def build_press(asof: str) -> dict:
+def build_attention(asof: str, curated: Path, universe: list[str]) -> dict:
+    """Part hebdomadaire des pages vues Wikipédia des candidats 2027 : pour chaque semaine
+    complète (lundi à dimanche) des `ATTENTION_WEEKS` dernières, pages vues du candidat sur le
+    total des membres du cycle 2027 (`attention.parquet`, `share` non vide), en %. Candidats de
+    l'univers de la simulation, les plus vus sur les douze dernières semaines."""
+    a = pl.read_parquet(curated / "attention.parquet").filter(
+        (pl.col("source") == "wikipedia") & (pl.col("election") == 2027)
+        & pl.col("share").is_not_null() & (pl.col("date") <= dt.date.fromisoformat(asof))
+    )
+    if a.is_empty():
+        return {"in_forecast": False, "note": ATTENTION_NOTE, "source": "Wikipédia (pages vues)",
+                "weeks": [], "tracks": []}
+    a = a.with_columns(pl.col("date").dt.truncate("1w").alias("week"))
+    total = a.group_by("date", "week").agg(pl.col("value").sum().alias("total"))
+    days = total.group_by("week").agg(pl.len().alias("n_days"), pl.col("total").sum())
+    weeks = days.filter(pl.col("n_days") == 7).sort("week").tail(ATTENTION_WEEKS)
+    by_cand = (
+        a.filter(pl.col("candidate_id").is_in(universe))
+        .group_by("candidate_id", "week").agg(pl.col("value").sum())
+        .join(weeks.select("week", "total"), on="week")
+        .with_columns((100 * pl.col("value") / pl.col("total")).alias("pct"))
+    )
+    week_list = weeks["week"].to_list()
+    recent = set(week_list[-12:])
+    rank = (
+        by_cand.filter(pl.col("week").is_in(list(recent)))
+        .group_by("candidate_id").agg(pl.col("pct").mean()).sort("pct", descending=True)
+    )
+    tracks = []
+    for cid in rank["candidate_id"].to_list()[:ATTENTION_MAX_CANDIDATES]:
+        vals = dict(by_cand.filter(pl.col("candidate_id") == cid).select("week", "pct").iter_rows())
+        tracks.append({"candidate_id": cid,
+                       "values": [_r(vals.get(w), 2) if w in vals else 0.0 for w in week_list]})
+    return {
+        "in_forecast": False,
+        "note": ATTENTION_NOTE,
+        "source": "Wikipédia (pages vues, API Wikimedia)",
+        "weeks": [w.isoformat() for w in week_list],
+        "tracks": tracks,
+    }
+
+
+def build_ina(curated: Path) -> dict:
+    """Part de chaque rubrique INA dans les sujets de JT de chaque année électorale, et sur
+    l'ensemble 2000-2020 pour référence, en %."""
+    ina = pl.read_parquet(curated / "press_ina.parquet").with_columns(
+        pl.col("date").dt.year().alias("year")
+    )
+    years = [y for y in INA_ELECTIONS if y in set(ina["year"].unique().to_list())]
+    total = ina.group_by("theme").agg(pl.col("n_subjects").sum())
+    total = total.with_columns((100 * pl.col("n_subjects") / pl.col("n_subjects").sum()).alias("pct"))
+    by_year = ina.filter(pl.col("year").is_in(years)).group_by("year", "theme").agg(
+        pl.col("n_subjects").sum()
+    ).with_columns((100 * pl.col("n_subjects") / pl.col("n_subjects").sum().over("year")).alias("pct"))
+    topics = []
+    for r in total.sort("pct", descending=True).iter_rows(named=True):
+        t = by_year.filter(pl.col("theme") == r["theme"])
+        vals = dict(zip(t["year"].to_list(), t["pct"].to_list()))
+        topics.append({"label": r["theme"], "shares": [_r(vals.get(y, 0.0), 1) for y in years],
+                       "share_all_years": _r(r["pct"], 1)})
+    span = (ina["year"].min(), ina["year"].max())
+    return {
+        "in_forecast": False,
+        "note": INA_NOTE,
+        "source": "INA, sujets des journaux télévisés (data.gouv.fr)",
+        "years": years,
+        "all_years_label": f"{span[0]}-{span[1]}",
+        "topics": topics,
+    }
+
+
+def build_gdelt(asof: str, curated: Path) -> dict:
+    """Part mensuelle des articles GDELT qui citent chaque candidat suivi (`volume_share`
+    recalculé au mois : volume sur volume surveillé), en %, depuis 2017."""
+    t = pl.read_parquet(curated / "press_timelines.parquet").filter(
+        (pl.col("source") == "gdelt") & (pl.col("date") >= GDELT_SINCE)
+        & (pl.col("date") <= dt.date.fromisoformat(asof))
+    )
+    if t.is_empty():
+        return {"in_forecast": False, "note": GDELT_NOTE, "source": "GDELT", "months": [],
+                "tracks": []}
+    t = t.with_columns(pl.col("date").dt.truncate("1mo").alias("month"))
+    m = t.group_by("candidate_id", "month").agg(pl.col("volume").sum(),
+                                                pl.col("total_monitored").sum())
+    m = m.with_columns((100 * pl.col("volume") / pl.col("total_monitored")).alias("pct"))
+    months = sorted(m["month"].unique().to_list())
+    order = m.group_by("candidate_id").agg(pl.col("pct").mean()).sort("pct", descending=True)
+    tracks = []
+    for cid in order["candidate_id"].to_list():
+        vals = dict(m.filter(pl.col("candidate_id") == cid).select("month", "pct").iter_rows())
+        tracks.append({"candidate_id": cid, "values": [_r(vals.get(x), 3) for x in months]})
+    return {
+        "in_forecast": False,
+        "note": GDELT_NOTE,
+        "source": "GDELT 2.0, API DOC (timelinevolraw)",
+        "months": [x.isoformat() for x in months],
+        "tracks": tracks,
+    }
+
+
+def build_press(asof: str, curated: Path | None = None, universe: list[str] | None = None) -> dict:
+    curated = curated or paths.CURATED
     return {
         "asof": asof,
         "in_forecast": False,
@@ -614,6 +848,73 @@ def build_press(asof: str) -> dict:
         "share_of_voice": [],
         "tone": [],
         "agenda": [],
+        "attention": build_attention(asof, curated, universe or []),
+        "ina": build_ina(curated),
+        "gdelt": build_gdelt(asof, curated),
+    }
+
+
+def _consecutive_pearson(values: pl.DataFrame, key: list[str], col: str) -> dict:
+    """Corrélation poolée de `col` entre élections consécutives, sur les clés communes (même
+    calcul que back/studies/pollster_ratings.py)."""
+    from scipy import stats
+
+    elections = sorted(values["election"].unique().to_list())
+    a_all, b_all = [], []
+    for a, b in itertools.pairwise(elections):
+        va = values.filter(pl.col("election") == a).select(*key, pl.col(col).alias("a"))
+        vb = values.filter(pl.col("election") == b).select(*key, pl.col(col).alias("b"))
+        j = va.join(vb, on=key).drop_nulls()
+        a_all += j["a"].to_list()
+        b_all += j["b"].to_list()
+    if len(a_all) < 3:
+        return {"n_pairs": len(a_all), "pearson": None, "p": None}
+    r, p = stats.pearsonr(a_all, b_all)
+    return {"n_pairs": len(a_all), "pearson": round(float(r), 2), "p": round(float(p), 2)}
+
+
+def build_pollster_ratings(study: Path, reg: Registry) -> dict:
+    """Palmarès des instituts 2002-2022 (`palmares.parquet` de l'étude) et stabilité du
+    classement d'une élection à la suivante."""
+    pal = pl.read_parquet(study / "palmares.parquet")
+    per_e = pl.read_parquet(study / "palmares_by_election.parquet")
+    house = pl.read_parquet(study / "house_effects.parquet").filter(
+        pl.col("bloc").is_in(MAIN_BLOCS)
+    )
+    rows = []
+    for r in pal.iter_rows(named=True):
+        lid = r["lineage"]
+        name = RATINGS_LABELS.get(lid) or (reg.pollsters[lid].name if lid in reg.pollsters else lid)
+        rows.append(
+            {
+                "pollster": lid,
+                "name": name,
+                "elections": [int(x) for x in str(r["elections"]).split(",") if x],
+                "n_polls": int(r["n_polls"] or 0),
+                "n_final": int(r["n_final"] or 0),
+                "mae_candidate": _r(r["mae_cand"], 2),
+                "mae_bloc": _r(r["mae_bloc"], 2),
+                "relative_error": _r(r["pm_cand"], 2),
+                "bias": {b: _r(r.get(b), 1) for b in MAIN_BLOCS},
+                "precision": _r(r["x_raw"], 2),
+                "n_better": int(r["n_better"] or 0),
+                "n_rated": int(r["n_x"] or 0),
+            }
+        )
+    stability = [
+        {"id": "precision", "label": "Précision relative (sondages des 21 derniers jours)",
+         **_consecutive_pearson(per_e, ["lineage"], "x")},
+        {"id": "relative_error", "label": "Erreur absolue relative du dernier sondage",
+         **_consecutive_pearson(per_e, ["lineage"], "pm_cand")},
+        {"id": "house_effects", "label": "Effets maison de campagne (cinq blocs)",
+         **_consecutive_pearson(house, ["lineage", "bloc"], "alpha")},
+    ]
+    return {
+        "in_forecast": False,
+        "note": RATINGS_NOTE,
+        "elections": sorted(per_e["election"].unique().to_list()),
+        "rows": rows,
+        "stability": stability,
     }
 
 
@@ -673,6 +974,12 @@ def build_backtest(generated_at: str, first: Path, second: Path) -> dict:
         "horizons_days": sorted({r["horizon_days"] for r in rows}, reverse=True),
         "models": models,
         "rows": rows,
+        "variables_tested": [
+            {"id": i, "label": lab, "verdict": verdict, "admitted": False, "published": pub,
+             "summary": text}
+            for i, lab, verdict, pub, text in VARIABLES_TESTED
+        ],
+        "variables_tested_reference": "docs/backtest-log.md",
     }
 
 
@@ -716,8 +1023,15 @@ def export_run(
     backtest_second: Path | None = None,
     polls_data: tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame] | None = None,
     export_configs: int = EXPORT_CONFIGS,
+    economy_study: Path | None = None,
+    pollster_ratings: Path | None = None,
+    curated: Path | None = None,
 ) -> dict:
-    """Écrit les fichiers du contrat JSON dans `out` ; rend un petit compte rendu."""
+    """Écrit les fichiers du contrat JSON dans `out` ; rend un petit compte rendu.
+
+    `economy_study`, `pollster_ratings` : dossiers des études (défaut runs/<ECONOMY_STUDY>,
+    runs/<POLLSTER_RATINGS>) ; `curated` : dossier des parquet explicatifs (macro, attention,
+    presse ; défaut data/curated). Injectables pour les tests."""
     run, out = Path(run), Path(out)
     reg = registry or default_registry()
     f = scenarios or load_scenarios(registry=reg)
@@ -748,9 +1062,10 @@ def export_run(
     first_round = build_first_round(rm, summary_json, traj, fr_conditions, r1, f)
     second_round = build_second_round(rm, pairs, transfers, draws, r2, bloc_hint)
     scenarios_json = build_scenarios(f)
-    polls_json = build_polls(rm, polls, results, house, reg)
-    economy = build_economy(rm["asof"])
-    press = build_press(rm["asof"])
+    ratings = build_pollster_ratings(pollster_ratings or paths.RUNS / POLLSTER_RATINGS, reg)
+    polls_json = build_polls(rm, polls, results, house, reg, ratings)
+    economy = build_economy(rm["asof"], economy_study, curated)
+    press = build_press(rm["asof"], curated, [u["candidate_id"] for u in rm["universe"]])
     backtest = build_backtest(
         generated_at,
         backtest_first or paths.RUNS / BACKTEST_FIRST_ROUND,
@@ -762,10 +1077,18 @@ def export_run(
     for p in second_round["pairs"]:
         cited |= {p["candidate_a"], p["candidate_b"]}
     cited |= {t["from"] for t in second_round["transfers"]}
+    for block in (press["attention"], press["gdelt"]):
+        cited |= {t["candidate_id"] for t in block["tracks"]}
     candidates = [candidate_entry(c, reg, rm["election"], bloc_hint) for c in sorted(cited)]
 
     last_poll = max(p["fieldwork_end"] for p in polls_json["polls"])
     commit = clean_commit()
+    polls_hash = rm.get("polls_hash")
+    fit_dir = rm.get("fit", {}).get("dir")
+    if polls_hash is None and fit_dir:  # simulations antérieures à l'empreinte : l'ajustement
+        fit_manifest = Path(fit_dir) / "manifest.json"
+        if fit_manifest.is_file():
+            polls_hash = json.loads(fit_manifest.read_text())["data"].get("rows_hash")
     manifest = {
         "schema_version": SCHEMA_VERSION,
         "run_date": run_date,
@@ -775,6 +1098,7 @@ def export_run(
         "commit": commit,
         "last_poll_date": last_poll,
         "n_polls": len(polls_json["polls"]),
+        "polls_hash": polls_hash,
         "n_draws": rm["n_draws"],
         "mock": False,
         "election": {
@@ -837,6 +1161,7 @@ def export_run(
         "run_date": run_date,
         "commit": commit,
         "n_polls": manifest["n_polls"],
+        "polls_hash": polls_hash,
         "n_candidates": len(candidates),
         "history_written": history_written,
         "history_entries": len(entries),

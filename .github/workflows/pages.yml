@@ -1,8 +1,10 @@
 # Construit le site statique (front/) et le publie sur GitHub Pages.
 #
-# À déplacer dans .github/workflows/pages.yml à la racine du dépôt, puis activer Pages avec
-# la source « GitHub Actions » (Settings → Pages). Le chemin de base vient de configure-pages :
-# /<nom du dépôt> pour un site de projet, vide avec un domaine personnalisé.
+# Le back ne tourne pas ici : le site publié est celui du dernier export commité dans
+# front/static/data (scripts/run_live.sh en local, puis commit et push). Ce workflow valide ces
+# données contre le contrat JSON (back/src/vvs/export/schemas/), vérifie les types et construit.
+# Activer Pages avec la source « GitHub Actions » (Settings → Pages). Le chemin de base vient
+# de configure-pages : /<nom du dépôt> pour un site de projet, vide avec un domaine personnalisé.
 name: Site (GitHub Pages)
 
 on:
@@ -39,6 +41,8 @@ jobs:
       - id: pages
         uses: actions/configure-pages@v6
       - run: npm ci
+      - name: Données réelles (pas le jeu factice)
+        run: node -e "process.exit(require('./static/data/manifest.json').mock ? 1 : 0)"
       - name: Validation des données contre le contrat JSON
         run: npm run validate-data
       - name: Vérification des types
