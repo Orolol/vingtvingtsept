@@ -235,9 +235,29 @@ def find_publish_date(text: str, fallback_year: int) -> date | None:
         return None
 
 
+# Définition de l'échelle de participation dans les questionnaires (Elabe : « 0 signifie que
+# vous êtes tout à fait certain de ne pas aller voter, 10 que vous êtes tout à fait certain
+# d'aller voter ») : elle décrit une question, pas la population des intentions de vote.
+_TURNOUT_SCALE = re.compile(
+    r"\b\d+ (?:signifie )?que vous etes tout a fait certaine?s? (?:de ne pas aller|d aller) voter"
+)
+_CERTAIN = re.compile(
+    r"certain(?:e|s|es)? d aller voter|votants decides|tout a fait certains"
+    r"|ayant l intention d aller voter"
+)
+
+
 def find_population(text: str) -> str:
-    t = _n(text)
-    if re.search(r"certain(?:e|s|es)? d aller voter|votants decides|tout a fait certains", t):
+    """Population des intentions de vote d'après le texte de la notice.
+
+    `certain_voters` : sous-échantillon filtré sur la participation déclarée (« certains
+    d'aller voter », « votants décidés », Elabe : « seules les personnes inscrites […] et
+    ayant l'intention d'aller voter sont prises en compte ») ; `registered` : inscrits sans
+    filtre ; sinon `unknown`. La définition de l'échelle de participation 0-10 du
+    questionnaire est ignorée : elle ne dit rien de la base des intentions.
+    """
+    t = _TURNOUT_SCALE.sub(" ", _n(text))
+    if _CERTAIN.search(t):
         return "certain_voters"
     if re.search(r"inscrit", t):
         return "registered"

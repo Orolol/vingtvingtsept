@@ -419,11 +419,13 @@ candidates:
     parties:
       - {party: rpr, from: null, to: 2002}
       - {party: ump, from: 2002, to: 2010}
+      - {party: dvd, from: 2010, to: 2024}
       - {party: la_france_humaniste, from: 2025, to: null}
     notes: >-
-      Premier ministre 2005-2007 ; fonde République solidaire en 2010 (hors registre), puis
-      La France humaniste en juin 2025. Candidature 2027 annoncée comme probable (août 2026),
-      non formalisée.
+      Premier ministre 2005-2007 ; fonde République solidaire en 2010 (hors registre, nuance
+      dvd ajoutée à la curation le 2026-10-20 pour les sondages 2012, où il est testé avant le
+      retrait de sa candidature), puis La France humaniste en juin 2025. Candidature 2027
+      annoncée comme probable (août 2026), non formalisée.
   faure_olivier:
     name: Olivier Faure
     first_name: Olivier
@@ -584,3 +586,444 @@ candidates:
     parties:
       - {party: div, from: 2026, to: null}
     notes: Journaliste, candidate déclarée sans étiquette le 14 octobre 2026 (France Inter).
+
+  # --- ajoutés à la curation (2026-10-20) : personnes testées dans les sondages (tables
+  # curated) ou présentes dans les tables d'alias (Wikipédia, MieuxVoter, Commission), sans
+  # candidature officielle. Affiliations relevées de mémoire ou d'après le champ `parti` de
+  # MieuxVoter pour 2027 ; quand l'affiliation à la date des sondages est douteuse, on prend
+  # une nuance (dvg, dvd, div…) et on l'écrit en note. `from: null` = date d'entrée inconnue.
+  alliot_marie_michele:
+    name: Michèle Alliot-Marie
+    first_name: Michèle
+    last_name: Alliot-Marie
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: >-
+      Ministre sous Chirac et Sarkozy ; envisage une candidature hors primaire en 2017
+      (sondages Wikipédia 2017). Appartenance à LR après 2017 non vérifiée.
+  aubry_martine:
+    name: Martine Aubry
+    first_name: Martine
+    last_name: Aubry
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Première secrétaire du PS 2008-2012, candidate à la primaire 2011 (sondages 2012, 2017).
+  barnier_michel:
+    name: Michel Barnier
+    first_name: Michel
+    last_name: Barnier
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Candidat au congrès LR de 2021 (sondages 2022), Premier ministre 2024.
+  baroin_francois:
+    name: François Baroin
+    first_name: François
+    last_name: Baroin
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Testé comme candidat LR possible avant le congrès 2021 (sondages 2022), non candidat.
+  bonnal_sebastien:
+    name: Sébastien Bonnal
+    first_name: Sébastien
+    last_name: Bonnal
+    parties:
+      - {party: div, from: 2026, to: null}
+    notes: >-
+      Candidat déclaré qui a commandé lui-même un sondage OpinionWay (septembre 2026, note de la
+      page Wikipédia) ; aucun parti relevé (champ `parti` vide chez MieuxVoter) : nuance div.
+  borloo_jean_louis:
+    name: Jean-Louis Borloo
+    first_name: Jean-Louis
+    last_name: Borloo
+    parties:
+      - {party: parti_radical, from: null, to: 2017}
+      - {party: udi, from: 2012, to: null}
+    notes: >-
+      Président du Parti radical, renonce à se présenter en octobre 2011 (sondages 2012) ;
+      fondateur de l'UDI en 2012, retiré de la vie politique en 2014.
+  borne_elisabeth:
+    name: Élisabeth Borne
+    first_name: Élisabeth
+    last_name: Borne
+    parties:
+      - {party: renaissance, from: 2022, to: null}
+    notes: >-
+      Première ministre 2022-2024, ministre de l'Éducation 2024-2025 ; affiliations antérieures
+      à 2022 (proche du PS, puis majorité présidentielle) non datées.
+  braun_pivet_yael:
+    name: Yaël Braun-Pivet
+    first_name: Yaël
+    last_name: Braun-Pivet
+    parties:
+      - {party: em, from: 2016, to: 2017}
+      - {party: lrem, from: 2017, to: 2022}
+      - {party: renaissance, from: 2022, to: null}
+    notes: Présidente de l'Assemblée nationale depuis 2022 ; ancienne adhérente du PS (non datée).
+  castets_lucie:
+    name: Lucie Castets
+    first_name: Lucie
+    last_name: Castets
+    parties:
+      - {party: dvg, from: 2024, to: null}
+    notes: >-
+      Haute fonctionnaire, proposée par le NFP pour Matignon en juillet 2024, sans parti à
+      cette date (nuance dvg). Présente seulement dans la table d'alias de la Commission.
+  castex_jean:
+    name: Jean Castex
+    first_name: Jean
+    last_name: Castex
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: 2020}
+      - {party: lrem, from: 2020, to: 2022}
+      - {party: dvc, from: 2022, to: null}
+    notes: >-
+      Premier ministre 2020-2022, quitte LR en 2020 ; adhésion à LREM (2020) à vérifier. PDG de
+      la RATP puis de la SNCF depuis 2022 : nuance dvc, appartenance à Renaissance non vérifiée.
+  ciotti_eric:
+    name: Éric Ciotti
+    first_name: Éric
+    last_name: Ciotti
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: 2024}
+      - {party: udr, from: 2024, to: null}
+    notes: >-
+      Candidat au congrès LR de 2021 (sondages 2022), président de LR 2022-2024 ; s'allie au RN
+      en juin 2024 et fonde l'UDR.
+  cope_jean_francois:
+    name: Jean-François Copé
+    first_name: Jean-François
+    last_name: Copé
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Candidat à la primaire de la droite 2016 (sondages 2017).
+  dati_rachida:
+    name: Rachida Dati
+    first_name: Rachida
+    last_name: Dati
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: 2024}
+      - {party: dvd, from: 2024, to: null}
+    notes: >-
+      Testée avant le congrès LR de 2021 (sondages 2022). Entrée au gouvernement Attal en
+      janvier 2024 et exclue de LR (nuance dvd ensuite) ; relations avec LR après 2024 à
+      vérifier.
+  delanoe_bertrand:
+    name: Bertrand Delanoë
+    first_name: Bertrand
+    last_name: Delanoë
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Maire de Paris 2001-2014, testé dans les sondages 2012.
+  delga_carole:
+    name: Carole Delga
+    first_name: Carole
+    last_name: Delga
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Présidente de la région Occitanie, testée dans les sondages 2027.
+  duflot_cecile:
+    name: Cécile Duflot
+    first_name: Cécile
+    last_name: Duflot
+    parties:
+      - {party: verts, from: null, to: 2010}
+      - {party: eelv, from: 2010, to: null}
+    notes: >-
+      Secrétaire nationale des Verts puis d'EELV, candidate à la primaire écologiste 2016
+      (sondages 2012, 2017) ; directrice d'Oxfam France depuis 2018, appartenance ultérieure non
+      vérifiée.
+  fabius_laurent:
+    name: Laurent Fabius
+    first_name: Laurent
+    last_name: Fabius
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Candidat à la primaire socialiste 2006 (sondages 2007) ; président du Conseil constitutionnel 2016-2025.
+  guaino_henri:
+    name: Henri Guaino
+    first_name: Henri
+    last_name: Guaino
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: >-
+      Député LR, annonce une candidature hors primaire pour 2017 (sondages 2017) ; date
+      d'adhésion à l'UMP et appartenance à LR après 2017 non vérifiées.
+  guedj_jerome:
+    name: Jérôme Guedj
+    first_name: Jérôme
+    last_name: Guedj
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: >-
+      Député PS de l'Essonne ; candidature annoncée le 5 février 2026 et parti « Parti
+      Socialiste » d'après MieuxVoter.
+  hanouna_cyril:
+    name: Cyril Hanouna
+    first_name: Cyril
+    last_name: Hanouna
+    parties:
+      - {party: div, from: 2025, to: null}
+    notes: >-
+      Animateur de télévision testé par quelques instituts (2025) sans candidature ni parti :
+      nuance div.
+  hulot_nicolas:
+    name: Nicolas Hulot
+    first_name: Nicolas
+    last_name: Hulot
+    parties:
+      - {party: eco, from: null, to: null}
+    notes: >-
+      Militant écologiste sans parti durable (pacte écologique 2007, candidat à la primaire
+      EELV 2011, ministre 2017-2018) : nuance eco sur toute la période (sondages 2007, 2012,
+      2017).
+  juppe_alain:
+    name: Alain Juppé
+    first_name: Alain
+    last_name: Juppé
+    parties:
+      - {party: rpr, from: null, to: 2002}
+      - {party: ump, from: 2002, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: >-
+      Candidat à la primaire de la droite 2016 (sondages 2017) ; quitte LR vers 2018-2019
+      (Conseil constitutionnel 2019), date à vérifier.
+  juvin_philippe:
+    name: Philippe Juvin
+    first_name: Philippe
+    last_name: Juvin
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: null}
+    notes: Candidat au congrès LR de 2021 (sondages 2022).
+  lagarde_jean_christophe:
+    name: Jean-Christophe Lagarde
+    first_name: Jean-Christophe
+    last_name: Lagarde
+    parties:
+      - {party: udi, from: 2012, to: null}
+    notes: Président de l'UDI 2014-2022, testé dans les sondages 2022 ; affiliation avant 2012 (Nouveau Centre) non reprise.
+  lang_jack:
+    name: Jack Lang
+    first_name: Jack
+    last_name: Lang
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Candidat potentiel à l'investiture socialiste 2006 (sondages 2007).
+  larrouturou_pierre:
+    name: Pierre Larrouturou
+    first_name: Pierre
+    last_name: Larrouturou
+    parties:
+      - {party: nouvelle_donne, from: 2013, to: null}
+    notes: Fondateur de Nouvelle Donne, testé dans les sondages 2017 ; affiliations antérieures (PS, EELV) non reprises.
+  le_maire_bruno:
+    name: Bruno Le Maire
+    first_name: Bruno
+    last_name: Le Maire
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: 2017}
+      - {party: lrem, from: 2017, to: 2022}
+      - {party: renaissance, from: 2022, to: null}
+    notes: >-
+      Candidat à la primaire de la droite 2016 (sondages 2017), rejoint la majorité de Macron en
+      2017, ministre de l'Économie 2017-2024 ; testé en 2027.
+  leclerc_michel_edouard:
+    name: Michel-Édouard Leclerc
+    first_name: Michel-Édouard
+    last_name: Leclerc
+    parties:
+      - {party: div, from: 2025, to: null}
+    notes: >-
+      Dirigeant des centres Leclerc, testé comme personnalité de la société civile ; aucune
+      candidature : nuance div. Présent seulement dans la table d'alias de la Commission.
+  lecornu_sebastien:
+    name: Sébastien Lecornu
+    first_name: Sébastien
+    last_name: Lecornu
+    parties:
+      - {party: ump, from: null, to: 2015}
+      - {party: lr, from: 2015, to: 2017}
+      - {party: lrem, from: 2017, to: 2022}
+      - {party: renaissance, from: 2022, to: null}
+    notes: Ministre des Armées puis Premier ministre (2025) ; parti « Renaissance » d'après MieuxVoter.
+  marchandise_charlotte:
+    name: Charlotte Marchandise
+    first_name: Charlotte
+    last_name: Marchandise
+    parties:
+      - {party: div, from: 2016, to: null}
+    notes: >-
+      Désignée par la primaire citoyenne LaPrimaire.org (2016), sans parti ; ne réunit pas ses
+      parrainages (sondages 2017). Nuance div.
+  marechal_marion:
+    name: Marion Maréchal
+    first_name: Marion
+    last_name: Maréchal
+    parties:
+      - {party: fn, from: null, to: 2018}
+      - {party: reconquete, from: 2022, to: 2024}
+      - {party: exd, from: 2024, to: null}
+    notes: >-
+      Députée FN 2012-2017, rejoint Reconquête en 2022, la quitte en 2024 pour Identité-Libertés
+      (hors registre, nuance exd). Présente seulement dans la table d'alias de la Commission.
+  maurel_emmanuel:
+    name: Emmanuel Maurel
+    first_name: Emmanuel
+    last_name: Maurel
+    parties:
+      - {party: ps, from: null, to: 2018}
+      - {party: grs, from: 2018, to: null}
+    notes: >-
+      Quitte le PS en 2018 et fonde la Gauche républicaine et socialiste ; candidature 2027
+      annoncée le 4 septembre 2026 d'après MieuxVoter.
+  montebourg_arnaud:
+    name: Arnaud Montebourg
+    first_name: Arnaud
+    last_name: Montebourg
+    parties:
+      - {party: ps, from: null, to: 2017}
+      - {party: dvg, from: 2021, to: null}
+    notes: >-
+      Candidat à la primaire socialiste 2017 ; candidature 2022 hors PS (mouvement
+      L'Engagement, retirée en janvier 2022) : nuance dvg. Date de sortie du PS à vérifier.
+  morin_herve:
+    name: Hervé Morin
+    first_name: Hervé
+    last_name: Morin
+    parties:
+      - {party: udf, from: null, to: 2007}
+      - {party: nouveau_centre, from: 2007, to: null}
+    notes: Président du Nouveau Centre, candidature 2012 retirée en février 2012.
+  panot_mathilde:
+    name: Mathilde Panot
+    first_name: Mathilde
+    last_name: Panot
+    parties:
+      - {party: lfi, from: 2016, to: null}
+    notes: Présidente du groupe LFI à l'Assemblée ; présente seulement dans la table d'alias de la Commission.
+  pasqua_charles:
+    name: Charles Pasqua
+    first_name: Charles
+    last_name: Pasqua
+    parties:
+      - {party: rpr, from: 1976, to: 1999}
+      - {party: rpf, from: 1999, to: null}
+    notes: >-
+      Candidature 2002 annoncée puis retirée faute de parrainages (sondages 2002) ; décédé en
+      2015.
+  payre_denis:
+    name: Denis Payre
+    first_name: Denis
+    last_name: Payre
+    parties:
+      - {party: dvd, from: 2013, to: null}
+    notes: >-
+      Entrepreneur, fondateur de Nous Citoyens (2013), candidat au congrès LR de 2021
+      (sondages 2022) ; adhésion à LR non vérifiée : nuance dvd.
+  peillon_vincent:
+    name: Vincent Peillon
+    first_name: Vincent
+    last_name: Peillon
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Candidat à la primaire de la gauche 2017.
+  pinel_sylvia:
+    name: Sylvia Pinel
+    first_name: Sylvia
+    last_name: Pinel
+    parties:
+      - {party: prg, from: null, to: null}
+    notes: >-
+      Présidente du PRG, candidate à la primaire de la gauche 2017 ; parcours après la fusion
+      radicale de 2017 non repris.
+  piolle_eric:
+    name: Éric Piolle
+    first_name: Éric
+    last_name: Piolle
+    parties:
+      - {party: eelv, from: null, to: 2023}
+      - {party: les_ecologistes, from: 2023, to: null}
+    notes: Maire de Grenoble, candidat à la primaire écologiste 2021 (sondages 2022).
+  poisson_jean_frederic:
+    name: Jean-Frédéric Poisson
+    first_name: Jean-Frédéric
+    last_name: Poisson
+    parties:
+      - {party: pcd, from: null, to: null}
+    notes: >-
+      Président du PCD (renommé VIA, la voie du peuple, en 2020), candidat déclaré en 2021 puis
+      rallié à Éric Zemmour en décembre 2021 (sondages 2022). Bloc par défaut du PCD (right) :
+      cas limite à trancher s'il pèse dans les études (alliance avec Reconquête).
+  rousseau_sandrine:
+    name: Sandrine Rousseau
+    first_name: Sandrine
+    last_name: Rousseau
+    parties:
+      - {party: eelv, from: null, to: 2023}
+      - {party: les_ecologistes, from: 2023, to: null}
+    notes: Candidate à la primaire écologiste 2021 (sondages 2022), testée en 2027.
+  strauss_kahn_dominique:
+    name: Dominique Strauss-Kahn
+    first_name: Dominique
+    last_name: Strauss-Kahn
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Directeur du FMI, favori des sondages 2012 avant mai 2011 ; candidat à la primaire PS 2006.
+  tapie_bernard:
+    name: Bernard Tapie
+    first_name: Bernard
+    last_name: Tapie
+    parties:
+      - {party: div, from: null, to: null}
+    notes: >-
+      Ancien ministre (MRG) testé dans quelques sondages 2012 ; aucune affiliation établie à
+      cette date (soutien de Sarkozy en 2007) : nuance div. Décédé en 2021.
+  thouy_helene:
+    name: Hélène Thouy
+    first_name: Hélène
+    last_name: Thouy
+    parties:
+      - {party: parti_animaliste, from: 2016, to: null}
+    notes: Coprésidente du Parti animaliste, candidate déclarée en 2021 sans parrainages suffisants (sondages 2022).
+  vallaud_boris:
+    name: Boris Vallaud
+    first_name: Boris
+    last_name: Vallaud
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Président du groupe socialiste à l'Assemblée ; présent seulement dans la table d'alias de la Commission.
+  valls_manuel:
+    name: Manuel Valls
+    first_name: Manuel
+    last_name: Valls
+    parties:
+      - {party: ps, from: null, to: 2017}
+    notes: >-
+      Premier ministre 2014-2016, candidat à la primaire de la gauche 2017 ; quitte le PS en
+      2017. Parcours ultérieur (Barcelone, ministre 2024-2025) non repris : aucun parti après
+      2017.
+  yade_rama:
+    name: Rama Yade
+    first_name: Rama
+    last_name: Yade
+    parties:
+      - {party: ump, from: null, to: 2010}
+      - {party: parti_radical, from: 2010, to: 2016}
+      - {party: dvd, from: 2016, to: null}
+    notes: >-
+      Secrétaire d'État sous Sarkozy, passée au Parti radical, puis candidature 2017 avec son
+      mouvement « La France qui ose » (nuance dvd) sans parrainages suffisants. Dates à vérifier.

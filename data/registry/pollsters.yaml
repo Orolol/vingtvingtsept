@@ -88,7 +88,9 @@ pollsters:
     successor: kantar
     notes: >-
       Libellés antérieurs à Kantar Sofres (2002-2012 environ) : téléphone et face-à-face. La
-      frontière sofres / kantar suit le libellé publié, pas la structure capitalistique.
+      frontière sofres / kantar suit le libellé publié, pas la structure capitalistique. Le
+      libellé « Sofres » seul (pages Wikipédia 2002-2012) se résout par l'id : pas d'alias, le
+      loader refuse un alias égal à l'id.
   bva:
     name: BVA
     aliases: [BVA Opinion, Institut BVA, BVA Group]
@@ -118,3 +120,28 @@ pollsters:
     aliases: [YouGov France]
     mode: online
     notes: Peu présent sur les intentions de vote présidentielles françaises.
+  # --- ajoutés à la curation (2026-10-20) : instituts rencontrés sur les pages Wikipédia
+  # 2017 et 2022 (un ou deux sondages chacun). Mode non vérifié sur les notices : valeur par
+  # défaut `online`, à corriger si une notice dit autre chose.
+  atlasintel:
+    name: AtlasIntel
+    aliases: [Atlas Intel, Atlas Politico]
+    mode: online
+    notes: >-
+      Institut brésilien (recrutement aléatoire en ligne), deux sondages 2022 publiés sous le
+      libellé « Atlas Politico » sur Wikipédia.
+  dedicated:
+    name: Dedicated Research
+    aliases: []
+    mode: online
+    notes: Institut belge ; un sondage 2017 sur Wikipédia. Mode à vérifier.
+  futurethinking:
+    name: Future Thinking
+    aliases: [Future Thinking SSI]
+    mode: online
+    notes: Sondage 2017 réalisé avec le panel en ligne SSI. Mode à vérifier.
+  scanresearch:
+    name: Scan Research
+    aliases: []
+    mode: online
+    notes: Deux sondages 2017 pour Le Terrain (commanditaire, pas un institut). Mode à vérifier.

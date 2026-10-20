@@ -299,6 +299,46 @@ def test_find_sample_size_ignores_reading_examples():
     assert notice.find_sample_size(text) == 1200
 
 
+_ELABE_SCALE = (
+    "Q3. Sur une échelle de 0 à 10 : 0 signifie que vous êtes tout à fait certain de ne pas "
+    "aller voter, 10 que vous êtes tout à fait certain d'aller voter. "
+)
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        # Elabe : la base est donnée par la phrase de méthode, pas par l'échelle 0-10
+        (
+            _ELABE_SCALE
+            + (
+                "Pour les questions d'intention de vote, seules les personnes inscrites sur "
+                "les listes électorales et ayant l'intention d'aller voter sont prises en compte."
+            ),
+            "certain_voters",
+        ),
+        # l'échelle seule ne fait pas des inscrits des « certains d'aller voter »
+        (_ELABE_SCALE + "Échantillon de 1 701 personnes, dont 1 553 inscrits.", "registered"),
+        # Ifop, baromètres : base « inscrits » ; la note sur les certains d'aller voter n'est
+        # pas dans les pages de méthode lues
+        ("Base : Ensemble des personnes inscrites sur les listes électorales", "registered"),
+        # Ifop pour Hexagone (avril 2025) : colonne publiée sur les certains d'aller voter
+        (
+            (
+                "Base : Ensemble des personnes inscrites sur Ensemble des électeurs Electeurs "
+                "tout à fait les listes électorales certains d'aller voter publiés"
+            ),
+            "certain_voters",
+        ),
+        # YouGov : pondération sur l'intention d'aller voter, pas un filtre
+        ("pondération basée sur l'âge, le vote en 2022 et l'intention d'aller voter (0-10)",
+         "unknown"),
+    ],
+)
+def test_find_population(text, expected):
+    assert notice.find_population(text) == expected
+
+
 # ------------------------------------------------------------------ notices figées (PDF)
 
 

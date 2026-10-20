@@ -53,6 +53,25 @@ parties:
     short: DLF
     bloc: far_right
     from: 2014
+  rpf:
+    name: Rassemblement pour la France
+    short: RPF
+    bloc: far_right
+    from: 1999
+    to: 2011
+    notes: >-
+      Fondé par Charles Pasqua et Philippe de Villiers après les européennes de 1999 (Villiers
+      le quitte dès 2000 pour le MPF). Bloc par la doctrine de blocs.yaml : droite souverainiste
+      hors de la droite de gouvernement, comme MPF et DLF. Ajouté à la curation (2026-10-20)
+      pour Pasqua, testé dans les sondages 2002 ; date de mise en sommeil à vérifier.
+  udr:
+    name: Union des droites pour la République
+    short: UDR
+    bloc: far_right
+    from: 2024
+    notes: >-
+      Parti d'Éric Ciotti après sa rupture avec LR (juin 2024), allié électoral du RN aux
+      législatives 2024 : extrême droite. Ajouté à la curation (2026-10-20).
   # --- right
   rpr:
     name: Rassemblement pour la République
@@ -102,6 +121,25 @@ parties:
     bloc: right
     from: 2012
     notes: Classée à droite tant qu'elle reste hors de la majorité présidentielle (docs/03).
+  parti_radical:
+    name: Parti radical (valoisien)
+    short: PRV
+    bloc: right
+    from: null
+    to: 2017
+    notes: >-
+      Associé à l'UMP de 2002 à 2011, puis composante de l'UDI ; fusionne avec le PRG dans le
+      Mouvement radical en 2017 (hors registre). Ajouté à la curation (2026-10-20) pour
+      Jean-Louis Borloo, testé dans les sondages 2012.
+  nouveau_centre:
+    name: Nouveau Centre
+    short: NC
+    bloc: right
+    from: 2007
+    notes: >-
+      Députés UDF ralliés à Sarkozy en 2007, membres de la majorité de droite jusqu'en 2012
+      puis de l'UDI ; renommé Les Centristes en 2016. Ajouté à la curation (2026-10-20) pour
+      Hervé Morin, testé dans les sondages 2012.
   # --- centre
   udf:
     name: Union pour la démocratie française
@@ -204,6 +242,14 @@ parties:
     bloc: left
     from: 2017
     notes: Mouvement de Benoît Hamon après sa sortie du PS.
+  nouvelle_donne:
+    name: Nouvelle Donne
+    short: ND
+    bloc: left
+    from: 2013
+    notes: >-
+      Parti de Pierre Larrouturou, membre de la NUPES en 2022 : gauche. Ajouté à la curation
+      (2026-10-20), Larrouturou étant testé dans les sondages 2017.
   # --- far_left
   pcf:
     name: Parti communiste français
@@ -231,6 +277,16 @@ parties:
     short: LFI
     bloc: far_left
     from: 2016
+  grs:
+    name: Gauche républicaine et socialiste
+    short: GRS
+    bloc: far_left
+    from: 2018
+    notes: >-
+      Scission de l'aile gauche du PS menée par Emmanuel Maurel (2018), alliée à LFI aux
+      européennes 2019 et siégeant avec le PCF (groupe GDR) : gauche radicale, comme le Parti de
+      gauche en 2008. Cas limite à réexaminer si GRS rejoint une candidature commune avec le
+      PS. Ajouté à la curation (2026-10-20) ; libellé du parti relevé chez MieuxVoter.
   lapres:
     name: L'Après
     short: APRES
@@ -310,6 +366,14 @@ parties:
     notes: >-
       Parti lancé par Dominique de Villepin en juin 2025 ; bloc provisoire, voir blocs.yaml
       (villepin_2027).
+  parti_animaliste:
+    name: Parti animaliste
+    short: PA
+    bloc: other
+    from: 2016
+    notes: >-
+      Parti de la cause animale sans ancrage gauche-droite : autres. Ajouté à la curation
+      (2026-10-20) pour Hélène Thouy, testée dans les sondages 2022.
   # --- nuances (étiquettes génériques)
   exg:
     name: Divers extrême gauche

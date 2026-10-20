@@ -214,5 +214,76 @@ def parse_jennings_wlezien(
             typer.echo(f"\n{title} :\n{error_summary(df=df, **kw)}")
 
 
+@app.command("fit")
+def fit_cmd(
+    election: int = typer.Option(..., help="Année de l'élection (ex. 2022)"),
+    asof: str = typer.Option(..., help="Date de prévision AAAA-MM-JJ (sondages terminés à cette date)"),
+    out: str = typer.Option(None, help="Dossier de sortie (défaut runs/<aujourd'hui>-fit-<élection>)"),
+    weeks: int = typer.Option(78, help="Profondeur de la grille, en semaines avant le vote"),
+    step_days: int = typer.Option(7, help="Pas de temps de la grille, en jours"),
+    method: str = typer.Option("nuts", help="nuts (référence) ou svi (approximation rapide)"),
+    chains: int = typer.Option(4, help="Chaînes NUTS"),
+    warmup: int = typer.Option(1000, help="Itérations de chauffe par chaîne"),
+    samples: int = typer.Option(1000, help="Tirages conservés par chaîne"),
+    seed: int = typer.Option(0, help="Graine"),
+    centered: bool = typer.Option(
+        False, "--centered", help="Marches en paramétrisation centrée (2× plus rapide, voir fit)"
+    ),
+    progress: bool = typer.Option(False, "--progress", help="Barre de progression numpyro"),
+) -> None:
+    """Agrégation des sondages de premier tour (docs/04-modele.md §1) -> runs/…"""
+    from datetime import date
+    from pathlib import Path
+
+    from vvs import paths
+    from vvs.model.run import run_fit
+
+    out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-fit-{election}"
+    m = run_fit(
+        election,
+        date.fromisoformat(asof),
+        out_dir,
+        weeks=weeks,
+        step_days=step_days,
+        method=method,
+        chains=chains,
+        warmup=warmup,
+        samples=samples,
+        seed=seed,
+        centered=centered,
+        progress_bar=progress,
+    )
+    d, diag = m["data"], m["diagnostics"]
+    typer.echo(
+        f"{d['n_polls']} sondages, {d['n_hypotheses']} hypothèses, {d['n_candidates']} candidats "
+        f"(source {d['source']}) ; inférence {m['duration_s']['inference']} s"
+    )
+    if "r_hat_max" in diag:
+        typer.echo(
+            f"r_hat max {diag['r_hat_max']:.3f}, ESS min {diag['ess_min']:.0f}, "
+            f"divergences {diag['divergences']}"
+        )
+    if d["dropped_candidates"]:
+        typer.echo(f"candidats hors registre ignorés : {d['dropped_candidates']}", err=True)
+    typer.echo(f"écrit : {out_dir}")
+
+
+@app.command("curate")
+def curate_cmd(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Compteurs détaillés de la fusion"),
+    dry_run: bool = typer.Option(False, "--dry-run", help="N'écrit rien dans data/curated"),
+) -> None:
+    """Fusion des sources de sondages et tables dérivées -> data/curated (voir vvs.curate).
+
+    Code de sortie 1 si une divergence connue n'est pas retrouvée dans le journal.
+    """
+    from vvs.curate import run
+
+    report = run(write=not dry_run)
+    typer.echo(report.summary(verbose=verbose))
+    if not all(report.known_divergences.values()):
+        raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()
