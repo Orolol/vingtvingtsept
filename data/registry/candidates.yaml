@@ -489,3 +489,98 @@ candidates:
       - {party: ump, from: null, to: 2015}
       - {party: lr, from: 2015, to: null}
     notes: Président de LR 2017-2019, président du groupe LR à l'Assemblée depuis 2024.
+
+  # --- ajoutés le 2026-10-20 pour scenarios_2027.yaml (candidats déclarés ou pressentis
+  # d'après la page Wikipédia FR « Candidatures à l'élection présidentielle française de
+  # 2027 » et franceinfo, 19-20 octobre 2026). Partis : nuance du ministère quand le
+  # mouvement n'est pas au registre ; affiliations antérieures non vérifiées.
+  batho_delphine:
+    name: Delphine Batho
+    first_name: Delphine
+    last_name: Batho
+    parties:
+      - {party: ps, from: null, to: 2018}
+      - {party: eco, from: 2018, to: null}
+    notes: >-
+      Présidente de Génération écologie (hors registre, nuance eco) ; candidate déclarée le
+      25 novembre 2025, opposée à la primaire de la gauche unitaire. Dates d'affiliation à
+      vérifier.
+  becht_olivier:
+    name: Olivier Becht
+    first_name: Olivier
+    last_name: Becht
+    parties:
+      - {party: renaissance, from: 2022, to: null}
+    notes: >-
+      Député du Haut-Rhin, Renaissance / Agir ; candidat déclaré le 24 septembre 2026 (Paris
+      Match). Affiliation antérieure à 2022 non relevée.
+  bouamrane_karim:
+    name: Karim Bouamrane
+    first_name: Karim
+    last_name: Bouamrane
+    parties:
+      - {party: ps, from: null, to: null}
+    notes: Maire de Saint-Ouen ; candidat déclaré le 9 juin 2026 (France Inter), hors primaire PS.
+  cazeneuve_bernard:
+    name: Bernard Cazeneuve
+    first_name: Bernard
+    last_name: Cazeneuve
+    parties:
+      - {party: ps, from: null, to: 2022}
+      - {party: dvg, from: 2022, to: null}
+    notes: >-
+      Premier ministre 2016-2017 ; quitte le PS en 2022 et fonde La Convention (hors registre,
+      nuance dvg). Candidat déclaré le 16 juillet 2026 (Le Parisien), hors primaire.
+  kazib_anasse:
+    name: Anasse Kazib
+    first_name: Anasse
+    last_name: Kazib
+    parties:
+      - {party: exg, from: null, to: null}
+    notes: Révolution permanente (hors registre, nuance exg) ; candidat déclaré le 1er juin 2026.
+  labib_selma:
+    name: Selma Labib
+    first_name: Selma
+    last_name: Labib
+    parties:
+      - {party: exg, from: null, to: null}
+    notes: >-
+      NPA – Révolutionnaires (branche issue de la scission du NPA, hors registre, nuance exg) ;
+      candidate déclarée le 17 juin 2026.
+  lisnard_david:
+    name: David Lisnard
+    first_name: David
+    last_name: Lisnard
+    parties:
+      - {party: lr, from: 2015, to: 2026}
+      - {party: dvd, from: 2026, to: null}
+    notes: >-
+      Maire de Cannes, président de Nouvelle Énergie (hors registre, nuance dvd) ; quitte LR
+      et se déclare candidat le 31 mars 2026, partisan d'une primaire de la droite.
+  philippot_florian:
+    name: Florian Philippot
+    first_name: Florian
+    last_name: Philippot
+    parties:
+      - {party: fn, from: null, to: 2017}
+      - {party: exd, from: 2017, to: null}
+    notes: >-
+      Président des Patriotes (hors registre, nuance exd) ; candidat déclaré le 9 mai 2026,
+      prêt à se retirer devant une candidature souverainiste « plus rassembleuse ».
+  platret_gilles:
+    name: Gilles Platret
+    first_name: Gilles
+    last_name: Platret
+    parties:
+      - {party: lr, from: null, to: 2026}
+      - {party: dvd, from: 2026, to: null}
+    notes: >-
+      Maire de Chalon-sur-Saône, ancien vice-président de LR ; candidat déclaré (divers
+      droite) le 8 octobre 2026. Date de départ de LR à vérifier.
+  polony_natacha:
+    name: Natacha Polony
+    first_name: Natacha
+    last_name: Polony
+    parties:
+      - {party: div, from: 2026, to: null}
+    notes: Journaliste, candidate déclarée sans étiquette le 14 octobre 2026 (France Inter).

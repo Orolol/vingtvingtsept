@@ -20,6 +20,8 @@ Fichiers :
 | `blocs.yaml` | définition des six blocs et cas limites tranchés, avec justification |
 | `elections.yaml` | dates des tours, candidats officiels (parti, bloc), résultats nationaux du Conseil constitutionnel |
 | `pollsters.yaml` | instituts, alias de libellés, mode de collecte |
+| `scenarios_2027.yaml` | dimensions de candidatures 2027, petits candidats, contraintes, révisions datées (`vvs.registry.scenarios`) |
+| `transfers.yaml` | matrices de reports de voix des seconds tours 2002-2022 par source (`vvs.registry.transfers`) |
 
 Validations croisées (`vvs/registry/loader.py`) : candidats et partis d'`elections.yaml`
 présents dans les autres fichiers, parti actif l'année de l'élection, cas limites de

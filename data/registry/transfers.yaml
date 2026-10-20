@@ -1,0 +1,723 @@
+# Reports de voix historiques entre les deux tours (prior des reports `T`, docs/04-modele.md § 4).
+#
+# Une entrée par source et par second tour, relevée le 2026-10-20 sur le document cité (`url`,
+# `pages`). Les chiffres sont recopiés tels quels, en % ; AUCUNE cellule n'est complétée de
+# mémoire ni déduite par différence à 100 : une cellule absente du document est absente ici.
+# Validé par `vvs.registry.transfers` (`load_transfers()`, `transfer_prior()`).
+#
+# - `rows[].from` : candidate_id du premier tour (elections.yaml), électorat spécial
+#   (`abstain`, `blank_null`, `abstain_or_blank_null`), ou groupe avec `members`.
+# - `rows[].to` : les deux finalistes, puis selon `columns` :
+#   - `split` : `blank_null` et `abstain` (base : électorat de premier tour) ;
+#   - `combined` : `blank_or_abstain`, la source ne distinguant pas blancs-nuls et abstention ;
+#   - `voters` : `blank_null` seulement (base : votants du second tour) ;
+#   - `expressed` : finalistes seuls (base : exprimés du second tour).
+# - `base` / `base_note` : population sur laquelle les pourcentages sont calculés.
+# - Une ligne complète somme à 100 à 2 points près ; une ligne incomplète ne dépasse pas 100.
+#
+# Microdonnées Cevipof (PEF 2002 et 2007, FES 2012, ENEF 2017 et 2022) : en accès restreint sur
+# data.sciencespo.fr, non utilisées (voir docs/notes/veille-2026-10-20.md § 4.1).
+
+transfers:
+  # --- 2002
+  - id: ipsos_2002
+    election: 2002
+    pollster: ipsos
+    title: "Ipsos / Vizzavi - Le Figaro - France 2 - Europe 1 - Le Point, 2nd tour 2002 : Comprendre le vote des Français (reports de voix entre les deux tours)"
+    url: https://www.ipsos.com/fr-fr/second-tour-presidentielle-2002-comprendre-le-vote-des-francais
+    pages: "page web (section « Reports de voix entre les deux tours »), publiée le 06.05.02 ; URL de départ node/273556 redirige ici"
+    fieldwork_start: 2002-05-05
+    fieldwork_end: 2002-05-05
+    sample_size: 2886
+    mode: phone
+    base: first_round_electorate
+    base_note: >-
+      En % des personnes déclarant avoir voté pour chaque candidat au premier tour (lignes
+      sommant à 100 avec blancs-nuls et abstention au second tour). Échantillon de 2886
+      inscrits, téléphone, méthode des quotas (sexe, âge, profession du chef de famille,
+      catégorie d'agglomération, région). Le tableau est une déclaration de vote du jour
+      du scrutin ; la page ne mentionne pas de calage sur des bureaux de vote.
+    columns: split
+    notes: >-
+      Tableau « Reports de voix entre les deux tours » recopié tel quel ; colonnes de la source :
+      « Ont voté J. Chirac », « Ont voté JM Le Pen », « Ont voté blanc ou nul », « Se sont
+      abstenus », « Total ». Aucune colonne « ne se prononce pas ». Le candidat Gluckstein
+      n'est pas dans le tableau (non listé par la source). Lignes « Abstentionnistes premier
+      tour » et « Blancs et nuls premier tour » fournies. Le même document donne aussi, pour
+      l'ensemble : A voté Chirac 62,5 ; Le Pen 13,8 ; blanc ou nul 4,7 ; abstenu 19 (en % de
+      tous les inscrits). Le bloc « Votants exprimés » (Chirac 82 / Le Pen 18) est le tableau
+      de sociologie, pas la matrice. Tableau texte extrait du HTML (une valeur par cellule,
+      lecture non ambiguë ; l'ordre des lignes est celui de la source).
+    rows:
+      - from: laguiller_arlette
+        to: {chirac_jacques: 72, le_pen_jean_marie: 5, blank_null: 10, abstain: 13}
+      - from: besancenot_olivier
+        to: {chirac_jacques: 79, le_pen_jean_marie: 4, blank_null: 8, abstain: 9}
+      - from: hue_robert
+        to: {chirac_jacques: 77, le_pen_jean_marie: 5, blank_null: 7, abstain: 11}
+      - from: jospin_lionel
+        to: {chirac_jacques: 82, le_pen_jean_marie: 4, blank_null: 4, abstain: 10}
+      - from: taubira_christiane
+        to: {chirac_jacques: 90, le_pen_jean_marie: 0, blank_null: 8, abstain: 2}
+      - from: chevenement_jean_pierre
+        to: {chirac_jacques: 80, le_pen_jean_marie: 2, blank_null: 10, abstain: 8}
+      - from: mamere_noel
+        to: {chirac_jacques: 84, le_pen_jean_marie: 4, blank_null: 4, abstain: 8}
+      - from: lepage_corinne
+        to: {chirac_jacques: 96, le_pen_jean_marie: 1, blank_null: 2, abstain: 1}
+      - from: saint_josse_jean
+        to: {chirac_jacques: 73, le_pen_jean_marie: 8, blank_null: 12, abstain: 7}
+      - from: bayrou_francois
+        to: {chirac_jacques: 85, le_pen_jean_marie: 8, blank_null: 1, abstain: 6}
+      - from: madelin_alain
+        to: {chirac_jacques: 88, le_pen_jean_marie: 3, blank_null: 2, abstain: 7}
+      - from: chirac_jacques
+        to: {chirac_jacques: 98, le_pen_jean_marie: 1, blank_null: 0, abstain: 1}
+      - from: boutin_christine
+        to: {chirac_jacques: 79, le_pen_jean_marie: 20, blank_null: 1, abstain: 0}
+      - from: le_pen_jean_marie
+        to: {chirac_jacques: 10, le_pen_jean_marie: 80, blank_null: 6, abstain: 4}
+      - from: megret_bruno
+        to: {chirac_jacques: 27, le_pen_jean_marie: 61, blank_null: 4, abstain: 8}
+      - from: abstain
+        to: {chirac_jacques: 41, le_pen_jean_marie: 3, blank_null: 1, abstain: 55}
+      - from: blank_null
+        to: {chirac_jacques: 56, le_pen_jean_marie: 7, blank_null: 35, abstain: 2}
+
+  # --- 2007
+  - id: ipsos_2007
+    election: 2007
+    pollster: ipsos
+    title: "Ipsos / Dell pour France 2, Europe 1, 20 Minutes, Le Point, 2nd tour 2007 : Comprendre le vote des Français (reports de voix entre les deux tours)"
+    url: https://www.ipsos.com/fr-fr/2nd-tour-presidentielle-2007-comprendre-le-vote-des-francais
+    pages: "page web (onglet « Reports de voix entre les deux tours »), publiée le 07.05.07 ; URL de départ node/275311 redirige ici"
+    fieldwork_start: 2007-05-06
+    fieldwork_end: 2007-05-06
+    sample_size: 3609
+    mode: phone
+    base: first_round_electorate
+    base_note: >-
+      En % des électeurs de chaque électorat de premier tour (lignes sommant à 100 avec
+      blancs-nuls et abstention au second tour). 3609 inscrits interrogés par téléphone le
+      6 mai 2007, méthode des quotas. La source précise : « Les reports de voix tiennent compte
+      à la fois des résultats du sondage et des éléments issus de l'analyse des transferts de
+      voix dans les 200 bureaux de vote ayant servi à l'estimation des résultats du 2nd tour. »
+    columns: split
+    notes: >-
+      Matrice partielle (5 électorats). Colonnes de la source : « Ont voté S. Royal », « Ont voté
+      N. Sarkozy », « Ont voté blanc ou nul », « Se sont abstenus », « Total ». La ligne
+      left_excl_royal est le « Sous-total Gauche (Hors S. Royal) » de la source ; sa composition
+      exacte n'est pas détaillée (seul Besancenot est donné en « dont »). Dans d'autres tableaux
+      de la même page, le regroupement « ExG + M-G. Buffet + D. Voynet » apparaît, ce qui suggère
+      (inférence, non confirmée par la source) que le sous-total regroupe Laguiller, Besancenot,
+      Bové, Schivardi, Buffet et Voynet ; aucune liste members n'est donc renseignée. La ligne besancenot_olivier
+      (« dont Olivier BESANCENOT ») est incluse dans left_excl_royal : ne pas les additionner.
+      Pas de lignes pour Royal, Sarkozy, de Villiers, Nihous. Le premier tour Besancenot, Le Pen,
+      Bayrou et abstentionnistes sont des lignes distinctes. Les tableaux de sociologie de la
+      même page (Sarkozy 53 / Royal 47 parmi les exprimés) ne sont pas des reports.
+    rows:
+      - from: left_excl_royal
+        group_note: >-
+          « Sous-total Gauche (hors S. Royal) » de la source ; composition non détaillée
+          (seul Besancenot est donné en « dont »).
+        to: {royal_segolene: 72, sarkozy_nicolas: 8, blank_null: 5, abstain: 15}
+      - from: besancenot_olivier
+        to: {royal_segolene: 69, sarkozy_nicolas: 6, blank_null: 5, abstain: 20}
+      - from: bayrou_francois
+        to: {royal_segolene: 38, sarkozy_nicolas: 40, blank_null: 7, abstain: 15}
+      - from: le_pen_jean_marie
+        to: {royal_segolene: 12, sarkozy_nicolas: 63, blank_null: 5, abstain: 20}
+      - from: abstain
+        to: {royal_segolene: 21, sarkozy_nicolas: 15, blank_null: 0, abstain: 64}
+
+  - id: csa_2007
+    election: 2007
+    pollster: csa
+    title: "CSA / Cisco pour France 3, France Inter, France Info, Le Parisien, Aujourd'hui en France : sondage soir du vote, Les électorats de Nicolas Sarkozy et de Ségolène Royal au second tour (transferts de vote du premier au second tour)"
+    url: http://www.csa.eu/dataset/data2007/opi20070506-les-electorats-de-nicolas-sarkozy-et-de-segolene-royal-au-second-tour-et-l-apres-presidentielle.htm
+    pages: "page web, section I, tableau « Les transferts de vote du premier au second tour » (lu via archive web.archive.org)"
+    fieldwork_start: 2007-05-06
+    fieldwork_end: 2007-05-06
+    sample_size: 1030
+    mode: phone
+    base: first_round_electorate
+    base_note: >-
+      En % des électeurs de chaque candidat au premier tour (colonne « Total » = 100). Sondage
+      téléphonique réalisé au domicile le 6 mai 2007 après 20h00, donc après l'annonce des
+      estimations, sur 1030 inscrits (quotas sexe, âge, profession du chef de ménage,
+      stratification région et catégorie d'agglomération). Déclaration rétrospective du vote
+      du premier tour et du second tour.
+    columns: combined
+    notes: >-
+      La source ne distingue pas blancs-nuls et abstention : la colonne est libellée
+      « Abstention » dans l'en-tête du tableau (le tableau du vote au second tour de la même page
+      précise « Abstention, blanc, nul : 20,2% ») ; elle est donc recopiée en blank_or_abstain.
+      Cinq électorats seulement : Besancenot, Royal, Bayrou, Sarkozy, Le Pen. Pas d'abstentionnistes
+      du premier tour. Écart notable avec Ipsos pour Bayrou (45 / 47 contre 38 / 40 avant
+      blancs-nuls et abstention) : mesure pas strictement comparable (sondage seul, sans calage sur
+      bureaux de vote, effectif de 1030).
+    rows:
+      - from: besancenot_olivier
+        to: {royal_segolene: 75, sarkozy_nicolas: 6, blank_or_abstain: 19}
+      - from: royal_segolene
+        to: {royal_segolene: 96, sarkozy_nicolas: 1, blank_or_abstain: 3}
+      - from: bayrou_francois
+        to: {royal_segolene: 45, sarkozy_nicolas: 47, blank_or_abstain: 8}
+      - from: sarkozy_nicolas
+        to: {royal_segolene: 1, sarkozy_nicolas: 98, blank_or_abstain: 1}
+      - from: le_pen_jean_marie
+        to: {royal_segolene: 18, sarkozy_nicolas: 58, blank_or_abstain: 24}
+
+  # --- 2012
+  - id: ipsos_2012
+    election: 2012
+    pollster: ipsos
+    title: "Ipsos - Logica Business Consulting pour France Télévisions, Radio France, Le Monde et Le Point, 2nd tour présidentielle 2012 : Comprendre le vote des Français (le report de voix entre les deux tours)"
+    url: https://www.slideshare.net/slideshow/comprendre-le-vote-des-franais-lections-2012/93093590
+    pages: "diapositive 3 (« Le report de voix entre les deux tours »). Le texte d'accompagnement figure sur https://www.ipsos.com/fr-fr/node/255396 (page sans tableau)"
+    fieldwork_start: 2012-05-03
+    fieldwork_end: 2012-05-05
+    sample_size: 3123
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      En % des électeurs de chaque candidat au premier tour (lignes sommant à 100 avec blanc ou nul
+      et abstention). Enquête par Internet, quotas (sexe, âge, profession du chef de famille, région,
+      catégorie d'agglomération), 3123 inscrits. La diapositive précise : « Les reports de voix
+      tiennent compte à la fois des résultats du sondage et des éléments issus de l'analyse des
+      transferts de voix dans les 250 bureaux de vote ayant servi à l'estimation des résultats 2nd tour. »
+    columns: split
+    notes: >-
+      Le tableau n'a pas pu être lu dans le PDF d'origine d'Ipsos (introuvable) ; il est lu sur la copie
+      SlideShare du deck Ipsos (compte IpsosFrance), dont le texte extrait donne
+      « Jean-Luc MELENCHON 80 6 4 10 100 ; François BAYROU 27 40 16 17 100 ; Marine LE PEN 13 50 13 24 100 »
+      sous l'en-tête « François Hollande % / Nicolas Sarkozy % / Blanc ou nul % / Se sont abstenus % / Total % ».
+      Cohérent avec le texte de la page Ipsos node/255396 (Mélenchon vers Hollande 80 ; Bayrou 27 / 40 / 33
+      de blancs et abstention ; Le Pen 50 / 13 / 37). Le terrain annoncé (3 au 5 mai 2012) précède le scrutin
+      du 6 mai : les reports sont néanmoins présentés comme ceux du second tour, calés sur 250 bureaux
+      de vote (la veille du projet indique 6 mai 2012, date de publication). Trois électorats seulement ; pas
+      d'abstentionnistes du premier tour.
+    rows:
+      - from: melenchon_jean_luc
+        to: {hollande_francois: 80, sarkozy_nicolas: 6, blank_null: 4, abstain: 10}
+      - from: bayrou_francois
+        to: {hollande_francois: 27, sarkozy_nicolas: 40, blank_null: 16, abstain: 17}
+      - from: le_pen_marine
+        to: {hollande_francois: 13, sarkozy_nicolas: 50, blank_null: 13, abstain: 24}
+
+  - id: harris_2012
+    election: 2012
+    pollster: harris
+    title: "Harris Interactive / Viadeo pour M6, Sondage Jour du vote : motivations de vote et d'abstention au second tour de l'élection présidentielle de 2012 (les reports de voix entre le premier et le second tour)"
+    url: https://harris-interactive.fr/wp-content/uploads/sites/6/2015/09/Results_HIFR_Jourduvote_06052012.pdf
+    pages: "p. 6"
+    fieldwork_start: 2012-05-06
+    fieldwork_end: 2012-05-06
+    sample_size: 2597
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      En % des électeurs de chaque candidat au premier tour. Enquête en ligne le dimanche 6 mai 2012
+      en journée auprès de 2597 inscrits (issus de 2913 individus de l'access panel), quotas et
+      redressement sur sexe, âge, CSP, région et sur le vote au premier tour et au second tour de
+      l'élection présidentielle de 2012 (la source indique un redressement sur le vote effectif des
+      deux tours).
+    columns: combined
+    notes: >-
+      La source regroupe « Abstention, blancs et nuls » (une seule colonne, recopiée en blank_or_abstain).
+      Trois électorats seulement, pas d'abstentionnistes du premier tour. Le tableau est en p. 6, graphique
+      texte propre, lecture non ambiguë. Le même PDF cite en p. 4-5 l'estimation Harris-Viadeo pour M6 du
+      résultat (image, non lue).
+    rows:
+      - from: melenchon_jean_luc
+        to: {hollande_francois: 84, sarkozy_nicolas: 4, blank_or_abstain: 12}
+      - from: bayrou_francois
+        to: {hollande_francois: 33, sarkozy_nicolas: 44, blank_or_abstain: 23}
+      - from: le_pen_marine
+        to: {hollande_francois: 14, sarkozy_nicolas: 53, blank_or_abstain: 33}
+
+  - id: csa_2012
+    election: 2012
+    pollster: csa
+    title: "CSA pour BFMTV, RMC et 20 Minutes : Jour du vote, raisons du choix et profil des électorats (2nd tour 2012), synthèse « Les reports de voix »"
+    url: http://www.csa.eu/elections2012/Type/10/Sondage/Etude/1980/Jour-du-vote---raisons-du-choix-et-profil-des-electorats.aspx
+    pages: "page web de synthèse du 09/05/2012 (lue via web.archive.org) ; le PDF complet (opi20120506-sondage-jour-du-vote-raisons-du-choix-et-profil-des-electorats.pdf) est introuvable dans les archives"
+    fieldwork_start: null
+    fieldwork_end: null
+    sample_size: null
+    mode: null
+    base: first_round_electorate
+    base_note: >-
+      Chiffres cités dans le texte de synthèse CSA, en % des électeurs de chaque candidat au premier
+      tour (ceux-ci ayant voté pour l'un des finalistes ou s'étant abstenus). Terrain, effectif et mode
+      non lus (PDF inaccessible). Le sondage « soir du vote » CSA / BFMTV / RMC / 20 Minutes du 6 mai 2012
+      (PDF distinct, lu, sans reports) est un téléphone de 1016 inscrits après 20h : il s'agit
+      probablement de la même enquête, mais ce n'est pas confirmé.
+    columns: combined
+    notes: >-
+      Valeurs lues dans le texte en prose de la page CSA, pas dans un tableau. Mélenchon : seuls Hollande (76)
+      et Sarkozy (4) sont cités, la part d'abstention n'est pas donnée. Bayrou : 26 Hollande, 41 Sarkozy et
+      « choix de l'abstention » 33 ; Le Pen : 21 Hollande, 44 Sarkozy, abstention 35. Le texte dit
+      « abstention » ; blancs et nuls ne sont pas distingués (colonne combinée). Abstentionnistes du
+      premier tour : 12 Hollande, 18 Sarkozy (abstention non citée). Le texte cite aussi le report des
+      électorats de 2007 (29 % des électeurs Le Pen 2007 et 56 % des Bayrou 2007 vers Hollande) : non repris
+      ici (autre scrutin de référence). Une page sœur CSA / L'Humanité (opi20120506, catégories populaires
+      seulement, sous-échantillon) donne d'autres chiffres, non repris.
+    rows:
+      - from: melenchon_jean_luc
+        to: {hollande_francois: 76, sarkozy_nicolas: 4}
+      - from: bayrou_francois
+        to: {hollande_francois: 26, sarkozy_nicolas: 41, blank_or_abstain: 33}
+      - from: le_pen_marine
+        to: {hollande_francois: 21, sarkozy_nicolas: 44, blank_or_abstain: 35}
+      - from: abstain
+        to: {hollande_francois: 12, sarkozy_nicolas: 18}
+
+  - id: ifop_2012_jdv
+    election: 2012
+    pollster: ifop
+    title: "Ifop-Fiducial pour Europe 1, Paris Match, Public Sénat : Les clés du second tour de l'élection présidentielle, sondage jour de vote 6 mai 2012 (reports de voix du premier au second tour)"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1859-1-study_file.pdf
+    pages: "p. 10"
+    fieldwork_start: 2012-05-06
+    fieldwork_end: 2012-05-06
+    sample_size: 1968
+    mode: online
+    base: other
+    base_note: >-
+      Base « other » : colonne « Ne se prononcent pas » et non abstention + blancs-nuls ;
+      la part non exprimée (4 % chez Mélenchon) suggère une base de votants.
+      En % des répondants par vote au premier tour (la ligne est titrée « Intention de vote au premier
+      tour », intitulé probablement hérité d'un gabarit antérieur) ; 1968 inscrits, CAWI, le 6 mai
+      2012 de 17h à 20h, quotas. Question du second tour : « allez-vous voter / avez-vous voté
+      aujourd'hui ? » (Hollande 51,9 / Sarkozy 48,1 en exprimés). Chaque page porte un pied « Mars 2012 »
+      qui est un reliquat de gabarit (les pages 7-9 sont sans ambiguïté du 6 mai).
+    columns: combined
+    notes: >-
+      Colonne « Ne se prononcent pas » (pas de distinction blanc-nul / abstention) recopiée en
+      blank_or_abstain : elle regroupe les répondants sans choix exprimé, ce qui n'est pas strictement
+      « abstention + blancs-nuls » comme chez Ipsos ou Harris. Six électorats : Mélenchon, Hollande, Joly,
+      Bayrou, Sarkozy, Le Pen. Page lue en texte (pdftotext, lignes décalées) puis vérifiée sur l'image de la p. 10 :
+      les valeurs recopiées sont celles de l'image.
+    rows:
+      - from: melenchon_jean_luc
+        to: {hollande_francois: 89, sarkozy_nicolas: 7, blank_or_abstain: 4}
+      - from: hollande_francois
+        to: {hollande_francois: 97, sarkozy_nicolas: 2, blank_or_abstain: 1}
+      - from: joly_eva
+        to: {hollande_francois: 77, sarkozy_nicolas: 12, blank_or_abstain: 11}
+      - from: bayrou_francois
+        to: {hollande_francois: 40, sarkozy_nicolas: 41, blank_or_abstain: 19}
+      - from: sarkozy_nicolas
+        to: {hollande_francois: 1, sarkozy_nicolas: 98, blank_or_abstain: 1}
+      - from: le_pen_marine
+        to: {hollande_francois: 21, sarkozy_nicolas: 54, blank_or_abstain: 25}
+
+  - id: ifop_2012_soir_t1
+    election: 2012
+    pollster: ifop
+    title: "Ifop-Fiducial pour Europe 1, Paris Match, Public Sénat : L'intention de vote au second tour de l'élection présidentielle au soir du premier tour (sondage soir de vote, 22 avril 2012)"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1847-1-study_file.pdf
+    pages: "p. 9"
+    fieldwork_start: 2012-04-22
+    fieldwork_end: 2012-04-22
+    sample_size: 1004
+    mode: phone
+    base: other
+    base_note: >-
+      Intentions déclarées de vote au second tour, recueillies le soir du premier tour (22 avril 2012,
+      20h05-21h30), pas un vote constaté : question « Pour lequel des candidats suivants y a-t-il le plus
+      de chance que vous votiez au second tour ? ». En % des électeurs de chaque candidat au premier tour.
+      1004 inscrits, téléphone, quotas.
+    columns: combined
+    notes: >-
+      Colonne « Abstention, blanc ou nul, ne se prononcent pas » recopiée en blank_or_abstain (une seule
+      colonne, regroupant abstention, blanc-nul et indécis). Trois électorats : Mélenchon, Bayrou, Le Pen.
+      Effectifs d'électeurs par candidat faibles (échantillon de 1004). Intention de vote d'ensemble :
+      Hollande 54,5 / Sarkozy 45,5 en exprimés. Utile comme repère de la dynamique entre les deux tours,
+      pas comme report réalisé.
+    rows:
+      - from: melenchon_jean_luc
+        to: {hollande_francois: 83, sarkozy_nicolas: 6, blank_or_abstain: 11}
+      - from: bayrou_francois
+        to: {hollande_francois: 32, sarkozy_nicolas: 38, blank_or_abstain: 30}
+      - from: le_pen_marine
+        to: {hollande_francois: 31, sarkozy_nicolas: 48, blank_or_abstain: 21}
+
+  # --- 2017
+  - id: ipsos_2017
+    election: 2017
+    pollster: ipsos
+    title: "Ipsos / Sopra Steria, 2nd tour 2017 : sociologie des électorats et profil des abstentionnistes (7 mai 2017, 20h15)"
+    url: https://www.ipsos.com/sites/default/files/files-fr-fr/doc_associe/ipsos_sopra_steria_sociologie_des_electorats_7_mai_20h15_0.pdf
+    pages: "p. 4 (diapositive « Le report de voix entre les deux tours »)"
+    fieldwork_start: 2017-05-04
+    fieldwork_end: 2017-05-06
+    sample_size: 4838
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      En % des électeurs de chaque candidat au premier tour ; chaque ligne somme à 100 avec
+      blancs ou nuls et « se sont abstenus ». Fiche technique : 4838 inscrits, interrogés par Internet
+      du 4 au 6 mai 2017, méthode des quotas. Le document précise que les reports « tiennent
+      compte à la fois des résultats du sondage et des éléments issus de l'analyse des transferts de
+      voix dans les 500 bureaux de vote ayant servi à l'estimation des résultats 2nd tour ».
+    columns: split
+    notes: >-
+      Seuls 4 électorats sont donnés (Fillon, Mélenchon, Hamon, Dupont-Aignan) ; pas de ligne Macron,
+      Le Pen, ni abstentionnistes ni autres candidats. Les dates de terrain (4-6 mai) viennent de la
+      fiche technique du document, alors que le fichier est daté du 7 mai 20h15.
+    rows:
+      - from: fillon_francois
+        to: {macron_emmanuel: 48, le_pen_marine: 20, blank_null: 15, abstain: 17}
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 52, le_pen_marine: 7, blank_null: 17, abstain: 24}
+      - from: hamon_benoit
+        to: {macron_emmanuel: 71, le_pen_marine: 2, blank_null: 10, abstain: 17}
+      - from: dupont_aignan_nicolas
+        to: {macron_emmanuel: 27, le_pen_marine: 30, blank_null: 20, abstain: 23}
+
+  - id: ifop_2017
+    election: 2017
+    pollster: ifop
+    title: "Ifop-Fiducial pour Paris Match, CNews et Sud Radio : Le profil des électeurs et les clefs du second tour (7 mai 2017), reports de voix"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/3756-1-study_file.pdf
+    pages: "p. 25 du document (page 27 du PDF), graphique « Les reports de voix du premier tour au second tour »"
+    fieldwork_start: 2017-05-07
+    fieldwork_end: 2017-05-07
+    sample_size: 2470
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      « Sur 100 électeurs de… » au premier tour. Échantillon de 2 470 inscrits (extrait de 2 572
+      personnes, France métropolitaine, 18 ans et plus), quotas, questionnaire auto-administré en
+      ligne le 7 mai 2017 de 11h à 18h. Lignes sommant à 100.
+    columns: combined
+    notes: >-
+      Le graphique regroupe « Abstention / Blanc ou nul / Nsp » en une seule colonne
+      (blank_or_abstain). Données lues sur un graphique en barres (étiquettes numériques). Pour la
+      ligne Macron, les étiquettes se chevauchent (« 1%2% ») ; la lecture visuelle de l'image
+      (segment gris, intermédiaire, puis marine) donne 1 pour abstention/blanc/nul/nsp et 2 pour Le Pen.
+      Pour Le Pen : 3 Macron, 6 abstention/blanc/nul/nsp, 91 Le Pen. Six électorats seulement
+      (pas de Arthaud, Poutou, Lassalle, Asselineau, Cheminade ni abstentionnistes).
+    rows:
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 54, le_pen_marine: 14, blank_or_abstain: 32}
+      - from: hamon_benoit
+        to: {macron_emmanuel: 79, le_pen_marine: 4, blank_or_abstain: 17}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 97, le_pen_marine: 2, blank_or_abstain: 1}
+      - from: fillon_francois
+        to: {macron_emmanuel: 51, le_pen_marine: 23, blank_or_abstain: 26}
+      - from: dupont_aignan_nicolas
+        to: {macron_emmanuel: 26, le_pen_marine: 46, blank_or_abstain: 28}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 3, le_pen_marine: 91, blank_or_abstain: 6}
+
+  - id: harris_2017
+    election: 2017
+    pollster: harris
+    title: "Harris Interactive pour M6, « Le 2nd tour de l'élection présidentielle 2017 », sondage jour du vote (7 mai 2017)"
+    url: https://harris-interactive.fr/wp-content/uploads/sites/6/2017/05/Rapport-Harris-Sondage-Jour-du-Vote-2nd-tour-de-lelection-presidentielle-M6.pdf
+    pages: "p. 8 du document, « Reports de voix entre le 1er et le 2nd tour de l'élection présidentielle »"
+    fieldwork_start: 2017-05-07
+    fieldwork_end: 2017-05-07
+    sample_size: 6994
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      « Aux inscrits sur les listes électorales, en % » : vote au second tour selon le vote au premier
+      tour. Enquête en ligne le 7 mai 2017 en journée, 6994 inscrits issus d'un échantillon représentatif
+      de 7500 Français de 18 ans et plus, quotas (sexe, âge, CSP, région). Lignes sommant à 100.
+    columns: combined
+    notes: >-
+      Colonne « Abstention, blancs et nuls » unique (blank_or_abstain). Six électorats seulement
+      (Mélenchon, Hamon, Macron, Fillon, Dupont-Aignan, Le Pen). Le commanditaire indiqué dans le nom
+      du fichier est M6.
+    rows:
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 53, le_pen_marine: 11, blank_or_abstain: 36}
+      - from: hamon_benoit
+        to: {macron_emmanuel: 79, le_pen_marine: 4, blank_or_abstain: 17}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 98, le_pen_marine: 1, blank_or_abstain: 1}
+      - from: fillon_francois
+        to: {macron_emmanuel: 48, le_pen_marine: 21, blank_or_abstain: 31}
+      - from: dupont_aignan_nicolas
+        to: {macron_emmanuel: 26, le_pen_marine: 39, blank_or_abstain: 35}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 2, le_pen_marine: 93, blank_or_abstain: 5}
+
+  - id: opinionway_2017
+    election: 2017
+    pollster: opinionway
+    title: "OpinionWay, sondage jour du vote, second tour de l'élection présidentielle 2017 (7 mai 2017), reports de voix"
+    url: https://www.opinion-way.com/wp-content/uploads/2025/01/OpinionWay-Sondage-Jour-du-Vote-Tour-2-Presidentielle-2017-7-Mai-2017.pdf
+    pages: "p. 6 (diapositive « Les reports de voix au second tour de l'élection présidentielle selon le vote au premier tour »)"
+    fieldwork_start: 2017-05-07
+    fieldwork_end: 2017-05-07
+    sample_size: 7752
+    mode: online
+    base: second_round_voters
+    base_note: >-
+      Base : personnes ayant voté au second tour (échantillon « de 7752 personnes inscrites sur les listes
+      électorales, ayant voté au second tour »). Les lignes donnent Macron, Le Pen et blanc ou nul parmi les
+      votants de second tour, pour chaque électorat de premier tour ; elles somment à 100. Les abstentionnistes
+      de second tour sont donc exclus de la base.
+    columns: voters
+    notes: >-
+      Pas de colonne abstention (clé abstain omise) : colonne « Blanc ou nul » seulement, en % des votants au
+      second tour. Incohérence interne : la méthodologie (p. 3) annonce 7752 personnes, la diapositive des reports
+      affiche « 9010 personnes » comme base de la question. Le même tableau figure dans le deck « Sociologie du vote »
+      du même institut (https://www.opinion-way.com/wp-content/uploads/2025/01/OpinionWay-Sociologie-Jour-du-Vote-Tour-2-Presidentielle-2017-Mai-2017.pdf,
+      p. 4, chiffres identiques). Sept électorats (pas Macron, Le Pen, Arthaud, Cheminade, ni abstentionnistes).
+      Poutou est libellé « Philippe Poutou » dans le document.
+    rows:
+      - from: poutou_philippe
+        to: {macron_emmanuel: 61, le_pen_marine: 11, blank_null: 28}
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 62, le_pen_marine: 13, blank_null: 25}
+      - from: hamon_benoit
+        to: {macron_emmanuel: 88, le_pen_marine: 3, blank_null: 9}
+      - from: lassalle_jean
+        to: {macron_emmanuel: 67, le_pen_marine: 10, blank_null: 23}
+      - from: fillon_francois
+        to: {macron_emmanuel: 56, le_pen_marine: 23, blank_null: 21}
+      - from: dupont_aignan_nicolas
+        to: {macron_emmanuel: 37, le_pen_marine: 36, blank_null: 27}
+      - from: asselineau_francois
+        to: {macron_emmanuel: 25, le_pen_marine: 62, blank_null: 13}
+
+  # --- 2022
+  - id: ipsos_2022
+    election: 2022
+    pollster: ipsos
+    title: "Ipsos / Sopra Steria, 2nd tour 2022 : sociologie des électorats et profil des abstentionnistes (24 avril 2022, 20h)"
+    url: "https://www.ipsos.com/sites/default/files/ct/news/documents/2022-04/Ipsos%20Sopra%20Steria_Sociologie%20des%20e%CC%81lectorats%20et%20profil%20des%20abstentionnistes_24%20Avril%2020h.pdf"
+    pages: "p. 4 (diapositive « Les reports de voix entre les deux-tours »)"
+    fieldwork_start: 2022-04-21
+    fieldwork_end: 2022-04-23
+    sample_size: 4000
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      En % des électeurs de chaque candidat au premier tour ; chaque ligne somme à 100 avec blancs ou nuls
+      et « se sont abstenus ». 4000 inscrits, Internet (Access Panel Online d'Ipsos), quotas, 21 au 23 avril 2022.
+      Le document précise que les reports « tiennent compte à la fois des résultats du sondage et des éléments
+      issus de l'analyse des transferts de voix dans les 500 bureaux de vote ayant servi à l'estimation des
+      résultats 2nd tour ».
+    columns: split
+    notes: >-
+      Six électorats seulement (Mélenchon, Jadot, Macron, Pécresse, Le Pen, Zemmour) ; pas de Roussel, Hidalgo,
+      Lassalle, Dupont-Aignan, Arthaud, Poutou ni abstentionnistes. Le document est daté du 24 avril ; le terrain
+      (21-23 avril) précède le vote, les reports sont calés sur les bureaux de vote.
+    rows:
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 42, le_pen_marine: 17, blank_null: 17, abstain: 24}
+      - from: jadot_yannick
+        to: {macron_emmanuel: 65, le_pen_marine: 6, blank_null: 13, abstain: 16}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 98, le_pen_marine: 1, blank_null: 0, abstain: 1}
+      - from: pecresse_valerie
+        to: {macron_emmanuel: 53, le_pen_marine: 18, blank_null: 14, abstain: 15}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 3, le_pen_marine: 91, blank_null: 1, abstain: 5}
+      - from: zemmour_eric
+        to: {macron_emmanuel: 10, le_pen_marine: 73, blank_null: 3, abstain: 14}
+
+  - id: ifop_2022
+    election: 2022
+    pollster: ifop
+    title: "Ifop-Fiducial pour TF1, LCI, Paris Match et Sud Radio : Présidentielle 2022, sondage jour du vote, profil des électeurs et clés du scrutin (2nd tour), 24 avril 2022"
+    url: https://www.ifop.com/wp-content/uploads/2022/04/118997-rapport-jdv-pre22-t2-10h-complet-25.04.pdf
+    pages: "p. 22 du document (page 23 du PDF), « Les reports de voix du premier au second tour de l'élection présidentielle »"
+    fieldwork_start: 2022-04-24
+    fieldwork_end: 2022-04-24
+    sample_size: 4827
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      Libellé du tableau : « Base : aux votants » ; question « pour lequel des candidats suivants avez-vous voté ou
+      allez-vous voter aujourd'hui ? », selon le vote au premier tour. Le tableau comprend néanmoins la ligne « Vote
+      blanc, nul ou abstention » et les colonnes somment à 100. 4827 inscrits (extrait de 5086 personnes), quotas,
+      questionnaire auto-administré en ligne le 24 avril 2022 de 11h à 18h. Données redressées sur l'estimation des
+      résultats définitifs du ministère de l'Intérieur.
+    columns: combined
+    notes: >-
+      Colonne unique « Vote blanc, nul ou abstention » (blank_or_abstain). Les en-têtes de colonnes sont des
+      portraits, lus dans l'ordre Mélenchon, Jadot, Macron, Pécresse, Le Pen, Zemmour (confirmé par les
+      chiffres : 96 % de Macron vers Macron, 94 % de Le Pen vers Le Pen, 78 % de Zemmour vers Le Pen). Six
+      électorats seulement. Une version préliminaire du même rapport (20h50, https://www.ifop.com/wp-content/uploads/2022/04/118997-rapport-jdv-pre22-t2-20h50-ens-24.04.pdf,
+      p. 13) donne les mêmes chiffres, redressés sur l'estimation Ifop-Fiducial de 20h. Ambiguïté : le tableau de
+      participation selon le vote au premier tour (p. 8 du rapport complet) donne des taux d'abstention par électorat
+      qui ne se concilient pas exactement avec la ligne blanc/nul/abstention ci-dessous ; seule la matrice p. 22 est retenue.
+    rows:
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 42, le_pen_marine: 13, blank_or_abstain: 45}
+      - from: jadot_yannick
+        to: {macron_emmanuel: 64, le_pen_marine: 7, blank_or_abstain: 29}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 96, le_pen_marine: 1, blank_or_abstain: 3}
+      - from: pecresse_valerie
+        to: {macron_emmanuel: 52, le_pen_marine: 18, blank_or_abstain: 30}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 2, le_pen_marine: 94, blank_or_abstain: 4}
+      - from: zemmour_eric
+        to: {macron_emmanuel: 9, le_pen_marine: 78, blank_or_abstain: 13}
+
+  - id: elabe_2022
+    election: 2022
+    pollster: elabe
+    title: "Elabe pour BFMTV, L'Express et SFR (et RMC) : Comprendre le vote au 2nd tour de l'élection présidentielle, sondage « Jour du vote » (24 avril 2022), reports de voix"
+    url: https://elabe.fr/fichier-pdf/9650-comprendre-le-vote-au-2nd-tour-de-lelection-presidentielle
+    pages: "p. 8, « Reports de voix du 1er tour au 2nd tour »"
+    fieldwork_start: 2022-04-24
+    fieldwork_end: 2022-04-24
+    sample_size: 2001
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      Graphique en barres empilées ; chaque ligne somme à 100 : Macron, Le Pen, « Abstention, vote blanc ou nul ».
+      Échantillon de 2001 personnes (résidents de France métropolitaine, 18 ans et plus), dont 1900 inscrits ; quotas
+      (sexe, âge, profession) après stratification par région et catégorie d'agglomération ; Internet le 24 avril 2022.
+      Le document ne précise pas si le graphique porte sur les 1900 inscrits.
+    columns: combined
+    notes: >-
+      Colonne unique « Abstention, vote blanc ou nul » (blank_or_abstain). Ligne Macron lue sur l'image : 95 Macron,
+      2 Le Pen (segment violet), 3 abstention/blanc/nul (segment gris) ; la lecture texte brute donnait seulement « 2 3 ».
+      Six électorats seulement.
+    rows:
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 38, le_pen_marine: 18, blank_or_abstain: 44}
+      - from: jadot_yannick
+        to: {macron_emmanuel: 68, le_pen_marine: 8, blank_or_abstain: 24}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 95, le_pen_marine: 2, blank_or_abstain: 3}
+      - from: pecresse_valerie
+        to: {macron_emmanuel: 51, le_pen_marine: 22, blank_or_abstain: 27}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 5, le_pen_marine: 90, blank_or_abstain: 5}
+      - from: zemmour_eric
+        to: {macron_emmanuel: 11, le_pen_marine: 80, blank_or_abstain: 9}
+
+  - id: elabe_2022_expressed
+    election: 2022
+    pollster: elabe
+    title: "Elabe, sondage « Jour du vote » 2nd tour 2022 : vote exprimé selon le vote au 1er tour (lecture horizontale)"
+    url: https://elabe.fr/fichier-pdf/9650-comprendre-le-vote-au-2nd-tour-de-lelection-presidentielle
+    pages: "p. 9, « Vote selon le profil sociodémographique et politique », ligne « VOTE PRESIDENTIELLE 2022 (1ER TOUR) »"
+    fieldwork_start: 2022-04-24
+    fieldwork_end: 2022-04-24
+    sample_size: 2001
+    mode: online
+    base: second_round_expressed
+    base_note: >-
+      « En % des intentions de vote exprimées » : répartition Macron / Le Pen parmi les votants exprimés de chaque
+      électorat de premier tour ; chaque ligne somme à 100. Pas de blanc/nul ni d'abstention.
+    columns: expressed
+    notes: >-
+      Seules les clés macron_emmanuel et le_pen_marine existent (blank_null et abstain absentes de cette table).
+      Ligne « Abstention, vote blanc ou nul » (abstentionnistes et votants blancs/nuls du premier tour regroupés,
+      ici clé abstain_or_blank_null) : 64 / 36. Le document signale « Yannick JADOT (*) : résultats à interpréter avec
+      prudence compte tenu des effectifs de répondants ». Pas de lignes Roussel, Hidalgo, Lassalle, Dupont-Aignan,
+      Arthaud ni Poutou.
+    rows:
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 68, le_pen_marine: 32}
+      - from: jadot_yannick
+        to: {macron_emmanuel: 89, le_pen_marine: 11}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 98, le_pen_marine: 2}
+      - from: pecresse_valerie
+        to: {macron_emmanuel: 70, le_pen_marine: 30}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 6, le_pen_marine: 94}
+      - from: zemmour_eric
+        to: {macron_emmanuel: 12, le_pen_marine: 88}
+      - from: abstain_or_blank_null
+        to: {macron_emmanuel: 64, le_pen_marine: 36}
+
+  - id: harris_2022_expressed
+    election: 2022
+    pollster: harris
+    title: "Harris Interactive x Toluna pour M6 et RTL : Sociologie du vote, second tour (24 avril 2022)"
+    url: https://harris-interactive.fr/wp-content/uploads/sites/6/2022/04/Sociologie_du_vote-24042022.pdf
+    pages: "p. 6 du document, « Vote au 1er tour de l'élection présidentielle 2022 »"
+    fieldwork_start: 2022-04-24
+    fieldwork_end: 2022-04-24
+    sample_size: 6683
+    mode: online
+    base: second_round_expressed
+    base_note: >-
+      « En % de votes exprimés » : répartition Macron / Le Pen parmi les votants exprimés de chaque électorat de
+      premier tour ; chaque ligne somme à 100 (une décimale). Échantillon de 6683 inscrits, issu de 7311 personnes
+      (France, 18 ans et plus), quotas et redressement (sexe, âge, CSP, région, taille d'agglomération, vote aux
+      élections antérieures).
+    columns: expressed
+    notes: >-
+      Seules les clés macron_emmanuel et le_pen_marine existent : le document ne donne ni blanc/nul ni abstention
+      (pas de matrice complète pour 2022 chez Harris dans ce document). Dix électorats, dont Roussel, Hidalgo,
+      Dupont-Aignan et Lassalle, absents des autres sources ; pas d'Arthaud ni de Poutou ni d'abstentionnistes.
+      Les valeurs sont données avec une décimale dans le document.
+    rows:
+      - from: roussel_fabien
+        to: {macron_emmanuel: 80.2, le_pen_marine: 19.8}
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 75.8, le_pen_marine: 24.2}
+      - from: hidalgo_anne
+        to: {macron_emmanuel: 86.1, le_pen_marine: 13.9}
+      - from: jadot_yannick
+        to: {macron_emmanuel: 88.6, le_pen_marine: 11.4}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 98.5, le_pen_marine: 1.5}
+      - from: pecresse_valerie
+        to: {macron_emmanuel: 71.9, le_pen_marine: 28.1}
+      - from: dupont_aignan_nicolas
+        to: {macron_emmanuel: 22.6, le_pen_marine: 77.4}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 3.9, le_pen_marine: 96.1}
+      - from: zemmour_eric
+        to: {macron_emmanuel: 12.9, le_pen_marine: 87.1}
+      - from: lassalle_jean
+        to: {macron_emmanuel: 52.0, le_pen_marine: 48.0}
+
+  - id: opinionway_2022
+    election: 2022
+    pollster: opinionway
+    title: "OpinionWay pour CNEWS et Europe 1 : sondage jour du vote, présidentielle 2022, second tour (24 avril 2022), reports de voix"
+    url: https://www.opinion-way.com/wp-content/uploads/2022/04/OpinionWay-pour-CNEWS-et-Europe-1-Sondage-jour-du-vote-24-avril-2022.pdf
+    pages: "p. 5 (diapositive « Les reports de voix entre le premier et le second tour »)"
+    fieldwork_start: 2022-04-24
+    fieldwork_end: 2022-04-24
+    sample_size: 5719
+    mode: online
+    base: first_round_electorate
+    base_note: >-
+      « Détail selon le vote au premier tour » ; question « Pour lequel des candidats suivants avez-vous voté aujourd'hui
+      lors du second tour ? ». Lignes de l'image : Macron, Le Pen, « Abstention / Blanc / Nul » ; chaque colonne
+      (électorat de premier tour) somme à 100. Échantillon de 5719 inscrits (extrait de 5863 personnes), quotas, CAWI
+      le 24 avril 2022.
+    columns: combined
+    notes: >-
+      Le PDF est une image (pas de couche texte) : chiffres lus sur le rendu de la page 5. Colonne unique
+      « Abstention / Blanc / Nul » (blank_or_abstain). Septième colonne « Abstention, blancs et nuls » du premier tour
+      (clé abstain_or_blank_null), donc les abstentionnistes et votants blancs/nuls du premier tour sont regroupés.
+      Six électorats de candidats seulement (Mélenchon, Jadot, Macron, Pécresse, Zemmour, Le Pen). Un second document
+      OpinionWay « Sociologie du vote, second tour, 20h15 » est référencé sur le site de l'institut
+      (https://www.opinion-way.com/fr/publications/sociologie-du-vote-24-avril-2022-second-tour-20h15-2022-16126/), mais
+      le fichier PDF lié renvoie en réalité la page d'accueil HTML du site et n'a pas pu être lu.
+    rows:
+      - from: melenchon_jean_luc
+        to: {macron_emmanuel: 54, le_pen_marine: 24, blank_or_abstain: 22}
+      - from: jadot_yannick
+        to: {macron_emmanuel: 81, le_pen_marine: 8, blank_or_abstain: 11}
+      - from: macron_emmanuel
+        to: {macron_emmanuel: 98, le_pen_marine: 1, blank_or_abstain: 1}
+      - from: pecresse_valerie
+        to: {macron_emmanuel: 63, le_pen_marine: 24, blank_or_abstain: 13}
+      - from: zemmour_eric
+        to: {macron_emmanuel: 13, le_pen_marine: 83, blank_or_abstain: 4}
+      - from: le_pen_marine
+        to: {macron_emmanuel: 4, le_pen_marine: 94, blank_or_abstain: 2}
+      - from: abstain_or_blank_null
+        to: {macron_emmanuel: 37, le_pen_marine: 28, blank_or_abstain: 35}
