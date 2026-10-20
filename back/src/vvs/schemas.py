@@ -10,7 +10,7 @@ from __future__ import annotations
 import polars as pl
 
 POLL_MODES = ("online", "phone", "mixed", "unknown")
-POLL_SOURCES = ("wikipedia", "commission", "nsppolls")
+POLL_SOURCES = ("wikipedia", "commission", "nsppolls", "mieuxvoter")
 POPULATIONS = ("registered", "certain_voters", "unknown")
 SHARE_BASES = ("expressed", "all_respondents", "unknown")
 GEO_LEVELS = ("national", "department", "commune", "polling_station")
