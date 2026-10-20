@@ -1,0 +1,155 @@
+# Requêtes de presse par candidat et par thème (docs/06-presse.md).
+#
+# Lu par vvs.ingest.press.outlets.load_queries ; les clés de `candidates` sont des ids de
+# candidates.yaml (vérifié au chargement). Le query_id d'un candidat est son candidate_id,
+# celui d'un thème `topic_<thème>`.
+#
+# Candidats
+#   aliases   formes qui désignent la personne sans ambiguïté sur 2017-2027, combinées en OU.
+#             Une forme avec espace devient une phrase entre guillemets. On met la variante
+#             sans accent à côté de la forme accentuée : GDELT cherche dans le texte traduit
+#             et Media Cloud ne garantit pas le repli des accents.
+#   exclude   phrases dont la présence écarte l'article (opérateur « - » de GDELT, AND NOT de
+#             Media Cloud). À utiliser avec parcimonie : on perd aussi les articles qui
+#             mentionnent les deux.
+#   rejected  formes écartées volontairement, avec la raison ; un test vérifie qu'aucune
+#             n'est reprise dans `aliases`.
+#   gdelt_aliases  formes propres à GDELT, qui remplacent `aliases` dans les requêtes DOC.
+#             Mesuré le 20 octobre 2026 : pour les articles en français, l'API DOC cherche
+#             dans la traduction anglaise automatique. « Le » y devient « the » : la phrase
+#             "Le Pen" ne ramène que 1 037 articles en 2017 contre 48 879 pour le mot Pen, et
+#             "Marine Le Pen" 3 en janvier 2017. Les prénoms peuvent aussi être traduits
+#             (Édouard -> Edward). D'où des noms seuls, parfois rejetés pour Media Cloud ;
+#             l'ambiguïté qui en résulte est assumée et notée par candidat.
+#
+# Les noms seuls qui désignent plusieurs personnes ou un mot courant (« Philippe », « Le Pen »,
+# « Attal », « Jadot », « Hamon », « Glucksmann ») sont rejetés : seul le prénom + nom passe.
+#
+# Thèmes : liste fermée de docs/06-presse.md. `keywords` sert à Media Cloud et à l'agrégat de
+# volume GDELT (OU de mots et phrases) ; `gdelt_themes` sont des codes du GKG vérifiés dans
+# LOOKUP-GKGTHEMES.TXT le 20 octobre 2026 (opérateur `theme:`) ; `ina_rubrics` donne la
+# correspondance avec les 14 rubriques du baromètre INA des JT (fit : direct = la rubrique
+# recouvre le thème ; partial = la rubrique contient le thème parmi d'autres sujets ; none =
+# pas de rubrique, le thème est dispersé). Ces listes de mots-clés ne remplacent pas la
+# classification NLP de la phase 7 ; elles donnent un premier volume par thème.
+
+defaults:
+  gdelt_filters: sourcelang:french sourcecountry:FR
+  gdelt_start: 2017-01-01
+  mediacloud_collection: 34412146
+
+candidates:
+  macron_emmanuel:
+    aliases: [Macron]
+    rejected:
+      Emmanuel: prénom seul
+    notes: >-
+      « Macron » attrape aussi Brigitte Macron et la « macronie » ; on l'accepte, une
+      exclusion ferait perdre les articles qui citent les deux.
+  le_pen_marine:
+    aliases: [Marine Le Pen]
+    gdelt_aliases: [Pen]
+    rejected:
+      Le Pen: Jean-Marie Le Pen, Marion Maréchal-Le Pen, « le clan Le Pen »
+      Marine: prénom courant (et Marine Tondelier)
+      MLP: sigle rare dans les titres, faux positifs
+    notes: >-
+      GDELT : Pen seul (traduction anglaise) attrape aussi Jean-Marie Le Pen (mort en
+      janvier 2025), Marion Maréchal-Le Pen et quelques « stylo » traduits.
+  melenchon_jean_luc:
+    aliases: [Mélenchon, Melenchon]
+  fillon_francois:
+    aliases: [Fillon]
+    notes: Attrape Penelope Fillon (affaire de 2017), ce qui relève bien de la couverture du candidat.
+  hamon_benoit:
+    aliases: [Benoît Hamon, Benoit Hamon]
+    gdelt_aliases: [Hamon]
+    rejected:
+      Hamon: patronyme courant (Léo Hamon, Francis Hamon…)
+  zemmour_eric:
+    aliases: [Zemmour]
+  pecresse_valerie:
+    aliases: [Pécresse, Pecresse]
+  jadot_yannick:
+    aliases: [Yannick Jadot]
+    gdelt_aliases: [Jadot]
+    rejected:
+      Jadot: maison de vins de Bourgogne Louis Jadot
+  bardella_jordan:
+    aliases: [Bardella]
+  philippe_edouard:
+    aliases: [Édouard Philippe, Edouard Philippe]
+    gdelt_aliases: [Édouard Philippe, Edouard Philippe, Edward Philippe]
+    rejected:
+      Philippe: prénom et patronyme très courants (Philippe Poutou, Philippe de Villiers…)
+      Édouard: prénom seul
+  attal_gabriel:
+    aliases: [Gabriel Attal]
+    gdelt_aliases: [Attal]
+    rejected:
+      Attal: Yvan Attal (acteur, réalisateur)
+  retailleau_bruno:
+    aliases: [Retailleau]
+  glucksmann_raphael:
+    aliases: [Raphaël Glucksmann, Raphael Glucksmann]
+    gdelt_aliases: [Glucksmann]
+    rejected:
+      Glucksmann: André Glucksmann, son père, philosophe mort en 2015
+  tondelier_marine:
+    aliases: [Tondelier]
+    rejected:
+      Marine: prénom seul (et Marine Le Pen)
+
+themes:
+  immigration:
+    keywords: [immigration, immigré, immigrés, migrant, migrants, migratoire, "droit d'asile", "demandeurs d'asile", sans-papiers, OQTF, régularisation]
+    gdelt_themes: [IMMIGRATION, REFUGEES]
+    ina_rubrics: {fit: none, rubrics: []}
+    notes: Dispersé entre « Société », « Politique France » et « International » à l'INA.
+  security:
+    keywords: [insécurité, délinquance, criminalité, attentat, terrorisme, terroriste, police, gendarmerie, violences, narcotrafic, "trafic de drogue"]
+    gdelt_themes: [TERROR, SECURITY_SERVICES, CRIME_ILLEGAL_DRUGS, CRIME_COMMON_ROBBERY, UNGP_CRIME_VIOLENCE]
+    ina_rubrics: {fit: partial, rubrics: [Faits divers, Justice]}
+    notes: >-
+      « Faits divers » est le meilleur indicateur INA de la saillance sécuritaire ;
+      « Justice » mêle procès ordinaires et affaires politico-judiciaires.
+  purchasing_power:
+    keywords: ["pouvoir d'achat", inflation, "prix de l'essence", "prix du carburant", "hausse des prix", "coût de la vie", salaires, "factures d'énergie"]
+    gdelt_themes: [ECON_INFLATION, ECON_COST_OF_LIVING, FUELPRICES, ECON_GASOLINEPRICE]
+    ina_rubrics: {fit: partial, rubrics: [Economie]}
+    notes: La rubrique « Economie » de l'INA ne sépare pas pouvoir d'achat et chômage.
+  unemployment:
+    keywords: [chômage, chômeurs, "demandeurs d'emploi", "Pôle emploi", "France Travail", licenciements, "plan social"]
+    gdelt_themes: [UNEMPLOYMENT]
+    ina_rubrics: {fit: partial, rubrics: [Economie]}
+  health:
+    keywords: [santé, hôpital, hôpitaux, Covid, épidémie, vaccin, vaccination, "déserts médicaux", Sécurité sociale]
+    gdelt_themes: [HEALTH_PANDEMIC, GENERAL_HEALTH, MEDICAL]
+    ina_rubrics: {fit: direct, rubrics: [Santé]}
+  ecology:
+    keywords: [écologie, écologique, climat, climatique, "transition énergétique", "réchauffement climatique", biodiversité, pollution]
+    gdelt_themes: [ENV_CLIMATECHANGE, ENV_GREEN]
+    ina_rubrics: {fit: direct, rubrics: [Environnement]}
+    notes: « Catastrophes » (intempéries, accidents) n'est pas rattaché à l'écologie.
+  europe:
+    keywords: ["Union européenne", Bruxelles, "Commission européenne", "Parlement européen", "élections européennes", zone euro, Frexit]
+    gdelt_themes: []
+    ina_rubrics: {fit: none, rubrics: []}
+    notes: >-
+      Pas de thème GKG dédié à l'Union européenne dans la table ; pas de rubrique INA (sujets
+      européens rangés en « International » ou « Politique France »).
+  international:
+    keywords: [Ukraine, Russie, Poutine, "Proche-Orient", Gaza, Israël, "États-Unis", Trump, Chine, diplomatie, guerre]
+    gdelt_themes: []
+    ina_rubrics: {fit: direct, rubrics: [International]}
+  institutions:
+    keywords: [Assemblée nationale, Sénat, "49.3", dissolution, "motion de censure", Constitution, référendum, "Conseil constitutionnel", "Premier ministre", gouvernement, remaniement]
+    gdelt_themes: [CONSTITUTIONAL, LEGISLATION]
+    ina_rubrics: {fit: partial, rubrics: [Politique France]}
+    notes: >-
+      « Politique France » couvre toute la vie politique nationale, campagne comprise : c'est
+      un majorant de la saillance institutionnelle, pas une mesure.
+  scandals:
+    keywords: [affaire, mise en examen, "emplois fictifs", corruption, "financement illégal", condamnation, inéligibilité, perquisition]
+    gdelt_themes: [CORRUPTION, SCANDAL]
+    ina_rubrics: {fit: partial, rubrics: [Justice]}

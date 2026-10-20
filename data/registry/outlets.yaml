@@ -1,0 +1,264 @@
+# Panel de titres de presse nationale (docs/06-presse.md, « Panel de titres »).
+#
+# Lu par vvs.ingest.press.outlets.load_outlets. Sert à filtrer les sorties de GDELT
+# (`artlist`, champ `domain`) et de Media Cloud (`media_url`, ou `source_ids` résolus dans
+# la collection « France - National » 34412146) : on compte les titres d'un panel fixe sur
+# toute la période, pour ne pas confondre une hausse de volume avec un élargissement de la
+# couverture de la source.
+#
+# Champs :
+#   name      nom d'usage
+#   kind      daily (quotidien national), weekly (hebdomadaire ou mensuel d'actualité),
+#             online (pure player), tv_news (chaîne ou rédaction télé), radio, agency,
+#             regional_daily (hors panel national, gardé pour contrôle)
+#   domains   domaines enregistrables, sans « www. » ; la correspondance se fait par suffixe
+#             (« www.lemonde.fr » et « abonnes.lemonde.fr » -> lemonde.fr). Le premier est le
+#             domaine principal. Les anciens domaines restent listés (huffingtonpost.fr).
+#   panel     true si le titre entre dans le panel stable ; false = suivi mais exclu des
+#             agrégats (couverture irrégulière, régional, international)
+#   since     première année où le titre existe sous ce domaine, si postérieure à 2008
+#   mediacloud_in_collection : présence vérifiée dans l'instantané Zenodo du 8 janvier 2026
+#             de la collection 34412146 (docs/notes/veille-2026-10-20.md §3.1) ;
+#             null = non vérifié
+#   url_patterns (agence seulement) : préfixes d'URL (domaine + chemin) par lesquels des
+#             dépêches sont republiées par un autre titre (« AFP via relais »)
+#
+# Domaines relevés de mémoire et recoupés avec la liste de la veille ; à contrôler sur un
+# échantillon GDELT et Media Cloud avant la classification de masse.
+
+outlets:
+  # --- quotidiens nationaux
+  le_monde:
+    name: Le Monde
+    kind: daily
+    domains: [lemonde.fr]
+    panel: true
+    mediacloud_in_collection: true
+  le_figaro:
+    name: Le Figaro
+    kind: daily
+    domains: [lefigaro.fr]
+    panel: true
+    mediacloud_in_collection: true
+  liberation:
+    name: Libération
+    kind: daily
+    domains: [liberation.fr]
+    panel: true
+    mediacloud_in_collection: true
+  le_parisien:
+    name: Le Parisien / Aujourd'hui en France
+    kind: daily
+    domains: [leparisien.fr]
+    panel: true
+    mediacloud_in_collection: true
+  les_echos:
+    name: Les Échos
+    kind: daily
+    domains: [lesechos.fr]
+    panel: true
+    mediacloud_in_collection: true
+  la_croix:
+    name: La Croix
+    kind: daily
+    domains: [la-croix.com]
+    panel: true
+    mediacloud_in_collection: true
+  l_humanite:
+    name: L'Humanité
+    kind: daily
+    domains: [humanite.fr]
+    panel: true
+    mediacloud_in_collection: true
+  vingt_minutes:
+    name: 20 Minutes
+    kind: daily
+    domains: [20minutes.fr]
+    panel: true
+    mediacloud_in_collection: true
+  l_opinion:
+    name: L'Opinion
+    kind: daily
+    domains: [lopinion.fr]
+    panel: true
+    since: 2013
+    mediacloud_in_collection: null
+  # --- hebdomadaires et magazines d'actualité
+  le_point:
+    name: Le Point
+    kind: weekly
+    domains: [lepoint.fr]
+    panel: true
+    mediacloud_in_collection: true
+  l_express:
+    name: L'Express
+    kind: weekly
+    domains: [lexpress.fr]
+    panel: true
+    mediacloud_in_collection: true
+  le_nouvel_obs:
+    name: Le Nouvel Obs
+    kind: weekly
+    domains: [nouvelobs.com]
+    panel: true
+    mediacloud_in_collection: true
+  marianne:
+    name: Marianne
+    kind: weekly
+    domains: [marianne.net]
+    panel: true
+    mediacloud_in_collection: true
+  valeurs_actuelles:
+    name: Valeurs actuelles
+    kind: weekly
+    domains: [valeursactuelles.com]
+    panel: true
+    mediacloud_in_collection: true
+  le_jdd:
+    name: Le Journal du dimanche
+    kind: weekly
+    domains: [lejdd.fr]
+    panel: true
+    mediacloud_in_collection: true
+  paris_match:
+    name: Paris Match
+    kind: weekly
+    domains: [parismatch.com]
+    panel: true
+    mediacloud_in_collection: null
+  challenges:
+    name: Challenges
+    kind: weekly
+    domains: [challenges.fr]
+    panel: true
+    mediacloud_in_collection: null
+  # --- pure players
+  mediapart:
+    name: Mediapart
+    kind: online
+    domains: [mediapart.fr]
+    panel: true
+    mediacloud_in_collection: true
+  huffpost:
+    name: HuffPost France
+    kind: online
+    domains: [huffingtonpost.fr, huffpost.fr]
+    panel: true
+    since: 2012
+    mediacloud_in_collection: true
+    notes: huffpost.fr absent de la collection, huffingtonpost.fr présent.
+  # --- télévision (rédactions et chaînes d'information)
+  franceinfo:
+    name: Franceinfo / France Télévisions
+    kind: tv_news
+    domains: [francetvinfo.fr]
+    panel: true
+    mediacloud_in_collection: true
+  bfmtv:
+    name: BFM TV
+    kind: tv_news
+    domains: [bfmtv.com]
+    panel: true
+    mediacloud_in_collection: true
+  cnews:
+    name: CNews (ex-i>Télé)
+    kind: tv_news
+    domains: [cnews.fr]
+    panel: true
+    since: 2017
+    mediacloud_in_collection: true
+    notes: i>Télé devient CNews en février 2017 ; l'ancien domaine itele.fr n'est pas suivi.
+  tf1info:
+    name: TF1 Info / LCI
+    kind: tv_news
+    domains: [tf1info.fr, lci.fr]
+    panel: true
+    mediacloud_in_collection: true
+    notes: >-
+      lci.fr puis tf1info.fr (2022) pour la même rédaction ; les deux domaines sont fusionnés
+      pour que la bascule ne crée pas de rupture de volume.
+  public_senat:
+    name: Public Sénat
+    kind: tv_news
+    domains: [publicsenat.fr]
+    panel: true
+    mediacloud_in_collection: true
+  lcp:
+    name: LCP Assemblée nationale
+    kind: tv_news
+    domains: [lcp.fr]
+    panel: true
+    mediacloud_in_collection: true
+  # --- radio
+  france_inter:
+    name: France Inter
+    kind: radio
+    domains: [franceinter.fr, radiofrance.fr]
+    panel: true
+    mediacloud_in_collection: true
+    notes: >-
+      franceinter.fr présent dans la collection, radiofrance.fr absent ; Radio France migre
+      ses pages vers radiofrance.fr, d'où un risque de rupture à surveiller.
+  france_culture:
+    name: France Culture
+    kind: radio
+    domains: [franceculture.fr]
+    panel: true
+    mediacloud_in_collection: true
+  europe1:
+    name: Europe 1
+    kind: radio
+    domains: [europe1.fr]
+    panel: true
+    mediacloud_in_collection: true
+  rtl:
+    name: RTL
+    kind: radio
+    domains: [rtl.fr]
+    panel: true
+    mediacloud_in_collection: true
+  rmc:
+    name: RMC
+    kind: radio
+    domains: [rmc.bfmtv.com]
+    panel: false
+    mediacloud_in_collection: null
+    notes: >-
+      Sous-domaine de bfmtv.com. La correspondance la plus spécifique l'emporte : les pages
+      rmc.bfmtv.com (beaucoup de sport) vont à rmc, hors panel, et ne gonflent pas bfmtv.
+  # --- agence
+  afp:
+    name: Agence France-Presse
+    kind: agency
+    domains: [afp.com]
+    panel: true
+    mediacloud_in_collection: true
+    url_patterns:
+      - lefigaro.fr/flash-actu/
+    notes: >-
+      afp.com publie peu de dépêches en clair ; l'essentiel du fil passe par les titres
+      clients. Le seul relais identifiable par l'URL relevé ici est la rubrique « flash-actu »
+      du Figaro (à vérifier sur échantillon). Une dépêche relayée est attribuée à afp, pas
+      au titre qui la republie.
+  # --- hors panel : international francophone et régional (contrôle)
+  france24:
+    name: France 24
+    kind: tv_news
+    domains: [france24.com]
+    panel: false
+    mediacloud_in_collection: true
+    notes: Chaîne internationale, éditorial tourné vers l'étranger.
+  rfi:
+    name: RFI
+    kind: radio
+    domains: [rfi.fr]
+    panel: false
+    mediacloud_in_collection: true
+    notes: Radio internationale.
+  ouest_france:
+    name: Ouest-France
+    kind: regional_daily
+    domains: [ouest-france.fr]
+    panel: false
+    mediacloud_in_collection: true
+    notes: Premier quotidien de France par la diffusion, mais régional ; contrôle seulement.
