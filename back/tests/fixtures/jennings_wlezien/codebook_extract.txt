@@ -1,0 +1,162 @@
+Party ID – Legislative Elections
+Country ID Party Name
+Australia
+1 Liberal/National Party
+2 Australian Labor Party (ALP)
+3 Australian Democrats
+4 Australian Greens
+5 Hanson/One Nation
+6 Family First
+Australia (two-party preference)
+1 Liberal/National Party
+2 Australian Labor Party (ALP)
+Finland
+1 Centre Party
+2 National Coalition Party
+3 Social Democrats (SDP)
+4 Left Alliance
+5 Green League
+6 Christian Democrats
+7 Swedish People’s (SFP/RKP)
+8 Finns/True Finns (PS/S)
+Germany
+1 Christian Democratic Union (CDU/CSU)
+2 Social Democratic Party of Germany (SPD)
+3 The Greens
+4 Free Democratic Party (FDP)
+5 The Left (Linke)
+6 Alternative for Germany [Alternative für Deutschland]
+(AfD)
+Hungary
+1 Federation of Young Democrats (FIDESZ)
+2 Hungarian Socialist Party (MSZP)
+3 Movement for a Better Hungary (JOBBIK)
+4 Hungarian Democratic Forum (MDF)
+5 Politics Can Be Different (IMP)
+6 Unity (or Left Unity): MSZP, E14, DK, PM, LMP
+7 Democratic Coalition (DK)
+8 Together Hungary (E14-PM)
+United States
+1 Democratic Party
+2 Republican Party
+Candidate ID – Presidential Elections
+Country: Election Year ID Party Candidate Name
+Chile: 2005 (Round 1)
+1 RN Piñera
+2 PS/CPD Bachelet
+3 - -
+4 PH/JPM Goldschmidt
+5 UDI Infante
+Chile: 2009 (Round 1)
+1 RN/CFC Piñera
+2 PDC/CPD Frei
+3 IND MEO
+4 PCCh/JPM Arrate
+5 - -
+Chile: 2009 (Round 2)
+1 RN/CFC Piñera
+2 PDC/CPD Frei
+3 - -
+4 - -
+5 - -
+Cyprus: 2013 (Round 1)
+1 DISY Anastasiades
+2 AKEL Malas
+3 EDEK Lillikas
+4 DIKO/EDEK -
+-
+Cyprus: 2013 (Round 1)
+1 DISY Anastasiades
+2 AKEL Malas
+3 EDEK -
+4 DIKO/EDEK -
+France: 1965 (Round 1)
+1 UNR De Gaulle
+2 FGDS Mitterand
+3 IFR Tixier-Vignancour
+4 MRP Lecanuet
+5 - -
+6 - -
+7 - -
+8 - -
+9 - -
+10 - -
+11 - -
+12 - -
+France: 1965 (Round 2)
+1 UNR De Gaulle
+2 FGDS Mitterand
+3 - -
+4 - -
+5 - -
+6 - -
+7 - -
+8 - -
+9 - -
+10 - -
+11 - -
+12 - -
+France: 1969 (Round 1)
+1 UDR G. Pompidou
+2 SFIO Defferre
+3 - -
+4 DC Poher
+5 PCF Duclos
+6 - -
+7 - -
+8 - -
+9 LC Krivine
+10 IND Ducatel
+11 PSU Rocard
+12 - -
+France: 1969 (Round 2)
+1 UDR G. Pompidou
+2 - -
+3 - -
+4 DC Poher
+5 - -
+6 - -
+7 - -
+8 - -
+9 - -
+10 - -
+11 - -
+12 - -
+France: 2012 (Round 1)
+1 UMP Sarkozy
+2 PS Hollande
+3 FN M Le Pen
+4 UDF Bayrou
+5 FG Mélenchon
+6 EELV Joly
+7 LO Sarkozy
+8 MDC Hollande
+9 - -
+10 - -
+11 - -
+12 - -
+France: 2017 (Round 1)
+1 UMP Fillon
+2 PS Hamon
+3 FN M Le Pen
+4 UDF -
+5 FG Mélenchon
+6 EELV Joly
+7 LO Sarkozy
+8 MDC Hollande
+9 - -
+10 - -
+11 - -
+12 - -
+13 En Marche! Macron
+France: 2017 (Round 2)
+3 FN M Le Pen
+13 En Marche! Macron
+United States – 2016
+1 Democratic Party Hillary Clinton
+2 Republican Party Donald Trump
+Election Polling Errors across Time and Space
+DATASET CODEBOOK
+MAIN DATASET (“POLLS1517_NATURE.dta”)
+List of variables
+election Election (country-year)

@@ -1,0 +1,69 @@
+# Base de Jennings et Wlezien sur les erreurs des sondages préélectoraux.
+#
+# Jennings, W. et Wlezien, C. (2018). « Election polling errors across time and space »,
+# Nature Human Behaviour 2 : 276-283, doi:10.1038/s41562-018-0315-6 ; correctif publié en 2020
+# (Nature Human Behaviour 4 : 769-770), qui ne touche que le code des figures 2c et 2e, pas les
+# données. Réplication : Harvard Dataverse, doi:10.7910/DVN/8421DX.
+#
+# Lu par vvs.ingest.jennings_wlezien : `vvs ingest jennings-wlezien` télécharge chaque fichier
+# dans data/raw/jennings_wlezien/<name> (jamais réécrit s'il existe, empreinte vérifiée) ;
+# `vvs parse jennings-wlezien` produit data/curated/jw_polls.parquet.
+#
+# Version retenue (vérifiée le 2026-10-20 via l'API Dataverse /api/datasets/:persistentId/) :
+# V3.0 du 2020-09-23, la dernière ; elle ne change pas les données de la V2.0 (2018-01-21),
+# elle ajoute le code corrigé et l'erratum. Aucune mise à jour publique des données après 2017
+# n'a été trouvée : la base « TimelinePartiesMI_New.dta » de Wlezien et Jennings (EJPR 2023,
+# doi:10.7910/DVN/DR9RRK, 707 Mo) porte sur l'évolution des intentions de vote et pas sur
+# l'erreur au résultat ; l'extension de Tudor et Wall (2021) n'est pas publiée en données.
+#
+# Fichiers : `url` télécharge le format d'origine (Stata 13) déposé par les auteurs, pas la
+# version tabulée régénérée par Dataverse (`.tab`, 292 Mo). Dataverse ne publie qu'un MD5
+# de la version tabulée ; le sha256 ci-dessous est celui du fichier d'origine, calculé au
+# premier téléchargement (2026-10-20) ; sa taille égale `originalFileSize` de l'API.
+#
+# Contenu : grille quotidienne parti x jour (1 512 720 lignes, 25 variables) dont 88 089
+# portent une valeur de sondage. `poll_` est la moyenne des sondages publiés ce jour-là
+# (`npolls` sondages), pas un sondage individuel : la base ne donne ni l'institut ni les
+# dates de terrain. `sample` vaut 1000 x npolls quand la taille est inconnue. Les noms de
+# partis et de candidats ne figurent que dans le codebook PDF. Seuls les principaux partis
+# ou candidats de chaque élection sont présents.
+
+dataset:
+  doi: 10.7910/DVN/8421DX
+  landing: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/8421DX
+  version: "3.0"
+  version_date: 2020-09-23
+  data_version_date: 2018-01-21
+  license: CC0-1.0
+  citation: >-
+    Jennings, Will; Wlezien, Christopher, 2018, « Replication Data for: Election Polling
+    Errors across Time and Space », https://doi.org/10.7910/DVN/8421DX, Harvard Dataverse, V3.
+  article_doi: 10.1038/s41562-018-0315-6
+  open_pdf: https://eprints.soton.ac.uk/421260/1/JenningsWlezien_PollingErrors.pdf
+  coverage: >-
+    351 élections (tours) dans 45 pays, 1942-2017, d'après l'article ; le fichier en compte
+    337 avec au moins un sondage (255 législatives, 82 présidentielles), sondages du
+    1942-02-14 au 2017-09-24. France : présidentielles 1965 à 2017, 19 tours (le second
+    tour de 1965 n'a aucun sondage).
+
+files:
+  - name: LONG_MI_NATURE_20180111.dta
+    role: main
+    file_doi: doi:10.7910/DVN/8421DX/JJETUZ
+    url: https://dataverse.harvard.edu/api/access/datafile/3107210?format=original
+    sha256: 2be2184664c356af4158208cf28eae952ed7d4bf460349c5bbd561336cff127a
+    bytes: 248094539
+  - name: Nature_Dataverse_Codebook_v2.0.pdf
+    role: codebook
+    file_doi: doi:10.7910/DVN/8421DX/XQXUJW
+    url: https://dataverse.harvard.edu/api/access/datafile/3107217
+    sha256: 210d84fb42e6b617699d3ef374bf1ef5e3eed51f5f326352004c778409368fd8
+    bytes: 1339456
+    md5: 925e2310437533f78449118d7b3786d7  # publié par Dataverse, vérifié
+  - name: Nature_Dataverse_Erratum.pdf
+    role: erratum
+    file_doi: doi:10.7910/DVN/8421DX/W9ODHE
+    url: https://dataverse.harvard.edu/api/access/datafile/4086928
+    sha256: d1de36cc4723cf76ae6b11b81edeaf5d831d5ed66920637483574055afd8296c
+    bytes: 129027
+    md5: 698188f64f412ceba41a1d7a42d435fd  # publié par Dataverse, vérifié
