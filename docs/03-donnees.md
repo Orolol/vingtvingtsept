@@ -1,0 +1,143 @@
+# 03 — Données
+
+## Sources
+
+### Sondages
+
+| Source | Couverture | Usage | Notes |
+|---|---|---|---|
+| Wikipédia FR, pages « Liste de sondages sur l'élection présidentielle française de AAAA » | 2002, 2007, 2012, 2017, 2022, 2027 | série historique principale | tableaux hétérogènes d'une page à l'autre : un adaptateur par élection |
+| Commission des sondages (notices) | 2017 à 2027, exhaustif par obligation légale | série live 2027, méthodes, résultats bruts quand publiés | un scraper de notices ; PDF à parser |
+| NSPPolls (GitHub, JSON) | 2017, 2022 | contrôle croisé, hypothèses de second tour | pas de version 2027 connue |
+| Sondages de second tour | mêmes pages Wikipédia | reports de voix | hypothèses de duels, série creuse |
+
+Règle : Wikipédia est la source d'enregistrement pour le passé, la Commission pour 2027, et
+toute divergence entre sources sur un même sondage est journalisée dans la curation.
+
+Points de vigilance connus sur Wikipédia :
+
+- les tableaux changent de forme entre pages et parfois au milieu d'une page (colonnes
+  par candidat, hypothèses imbriquées, notes de bas de tableau) ;
+- la population est tantôt « inscrits », tantôt « certains d'aller voter », rarement
+  explicite ;
+- les dates de terrain sont des plages, parfois sans année dans la cellule ;
+- les hypothèses de premier tour avec des candidats différents sont des lignes distinctes
+  ou des sous-tableaux ;
+- les anciens sondages (2002, 2007) sont moins nombreux et moins documentés.
+
+On stocke le HTML brut horodaté dans `data/raw/wikipedia/`, et on parse à partir de là, de
+sorte que le parseur puisse être corrigé sans retélécharger.
+
+### Résultats électoraux
+
+| Source | Contenu |
+|---|---|
+| Ministère de l'Intérieur via data.gouv.fr | présidentielles 2002 à 2022 par commune et bureau de vote ; législatives 2022, 2024 ; européennes 2014, 2019, 2024 |
+
+Usage : vérité terrain du backtest (national), prior structurel des blocs (national et
+par département), base future des législatives. On conserve les fichiers bruts hors git
+(`data/raw/results/`) et on versionne les agrégats nationaux et départementaux.
+
+### Registre candidats, partis, blocs
+
+Fichiers YAML dans `data/registry/`, validés par pydantic :
+
+- `candidates.yaml` : une entrée par personne (id stable, nom, partis successifs).
+- `elections.yaml` : par élection, la liste des candidats officiels avec parti et bloc, les
+  dates des tours, les résultats nationaux officiels.
+- `blocs.yaml` : définition des blocs et de leurs frontières, avec la justification.
+- `pollsters.yaml` : instituts, alias rencontrés dans les sources, mode (téléphone, en ligne,
+  mixte), date d'entrée.
+- `scenarios_2027.yaml` : configurations de candidats et leurs probabilités, datées et
+  justifiées (voir `04-modele.md`).
+
+Blocs retenus pour commencer, à discuter avant la phase 2 :
+
+| Bloc | Contenu |
+|---|---|
+| `far_right` | FN/RN, Zemmour, Debout la France |
+| `right` | UMP/LR, Fillon, UDI quand hors majorité |
+| `centre` | Bayrou 2007-2012, Macron et majorité présidentielle, Horizons |
+| `left` | PS, Hollande, Jospin, écologistes, Hamon |
+| `far_left` | Mélenchon, PCF, NPA, LO |
+| `other` | candidats non rattachés (Lassalle, Cheminade, chasseurs...) |
+
+La frontière écologistes / gauche radicale et la position de Mélenchon avant 2012 sont les
+cas limites à trancher explicitement dans `blocs.yaml`.
+
+## Schémas
+
+Format parquet, colonnes en anglais, une table par entité.
+
+### `polls`
+
+Une ligne par sondage (unité de collecte).
+
+| Colonne | Type | Description |
+|---|---|---|
+| `poll_id` | str | clé stable : `{election}-{pollster}-{fieldwork_end}-{seq}` |
+| `election` | int | année de l'élection |
+| `pollster` | str | id du registre `pollsters.yaml` |
+| `sponsor` | str, nullable | commanditaire |
+| `fieldwork_start`, `fieldwork_end` | date | terrain |
+| `publish_date` | date, nullable | publication |
+| `sample_size` | int, nullable | échantillon total |
+| `mode` | enum | `online`, `phone`, `mixed`, `unknown` |
+| `source` | enum | `wikipedia`, `commission`, `nsppolls` |
+| `source_url` | str | page ou notice |
+| `ingested_at` | datetime | horodatage de l'ingestion |
+
+### `poll_results`
+
+Une ligne par intention de vote.
+
+| Colonne | Type | Description |
+|---|---|---|
+| `poll_id` | str | clé vers `polls` |
+| `round` | int | 1 ou 2 |
+| `hypothesis_id` | str | identifie la configuration de candidats testée (hash trié des ids candidats) |
+| `population` | enum | `registered`, `certain_voters`, `unknown` |
+| `candidate_id` | str | clé vers le registre ; `abstention`, `blank`, `undecided` sont des ids réservés |
+| `share` | float | pourcentage, base exprimés sauf mention |
+| `share_base` | enum | `expressed`, `all_respondents`, `unknown` |
+| `raw_share` | float, nullable | résultat brut avant redressement, si la notice le donne |
+
+### `results`
+
+Une ligne par candidat, par élection, par tour, par niveau géographique.
+
+| Colonne | Type |
+|---|---|
+| `election` | int |
+| `round` | int |
+| `geo_level` | enum `national`, `department`, `commune`, `polling_station` |
+| `geo_code` | str |
+| `candidate_id` | str |
+| `votes` | int |
+| `registered`, `voters`, `expressed` | int |
+
+### Tables dérivées
+
+- `poll_results_by_bloc` : agrégation des parts par bloc et hypothèse, utilisée par le
+  prior structurel et les études.
+- `poll_errors` : pour chaque élection, écart entre le dernier sondage de chaque institut
+  (et l'agrégat) et le résultat, par candidat et par bloc. Entrée du modèle d'erreur.
+
+## Curation : règles explicites
+
+- Déduplication entre sources sur (`pollster`, `fieldwork_start`, `fieldwork_end`,
+  `sponsor`), tolérance d'un jour sur les dates ; en cas de conflit sur une valeur, la
+  Commission l'emporte sur Wikipédia, qui l'emporte sur NSPPolls, et l'écart est journalisé.
+- Un sondage dont les parts d'une hypothèse ne somment pas entre 97 et 103 est marqué
+  `suspect` et exclu par défaut, jamais corrigé à la main.
+- Rattachement des libellés de candidats au registre par table d'alias versionnée ; un
+  libellé inconnu fait échouer la curation, on ne devine pas.
+- Les candidats absents d'une hypothèse ne sont pas des zéros : ils sont absents. Le modèle
+  travaille sur l'ensemble des candidats de l'hypothèse.
+
+## Tests
+
+- Parseurs Wikipédia : un fichier HTML figé par élection dans `tests/fixtures/`, avec le
+  nombre de sondages attendu et quelques lignes vérifiées à la main.
+- Curation : invariants (sommes, unicité des clés, alias résolus, dates ordonnées).
+- Registre : chaque candidat des `results` nationaux existe dans `elections.yaml`.

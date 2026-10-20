@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Node
+node_modules/
+front/.svelte-kit/
+front/build/
+
+# Données volumineuses et sorties
+data/raw/results/
+data/raw/press/
+runs/
+*.log
+
+# Secrets
+.env
+.env.*
+!.env.example
