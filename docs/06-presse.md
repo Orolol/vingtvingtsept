@@ -96,3 +96,20 @@ ou non dans la prévision.
   quatre semaines comme rattrapage de mesure autour des événements (0,35 point par écart
   type), effet nul hors événements, Granger inverse significatif, Trends ne réplique pas.
   **Non retenue** pour la prévision ; utilisable comme témoin d'actualité sur le site.
+
+### Couverture Media Cloud mesurée le 2026-10-20 (`data/curated/press/mediacloud_coverage_2012_2017_2022.csv`)
+
+| Année | Titres dans la collection France - National |
+|---|---|
+| 2012 | 32 816 |
+| 2017 | 1 204 574 |
+| 2022 | 1 779 821 |
+
+2012 est inutilisable (quelques dizaines de titres par média sur l'année). 2017 et 2022 sont
+exploitables au niveau de la collection, mais la composition par média change fortement
+d'une année à l'autre (BFMTV 1 597 titres en 2017 contre 140 704 en 2022 ; RTL 33 939 en
+2017 contre 53 en 2022) : toute part de voix doit être normalisée par le total de la
+collection, et une comparaison média par média n'a pas de sens. Limite de débit observée :
+une requête toutes les 35 à 70 secondes. Conséquence : Media Cloud sert au backtest 2017 et
+2022 et au live 2027 par comptages (`count-over-time`), pas par extraction massive de
+titres ; INA couvre 2002 à 2017 pour l'agenda télévisé.
