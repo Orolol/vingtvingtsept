@@ -293,3 +293,76 @@ def with_lags(ind: pl.DataFrame, cols: Iterable[str], lags: Iterable[int]) -> pl
 def cumulative_change(ind: pl.DataFrame, col: str, horizon: int) -> pl.Series:
     """Somme glissante de `d_<col>` sur `horizon` mois (vide si un mois manque)."""
     return ind.sort("month")[f"d_{col}"].rolling_sum(horizon)
+
+
+# ---------------------------------------------------------------------------- candidats, semaine
+#
+# Panel hebdomadaire par candidat (étude attention, back/studies/attention.py). Mêmes règles
+# que les blocs : premier tour, hypothèses suspectes exclues, hypothèses 2027 avec Emmanuel
+# Macron écartées ; un sondage = moyenne des hypothèses qui testent le candidat (absent ailleurs,
+# pas à zéro) ; une semaine (lundi à dimanche, date de fin de terrain) = moyenne des instituts,
+# chacun moyenné sur ses sondages de la semaine ; une semaine sans sondage reste vide.
+
+NON_CANDIDATES = ("abstention", "blank", "undecided", "other")
+
+
+def week_start(col: str) -> pl.Expr:
+    """Lundi de la semaine ISO de la date `col`."""
+    return pl.col(col).dt.truncate("1w")
+
+
+def poll_candidate_shares(results: pl.DataFrame, polls: pl.DataFrame,
+                          elections: Iterable[int] | None = None) -> pl.DataFrame:
+    """Une ligne par (sondage, candidat) : moyenne des hypothèses de premier tour retenues."""
+    meta = polls.select("poll_id", "election", "pollster", "fieldwork_end", "is_rolling")
+    if elections is not None:
+        meta = meta.filter(pl.col("election").is_in(list(elections)))
+    h = results.join(meta.select("poll_id", "election"), on="poll_id").filter(
+        (pl.col("round") == 1)
+        & ~pl.col("suspect")
+        & ~pl.col("candidate_id").is_in(NON_CANDIDATES)
+        & ~(
+            (pl.col("election") == 2027)
+            & pl.col("hypothesis_id").str.split("+").list.contains(EXCLUDED_2027)
+        )
+    )
+    per_poll = h.group_by("poll_id", "candidate_id").agg(
+        pl.col("share").mean(), pl.col("hypothesis_id").n_unique().alias("n_hypotheses")
+    )
+    return (per_poll.join(meta, on="poll_id")
+            .with_columns(week_start("fieldwork_end").alias("week"))
+            .sort("election", "fieldwork_end", "poll_id", "candidate_id"))
+
+
+def weekly_candidate_shares(poll_shares: pl.DataFrame) -> pl.DataFrame:
+    """(election, week, candidate_id) : moyenne des instituts, chacun moyenné sur ses
+    sondages de la semaine."""
+    by_pollster = poll_shares.group_by("election", "week", "candidate_id", "pollster").agg(
+        pl.col("share").mean(), pl.len().alias("n")
+    )
+    return (
+        by_pollster.group_by("election", "week", "candidate_id")
+        .agg(
+            pl.col("share").mean(),
+            pl.col("n").sum().cast(pl.Int32).alias("n_polls"),
+            pl.len().cast(pl.Int32).alias("n_pollsters"),
+        )
+        .sort("election", "candidate_id", "week")
+    )
+
+
+def weekly_attention(attention: pl.DataFrame, source: str) -> pl.DataFrame:
+    """(candidate_id, week, value) : somme hebdomadaire des valeurs quotidiennes (Wikipédia),
+    ou valeur de la semaine Google (dimanche) rattachée au lundi suivant (Trends). Les semaines
+    incomplètes (moins de 7 jours au quotidien) sont retirées."""
+    a = attention.filter(pl.col("source") == source)
+    if a.is_empty():
+        return pl.DataFrame(schema={"candidate_id": pl.Utf8, "week": pl.Date,
+                                    "value": pl.Float64})
+    if a["freq"][0] == "D":
+        return (a.with_columns(week_start("date").alias("week"))
+                .group_by("candidate_id", "week")
+                .agg(pl.col("value").sum(), pl.len().alias("_days"))
+                .filter(pl.col("_days") == 7).drop("_days").sort("candidate_id", "week"))
+    return (a.with_columns((pl.col("date") + pl.duration(days=1)).alias("week"))
+            .select("candidate_id", "week", "value").sort("candidate_id", "week"))

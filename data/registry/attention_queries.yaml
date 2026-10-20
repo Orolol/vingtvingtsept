@@ -1,0 +1,589 @@
+# Signaux d'attention en ligne par candidat : article Wikipédia FR (pages vues) et sujet
+# Google Trends. Lu par vvs.ingest.attention.load_registry ; les clés de `candidates` sont des
+# ids de candidates.yaml (vérifié au chargement), les dates de premier tour viennent
+# d'elections.yaml.
+#
+# Couverture : candidats officiels de 2002 à 2022, candidats testés au premier tour dans les
+# sondages des cycles 2017, 2022 et 2027 (poll_results.parquet, au moins un sondage), et
+# candidats des scénarios 2027 (scenarios_2027.yaml). Relevé du 2026-10-20.
+#
+# candidates.<id>.wikipedia.title : titre exact de l'article sur fr.wikipedia à la date du
+#   relevé (aucun n'était une redirection ni une page d'homonymie). Les anciens titres
+#   (renommages) sont retrouvés automatiquement par l'ingestion ; `extra_titles` ajoute à la
+#   main un titre que la recherche automatique ne voit pas. `null` : pas d'article.
+# candidates.<id>.trends : `topic` = sujet Trends (identifiant Knowledge Graph) proposé par
+#   l'autocomplétion de trends.google.com le 2026-10-20 pour le nom du candidat, le premier
+#   sujet au nom exact qui désigne une personne (type en commentaire) ; à défaut `keyword`
+#   = le nom, recherché comme mot-clé.
+# cycles.<élection> : membres du cycle, dénominateur de `share` dans attention.parquet.
+#   2007 et 2012 : candidats officiels (Trends seulement, les pages vues commencent en
+#   juillet 2015). 2017, 2022, 2027 : candidats testés dans au moins un sondage du cycle et
+#   candidats officiels ; 2027 sans Emmanuel Macron (non rééligible, testé en 2022-2023),
+#   avec les candidats des scénarios.
+
+wikipedia:
+  start: 2015-07-01  # début de l'API Pageviews
+
+trends:
+  start: 2004-01-01  # début des séries Google Trends
+  # Pivot du chaînage entre lots et entre fenêtres (vvs.ingest.attention.google_trends) :
+  # présent dans le débat de 2002 à 2026 (candidat 2002, 2007, 2012, allié de Macron, Premier
+  # ministre 2024-2025), à un niveau de recherche moyen, ni écrasé ni écrasant.
+  pivot: bayrou_francois
+
+candidates:
+  alliot_marie_michele:
+    name: Michèle Alliot-Marie
+    wikipedia: {title: "Michèle Alliot-Marie"}
+    trends: {topic: "/m/061czc"}  # Michèle Alliot-Marie — Ancienne députée européenne
+  arthaud_nathalie:
+    name: Nathalie Arthaud
+    wikipedia: {title: "Nathalie Arthaud"}
+    trends: {topic: "/m/0h3t838"}  # Nathalie Arthaud — Porte-parole de Lutte ouvrière
+  asselineau_francois:
+    name: François Asselineau
+    wikipedia: {title: "François Asselineau"}
+    trends: {topic: "/m/0gfjb2t"}  # François Asselineau — Homme politique français
+  attal_gabriel:
+    name: Gabriel Attal
+    wikipedia: {title: "Gabriel Attal"}
+    trends: {topic: "/g/11fx8hzm60"}  # Gabriel Attal — Député français
+  aubry_martine:
+    name: Martine Aubry
+    wikipedia: {title: "Martine Aubry"}
+    trends: {topic: "/m/07td21"}  # Martine Aubry — Ancienne Ministre du Travail et des Solidarités de France
+  bardella_jordan:
+    name: Jordan Bardella
+    wikipedia: {title: "Jordan Bardella"}
+    trends: {topic: "/g/11gbldvj12"}  # Jordan Bardella — Député européen
+  barnier_michel:
+    name: Michel Barnier
+    wikipedia: {title: "Michel Barnier"}
+    trends: {topic: "/m/02tp6y"}  # Michel Barnier — Député français
+  baroin_francois:
+    name: François Baroin
+    wikipedia: {title: "François Baroin"}
+    trends: {topic: "/m/027g453"}  # François Baroin — Maire de Troyes
+  batho_delphine:
+    name: Delphine Batho
+    wikipedia: {title: "Delphine Batho"}
+    trends: {topic: "/m/04zxk7j"}  # Delphine Batho — Députée française
+  bayrou_francois:
+    name: François Bayrou
+    wikipedia: {title: "François Bayrou"}
+    trends: {topic: "/m/02y2cb"}  # François Bayrou — Ancien Premier ministre de France
+  becht_olivier:
+    name: Olivier Becht
+    wikipedia: {title: "Olivier Becht"}
+    trends: {topic: "/g/11d_782vtm"}  # Olivier Becht — Député français
+  bertrand_xavier:
+    name: Xavier Bertrand
+    wikipedia: {title: "Xavier Bertrand"}
+    trends: {topic: "/m/02yd2l"}  # Xavier Bertrand — Président du conseil régional des Hauts-de-France
+  besancenot_olivier:
+    name: Olivier Besancenot
+    wikipedia: {title: "Olivier Besancenot"}
+    trends: {topic: "/m/02y0l2"}  # Olivier Besancenot — Homme politique français
+  bompard_manuel:
+    name: Manuel Bompard
+    wikipedia: {title: "Manuel Bompard"}
+    trends: {topic: "/g/11g7z0cl5v"}  # Manuel Bompard — Député français
+  bonnal_sebastien:
+    name: Sébastien Bonnal
+    wikipedia: null  # pas d'article sur fr.wikipedia (vérifié le 2026-10-20)
+    trends: {keyword: "Sébastien Bonnal"}  # pas de sujet Trends à ce nom
+  borne_elisabeth:
+    name: Élisabeth Borne
+    wikipedia: {title: "Élisabeth Borne"}
+    trends: {topic: "/g/11btrngwnv"}  # Élisabeth Borne — Députée de l'Assemblée nationale de France
+  bouamrane_karim:
+    name: Karim Bouamrane
+    wikipedia: {title: "Karim Bouamrane"}
+    trends: {topic: "/g/11hhgmc28d"}  # Karim Bouamrane — Maire de Saint-Ouen-sur-Seine
+  boutin_christine:
+    name: Christine Boutin
+    wikipedia: {title: "Christine Boutin"}
+    trends: {topic: "/m/02rp8j"}  # Christine Boutin — Ancienne ministre déléguée chargée du Logement de France
+  bove_jose:
+    name: José Bové
+    wikipedia: {title: "José Bové"}
+    trends: {topic: "/m/0jgvf"}  # José Bové — Ancien député européen
+  braun_pivet_yael:
+    name: Yaël Braun-Pivet
+    wikipedia: {title: "Yaël Braun-Pivet"}
+    trends: {topic: "/g/11d_77bf_c"}  # Yaël Braun-Pivet — Députée de l'Assemblée nationale de France
+  buffet_marie_george:
+    name: Marie-George Buffet
+    wikipedia: {title: "Marie-George Buffet"}
+    trends: {topic: "/m/07jsph"}  # Marie-George Buffet — Ancienne députée française
+  castex_jean:
+    name: Jean Castex
+    wikipedia: {title: "Jean Castex"}
+    trends: {topic: "/g/122nj9t1"}  # Jean Castex — Homme d'État et ancien Premier ministre de France
+  cazeneuve_bernard:
+    name: Bernard Cazeneuve
+    wikipedia: {title: "Bernard Cazeneuve"}
+    trends: {topic: "/m/04zwgg7"}  # Bernard Cazeneuve — Ancien Premier ministre de France
+  cheminade_jacques:
+    name: Jacques Cheminade
+    wikipedia: {title: "Jacques Cheminade"}
+    trends: {topic: "/m/047fzn"}  # Jacques Cheminade — Président de Solidarité et progrès
+  chevenement_jean_pierre:
+    name: Jean-Pierre Chevènement
+    wikipedia: {title: "Jean-Pierre Chevènement"}
+    trends: {topic: "/m/05mtct"}  # Jean-Pierre Chevènement — Ancien Ministre de l'Éducation nationale de France
+  chirac_jacques:
+    name: Jacques Chirac
+    wikipedia: {title: "Jacques Chirac"}
+    trends: {topic: "/m/09xg8"}  # Jacques Chirac — Ancien président de la République française
+  ciotti_eric:
+    name: Éric Ciotti
+    wikipedia: {title: "Éric Ciotti"}
+    trends: {topic: "/m/04zxyp6"}  # Éric Ciotti — Maire de Nice
+  cope_jean_francois:
+    name: Jean-François Copé
+    wikipedia: {title: "Jean-François Copé"}
+    trends: {topic: "/m/02x0c97"}  # Jean-François Copé — Maire de Meaux
+  darmanin_gerald:
+    name: Gérald Darmanin
+    wikipedia: {title: "Gérald Darmanin"}
+    trends: {topic: "/g/121_434n"}  # Gérald Darmanin — Ministre de la Justice de France
+  dati_rachida:
+    name: Rachida Dati
+    wikipedia: {title: "Rachida Dati"}
+    trends: {topic: "/m/02r53f9"}  # Rachida Dati — Magistrate et ancienne députée européenne
+  de_villepin_dominique:
+    name: Dominique de Villepin
+    wikipedia: {title: "Dominique de Villepin"}
+    trends: {topic: "/m/015yb0"}  # Dominique de Villepin — Ancien Premier ministre de France
+  de_villiers_philippe:
+    name: Philippe de Villiers
+    wikipedia: {title: "Philippe de Villiers"}
+    trends: {topic: "/m/02rpw3"}  # Philippe de Villiers — Ancien député européen
+  delga_carole:
+    name: Carole Delga
+    wikipedia: {title: "Carole Delga"}
+    trends: {topic: "/g/112yg0gpn"}  # Carole Delga — Sujet
+  duflot_cecile:
+    name: Cécile Duflot
+    wikipedia: {title: "Cécile Duflot"}
+    trends: {topic: "/m/05c4g_w"}  # Cécile Duflot — Ancienne Ministre de l’Égalité des territoires et du Logement de France
+  dupont_aignan_nicolas:
+    name: Nicolas Dupont-Aignan
+    wikipedia: {title: "Nicolas Dupont-Aignan"}
+    trends: {topic: "/m/0f6b18"}  # Nicolas Dupont-Aignan — Maire de Yerres
+  faure_olivier:
+    name: Olivier Faure
+    wikipedia: {title: "Olivier Faure"}
+    trends: {topic: "/g/12z65n1_d"}  # Olivier Faure — Député français
+  fillon_francois:
+    name: François Fillon
+    wikipedia: {title: "François Fillon"}
+    trends: {topic: "/m/0fqmlm"}  # François Fillon — Ancien Premier ministre de France
+  glucksmann_raphael:
+    name: Raphaël Glucksmann
+    wikipedia: {title: "Raphaël Glucksmann"}
+    trends: {topic: "/g/11ldsd9kv9"}  # Raphaël Glucksmann — Député européen
+  gluckstein_daniel:
+    name: Daniel Gluckstein
+    wikipedia: {title: "Daniel Gluckstein"}
+    trends: {topic: "/g/11y505bbcx"}  # Daniel Gluckstein — Homme politique français
+  guaino_henri:
+    name: Henri Guaino
+    wikipedia: {title: "Henri Guaino"}
+    trends: {topic: "/m/0hzpsp9"}  # Henri Guaino — Conseiller et ancien député de la République française
+  guedj_jerome:
+    name: Jérôme Guedj
+    wikipedia: {title: "Jérôme Guedj"}
+    trends: {topic: "/m/0qrzzcy"}  # Jérôme Guedj — Député de l'Assemblée nationale de France
+  hamon_benoit:
+    name: Benoît Hamon
+    wikipedia: {title: "Benoît Hamon"}
+    trends: {topic: "/m/0551nw"}  # Benoît Hamon — Ancien député européen
+  hanouna_cyril:
+    name: Cyril Hanouna
+    wikipedia: {title: "Cyril Hanouna"}
+    trends: {topic: "/m/0h96rwf"}  # Cyril Hanouna — Animateur de radio
+  hidalgo_anne:
+    name: Anne Hidalgo
+    wikipedia: {title: "Anne Hidalgo"}
+    trends: {topic: "/m/03hn76f"}  # Anne Hidalgo — Ancienne Maire de Paris
+  hollande_francois:
+    name: François Hollande
+    wikipedia: {title: "François Hollande"}
+    trends: {topic: "/m/02qg4z"}  # François Hollande — Député de la République française
+  hue_robert:
+    name: Robert Hue
+    wikipedia: {title: "Robert Hue"}
+    trends: {topic: "/m/01fl_v"}  # Robert Hue — Ancien député européen
+  hulot_nicolas:
+    name: Nicolas Hulot
+    wikipedia: {title: "Nicolas Hulot"}
+    trends: {topic: "/m/03dbb7"}  # Nicolas Hulot — Journaliste et ancien Ministre de la Transition écologique, de la Biodiversité et des Négociations internationales sur le climat et la nature de France
+  jadot_yannick:
+    name: Yannick Jadot
+    wikipedia: {title: "Yannick Jadot"}
+    trends: {topic: "/m/05zztc0"}  # Yannick Jadot — Sénateur
+  joly_eva:
+    name: Eva Joly
+    wikipedia: {title: "Eva Joly"}
+    trends: {topic: "/m/0662d_"}  # Eva Joly — Ancienne députée européenne
+  jospin_lionel:
+    name: Lionel Jospin
+    wikipedia: {title: "Lionel Jospin"}
+    trends: {topic: "/m/0hrb1"}  # Lionel Jospin — Ancien Premier ministre de France
+  juppe_alain:
+    name: Alain Juppé
+    wikipedia: {title: "Alain Juppé"}
+    trends: {topic: "/m/02840y"}  # Alain Juppé — Membre du Conseil constitutionnel de France
+  juvin_philippe:
+    name: Philippe Juvin
+    wikipedia: {title: "Philippe Juvin"}
+    trends: {topic: "/m/06w2bm1"}  # Philippe Juvin — Député français
+  kazib_anasse:
+    name: Anasse Kazib
+    wikipedia: {title: "Anasse Kazib"}
+    trends: {topic: "/g/11n87rr1c0"}  # Anasse Kazib — Cheminot français
+  knafo_sarah:
+    name: Sarah Knafo
+    wikipedia: {title: "Sarah Knafo"}
+    trends: {topic: "/g/11n8rz3myv"}  # Sarah Knafo — Députée européenne
+  labib_selma:
+    name: Selma Labib
+    wikipedia: null  # pas d'article sur fr.wikipedia (vérifié le 2026-10-20)
+    trends: {topic: "/g/11vz9jd2vs"}  # Selma Labib — Femme politique française
+  lagarde_jean_christophe:
+    name: Jean-Christophe Lagarde
+    wikipedia: {title: "Jean-Christophe Lagarde"}
+    trends: {topic: "/m/04zzq76"}  # Jean-Christophe Lagarde — Ancien député français
+  laguiller_arlette:
+    name: Arlette Laguiller
+    wikipedia: {title: "Arlette Laguiller"}
+    trends: {topic: "/m/01vvg4"}  # Arlette Laguiller — Ancienne députée européenne
+  larrouturou_pierre:
+    name: Pierre Larrouturou
+    wikipedia: {title: "Pierre Larrouturou"}
+    trends: {topic: "/g/11y505krmh"}  # Pierre Larrouturou — Économiste et ancien député européen
+  lassalle_jean:
+    name: Jean Lassalle
+    wikipedia: {title: "Jean Lassalle"}
+    trends: {topic: "/m/0clcmp"}  # Jean Lassalle — Ancien député français
+  le_maire_bruno:
+    name: Bruno Le Maire
+    wikipedia: {title: "Bruno Le Maire"}
+    trends: {topic: "/m/04zwchc"}  # Bruno Le Maire — Ancien Ministre de l'Économie, des Finances et de la Souveraineté industrielle, énergétique et numérique de France
+  le_pen_jean_marie:
+    name: Jean-Marie Le Pen
+    wikipedia: {title: "Jean-Marie Le Pen"}
+    trends: {topic: "/m/0d7x8"}  # Jean-Marie Le Pen — Ancien député européen
+  le_pen_marine:
+    name: Marine Le Pen
+    wikipedia: {title: "Marine Le Pen"}
+    trends: {topic: "/m/02rdgs"}  # Marine Le Pen — Députée de l'Assemblée nationale de France
+  lecornu_sebastien:
+    name: Sébastien Lecornu
+    wikipedia: {title: "Sébastien Lecornu"}
+    trends: {topic: "/g/11b7lp6144"}  # Sébastien Lecornu — Premier ministre de France
+  lepage_corinne:
+    name: Corinne Lepage
+    wikipedia: {title: "Corinne Lepage"}
+    trends: {topic: "/m/0d4txw"}  # Corinne Lepage — Avocate et ancienne députée européenne
+  lisnard_david:
+    name: David Lisnard
+    wikipedia: {title: "David Lisnard"}
+    trends: {topic: "/g/1213hqf4"}  # David Lisnard — Maire de Cannes
+  macron_emmanuel:
+    name: Emmanuel Macron
+    wikipedia: {title: "Emmanuel Macron"}
+    trends: {topic: "/m/011ncr8c"}  # Emmanuel Macron — Président de la République française
+  madelin_alain:
+    name: Alain Madelin
+    wikipedia: {title: "Alain Madelin"}
+    trends: {topic: "/m/01fm1s"}  # Alain Madelin — Ancien député européen
+  mamere_noel:
+    name: Noël Mamère
+    wikipedia: {title: "Noël Mamère"}
+    trends: {topic: "/m/03298n"}  # Noël Mamère — Journaliste et ancien député européen
+  marchandise_charlotte:
+    name: Charlotte Marchandise
+    wikipedia: null  # pas d'article sur fr.wikipedia (vérifié le 2026-10-20)
+    trends: {topic: "/g/11g69ggnwh"}  # Charlotte Marchandise — Femme politique
+  maurel_emmanuel:
+    name: Emmanuel Maurel
+    wikipedia: {title: "Emmanuel Maurel"}
+    trends: {topic: "/m/0n48xx5"}  # Emmanuel Maurel — Député français
+  megret_bruno:
+    name: Bruno Mégret
+    wikipedia: {title: "Bruno Mégret"}
+    trends: {topic: "/m/02qb7d"}  # Bruno Mégret — Ancien député européen
+  melenchon_jean_luc:
+    name: Jean-Luc Mélenchon
+    wikipedia: {title: "Jean-Luc Mélenchon"}
+    trends: {topic: "/m/04zzm99"}  # Jean-Luc Mélenchon — Ancien député européen
+  montebourg_arnaud:
+    name: Arnaud Montebourg
+    wikipedia: {title: "Arnaud Montebourg"}
+    trends: {topic: "/m/0b_zmm"}  # Arnaud Montebourg — Avocat et ancien Ministre de l'Économie, du Redressement productif et du Numérique de France
+  nihous_frederic:
+    name: Frédéric Nihous
+    wikipedia: {title: "Frédéric Nihous"}
+    trends: {topic: "/m/02q269x"}  # Frédéric Nihous — Homme politique français
+  payre_denis:
+    name: Denis Payre
+    wikipedia: {title: "Denis Payre"}
+    trends: {topic: "/g/1216x130"}  # Denis Payre — Entrepreneur français
+  pecresse_valerie:
+    name: Valérie Pécresse
+    wikipedia: {title: "Valérie Pécresse"}
+    trends: {topic: "/m/02r6f2s"}  # Valérie Pécresse — Présidente du Conseil régional d'Île-de-France
+  peillon_vincent:
+    name: Vincent Peillon
+    wikipedia: {title: "Vincent Peillon"}
+    trends: {topic: "/m/0551vp"}  # Vincent Peillon — Ancien Ministre de l'Éducation nationale de France
+  philippe_edouard:
+    name: Édouard Philippe
+    wikipedia: {title: "Édouard Philippe"}
+    trends: {topic: "/g/122xf96w"}  # Édouard Philippe — Maire du Havre
+  philippot_florian:
+    name: Florian Philippot
+    wikipedia: {title: "Florian Philippot"}
+    trends: {topic: "/m/0k96jhd"}  # Florian Philippot — Ancien député européen
+  pinel_sylvia:
+    name: Sylvia Pinel
+    wikipedia: {title: "Sylvia Pinel"}
+    trends: {topic: "/m/04zxp2y"}  # Sylvia Pinel — Ancienne Ministre de l'Aménagement du territoire et de la Décentralisation de France
+  piolle_eric:
+    name: Éric Piolle
+    wikipedia: {title: "Éric Piolle"}
+    trends: {topic: "/g/1q2xhh2q4"}  # Éric Piolle — Homme politique français
+  platret_gilles:
+    name: Gilles Platret
+    wikipedia: null  # pas d'article sur fr.wikipedia (vérifié le 2026-10-20)
+    trends: {topic: "/g/11hbj3y4by"}  # Gilles Platret — Homme politique français
+  poisson_jean_frederic:
+    name: Jean-Frédéric Poisson
+    wikipedia: {title: "Jean-Frédéric Poisson"}
+    trends: {topic: "/m/04zzx9h"}  # Jean-Frédéric Poisson — Président du Parti chrétien-démocrate
+  polony_natacha:
+    name: Natacha Polony
+    wikipedia: {title: "Natacha Polony"}
+    trends: {topic: "/m/0j629jc"}  # Natacha Polony — Journaliste et essayiste française
+  poutou_philippe:
+    name: Philippe Poutou
+    wikipedia: {title: "Philippe Poutou"}
+    trends: {topic: "/m/0gxyxxy"}  # Philippe Poutou — Ouvrier et syndicaliste français
+  retailleau_bruno:
+    name: Bruno Retailleau
+    wikipedia: {title: "Bruno Retailleau"}
+    trends: {topic: "/m/04zzqs1"}  # Bruno Retailleau — Sénateur de France
+  rousseau_sandrine:
+    name: Sandrine Rousseau
+    wikipedia: {title: "Sandrine Rousseau"}
+    trends: {topic: "/g/1q5jyf2nd"}  # Sandrine Rousseau — Députée de l'Assemblée nationale de France
+  roussel_fabien:
+    name: Fabien Roussel
+    wikipedia: {title: "Fabien Roussel"}
+    trends: {topic: "/g/11c5g9tmkb"}  # Fabien Roussel — Maire de Saint-Amand-les-Eaux
+  royal_segolene:
+    name: Ségolène Royal
+    wikipedia: {title: "Ségolène Royal"}
+    trends: {topic: "/m/02qg6y"}  # Ségolène Royal — Ancienne Ministre de la Transition écologique, de la Biodiversité et des Négociations internationales sur le climat et la nature de France
+  ruffin_francois:
+    name: François Ruffin
+    wikipedia: {title: "François Ruffin"}
+    trends: {topic: "/g/122z_q42"}  # François Ruffin — Député français
+  saint_josse_jean:
+    name: Jean Saint-Josse
+    wikipedia: {title: "Jean Saint-Josse"}
+    trends: {topic: "/m/02rnk_j"}  # Jean Saint-Josse — Ancien député européen
+  sarkozy_nicolas:
+    name: Nicolas Sarkozy
+    wikipedia: {title: "Nicolas Sarkozy"}
+    trends: {topic: "/m/02ps9k"}  # Nicolas Sarkozy — Ancien président de la République française
+  schivardi_gerard:
+    name: Gérard Schivardi
+    wikipedia: {title: "Gérard Schivardi"}
+    trends: {topic: "/m/02q0gvs"}  # Gérard Schivardi — Homme politique français
+  taubira_christiane:
+    name: Christiane Taubira
+    wikipedia: {title: "Christiane Taubira"}
+    trends: {topic: "/m/0ctgsv"}  # Christiane Taubira — Ancienne députée européenne
+  thouy_helene:
+    name: Hélène Thouy
+    wikipedia: {title: "Hélène Thouy"}
+    trends: {topic: "/g/11fl5mlx15"}  # Hélène Thouy — Avocate française
+  tondelier_marine:
+    name: Marine Tondelier
+    wikipedia: {title: "Marine Tondelier"}
+    trends: {topic: "/g/11ddzwzdyq"}  # Marine Tondelier — Conseillère régionale des Hauts-de-France
+  valls_manuel:
+    name: Manuel Valls
+    wikipedia: {title: "Manuel Valls"}
+    trends: {topic: "/m/047drb0"}  # Manuel Valls — Ancien Premier ministre de France
+  voynet_dominique:
+    name: Dominique Voynet
+    wikipedia: {title: "Dominique Voynet"}
+    trends: {topic: "/m/0b7tfs"}  # Dominique Voynet — Députée française
+  wauquiez_laurent:
+    name: Laurent Wauquiez
+    wikipedia: {title: "Laurent Wauquiez"}
+    trends: {topic: "/m/02rvtrg"}  # Laurent Wauquiez — Député de l'Assemblée nationale de France
+  yade_rama:
+    name: Rama Yade
+    wikipedia: {title: "Rama Yade"}
+    trends: {topic: "/m/02r53ks"}  # Rama Yade — Ancienne secrétaire d'État chargée des Affaires étrangères et des Droits de l'homme
+  zemmour_eric:
+    name: Éric Zemmour
+    wikipedia: {title: "Éric Zemmour"}
+    trends: {topic: "/m/027jgr_"}  # Éric Zemmour — Journaliste et écrivain français
+
+cycles:
+  2007:
+    - bayrou_francois
+    - besancenot_olivier
+    - bove_jose
+    - buffet_marie_george
+    - de_villiers_philippe
+    - laguiller_arlette
+    - le_pen_jean_marie
+    - nihous_frederic
+    - royal_segolene
+    - sarkozy_nicolas
+    - schivardi_gerard
+    - voynet_dominique
+  2012:
+    - arthaud_nathalie
+    - bayrou_francois
+    - cheminade_jacques
+    - dupont_aignan_nicolas
+    - hollande_francois
+    - joly_eva
+    - le_pen_marine
+    - melenchon_jean_luc
+    - poutou_philippe
+    - sarkozy_nicolas
+  2017:
+    - alliot_marie_michele
+    - arthaud_nathalie
+    - asselineau_francois
+    - aubry_martine
+    - bayrou_francois
+    - besancenot_olivier
+    - cheminade_jacques
+    - cope_jean_francois
+    - de_villiers_philippe
+    - duflot_cecile
+    - dupont_aignan_nicolas
+    - fillon_francois
+    - guaino_henri
+    - hamon_benoit
+    - hollande_francois
+    - hulot_nicolas
+    - jadot_yannick
+    - joly_eva
+    - juppe_alain
+    - larrouturou_pierre
+    - lassalle_jean
+    - le_maire_bruno
+    - le_pen_marine
+    - macron_emmanuel
+    - marchandise_charlotte
+    - melenchon_jean_luc
+    - montebourg_arnaud
+    - peillon_vincent
+    - pinel_sylvia
+    - poutou_philippe
+    - sarkozy_nicolas
+    - valls_manuel
+    - yade_rama
+  2022:
+    - arthaud_nathalie
+    - asselineau_francois
+    - barnier_michel
+    - baroin_francois
+    - bertrand_xavier
+    - cazeneuve_bernard
+    - cheminade_jacques
+    - ciotti_eric
+    - dati_rachida
+    - dupont_aignan_nicolas
+    - faure_olivier
+    - fillon_francois
+    - hamon_benoit
+    - hidalgo_anne
+    - hollande_francois
+    - jadot_yannick
+    - juvin_philippe
+    - lagarde_jean_christophe
+    - lassalle_jean
+    - le_pen_marine
+    - macron_emmanuel
+    - melenchon_jean_luc
+    - montebourg_arnaud
+    - payre_denis
+    - pecresse_valerie
+    - philippot_florian
+    - piolle_eric
+    - poisson_jean_frederic
+    - poutou_philippe
+    - retailleau_bruno
+    - rousseau_sandrine
+    - roussel_fabien
+    - royal_segolene
+    - taubira_christiane
+    - thouy_helene
+    - wauquiez_laurent
+    - zemmour_eric
+  2027:
+    - arthaud_nathalie
+    - asselineau_francois
+    - attal_gabriel
+    - bardella_jordan
+    - barnier_michel
+    - batho_delphine
+    - bayrou_francois
+    - becht_olivier
+    - bertrand_xavier
+    - bompard_manuel
+    - bonnal_sebastien
+    - borne_elisabeth
+    - bouamrane_karim
+    - braun_pivet_yael
+    - castex_jean
+    - cazeneuve_bernard
+    - darmanin_gerald
+    - de_villepin_dominique
+    - de_villiers_philippe
+    - delga_carole
+    - dupont_aignan_nicolas
+    - faure_olivier
+    - glucksmann_raphael
+    - guedj_jerome
+    - hanouna_cyril
+    - hidalgo_anne
+    - hollande_francois
+    - jadot_yannick
+    - kazib_anasse
+    - knafo_sarah
+    - labib_selma
+    - lassalle_jean
+    - le_maire_bruno
+    - le_pen_marine
+    - lecornu_sebastien
+    - lisnard_david
+    - maurel_emmanuel
+    - melenchon_jean_luc
+    - pecresse_valerie
+    - philippe_edouard
+    - philippot_florian
+    - platret_gilles
+    - polony_natacha
+    - poutou_philippe
+    - retailleau_bruno
+    - rousseau_sandrine
+    - roussel_fabien
+    - royal_segolene
+    - ruffin_francois
+    - tondelier_marine
+    - wauquiez_laurent
+    - zemmour_eric
