@@ -70,3 +70,40 @@ série et par mois).
 - `runs/<date>/economy/` : tableaux de coefficients, figures par bloc, note de résultats.
 - Section « Économie » du site : séries et corrélations, avec la mention claire de ce qui
   entre ou non dans la prévision.
+
+## Résultat de l'étude du 2026-10-20 (`runs/2026-10-20-economy/report.md`)
+
+**Négatif.** Sur un panel de 80 variations mensuelles par bloc (6 cycles, 69 % dans les
+douze mois précédant un vote), aucune variable économique ne fait bouger les intentions de
+vote par bloc de façon distinguable du hasard. Contrôles ajoutés au protocole : taille
+réelle des tests mesurée par décalage circulaire des séries macro (les tests HAC rejettent
+26 à 33 % du temps sous l'hypothèse nulle sur ces données), et placebo par paire corrigeant
+le choix du retard. Critères fixés avant lecture.
+
+- **Chômage BIT, la question de départ** : quand il monte, la droite baisse trois mois plus
+  tard et l'extrême droite monte, signe stable en retirant un cycle, mais effacé en niveau,
+  profil par retard instable, aucune trace d'une élection à l'autre. Placebos p = 0,08 et
+  0,13. Le lien apparent demandeurs d'emploi / extrême droite tient aux mois de sortie du
+  Covid.
+- **Prix, carburants, confiance des ménages, climat des affaires** : rien. Une paire passe
+  formellement (inflation alimentaire et extrême droite, retard 5, signe contre-intuitif),
+  compatible avec les 4 faux positifs attendus sur 78 paires.
+- **Popularité du président** : +0,32 point du bloc sortant par point de satisfaits, en
+  niveau, même signe sur les six élections ; mais en variations elle ne précède pas les
+  sondages (placebo p = 0,59). Lien contemporain, pas prédictif.
+
+Décisions :
+
+- aucune dérive économique `μ_b(τ)` dans la projection ; Timestral n'a donc pas d'usage ici
+  pour l'instant ;
+- un seul test confirmatoire facultatif, déclaré d'avance : variation du chômage BIT sur
+  trois mois, retard 3, droite et extrême droite, leave-one-election-out ; amplitude
+  impliquée de 3 à 5 points à 180 jours, échec attendu ;
+- la popularité du président en niveau peut être essayée dans le prior structurel du bloc
+  sortant à 180 et 90 jours, avec deux réserves : les sondages la contiennent déjà, et le
+  bloc sortant de 2027 (centre sans Macron) n'a pas de précédent ;
+- ne pas tester inflation, carburants, confiance, climat des affaires ni demandeurs d'emploi
+  (série rompue en 2025).
+
+Le volet « Économie » du site garde les séries et les corrélations avec la mention
+« n'entre pas dans la prévision ».
