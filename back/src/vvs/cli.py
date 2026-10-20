@@ -448,6 +448,9 @@ def simulate_cmd(
         None, help="Part du biais RN du second tour appliquée (défaut : atténuation par horizon)"
     ),
     refit: bool = typer.Option(False, "--refit", help="Refaire l'ajustement même s'il existe"),
+    substitution: bool = typer.Option(
+        False, "--substitution", help="Substitution intra-bloc (logit emboîté) dans l'ajustement"
+    ),
 ) -> None:
     """Simulation de l'élection (docs/04-modele.md § 5) : scénarios, premier tour, second tour."""
     from datetime import date
@@ -461,10 +464,18 @@ def simulate_cmd(
     if draws < 10_000:
         raise typer.BadParameter("au moins 10 000 tirages (docs/04-modele.md § 5)")
     d = date.fromisoformat(asof)
-    fit_dir = Path(fit) if fit else paths.RUNS / f"{d.isoformat()}-fit-{election}"
+    suffix = "-subst" if substitution else ""
+    fit_dir = Path(fit) if fit else paths.RUNS / f"{d.isoformat()}-fit-{election}{suffix}"
     if refit or not (fit_dir / "draws.npz").exists():
         typer.echo(f"ajustement du premier tour -> {fit_dir}")
-        m = fit_for_simulation(election, d, fit_dir)
+        kw = {}
+        if substitution:
+            from dataclasses import replace
+
+            from vvs.eval.backtest import DEFAULT_VARIANT, VARIANTS
+
+            kw["priors"] = replace(VARIANTS[DEFAULT_VARIANT], substitution=True)
+        m = fit_for_simulation(election, d, fit_dir, **kw)
         typer.echo(f"r_hat max {m['diagnostics'].get('r_hat_max')}, "
                    f"divergences {m['diagnostics'].get('divergences')}")
     out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-simulate"

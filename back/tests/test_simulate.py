@@ -131,3 +131,38 @@ def test_trajectories_null_before_first_poll(toy):
     assert t.filter(pl.col("candidate_id") == "placeholder_centre")["q50"].is_null().all()
     q = t.drop_nulls("q50").select(QNAMES).to_numpy()
     assert np.all(np.diff(q, axis=1) >= -1e-9)
+
+
+def test_nested_shares_reduces_to_iia_at_lambda_one():
+    import numpy as np
+
+    from vvs.model.simulate import iia_shares, nested_shares
+
+    rng = np.random.default_rng(1)
+    n, u, b = 50, 6, 3
+    cand_bloc = np.array([0, 0, 1, 1, 2, 2])
+    beta = rng.normal(size=(n, b))
+    delta = rng.normal(size=(n, u))
+    theta = beta[:, cand_bloc] + delta
+    present = rng.random((n, u)) > 0.3
+    present[:, 0] = True
+    ctx = {"beta": beta, "lam": np.ones((n, b)), "cand_bloc": cand_bloc}
+    np.testing.assert_allclose(nested_shares(theta, present, [], ctx), iia_shares(theta, present, []), atol=1e-12)
+
+
+def test_nested_shares_keeps_bloc_share_at_lambda_zero():
+    """À λ = 0, retirer un candidat laisse la part de son bloc inchangée."""
+    import numpy as np
+
+    from vvs.model.simulate import nested_shares
+
+    cand_bloc = np.array([0, 0, 1, 1])
+    beta = np.array([[0.3, -0.3]])
+    delta = np.array([[0.5, -0.5, 0.2, -0.2]])
+    theta = beta[:, cand_bloc] + delta
+    ctx = {"beta": beta, "lam": np.zeros((1, 2)), "cand_bloc": cand_bloc}
+    full = nested_shares(theta, np.ones((1, 4), bool), [], ctx)
+    reduced = nested_shares(theta, np.array([[True, False, True, True]]), [], ctx)
+    assert reduced[0, 1] == 0
+    np.testing.assert_allclose(reduced[0, :2].sum(), full[0, :2].sum(), atol=1e-12)
+    assert np.isclose(reduced.sum(), 1.0)

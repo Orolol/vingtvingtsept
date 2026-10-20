@@ -123,19 +123,72 @@ def quantile_dict(x: np.ndarray) -> dict[str, float]:
 
 # --- règle de parts (point d'extension de la substitution)
 
-ShareRule = Callable[[np.ndarray, np.ndarray, Sequence[str]], np.ndarray]
+ShareRule = Callable[[np.ndarray, np.ndarray, Sequence[str], "dict | None"], np.ndarray]
 
 
-def iia_shares(logits: np.ndarray, present: np.ndarray, blocs: Sequence[str]) -> np.ndarray:
+def iia_shares(
+    logits: np.ndarray, present: np.ndarray, blocs: Sequence[str], ctx: dict | None = None
+) -> np.ndarray:
     """Softmax restreint aux candidats présents (indépendance des alternatives non pertinentes).
 
     `logits` (…, U), `present` (…, U) booléen ou diffusable ; parts nulles pour les absents.
-    `blocs` (U,) est inutilisé ici : c'est l'argument dont une règle de substitution intra-bloc
-    aura besoin."""
+    `blocs` et `ctx` sont inutilisés ici : ce sont les arguments de `nested_shares`."""
     x = np.where(present, logits, -np.inf)
     m = np.max(x, axis=-1, keepdims=True)
     z = np.where(present, np.exp(x - m), 0.0)
     return z / z.sum(-1, keepdims=True)
+
+
+def _lse(x: np.ndarray) -> np.ndarray:
+    m = np.max(x, axis=-1, keepdims=True)
+    m = np.where(np.isfinite(m), m, 0.0)
+    return m + np.log(np.exp(x - m).sum(-1, keepdims=True))
+
+
+def nested_shares(
+    logits: np.ndarray, present: np.ndarray, blocs: Sequence[str], ctx: dict | None
+) -> np.ndarray:
+    """Logit emboîté par bloc (substitution intra-bloc, `Priors.substitution`), même forme que
+    `first_round.config_log_shares` mais avec une présence variable par tirage.
+
+    `logits` = θ = β + δ (…, U) ; `ctx` : `beta` (…, B) aligné sur les dimensions de tête de
+    `logits`, `lam` (N, B), `cand_bloc` (U,) indices dans B. Un bloc sans candidat présent
+    pèse zéro ; λ = 1 redonne `iia_shares`."""
+    if ctx is None:
+        raise ValueError("nested_shares : contexte (β, λ, cand_bloc) requis")
+    beta, lam, cb = ctx["beta"], ctx["lam"], ctx["cand_bloc"]
+    if lam.ndim == 2 and logits.ndim == 3:  # (N, B) -> (N, 1, B) pour les trajectoires
+        lam = lam[:, None, :]
+    delta = logits - beta[..., cb]
+    d = np.where(present, delta, -np.inf)
+    nb = beta.shape[-1]
+    lse = np.full(beta.shape, -np.inf)
+    for b in range(nb):
+        idx = cb == b
+        if idx.any():
+            lse[..., b] = _lse(d[..., idx])[..., 0]
+    util = np.where(np.isfinite(lse), beta + lam * lse, -np.inf)
+    log_pb = util - _lse(util)
+    log_share = np.where(present, log_pb[..., cb] + d - lse[..., cb], -np.inf)
+    z = np.where(present, np.exp(log_share), 0.0)
+    return z / z.sum(-1, keepdims=True)
+
+
+def share_context(fit: FitDraws, uni: Universe, s_idx: np.ndarray, week: int | slice) -> dict | None:
+    """Contexte de `nested_shares` pour les tirages `s_idx` (None sans substitution)."""
+    if fit.lam is None:
+        return None
+    bloc_index = {b: i for i, b in enumerate(fit.bloc_ids)}
+    cb = np.array([bloc_index[b] for b in uni.blocs])
+    return {"beta": fit.beta[s_idx][:, week], "lam": fit.lam[s_idx], "cand_bloc": cb}
+
+
+def perturbed_shares(ref: np.ndarray, eta: np.ndarray, present: np.ndarray) -> np.ndarray:
+    """Parts au jour du vote : η s'applique aux log-parts (c'est sur des différences de
+    log-parts qu'il est calibré), puis renormalisation sur les présents. Identique à
+    softmax(θ + η) sous l'IIA."""
+    log_ref = np.log(np.where(present, ref, 1.0))
+    return iia_shares(log_ref + eta, present, [])
 
 
 # --- tirages du premier tour
@@ -155,6 +208,13 @@ class FitDraws:
     asof_week: int
     observed: pl.DataFrame
     manifest: dict
+    beta: np.ndarray | None = None  # (S, T, B), substitution seulement
+    lam: np.ndarray | None = None  # (S, B)
+    bloc_ids: list[str] | None = None
+
+    @property
+    def substitution(self) -> bool:
+        return self.lam is not None
 
     @classmethod
     def load(cls, fit_dir: Path) -> FitDraws:
@@ -162,13 +222,19 @@ class FitDraws:
         d = np.load(fit_dir / "draws.npz")
         if "theta" not in d.files:
             raise ValueError(f"{fit_dir}/draws.npz sans trajectoires : relancer avec save_trajectories")
+        extra: dict = {}
         if "lam" in d.files:
-            # ajustement avec substitution intra-bloc (logit emboîté, vvs.model.run) : les parts
-            # ne sont plus un softmax de θ ; il faut une ShareRule qui lise β et λ par tirage
-            raise NotImplementedError(
-                f"{fit_dir} : ajustement avec substitution, la simulation ne gère que l'IIA"
-            )
+            # ajustement avec substitution intra-bloc (logit emboîté) : les parts se calculent
+            # par `nested_shares` à partir de β et λ par tirage
+            if "beta" not in d.files:
+                raise ValueError(f"{fit_dir}/draws.npz : substitution sans β hebdomadaire")
+            extra = {
+                "beta": d["beta"].astype(np.float64),
+                "lam": d["lam"].astype(np.float64),
+                "bloc_ids": [str(b) for b in d["bloc_ids"]],
+            }
         return cls(
+            **extra,
             fit_dir=fit_dir,
             candidates=[str(c) for c in d["candidates"]],
             blocs=[str(b) for b in d["blocs"]],
@@ -516,10 +582,11 @@ def first_round_draws(
     theta = universe_theta(fit, uni, s_idx, fit.asof_week)
     theta = insert_prior_shares(theta, present, uni, rng)
     theta_safe = np.where(present, theta, 0.0)
-    ref = share_rule(theta_safe, present, uni.blocs)
+    ctx = share_context(fit, uni, s_idx, fit.asof_week)
+    ref = share_rule(theta_safe, present, uni.blocs, ctx)
     p_ref = np.where(present, ref, 1.0)  # parts des absents sans effet (η retiré ensuite)
     eta = error_model.sample_eta(horizon, list(uni.blocs), p_ref, rng)
-    shares = share_rule(theta_safe + eta, present, uni.blocs)
+    shares = perturbed_shares(ref, eta, present)
     return {
         "config": cfg,
         "posterior": s_idx,
@@ -542,7 +609,7 @@ def simulate(
     rn_bias_full_days: float = RN_BIAS_FULL_DAYS,
     rn_bias_zero_days: float = RN_BIAS_ZERO_DAYS,
     min_hypotheses: int = MIN_HYPOTHESES,
-    share_rule: ShareRule = iia_shares,
+    share_rule: ShareRule | None = None,
     scenarios: ScenariosFile | None = None,
     registry: Registry | None = None,
     error_model=None,
@@ -562,6 +629,8 @@ def simulate(
     reg = registry or default_registry()
     f = scenarios or load_scenarios(registry=reg)
     fit = FitDraws.load(fit_dir)
+    if share_rule is None:
+        share_rule = nested_shares if fit.substitution else iia_shares
     e = reg.elections[election]
     d1, d2 = e.round_(1).date, e.round_(2).date
     horizon = float((d1 - asof).days)
@@ -871,7 +940,8 @@ def trajectories(
         theta = universe_theta(fit, uni, s_idx, weeks)  # (n, W, U)
         theta = insert_prior_shares(theta, present, uni, rng)
         pr = present[:, None, :]
-        sh = 100 * share_rule(np.where(pr, theta, 0.0), pr, uni.blocs)
+        ctx = share_context(fit, uni, s_idx, weeks)
+        sh = 100 * share_rule(np.where(pr, theta, 0.0), pr, uni.blocs, ctx)
         for u, c in enumerate(uni.ids):
             if not present[:, u].any():
                 continue
