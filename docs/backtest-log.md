@@ -169,3 +169,14 @@ victoire, Philippe 16,4 → 16,1 %, duel Le Pen–Philippe 57,0 → 55,8 % pour 
 depuis 2017, μ ≈ −0,055 en logit) : testé comme option, **rejeté** (log-score −0,03 à −0,06
 à tous les horizons, perte sur les trois élections ; en 2017 la médiane s'éloigne du
 résultat).
+
+## 2026-10-20 — deuxième vague de pistes : volatilité, vote utile, presse
+
+| Piste | Résultat | Verdict |
+|---|---|---|
+| Erreur adaptée à la volatilité réalisée | κ = 0 en leave-one-election-out ; seul 2022 serait mieux couvert, au prix du log-score ; signal réel seulement par candidat (β = 0,28) | non admise |
+| Vote utile de fin de campagne | consolidation nette à gauche seulement (5/5, p = 0,001), absente ailleurs ; la dérive surcorrige à 7 jours (Jospin 2002 projeté à 29 %), perd en validation croisée | non admise ; la règle de docs/07 juge désormais aux horizons d'action |
+| Presse par comptages (part de voix, ton, agenda, affaires) | aucun des six tests ne passe ; mesure les mêmes événements que l'attention Wikipédia avec moins de signal | non testée au backtest |
+
+Pistes restantes notées : volatilité par candidat pour la composante v_c de η ; consolidation
+limitée à la gauche comme information qualitative sur le site.

@@ -113,3 +113,29 @@ collection, et une comparaison média par média n'a pas de sens. Limite de déb
 une requête toutes les 35 à 70 secondes. Conséquence : Media Cloud sert au backtest 2017 et
 2022 et au live 2027 par comptages (`count-over-time`), pas par extraction massive de
 titres ; INA couvre 2002 à 2017 pour l'agenda télévisé.
+
+### Étude par comptages du 2026-10-20 (`runs/2026-10-20-press-study/report.md`)
+
+Media Cloud, 180 requêtes `count-over-time` (part de voix de 18 candidats par cycle, 10
+thèmes, co-mentions « affaires » comme proxy de couverture négative), GDELT ton pour quatre
+candidats, INA pour 2002-2017 ; critères fixés avant lecture, placebos, 2017, 2022, 2027.
+
+**Négatif sur les six tests.** Part de voix → sondages à 4 semaines : β = −0,009 (placebo
+p = 0,96) ; ton GDELT et part d'affaires : rien ; pics de volume : mouvement moyen 0,82
+contre 0,77 au hasard ; agenda immigration et sécurité → extrême droite : mauvais signe dans
+chaque cycle, réplication INA nulle ; médiation chômage × couverture : signe opposé ;
+erreur finale : signes opposés entre 2017 et 2022. Dans une régression jointe, l'attention
+Wikipédia garde son effet (+0,16) et la presse prend un signe négatif (−0,17) : la presse
+mesure les mêmes événements avec moins de signal, et ce qui précède un rattrapage des
+sondages est l'intérêt du public au-delà de la couverture. Lecture faite après coup, signe
+inversé en 2027.
+
+Descriptif : l'affaire Fillon n'est pas un pic de volume mais un changement de composition
+(part de sa couverture mentionnant des affaires de 2 à 22 % la semaine du Canard enchaîné),
+simultané à la chute dans les sondages. Pécresse 2022 perd cinq points après le Zénith sans
+aucun signal de presse.
+
+Décision : **aucune variable de presse au backtest**. Media Cloud reste pour la section
+« Presse » du site (part de voix et agenda, environ 300 requêtes par semaine), marquée
+« n'entre pas dans la prévision ». La classification NLP des titres n'a plus d'objet
+prédictif ; elle reste possible pour l'affichage.
