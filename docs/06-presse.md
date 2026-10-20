@@ -78,3 +78,21 @@ l'agenda pour un effet de bloc. Résultat négatif consigné ici.
 Ingestion quotidienne depuis Media Cloud et GDELT, classification incrémentale, section
 « Presse » du site : part de voix, ton, agenda de la semaine, avec la mention de ce qui entre
 ou non dans la prévision.
+
+## Résultats du 2026-10-20
+
+- **Ingestion** (`runs/2026-10-20-press/`) : INA 2000-2020 complet (268 424 lignes,
+  cinq chaînes, 14 rubriques ; pas 2022, pas de titres de sujets, sécurité mal isolée).
+  GDELT : l'API cherche dans la traduction anglaise automatique des articles (« Marine Le
+  Pen » en français donne 3 articles en janvier 2017), d'où des alias adaptés
+  (`gdelt_aliases`), et le volume total surveillé s'effondre (624 000 articles par jour
+  en 2017, 103 000 en 2026) : seul `volume_share` est comparable entre années. Limite de
+  débit réelle : une réussite toutes les 10 à 20 minutes. Media Cloud : client prêt, clé
+  fournie, couverture 2012-2022 en cours de mesure (limite d'une requête toutes les 35 à
+  70 s).
+- **Attention en ligne** (`runs/2026-10-20-attention/report.md`) : pages vues Wikipédia (97
+  candidats depuis 2015) et Google Trends (90 candidats depuis 2004, chaînage sur pivot,
+  imprécis après 2014). Résultat : l'attention Wikipédia précède les sondages de une à
+  quatre semaines comme rattrapage de mesure autour des événements (0,35 point par écart
+  type), effet nul hors événements, Granger inverse significatif, Trends ne réplique pas.
+  **Non retenue** pour la prévision ; utilisable comme témoin d'actualité sur le site.

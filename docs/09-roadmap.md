@@ -6,17 +6,27 @@
 | 1 | Données : Wikipédia 2002 à 2027 (978 sondages), notices de la Commission (2027), MieuxVoter, registre candidats/blocs/élections/instituts, résultats du ministère de l'Intérieur (présidentielles, européennes, législatives), séries macro et popularité, base Jennings–Wlezien, scénarios 2027, reports de voix 2002-2022 | `data/curated/*.parquet`, `data/registry/*.yaml`, 283 tests | ingestions faites le 2026-10-20 ; curation en cours |
 | 2 | Agrégateur premier tour sur 2022 (sans scénarios), effets maison, figures | courbes 2022 cohérentes avec le résultat | fait le 2026-10-20 |
 | 3 | Modèle d'erreur et backtest 2002-2022 aux quatre horizons ; baselines ; second tour par reports évalué | `docs/backtest-log.md` | fait le 2026-10-20 |
-| 4 | Scénarios 2027, substitution intra-bloc, second tour par reports, simulation ; première projection 2027 | `runs/<date>/summary.json` | à faire |
+| 4 | Scénarios 2027, substitution intra-bloc, second tour par reports, simulation ; première projection 2027 | `runs/2026-10-20-simulate-subst/`, site local | fait le 2026-10-20 |
 | 5 | Front SvelteKit, export JSON, publication | site en ligne | squelette et contrat JSON faits ; export et publication à faire |
 | 6 | Étude économie, admission ou non, section du site | `runs/<date>/economy/`, mise à jour de `05` | étude faite le 2026-10-20, résultat négatif ; section du site à faire |
-| 7 | Ingestion presse (Media Cloud, GDELT), classification, étude, admission ou non, section du site | `runs/<date>/press/`, mise à jour de `06` | à faire |
+| 7 | Ingestion presse (Media Cloud, GDELT, INA), attention en ligne, classification, étude, admission ou non, section du site | `runs/2026-10-20-press/`, `runs/2026-10-20-attention/` | ingestion et étude d'attention faites (non retenue) ; classification des titres et section du site à faire |
 | 8 | Live : automatisation des runs, mise à jour à chaque sondage, historique des probabilités | tâche planifiée | à faire |
 | 9 | Législatives (seconde étape, hors périmètre actuel) | nouvelle spec | plus tard |
 
 Les phases 6 et 7 sont indépendantes l'une de l'autre et de la 5 ; elles peuvent démarrer
 dès que la 3 fournit un backtest de référence.
 
+## Vague de variables testées le 2026-10-20
+
+Substitution intra-bloc, rebonds, palmarès des instituts, potentiel électoral, sûrs de leur
+choix, attention en ligne : aucune admise (voir `backtest-log.md`). Toutes restent des
+options désactivées dans le code et des volets explicatifs possibles du site.
+
 ## Questions ouvertes
+- Participation simulée mal calibrée (78 % d'exprimés parmi les inscrits en 2017 contre
+  66 % observés) : à corriger dans `simulate.py`.
+- Biais RN du second tour : atténuation linéaire provisoire, à réévaluer par horizon.
+- Erreurs corrélées premier tour / duel (composante d'extrême droite partagée) : à faire.
 
 - Page Wikipédia 2012 : le tableau « second trimestre 2011 » est corrompu (colonne
   Chevènement contenant les scores de Hulot, sondages perdus). Écarté pour l'instant ; la

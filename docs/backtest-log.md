@@ -100,3 +100,27 @@ sondages ne contraignent qu'une combinaison linéaire.
 4. Vérifier les dates de publication des listes officielles (actuellement de mémoire dans
    `eval/configurations.py`) et les reporter dans `elections.yaml`.
 5. Ligne de référence pour l'admission d'une variable : « modèle + η ».
+
+## 2026-10-20 — vague de variables candidates : cinq tests, aucune admission
+
+Commits `75f6767` (substitution), `a13bcc8` (rebonds), `0dabddc` (palmarès), `0ee5955`
+(potentiel), `f86ca06` (certitude), `a3c2175` (attention), `8de3d45` (options partagées).
+Référence : « modèle + η », variante `floor`. Chaque variable est une option désactivée par
+défaut dans le code ; les études et comparaisons sont dans `runs/2026-10-20-*`.
+
+| Variable | Étude | Backtest contre floor (log-score 180 / 90 j) | Verdict |
+|---|---|---|---|
+| Substitution intra-bloc (logit emboîté) | gain net sur les hypothèses emboîtées 2022 (0,94 → 0,83) et 2027 (1,27 → 1,01), perte 2017 (Bayrou) | −1,33 → −1,37 / −0,98 → −0,98 ; 2022 à 90 j s'améliore (CRPS −0,26), 2017 à 90 j se dégrade avec absorption | **non admise** ; publiée sur le site à la demande de Gaétan, le run IIA reste disponible |
+| Rebonds de primaire et d'annonce | forme commune seulement pour les primaires : saut de 2 à 10 points entièrement érodé au vote (7 cas sur 7) ; aucune forme pour déclarations, retraits, chocs | −1,326 → −1,343 / −0,978 → −0,821 ; le gain à 90 j tient à Pécresse 2022 | **non admise** |
+| Palmarès des instituts | précision et effets maison non reproductibles d'une élection à l'autre (r ≈ 0,1) ; seul signal persistant : sous-estimation de la gauche radicale par OpinionWay et Ifop | −1,326 → −1,311 / −0,978 → −0,983 ; gain sur une élection sur trois | **non admise** |
+| Potentiel électoral et rejet (second tour) | pas un plafond général : les votes de barrage le dépassent ; seul le finaliste RN reste sous son potentiel (n = 2) ; reports via potentiel moins bons que la matrice | CRPS identique à 180 et 90 j, 1,225 → 1,214 à la veille du second tour | **non admise** |
+| Sûrs de leur choix | corrélation avec le mouvement ultérieur de signe opposé entre 2017 (−0,43) et 2022 (+0,20) ; aucune ventilation par candidat publiée pour 2027 | +0,03 / 0,00 en log-score, CRPS dégradé, couverture −5 pts | **non admise** |
+| Attention en ligne (Wikipédia, Trends) | Wikipédia précède les sondages de 1 à 4 semaines (β = 0,085, placebo p = 0,01) mais l'effet disparaît hors événements et à retard d'une semaine ; Granger inverse aussi significatif ; Trends ne réplique pas | non testée au backtest : effet nul aux horizons de la règle | **non retenue** |
+
+Enseignement : avec cinq élections, la ligne « modèle + η » est difficile à battre, et la
+plupart des signaux plausibles sont soit déjà dans les sondages, soit instables d'une
+élection à l'autre. Les volets explicatifs du site peuvent montrer ces signaux avec la
+mention « n'entre pas dans la prévision ». Pistes restantes jugées les plus utiles :
+corriger la participation simulée (78 % d'exprimés parmi les inscrits en 2017 contre 66 %
+observés), coupler l'erreur de duel et le premier tour par une composante d'extrême droite
+partagée, et réévaluer le biais RN du second tour par horizon.
