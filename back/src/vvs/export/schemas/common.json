@@ -1,0 +1,134 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/common.json",
+	"title": "Common",
+	"description": "Définitions partagées par les fichiers de front/static/data/. Parts en points de pourcentage des suffrages exprimés (0 à 100), probabilités entre 0 et 1.",
+	"$defs": {
+		"date": {
+			"title": "IsoDate",
+			"description": "Date calendaire ISO 8601 (AAAA-MM-JJ).",
+			"type": "string",
+			"format": "date",
+			"pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+		},
+		"date_time": {
+			"title": "IsoDateTime",
+			"description": "Horodatage ISO 8601 avec fuseau (UTC recommandé).",
+			"type": "string",
+			"format": "date-time"
+		},
+		"candidate_id": {
+			"title": "CandidateId",
+			"description": "Clé du registre data/registry/candidates.yaml, ou `placeholder_<bloc>` pour un candidat non identifié connu seulement par son bloc.",
+			"type": "string",
+			"pattern": "^[a-z][a-z0-9_]*$"
+		},
+		"pollster_id": {
+			"title": "PollsterId",
+			"description": "Clé du registre data/registry/pollsters.yaml.",
+			"type": "string",
+			"pattern": "^[a-z][a-z0-9_]*$"
+		},
+		"condition_id": {
+			"title": "ConditionId",
+			"description": "Identifiant d'une condition (voir Condition) : `mix` pour le mélange de scénarios.",
+			"type": "string",
+			"minLength": 1
+		},
+		"bloc": {
+			"title": "Bloc",
+			"description": "Bloc politique (data/registry/blocs.yaml).",
+			"type": "string",
+			"enum": ["far_right", "right", "centre", "left", "far_left", "other"]
+		},
+		"probability": {
+			"title": "Probability",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 1
+		},
+		"share": {
+			"title": "Share",
+			"description": "Part en points de pourcentage des suffrages exprimés.",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 100
+		},
+		"interval": {
+			"title": "Interval",
+			"description": "Quantiles d'une distribution : médiane (q50), intervalle à 50 % (q25 à q75) et à 90 % (q05 à q95). Les quantiles sont croissants. Unité donnée par le champ qui le porte.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["q05", "q25", "q50", "q75", "q95"],
+			"properties": {
+				"q05": { "type": "number" },
+				"q25": { "type": "number" },
+				"q50": { "type": "number" },
+				"q75": { "type": "number" },
+				"q95": { "type": "number" }
+			}
+		},
+		"population": {
+			"title": "Population",
+			"description": "Base de l'échantillon publié : inscrits, ou certains d'aller voter.",
+			"type": "string",
+			"enum": ["registered", "certain_voters", "unknown"]
+		},
+		"source_ref": {
+			"title": "SourceRef",
+			"description": "Source citée : libellé court et lien (URL, ou chemin dans le dépôt pour une note interne).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["label", "href"],
+			"properties": {
+				"label": { "type": "string" },
+				"href": { "type": "string", "minLength": 1 }
+			}
+		},
+		"states": {
+			"title": "StateSelection",
+			"description": "États choisis par dimension de scénario : clé = id de dimension, valeur = id d'état (scenarios_2027.yaml).",
+			"type": "object",
+			"additionalProperties": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+			"propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" }
+		},
+		"condition": {
+			"title": "Condition",
+			"description": "Ce sur quoi une prévision est conditionnée. `mixture` : mélange de toutes les configurations pondérées par leur probabilité (id `mix`, states vide, probability 1). `dimension_state` : un état d'une dimension, les autres dimensions restant mélangées (states à une clé). `configuration` : une configuration complète (un état par dimension ; petits candidats à leur probabilité de présence).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "kind", "label", "states", "probability"],
+			"properties": {
+				"id": { "$ref": "#/$defs/condition_id" },
+				"kind": { "type": "string", "enum": ["mixture", "dimension_state", "configuration"] },
+				"label": { "type": "string", "description": "Libellé court affichable (« Bardella candidat du RN »)." },
+				"states": { "$ref": "#/$defs/states" },
+				"probability": {
+					"$ref": "#/$defs/probability",
+					"description": "Probabilité de la condition (renormalisée après contraintes)."
+				}
+			}
+		},
+		"candidate": {
+			"title": "Candidate",
+			"description": "Candidat 2027 tel qu'affiché par le site.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "name", "short_name", "bloc", "party", "is_placeholder"],
+			"properties": {
+				"id": { "$ref": "#/$defs/candidate_id" },
+				"name": { "type": "string", "description": "Nom complet (« Marine Le Pen »)." },
+				"short_name": { "type": "string", "description": "Nom court pour les graphiques (« Le Pen »)." },
+				"bloc": { "$ref": "#/$defs/bloc" },
+				"party": {
+					"type": ["string", "null"],
+					"description": "Id du parti actuel (parties.yaml), null si sans parti ou inconnu."
+				},
+				"is_placeholder": {
+					"type": "boolean",
+					"description": "Vrai pour un candidat non identifié (placeholder de bloc)."
+				}
+			}
+		}
+	}
+}

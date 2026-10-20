@@ -1,0 +1,61 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/backtest.json",
+	"title": "Backtest",
+	"description": "Résultats du backtest (docs/07-evaluation.md) : métriques par modèle, élection et horizon, tableau complet.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["generated_at", "model_version", "elections", "horizons_days", "models", "rows"],
+	"$defs": {
+		"model": {
+			"title": "BacktestModel",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "label", "kind", "description"],
+			"properties": {
+				"id": { "type": "string" },
+				"label": { "type": "string" },
+				"kind": { "type": "string", "enum": ["model", "baseline", "ablation"] },
+				"description": { "type": "string" }
+			}
+		},
+		"row": {
+			"title": "BacktestRow",
+			"description": "Métriques d'un modèle pour une élection et un horizon. Null si non calculée.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"model_id",
+				"election",
+				"horizon_days",
+				"log_score_pair",
+				"log_score_winner",
+				"brier_qualify",
+				"crps_first_round",
+				"mae_first_round",
+				"coverage_50",
+				"coverage_90"
+			],
+			"properties": {
+				"model_id": { "type": "string" },
+				"election": { "type": "integer" },
+				"horizon_days": { "type": "integer", "minimum": 0 },
+				"log_score_pair": { "type": ["number", "null"], "description": "Log-score de la paire de qualifiés (plus haut = mieux)." },
+				"log_score_winner": { "type": ["number", "null"], "description": "Log-score du vainqueur final." },
+				"brier_qualify": { "type": ["number", "null"], "minimum": 0, "description": "Brier moyen sur la qualification de chaque candidat (plus bas = mieux)." },
+				"crps_first_round": { "type": ["number", "null"], "minimum": 0, "description": "CRPS moyen des parts de premier tour, en points." },
+				"mae_first_round": { "type": ["number", "null"], "minimum": 0, "description": "Erreur absolue moyenne des médianes de premier tour, en points." },
+				"coverage_50": { "anyOf": [{ "$ref": "common.json#/$defs/probability" }, { "type": "null" }], "description": "Part des résultats dans l'intervalle à 50 %." },
+				"coverage_90": { "anyOf": [{ "$ref": "common.json#/$defs/probability" }, { "type": "null" }], "description": "Part des résultats dans l'intervalle à 90 %." }
+			}
+		}
+	},
+	"properties": {
+		"generated_at": { "$ref": "common.json#/$defs/date_time" },
+		"model_version": { "type": "string" },
+		"elections": { "type": "array", "items": { "type": "integer" } },
+		"horizons_days": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+		"models": { "type": "array", "items": { "$ref": "#/$defs/model" } },
+		"rows": { "type": "array", "items": { "$ref": "#/$defs/row" } }
+	}
+}

@@ -1,0 +1,65 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/manifest.json",
+	"title": "Manifest",
+	"description": "Manifeste du run exporté : chargé par toutes les pages (pied de page, date du dernier sondage, registre des candidats affichés).",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"schema_version",
+		"run_date",
+		"generated_at",
+		"asof",
+		"model_version",
+		"commit",
+		"last_poll_date",
+		"n_polls",
+		"n_draws",
+		"mock",
+		"election",
+		"candidates"
+	],
+	"properties": {
+		"schema_version": {
+			"type": "string",
+			"const": "1",
+			"description": "Version du contrat JSON ; change à toute rupture de forme."
+		},
+		"run_date": { "$ref": "common.json#/$defs/date", "description": "Date du run (runs/<run_date>/)." },
+		"generated_at": { "$ref": "common.json#/$defs/date_time", "description": "Horodatage de l'export." },
+		"asof": {
+			"$ref": "common.json#/$defs/date",
+			"description": "Date de prévision : seuls les sondages dont la fin de terrain précède ou égale cette date sont intégrés."
+		},
+		"model_version": { "type": "string", "minLength": 1 },
+		"commit": {
+			"type": ["string", "null"],
+			"description": "Commit git du back ayant produit le run (null si arbre modifié ou inconnu)."
+		},
+		"last_poll_date": {
+			"$ref": "common.json#/$defs/date",
+			"description": "Fin de terrain du sondage intégré le plus récent."
+		},
+		"n_polls": { "type": "integer", "minimum": 0, "description": "Nombre de sondages intégrés (premier et second tour)." },
+		"n_draws": { "type": "integer", "minimum": 1, "description": "Nombre de tirages Monte-Carlo." },
+		"mock": {
+			"type": "boolean",
+			"description": "Vrai si les données sont factices (squelette du site) : le site affiche alors un bandeau."
+		},
+		"election": {
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["year", "first_round", "second_round"],
+			"properties": {
+				"year": { "type": "integer" },
+				"first_round": { "$ref": "common.json#/$defs/date" },
+				"second_round": { "$ref": "common.json#/$defs/date" }
+			}
+		},
+		"candidates": {
+			"type": "array",
+			"description": "Tous les candidats cités par les autres fichiers (y compris placeholders).",
+			"items": { "$ref": "common.json#/$defs/candidate" }
+		}
+	}
+}

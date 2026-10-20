@@ -1,0 +1,34 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/history_entry.json",
+	"title": "HistoryEntry",
+	"description": "Résumé d'un run, écrit dans history/<run_date>.json : probabilités mélangées par candidat. Un fichier n'est jamais réécrit une fois publié.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["run_date", "asof", "model_version", "last_poll_date", "n_polls", "candidates"],
+	"properties": {
+		"run_date": { "$ref": "common.json#/$defs/date" },
+		"asof": { "$ref": "common.json#/$defs/date" },
+		"model_version": { "type": "string" },
+		"last_poll_date": { "$ref": "common.json#/$defs/date" },
+		"n_polls": { "type": "integer", "minimum": 0 },
+		"candidates": {
+			"type": "array",
+			"items": {
+				"title": "HistoryCandidate",
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["candidate_id", "p_qualify", "p_win", "first_round_share"],
+				"properties": {
+					"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+					"p_qualify": { "$ref": "common.json#/$defs/probability" },
+					"p_win": { "$ref": "common.json#/$defs/probability" },
+					"first_round_share": {
+						"$ref": "common.json#/$defs/interval",
+						"description": "Part projetée au jour du vote, conditionnelle à la présence."
+					}
+				}
+			}
+		}
+	}
+}

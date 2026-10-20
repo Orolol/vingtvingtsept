@@ -1,0 +1,8 @@
+# Package Managers
+package-lock.json
+
+# Données et fichiers générés
+/static/data/
+/src/lib/types/
+/build/
+/.svelte-kit/

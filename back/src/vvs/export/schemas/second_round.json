@@ -1,0 +1,78 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/second_round.json",
+	"title": "SecondRound",
+	"description": "Matrice des duels de second tour (mélange de scénarios), reports de voix estimés et sondages de second tour hypothétiques.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["asof", "election_date", "pairs", "transfers", "polls"],
+	"$defs": {
+		"pair": {
+			"title": "Duel",
+			"description": "Un duel possible. Le score du second nommé (b) est 100 − score de a : ses quantiles se déduisent par symétrie (q05_b = 100 − q95_a).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["candidate_a", "candidate_b", "p_pair", "p_a_wins", "share_a"],
+			"properties": {
+				"candidate_a": { "$ref": "common.json#/$defs/candidate_id" },
+				"candidate_b": { "$ref": "common.json#/$defs/candidate_id" },
+				"p_pair": {
+					"$ref": "common.json#/$defs/probability",
+					"description": "Probabilité que ce duel ait lieu. Somme sur les paires = 1 (aux paires élaguées près)."
+				},
+				"p_a_wins": {
+					"$ref": "common.json#/$defs/probability",
+					"description": "Probabilité de victoire de a, conditionnelle au duel."
+				},
+				"share_a": {
+					"$ref": "common.json#/$defs/interval",
+					"description": "Score de a au second tour, en points d'exprimés, conditionnel au duel."
+				}
+			}
+		},
+		"transfer": {
+			"title": "Transfer",
+			"description": "Report estimé de l'électorat de premier tour de `from` dans le duel (a, b), en points de cet électorat ; to_a + to_b + to_none ≈ 100 en médiane.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["candidate_a", "candidate_b", "from", "to_a", "to_b", "to_none"],
+			"properties": {
+				"candidate_a": { "$ref": "common.json#/$defs/candidate_id" },
+				"candidate_b": { "$ref": "common.json#/$defs/candidate_id" },
+				"from": { "$ref": "common.json#/$defs/candidate_id" },
+				"to_a": { "$ref": "common.json#/$defs/interval" },
+				"to_b": { "$ref": "common.json#/$defs/interval" },
+				"to_none": { "$ref": "common.json#/$defs/interval", "description": "Abstention, blanc ou nul." }
+			}
+		},
+		"poll": {
+			"title": "SecondRoundPoll",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["poll_id", "pollster", "fieldwork_end", "candidate_a", "candidate_b", "share_a"],
+			"properties": {
+				"poll_id": { "type": "string" },
+				"pollster": { "$ref": "common.json#/$defs/pollster_id" },
+				"fieldwork_end": { "$ref": "common.json#/$defs/date" },
+				"candidate_a": { "$ref": "common.json#/$defs/candidate_id" },
+				"candidate_b": { "$ref": "common.json#/$defs/candidate_id" },
+				"share_a": { "$ref": "common.json#/$defs/share", "description": "Score publié de a ; celui de b vaut 100 − share_a." }
+			}
+		}
+	},
+	"properties": {
+		"asof": { "$ref": "common.json#/$defs/date" },
+		"election_date": { "$ref": "common.json#/$defs/date", "description": "Date du second tour." },
+		"pairs": {
+			"type": "array",
+			"description": "Paires avec p_pair ≥ seuil d'export, triées par p_pair décroissant ; une paire non ordonnée n'apparaît qu'une fois.",
+			"items": { "$ref": "#/$defs/pair" }
+		},
+		"transfers": {
+			"type": "array",
+			"description": "Reports pour les paires principales et les électorats de premier tour significatifs.",
+			"items": { "$ref": "#/$defs/transfer" }
+		},
+		"polls": { "type": "array", "items": { "$ref": "#/$defs/poll" } }
+	}
+}

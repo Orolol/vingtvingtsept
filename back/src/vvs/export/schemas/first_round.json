@@ -1,0 +1,80 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/first_round.json",
+	"title": "FirstRound",
+	"description": "Trajectoires hebdomadaires du soutien latent de premier tour par condition et candidat, projection au jour du vote, sondages observés.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["asof", "election_date", "dates", "conditions", "series", "polls"],
+	"$defs": {
+		"series": {
+			"title": "TrajectorySeries",
+			"description": "Trajectoire d'un candidat sous une condition. Les tableaux q05 à q95 ont la longueur de `dates` (null avant le premier sondage qui teste le candidat).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["condition_id", "candidate_id", "q05", "q25", "q50", "q75", "q95", "election_day"],
+			"properties": {
+				"condition_id": { "$ref": "common.json#/$defs/condition_id" },
+				"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+				"q05": { "$ref": "#/$defs/quantile_track" },
+				"q25": { "$ref": "#/$defs/quantile_track" },
+				"q50": { "$ref": "#/$defs/quantile_track" },
+				"q75": { "$ref": "#/$defs/quantile_track" },
+				"q95": { "$ref": "#/$defs/quantile_track" },
+				"election_day": {
+					"$ref": "common.json#/$defs/interval",
+					"description": "Part projetée au jour du vote (incertitude de l'horizon incluse), conditionnelle à la présence."
+				}
+			}
+		},
+		"quantile_track": {
+			"title": "QuantileTrack",
+			"description": "Un quantile par semaine, aligné sur `dates`, en points d'exprimés.",
+			"type": "array",
+			"items": { "type": ["number", "null"], "minimum": 0, "maximum": 100 }
+		},
+		"poll": {
+			"title": "FirstRoundPoll",
+			"description": "Une hypothèse de premier tour d'un sondage (un sondage peut en tester plusieurs).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["poll_id", "hypothesis_id", "pollster", "fieldwork_end", "population", "conditions", "shares"],
+			"properties": {
+				"poll_id": { "type": "string" },
+				"hypothesis_id": { "type": "string" },
+				"pollster": { "$ref": "common.json#/$defs/pollster_id" },
+				"fieldwork_end": { "$ref": "common.json#/$defs/date" },
+				"population": { "$ref": "common.json#/$defs/population" },
+				"conditions": {
+					"type": "array",
+					"description": "Conditions (hors `mix`) compatibles avec la liste de candidats testée ; tout sondage est affiché sous `mix`.",
+					"items": { "$ref": "common.json#/$defs/condition_id" }
+				},
+				"shares": {
+					"type": "object",
+					"description": "Part observée par candidat (points d'exprimés), telle que publiée.",
+					"additionalProperties": { "$ref": "common.json#/$defs/share" },
+					"propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" }
+				}
+			}
+		}
+	},
+	"properties": {
+		"asof": { "$ref": "common.json#/$defs/date" },
+		"election_date": { "$ref": "common.json#/$defs/date", "description": "Date du premier tour." },
+		"dates": {
+			"type": "array",
+			"description": "Axe temporel commun : un lundi par semaine, croissant, dernier ≤ asof.",
+			"items": { "$ref": "common.json#/$defs/date" },
+			"minItems": 1
+		},
+		"conditions": {
+			"type": "array",
+			"description": "Conditions disponibles au filtre ; la première est `mix`.",
+			"items": { "$ref": "common.json#/$defs/condition" },
+			"minItems": 1
+		},
+		"series": { "type": "array", "items": { "$ref": "#/$defs/series" } },
+		"polls": { "type": "array", "items": { "$ref": "#/$defs/poll" } }
+	}
+}

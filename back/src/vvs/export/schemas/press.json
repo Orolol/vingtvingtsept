@@ -1,0 +1,60 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/press.json",
+	"title": "Press",
+	"description": "Volet explicatif presse (docs/06-presse.md) : part de voix, ton, agenda. N'entre dans la prévision que si `in_forecast` est vrai.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["asof", "in_forecast", "in_forecast_note", "weeks", "share_of_voice", "tone", "agenda"],
+	"$defs": {
+		"candidate_track": {
+			"title": "PressCandidateTrack",
+			"description": "Une valeur par semaine, alignée sur `weeks`.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["candidate_id", "values"],
+			"properties": {
+				"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+				"values": { "type": "array", "items": { "type": ["number", "null"] } }
+			}
+		},
+		"agenda_week": {
+			"title": "PressAgendaWeek",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["week", "topics"],
+			"properties": {
+				"week": { "$ref": "common.json#/$defs/date" },
+				"topics": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["label", "share"],
+						"properties": {
+							"label": { "type": "string" },
+							"share": { "$ref": "common.json#/$defs/share", "description": "Part des articles de la semaine (%)." }
+						}
+					}
+				}
+			}
+		}
+	},
+	"properties": {
+		"asof": { "$ref": "common.json#/$defs/date" },
+		"in_forecast": { "type": "boolean" },
+		"in_forecast_note": { "type": "string" },
+		"weeks": { "type": "array", "items": { "$ref": "common.json#/$defs/date" } },
+		"share_of_voice": {
+			"type": "array",
+			"description": "Part des mentions de candidats, en % des mentions de la semaine.",
+			"items": { "$ref": "#/$defs/candidate_track" }
+		},
+		"tone": {
+			"type": "array",
+			"description": "Ton moyen des articles qui citent le candidat, de −1 (négatif) à +1 (positif).",
+			"items": { "$ref": "#/$defs/candidate_track" }
+		},
+		"agenda": { "type": "array", "items": { "$ref": "#/$defs/agenda_week" } }
+	}
+}

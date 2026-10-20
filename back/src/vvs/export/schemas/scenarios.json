@@ -1,0 +1,164 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/scenarios.json",
+	"title": "Scenarios",
+	"description": "Contenu de data/registry/scenarios_2027.yaml (sources résolues), configurations les plus probables et historique des probabilités. La prévision conditionnelle à chaque condition est dans summary.json (`by_condition`).",
+	"type": "object",
+	"additionalProperties": false,
+	"required": [
+		"as_of",
+		"election",
+		"dimensions",
+		"small_candidates",
+		"constraints",
+		"revisions",
+		"configurations",
+		"n_configurations",
+		"impossible_mass",
+		"probability_history"
+	],
+	"$defs": {
+		"state": {
+			"title": "ScenarioState",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "probability", "candidates", "placeholders", "description", "sources", "condition_id"],
+			"properties": {
+				"id": { "type": "string" },
+				"probability": { "$ref": "common.json#/$defs/probability" },
+				"candidates": { "type": "array", "items": { "$ref": "common.json#/$defs/candidate_id" } },
+				"placeholders": {
+					"type": "array",
+					"description": "Blocs d'un candidat non identifié (candidate_id `placeholder_<bloc>`).",
+					"items": { "$ref": "common.json#/$defs/bloc" }
+				},
+				"description": { "type": "string" },
+				"sources": { "type": "array", "items": { "$ref": "common.json#/$defs/source_ref" } },
+				"condition_id": {
+					"$ref": "common.json#/$defs/condition_id",
+					"description": "Condition `dimension_state` correspondante dans summary.json."
+				}
+			}
+		},
+		"dimension": {
+			"title": "ScenarioDimension",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "question", "review", "states"],
+			"properties": {
+				"id": { "type": "string" },
+				"question": { "type": "string" },
+				"review": { "type": "array", "description": "Échéances de révision (texte libre).", "items": { "type": "string" } },
+				"states": {
+					"type": "array",
+					"description": "Probabilités sommant à 1.",
+					"items": { "$ref": "#/$defs/state" },
+					"minItems": 1
+				}
+			}
+		},
+		"small_candidate": {
+			"title": "SmallCandidate",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["candidate_id", "probability", "bloc", "rationale", "sources"],
+			"properties": {
+				"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+				"probability": { "$ref": "common.json#/$defs/probability", "description": "Probabilité de présence (Bernoulli indépendante) avant contraintes." },
+				"bloc": { "$ref": "common.json#/$defs/bloc" },
+				"rationale": { "type": "string" },
+				"sources": { "type": "array", "items": { "$ref": "common.json#/$defs/source_ref" } }
+			}
+		},
+		"constraint": {
+			"title": "ScenarioConstraint",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "when", "absent", "impossible", "rationale"],
+			"properties": {
+				"id": { "type": "string" },
+				"when": { "$ref": "common.json#/$defs/states" },
+				"absent": { "type": "array", "items": { "$ref": "common.json#/$defs/candidate_id" } },
+				"impossible": { "type": "boolean" },
+				"rationale": { "type": "string" }
+			}
+		},
+		"revision": {
+			"title": "ScenarioRevision",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["date", "author", "summary", "rationale"],
+			"properties": {
+				"date": { "$ref": "common.json#/$defs/date" },
+				"author": { "type": "string" },
+				"summary": { "type": "string" },
+				"rationale": { "type": "string" }
+			}
+		},
+		"configuration": {
+			"title": "ScenarioConfiguration",
+			"description": "Configuration de dimensions (petits candidats à leur probabilité de présence conditionnelle).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["condition_id", "states", "probability", "candidates", "placeholders", "small_presence"],
+			"properties": {
+				"condition_id": {
+					"$ref": "common.json#/$defs/condition_id",
+					"description": "Condition `configuration` correspondante dans summary.json, si exportée ; sinon id calculé sans résultat associé."
+				},
+				"states": { "$ref": "common.json#/$defs/states" },
+				"probability": { "$ref": "common.json#/$defs/probability" },
+				"candidates": { "type": "array", "items": { "$ref": "common.json#/$defs/candidate_id" } },
+				"placeholders": { "type": "array", "items": { "$ref": "common.json#/$defs/bloc" } },
+				"small_presence": {
+					"type": "object",
+					"description": "Probabilité de présence de chaque petit candidat dans cette configuration.",
+					"additionalProperties": { "$ref": "common.json#/$defs/probability" },
+					"propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" }
+				}
+			}
+		},
+		"history_point": {
+			"title": "ScenarioProbabilityPoint",
+			"description": "Probabilités des états à une révision : clé `<dimension>.<état>`.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["date", "probabilities"],
+			"properties": {
+				"date": { "$ref": "common.json#/$defs/date" },
+				"probabilities": {
+					"type": "object",
+					"additionalProperties": { "$ref": "common.json#/$defs/probability" },
+					"propertyNames": { "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$" }
+				}
+			}
+		}
+	},
+	"properties": {
+		"as_of": { "$ref": "common.json#/$defs/date", "description": "Date du registre de scénarios." },
+		"election": { "type": "integer" },
+		"dimensions": { "type": "array", "items": { "$ref": "#/$defs/dimension" } },
+		"small_candidates": { "type": "array", "items": { "$ref": "#/$defs/small_candidate" } },
+		"constraints": { "type": "array", "items": { "$ref": "#/$defs/constraint" } },
+		"revisions": {
+			"type": "array",
+			"description": "Révisions du registre, de la plus récente à la plus ancienne.",
+			"items": { "$ref": "#/$defs/revision" }
+		},
+		"configurations": {
+			"type": "array",
+			"description": "Configurations les plus probables, par probabilité décroissante.",
+			"items": { "$ref": "#/$defs/configuration" }
+		},
+		"n_configurations": { "type": "integer", "minimum": 0, "description": "Nombre total de configurations possibles après contraintes." },
+		"impossible_mass": {
+			"$ref": "common.json#/$defs/probability",
+			"description": "Masse brute retirée par les contraintes avant renormalisation."
+		},
+		"probability_history": {
+			"type": "array",
+			"description": "Probabilités des états à chaque révision, par date croissante.",
+			"items": { "$ref": "#/$defs/history_point" }
+		}
+	}
+}

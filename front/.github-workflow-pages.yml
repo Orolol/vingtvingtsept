@@ -1,0 +1,62 @@
+# Construit le site statique (front/) et le publie sur GitHub Pages.
+#
+# À déplacer dans .github/workflows/pages.yml à la racine du dépôt, puis activer Pages avec
+# la source « GitHub Actions » (Settings → Pages). Le chemin de base vient de configure-pages :
+# /<nom du dépôt> pour un site de projet, vide avec un domaine personnalisé.
+name: Site (GitHub Pages)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'front/**'
+      - 'back/src/vvs/export/schemas/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: front
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - id: pages
+        uses: actions/configure-pages@v6
+      - run: npm ci
+      - name: Validation des données contre le contrat JSON
+        run: npm run validate-data
+      - name: Vérification des types
+        run: npm run check
+      - name: Build
+        run: npm run build
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: front/build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

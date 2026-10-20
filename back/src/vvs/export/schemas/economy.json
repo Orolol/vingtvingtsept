@@ -1,0 +1,58 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/economy.json",
+	"title": "Economy",
+	"description": "Volet explicatif économie et popularité (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["asof", "in_forecast", "in_forecast_note", "series", "correlations"],
+	"$defs": {
+		"series": {
+			"title": "EconomySeries",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "label", "unit", "frequency", "source", "in_forecast", "points"],
+			"properties": {
+				"id": { "type": "string", "description": "Id de macro_series.yaml." },
+				"label": { "type": "string" },
+				"unit": { "type": "string", "description": "Unité affichée (« % », « points », « indice 100 = 2015 »)." },
+				"frequency": { "type": "string", "enum": ["monthly", "quarterly", "weekly"] },
+				"source": { "$ref": "common.json#/$defs/source_ref" },
+				"in_forecast": { "type": "boolean", "description": "Vrai si cette série entre dans la prévision." },
+				"points": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["date", "value"],
+						"properties": {
+							"date": { "$ref": "common.json#/$defs/date", "description": "Début de la période." },
+							"value": { "type": "number" }
+						}
+					}
+				}
+			}
+		},
+		"correlation": {
+			"title": "EconomyCorrelation",
+			"description": "Résultat d'étude : corrélation d'une série avec une cible (part d'un bloc, popularité) à un horizon donné.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["series_id", "target", "horizon_days", "estimate", "n"],
+			"properties": {
+				"series_id": { "type": "string" },
+				"target": { "type": "string" },
+				"horizon_days": { "type": "integer", "minimum": 0 },
+				"estimate": { "$ref": "common.json#/$defs/interval" },
+				"n": { "type": "integer", "minimum": 0 }
+			}
+		}
+	},
+	"properties": {
+		"asof": { "$ref": "common.json#/$defs/date" },
+		"in_forecast": { "type": "boolean", "description": "Vrai si au moins une variable économique est admise dans la prévision." },
+		"in_forecast_note": { "type": "string", "description": "Phrase affichée en tête de page." },
+		"series": { "type": "array", "items": { "$ref": "#/$defs/series" } },
+		"correlations": { "type": "array", "items": { "$ref": "#/$defs/correlation" } }
+	}
+}

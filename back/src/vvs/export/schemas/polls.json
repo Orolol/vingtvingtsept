@@ -1,0 +1,99 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/polls.json",
+	"title": "Polls",
+	"description": "Tous les sondages intégrés au run (premier et second tour) et effets maison estimés par institut.",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["asof", "pollsters", "polls", "house_effects"],
+	"$defs": {
+		"pollster": {
+			"title": "Pollster",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "name"],
+			"properties": {
+				"id": { "$ref": "common.json#/$defs/pollster_id" },
+				"name": { "type": "string" }
+			}
+		},
+		"hypothesis": {
+			"title": "PollHypothesis",
+			"description": "Une hypothèse testée : liste de candidats (premier tour) ou duel (second tour), une population.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["hypothesis_id", "round", "population", "shares"],
+			"properties": {
+				"hypothesis_id": { "type": "string" },
+				"round": { "type": "integer", "enum": [1, 2] },
+				"population": { "$ref": "common.json#/$defs/population" },
+				"shares": {
+					"type": "array",
+					"description": "Parts publiées en points d'exprimés, dans l'ordre décroissant.",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["candidate_id", "share"],
+						"properties": {
+							"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+							"share": { "$ref": "common.json#/$defs/share" }
+						}
+					},
+					"minItems": 2
+				}
+			}
+		},
+		"poll": {
+			"title": "Poll",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"poll_id",
+				"pollster",
+				"sponsor",
+				"fieldwork_start",
+				"fieldwork_end",
+				"publish_date",
+				"sample_size",
+				"mode",
+				"source_url",
+				"hypotheses"
+			],
+			"properties": {
+				"poll_id": { "type": "string", "description": "Clé de la table curated `polls`." },
+				"pollster": { "$ref": "common.json#/$defs/pollster_id" },
+				"sponsor": { "type": ["string", "null"], "description": "Commanditaire(s)." },
+				"fieldwork_start": { "$ref": "common.json#/$defs/date" },
+				"fieldwork_end": { "$ref": "common.json#/$defs/date" },
+				"publish_date": { "anyOf": [{ "$ref": "common.json#/$defs/date" }, { "type": "null" }] },
+				"sample_size": { "type": ["integer", "null"], "minimum": 1 },
+				"mode": { "type": "string", "enum": ["online", "phone", "mixed", "unknown"] },
+				"source_url": { "type": ["string", "null"], "description": "Notice de la Commission des sondages, ou page source." },
+				"hypotheses": { "type": "array", "items": { "$ref": "#/$defs/hypothesis" }, "minItems": 1 }
+			}
+		},
+		"house_effect": {
+			"title": "HouseEffect",
+			"description": "Effet maison estimé de l'institut sur un bloc, en points d'exprimés (positif = l'institut surestime le bloc par rapport au consensus).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["pollster", "bloc", "effect", "n_polls"],
+			"properties": {
+				"pollster": { "$ref": "common.json#/$defs/pollster_id" },
+				"bloc": { "$ref": "common.json#/$defs/bloc" },
+				"effect": { "$ref": "common.json#/$defs/interval" },
+				"n_polls": { "type": "integer", "minimum": 0 }
+			}
+		}
+	},
+	"properties": {
+		"asof": { "$ref": "common.json#/$defs/date" },
+		"pollsters": { "type": "array", "items": { "$ref": "#/$defs/pollster" } },
+		"polls": {
+			"type": "array",
+			"description": "Par fin de terrain décroissante.",
+			"items": { "$ref": "#/$defs/poll" }
+		},
+		"house_effects": { "type": "array", "items": { "$ref": "#/$defs/house_effect" } }
+	}
+}

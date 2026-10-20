@@ -1,0 +1,12 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/history_index.json",
+	"title": "HistoryIndex",
+	"description": "history/index.json : concaténation des history/<date>.json par run_date croissante, pour que le site trace l'évolution sans lister le dossier (impossible sur un hébergement statique).",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["entries"],
+	"properties": {
+		"entries": { "type": "array", "items": { "$ref": "history_entry.json" } }
+	}
+}

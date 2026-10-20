@@ -1,0 +1,69 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://schemas.vingtvingtsept.invalid/v1/summary.json",
+	"title": "Summary",
+	"description": "Probabilités du jour : mélange de scénarios d'abord (`mixture`), puis détail conditionnel (`by_condition`).",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["asof", "n_draws", "conditions", "mixture", "by_condition"],
+	"$defs": {
+		"candidate_outcome": {
+			"title": "CandidateOutcome",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["candidate_id", "p_present", "p_qualify", "p_win", "first_round_share"],
+			"properties": {
+				"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+				"p_present": {
+					"$ref": "common.json#/$defs/probability",
+					"description": "Probabilité d'être au premier tour sous la condition."
+				},
+				"p_qualify": {
+					"$ref": "common.json#/$defs/probability",
+					"description": "Probabilité de qualification au second tour (non conditionnelle à la présence)."
+				},
+				"p_win": {
+					"$ref": "common.json#/$defs/probability",
+					"description": "Probabilité de victoire finale (non conditionnelle à la présence)."
+				},
+				"first_round_share": {
+					"$ref": "common.json#/$defs/interval",
+					"description": "Part de premier tour au jour du vote, en points d'exprimés, conditionnelle à la présence du candidat."
+				}
+			}
+		},
+		"outcome_set": {
+			"title": "OutcomeSet",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["condition_id", "candidates"],
+			"properties": {
+				"condition_id": { "$ref": "common.json#/$defs/condition_id" },
+				"candidates": {
+					"type": "array",
+					"description": "Candidats avec p_present > 0 sous la condition, triés par p_win puis p_qualify décroissants. Somme des p_win = 1, somme des p_qualify = 2.",
+					"items": { "$ref": "#/$defs/candidate_outcome" }
+				}
+			}
+		}
+	},
+	"properties": {
+		"asof": { "$ref": "common.json#/$defs/date" },
+		"n_draws": { "type": "integer", "minimum": 1 },
+		"conditions": {
+			"type": "array",
+			"description": "Conditions décrites dans ce fichier ; la première est le mélange (`mix`).",
+			"items": { "$ref": "common.json#/$defs/condition" },
+			"minItems": 1
+		},
+		"mixture": {
+			"$ref": "#/$defs/outcome_set",
+			"description": "Résultat mélangé sur les scénarios (condition `mix`)."
+		},
+		"by_condition": {
+			"type": "array",
+			"description": "Un résultat par condition autre que `mix` : chaque état de dimension et les configurations les plus probables.",
+			"items": { "$ref": "#/$defs/outcome_set" }
+		}
+	}
+}

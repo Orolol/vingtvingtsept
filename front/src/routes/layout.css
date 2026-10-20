@@ -1,0 +1,47 @@
+@import 'tailwindcss';
+
+/* Jetons de couleur : une valeur claire et une sombre, choisies par prefers-color-scheme via
+   light-dark(). Tailwind expose bg-page, text-ink, border-line, etc. */
+@theme {
+	--color-page: light-dark(#f9f9f7, #0d0d0d);
+	--color-surface: light-dark(#fcfcfb, #1a1a19);
+	--color-raised: light-dark(#ffffff, #222220);
+	--color-ink: light-dark(#0b0b0b, #f0efec);
+	--color-ink-2: light-dark(#52514e, #c3c2b7);
+	--color-muted: light-dark(#6f6d68, #9c9a93);
+	--color-grid: light-dark(#e1e0d9, #2c2c2a);
+	--color-axis: light-dark(#c3c2b7, #4a4a46);
+	--color-line: light-dark(rgb(11 11 11 / 0.1), rgb(255 255 255 / 0.12));
+	--color-accent: light-dark(#256abf, #5598e7);
+	--color-warn-bg: light-dark(#fff4d6, #3a2e0c);
+	--color-warn-ink: light-dark(#5c4300, #f5d98a);
+	--font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+	color-scheme: light dark;
+}
+
+html {
+	background: var(--color-page);
+	color: var(--color-ink);
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	background: var(--color-page);
+	font-family: var(--font-sans);
+}
+
+.tabular {
+	font-variant-numeric: tabular-nums;
+}
+
+a {
+	text-underline-offset: 2px;
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 2px;
+}
