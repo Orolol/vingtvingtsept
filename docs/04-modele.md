@@ -141,6 +141,37 @@ Sorties agrégées : probabilités de qualification et de victoire (globales et 
 configuration), quantiles des parts, matrice des duels (probabilité et score attendu pour
 chaque paire), trajectoire des probabilités au fil des runs.
 
+## État d'implémentation au 2026-10-20
+
+- **Agrégation (section 1)** : implémentée en numpyro (`model/first_round.py`),
+  Dirichlet-multinomiale à concentration κ = (f·n − 1)/(1 − f), effectif effectif avec
+  plancher 1/n_eff = 1/(f·n) + 1/n_max (n_max ~ LogNormal(log 2500, 0,3), défaut), contraintes
+  d'identification par sommes nulles, hypothèses d'un même sondage pondérées 1/H.
+- **Substitution intra-bloc** : logit emboîté par bloc, option `Priors.substitution`,
+  désactivée par défaut. Dans le bloc, softmax de δ ; entre blocs, utilité
+  U_b = B_b + λ_b·log Σ exp(D_c) sur les candidats présents, λ_b ~ Beta(2, 2), λ = 1 redonne
+  l'IIA. λ estimés sur toutes les élections : extrême droite 0,38, droite 0,39, centre 0,58,
+  gauche 0,47, gauche radicale 0,56. Validation sur les hypothèses emboîtées d'un même
+  sondage : gain net en 2022 et 2027 (erreur absolue de 0,94 à 0,83 et de 1,27 à 1,01),
+  légère perte en 2017 (centre : Bayrou). Au backtest, pas de gain admissible (voir
+  `backtest-log.md`). Ce que la forme ne capture pas : le report entre blocs voisins.
+- **Erreur (section 2)** : voir `backtest-log.md`, entrée du 2026-10-20.
+- **Scénarios (section 3)** : `enumerate_configurations` en mode `marginal` (168
+  configurations de dimensions, petits candidats tirés indépendamment par Monte-Carlo) ; les
+  39 configurations les plus probables (95 % de la masse) sont portées au second tour une à
+  une, le reste regroupé.
+- **Second tour (section 4)** : `model/second_round.py`, échantillonnage d'importance ;
+  biais RN des sondages de duel calibré à 3,0 points et appliqué avec une atténuation
+  linéaire, plein effet à 30 jours ou moins, nul à 180 jours ou plus. **Provisoire** : le
+  backtest montre que le biais aide à la veille du second tour et dégrade à 180 jours, sans
+  mesure intermédiaire fiable.
+- **Simulation (section 5)** : `model/simulate.py`, 40 000 tirages, participation (part
+  d'exprimés parmi les inscrits) logit-normale ajustée sur 2002-2022, candidats à moins de
+  trois hypothèses dans la grille tirés d'un prior log-normal centré sur leur médiane ou
+  leur dernier résultat, remplaçants sans sondage au niveau de leur bloc. η s'applique aux
+  log-parts de la configuration (c'est sur des différences de log-parts qu'il est calibré),
+  identique à softmax(θ + η) sous l'IIA.
+
 ## 6. Ce qui est volontairement simple au début
 
 - Pas d'effet de mode d'enquête au départ ; on l'ajoute si les effets maison le réclament.
