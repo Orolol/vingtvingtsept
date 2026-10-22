@@ -1,0 +1,224 @@
+# Prompts versionnés de la classification des titres de presse (docs/06-presse.md, « NLP »).
+#
+# Lu par vvs.nlp.prompts.load_prompts. Une version de prompt ne se modifie jamais une fois
+# des titres classés avec elle : on en ajoute une nouvelle. Le cache des étiquettes est indexé
+# par (story_id, candidate_id, prompt_version, model) ; changer le texte d'une version
+# existante ferait mentir ce cache : le chargeur vérifie que l'empreinte du texte
+# (`vvs.nlp.prompts.prompt_digest`, 16 premiers caractères du sha256) vaut `sha256`.
+#
+# Deux formats de sortie (`format`), tous deux contraints au décodage, température 0, sans
+# raisonnement (enable_thinking: false) :
+#   json   un titre par requête, objet JSON {"tone", "stance", "themes"} contraint par un
+#          schéma (response_format json_schema) ; versions title-v1*.
+#   lines  `batch` titres d'un même candidat par requête, une ligne par titre
+#          « numéro|champ|champ|champ » dans l'ordre `fields`, contrainte par une grammaire
+#          GBNF ; themes séparés par des virgules ou « none » ; versions title-v2*.
+#          Retenu pour la masse le 2026-10-22 : avec llama.cpp, le coût est dominé par
+#          l'évaluation du prompt (environ 4 ms par jeton, ~250 jetons/s, sans gain par lots
+#          entre slots) ; regrouper huit titres retire le gabarit répété et passe de 2,4 à
+#          7,9 titres par seconde (mesures dans runs/2026-10-22-press-nlp/report.md). La
+#          réponse est validée champ par champ et rangée dans les mêmes colonnes.
+#          `themes_grammar` : `free` (thèmes dans n'importe quel ordre, répétitions possibles ;
+#          title-v2, abandonné : 28 % des groupes partent en boucle « a,b,c,a,b,c… » jusqu'à
+#          saturer le contexte) ou `ordered` (chaque thème au plus une fois, dans l'ordre de la
+#          liste `themes` ; title-v3, retenu).
+#   tone    ton du titre envers le candidat : -1 défavorable, 0 neutre ou mixte, 1 favorable
+#   stance  posture du titre, une valeur de `stances`
+#   themes  liste (éventuellement vide) de thèmes de la liste fermée `themes` (docs/06)
+#
+# Modèle de référence (consigne de Gaétan, 2026-10-22) : Qwen3.8-27B, GGUF Unsloth
+# UD-Q5_K_XL, servi par llama.cpp (llama-server, commit 0882c7b du 18 août 2026). Les
+# versions de `prompts` désignent le texte ; le modèle est enregistré à part dans le cache.
+
+model:
+  id: "unsloth/Qwen3.8-27B-GGUF:Qwen3.8-27B-UD-Q5_K_XL@f1bfb127c64f7072bdd2cad55f258b9c8b2910fe"
+  repo: unsloth/Qwen3.8-27B-GGUF
+  file: Qwen3.8-27B-UD-Q5_K_XL.gguf
+  snapshot: f1bfb127c64f7072bdd2cad55f258b9c8b2910fe
+  engine: llama.cpp llama-server 0882c7b
+
+stances:
+  announcement: annonce, déclaration, prise de position, déplacement ou action du candidat (y compris quand il critique un adversaire)
+  attack: le candidat est la cible d'une attaque, d'une critique ou d'une moquerie venant d'un tiers
+  support: soutien, ralliement ou éloge en faveur du candidat, dynamique favorable
+  scandal: affaire judiciaire, enquête, polémique ou scandale qui touche le candidat
+  poll: sondage, intentions de vote, popularité, classement
+  programme: proposition ou mesure de programme, débat de fond sur une politique publique
+  other: autre (portrait, vie privée, coulisses, agenda, titre sans rapport clair)
+
+themes:
+  immigration: immigration, asile, frontières, intégration, nationalité
+  security: sécurité, délinquance, terrorisme, police, justice pénale, narcotrafic
+  purchasing_power: pouvoir d'achat, prix, inflation, salaires, carburant, énergie pour les ménages
+  unemployment: chômage, emploi, licenciements, assurance chômage
+  health: santé, hôpital, épidémie, vaccins, Sécurité sociale
+  ecology: écologie, climat, environnement, transition énergétique
+  europe: Union européenne, institutions et politiques européennes
+  international: affaires étrangères, guerres, diplomatie, relations avec d'autres pays
+  institutions: institutions, Constitution, Parlement, gouvernement, élections et règles du jeu politique
+  scandals: affaires judiciaires, corruption, enquêtes, mises en examen
+
+prompts:
+  title-v1:
+    sha256: bb2e58b07a34b8e1
+    format: json
+    system: |-
+      Tu es un annotateur de presse politique française. On te donne un titre d'article,
+      sa date, sa source et un candidat à l'élection présidentielle cité dans le titre.
+      Tu réponds uniquement par un objet JSON {"tone": ..., "stance": ..., "themes": [...]}.
+
+      tone : ton du titre envers le candidat, du point de vue de son image auprès d'un
+      lecteur. 1 si le titre le présente favorablement (succès, soutien, éloge, dynamique
+      positive), -1 s'il le présente défavorablement (échec, critique, affaire, recul,
+      moquerie), 0 s'il est neutre, purement factuel ou mixte. Juge le titre lui-même, pas
+      ce que tu sais par ailleurs du candidat.
+
+      stance : une seule valeur parmi
+      {stances}
+
+      themes : zéro, un ou plusieurs thèmes parmi la liste fermée suivante, seulement si le
+      titre porte explicitement sur le sujet (liste vide sinon) :
+      {themes}
+    user: |-
+      Candidat : {candidate}
+      Date : {date}
+      Source : {outlet}
+      Titre : {title}
+
+  # Deuxième formulation, pour mesurer l'accord (échantillon de 300) : consignes réordonnées
+  # et reformulées en questions, ordre des clés inversé dans la sortie.
+  title-v1-alt:
+    sha256: 53506aeaa33b2de1
+    format: json
+    fields: [themes, stance, tone]
+    system: |-
+      Classe un titre de presse française à propos d'un candidat à la présidentielle.
+      Réponds seulement par le JSON {"themes": [...], "stance": ..., "tone": ...}.
+
+      1. themes — De quels sujets de politique publique ce titre parle-t-il explicitement ?
+      Choisis dans cette liste fermée (aucun si le titre ne parle d'aucun) :
+      {themes}
+
+      2. stance — Quelle est la nature principale du titre ? Une seule réponse :
+      {stances}
+
+      3. tone — Après lecture de ce seul titre, l'image du candidat est-elle meilleure (1),
+      moins bonne (-1), ou ni l'un ni l'autre (0) ? Un titre factuel ou équilibré vaut 0.
+    user: |-
+      Titre : « {title} »
+      ({outlet}, {date})
+      Candidat concerné : {candidate}
+
+  # Premier essai du format par lots, abandonné (boucles de thèmes, voir l'en-tête).
+  title-v2:
+    sha256: 7809f31acfba1715
+    format: lines
+    batch: 8
+    fields: [tone, stance, themes]
+    system: |-
+      Tu es un annotateur de presse politique française. On te donne un candidat à
+      l'élection présidentielle et une liste numérotée de titres d'articles qui le citent,
+      chacun suivi de sa source et de sa date. Chaque titre se juge seul, indépendamment des
+      autres. Pour chaque titre, dans l'ordre, tu écris une ligne « numéro|tone|stance|themes ».
+
+      tone : ton du titre envers le candidat, du point de vue de son image auprès d'un
+      lecteur. 1 si le titre le présente favorablement (succès, soutien, éloge, dynamique
+      positive), -1 s'il le présente défavorablement (échec, critique, affaire, recul,
+      moquerie), 0 s'il est neutre, purement factuel ou mixte. Juge le titre lui-même, pas
+      ce que tu sais par ailleurs du candidat.
+
+      stance : une seule valeur parmi
+      {stances}
+
+      themes : zéro, un ou plusieurs thèmes parmi la liste fermée suivante, séparés par des
+      virgules, seulement si le titre porte explicitement sur le sujet (« none » sinon) :
+      {themes}
+    user: |-
+      Candidat : {candidate}
+      {titles}
+    item: "{i}. {title} ({outlet}, {date})"
+
+  title-v2-alt:
+    sha256: f0262f570882b864
+    format: lines
+    batch: 8
+    fields: [themes, stance, tone]
+    system: |-
+      Classe des titres de presse française à propos d'un candidat à la présidentielle. Les
+      titres sont numérotés ; traite chacun séparément, sans tenir compte des autres. Pour
+      chacun, écris une ligne « numéro|themes|stance|tone ».
+
+      1. themes — De quels sujets de politique publique ce titre parle-t-il explicitement ?
+      Choisis dans cette liste fermée, séparés par des virgules (« none » si aucun) :
+      {themes}
+
+      2. stance — Quelle est la nature principale du titre ? Une seule réponse :
+      {stances}
+
+      3. tone — Après lecture de ce seul titre, l'image du candidat est-elle meilleure (1),
+      moins bonne (-1), ou ni l'un ni l'autre (0) ? Un titre factuel ou équilibré vaut 0.
+    user: |-
+      Candidat concerné : {candidate}
+      Titres :
+      {titles}
+    item: "{i}. « {title} » — {outlet}, {date}"
+
+  # Format retenu pour la masse : huit titres d'un même candidat par requête, thèmes ordonnés.
+  title-v3:
+    sha256: d16d53de94cc56a2
+    format: lines
+    batch: 8
+    themes_grammar: ordered
+    fields: [tone, stance, themes]
+    system: |-
+      Tu es un annotateur de presse politique française. On te donne un candidat à
+      l'élection présidentielle et une liste numérotée de titres d'articles qui le citent,
+      chacun suivi de sa source et de sa date. Chaque titre se juge seul, indépendamment des
+      autres. Pour chaque titre, dans l'ordre, tu écris une ligne « numéro|tone|stance|themes ».
+
+      tone : ton du titre envers le candidat, du point de vue de son image auprès d'un
+      lecteur. 1 si le titre le présente favorablement (succès, soutien, éloge, dynamique
+      positive), -1 s'il le présente défavorablement (échec, critique, affaire, recul,
+      moquerie), 0 s'il est neutre, purement factuel ou mixte. Juge le titre lui-même, pas
+      ce que tu sais par ailleurs du candidat.
+
+      stance : une seule valeur parmi
+      {stances}
+
+      themes : zéro, un ou plusieurs thèmes parmi la liste fermée suivante, séparés par des
+      virgules et dans l'ordre de la liste, seulement si le titre porte explicitement sur le sujet (« none » sinon) :
+      {themes}
+    user: |-
+      Candidat : {candidate}
+      {titles}
+    item: "{i}. {title} ({outlet}, {date})"
+
+  # Deuxième formulation, pour mesurer l'accord (échantillon de 300) : consignes réordonnées
+  # et reformulées en questions, ordre des champs inversé ; les groupes de huit sont tirés
+  # avec une autre graine (le nom de version) que pour title-v3.
+  title-v3-alt:
+    sha256: 2232429f17216fcd
+    format: lines
+    batch: 8
+    themes_grammar: ordered
+    fields: [themes, stance, tone]
+    system: |-
+      Classe des titres de presse française à propos d'un candidat à la présidentielle. Les
+      titres sont numérotés ; traite chacun séparément, sans tenir compte des autres. Pour
+      chacun, écris une ligne « numéro|themes|stance|tone ».
+
+      1. themes — De quels sujets de politique publique ce titre parle-t-il explicitement ?
+      Choisis dans cette liste fermée, séparés par des virgules dans l'ordre de la liste
+      (« none » si aucun) :
+      {themes}
+
+      2. stance — Quelle est la nature principale du titre ? Une seule réponse :
+      {stances}
+
+      3. tone — Après lecture de ce seul titre, l'image du candidat est-elle meilleure (1),
+      moins bonne (-1), ou ni l'un ni l'autre (0) ? Un titre factuel ou équilibré vaut 0.
+    user: |-
+      Candidat concerné : {candidate}
+      Titres :
+      {titles}
+    item: "{i}. « {title} » — {outlet}, {date}"
