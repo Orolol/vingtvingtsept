@@ -37,3 +37,7 @@ d'évaluation, le front et la feuille de route.
   jamais enfouies dans le code.
 - Commits aux étapes naturelles, sans push sans demande. Les règles globales de
   `~/AGENTS.md` s'appliquent (GPU partagé, tests ciblés, pas de `git add -A`).
+- **Plusieurs agents** : règle globale de `~/AGENTS.md`, worktree + PR pour tous sauf l'agent
+  créateur. Ici, l'agent créateur est la session Claude Code (Fable) qui a initialisé le dépôt
+  le 2026-10-20 et qui fusionne les PR ; tout autre agent (Codex/Astra compris) travaille dans
+  un worktree sur sa branche et ouvre une PR vers `main`.
