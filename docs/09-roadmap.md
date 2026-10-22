@@ -26,6 +26,12 @@ néanmoins activée dans la projection publiée, avec ce statut explicite ; les 
 restent désactivées et servent, le cas échéant, au volet explicatif.
 
 ## Questions ouvertes
+
+La [suite proposée après consolidation](12-prochaines-etapes.md) détaille les livrables
+et les critères de passage. Priorité au registre historique daté, puis à la reconstruction
+des scénarios par décision de candidature ; archive durable et validation prospective
+2027 peuvent avancer avec la référence actuelle.
+
 - Scénarios historiques : la mémoire des listes sondées ne suffit pas (étude `11`).
   Construire des états de candidature datés et des règles de compatibilité indépendantes
   des listes complètes ; couvrir aussi les candidats jamais sondés et les candidatures
