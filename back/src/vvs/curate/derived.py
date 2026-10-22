@@ -14,6 +14,8 @@ officiel national (part des exprimés), par candidat et par bloc :
 
 Règles communes :
 
+- une base par hypothèse quand un sondage en publie deux (`rules.one_base`, les certains
+  d'aller voter d'abord) ;
 - hypothèses suspectes exclues ; un sondage contribue une seule hypothèse : celle qui
   contient exactement les candidats officiels du tour, sinon (premier tour seulement) la plus
   proche (moins de candidats en trop ou manquants, puis moins de voix officielles manquantes),
@@ -49,7 +51,7 @@ def _bloc(bloc_of: BlocFn, cid: str, election: int) -> str:
 
 
 def results_by_bloc(polls: pl.DataFrame, results: pl.DataFrame, bloc_of: BlocFn) -> pl.DataFrame:
-    expressed = results.filter(~pl.col("candidate_id").is_in(NON_EXPRESSED)).join(
+    expressed = rules.one_base(results).filter(~pl.col("candidate_id").is_in(NON_EXPRESSED)).join(
         polls.select("poll_id", "election"), on="poll_id"
     )
     pairs = expressed.select("candidate_id", "election").unique()
@@ -148,7 +150,7 @@ def poll_errors(
         meta = polls.filter(
             (pl.col("election") == election) & (pl.col("fieldwork_end") < vote_day)
         ).select("poll_id", "pollster", "fieldwork_start", "fieldwork_end", "sample_size", "is_rolling")
-        res = results.filter(
+        res = rules.one_base(results).filter(
             (pl.col("round") == round_) & ~pl.col("suspect")
             & ~pl.col("candidate_id").is_in(NON_EXPRESSED)
         ).join(meta.select("poll_id"), on="poll_id")

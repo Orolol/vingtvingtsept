@@ -19,6 +19,11 @@
 	);
 	const num = (x: number | null, d = 2) => (x === null ? '—' : fmt.decimal(x, d));
 	const cov = (x: number | null) => (x === null ? '—' : fmt.prob(x));
+	const waves = $derived(
+		[...new Set(bt.variables_tested.map((v) => v.wave))]
+			.sort()
+			.map((w) => ({ wave: w, items: bt.variables_tested.filter((v) => v.wave === w) }))
+	);
 </script>
 
 <PageTitle title="Méthode">
@@ -156,26 +161,29 @@
 	<h2 id="titre-variables" class="mb-1 text-lg font-semibold">Variables testées et non admises</h2>
 	<p class="mb-3 text-sm text-ink-2">
 		Chaque piste a d'abord été étudiée, puis, si l'étude le justifiait, essayée au backtest contre
-		le modèle de référence. Aucune n'a passé la règle d'admission ; elles restent dans le code,
-		désactivées, et certaines sont montrées dans les volets explicatifs du site. Détail :
-		{bt.variables_tested_reference} dans le dépôt.
+		le modèle de référence. Aucune n'a passé la règle d'admission (une attend encore ses données) ;
+		elles restent dans le code, désactivées, et certaines sont montrées dans les volets explicatifs
+		du site. Détail : {bt.variables_tested_reference} dans le dépôt.
 	</p>
-	<ul class="divide-y divide-line rounded-md border border-line bg-surface text-sm">
-		{#each bt.variables_tested as v (v.id)}
-			<li class="px-3 py-2.5">
-				<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-					<span class="font-medium">{v.label}</span>
-					<span class="rounded-full border border-line px-2 text-xs text-muted">{v.verdict}</span>
-					{#if v.published}
-						<span class="rounded-full bg-warn-bg px-2 text-xs text-warn-ink"
-							>utilisée par la projection publiée</span
-						>
-					{/if}
-				</div>
-				<p class="mt-0.5 text-ink-2">{v.summary}</p>
-			</li>
-		{/each}
-	</ul>
+	{#each waves as w (w.wave)}
+		<h3 class="mt-4 mb-2 text-sm font-medium text-ink-2">Vague du {fmt.date(w.wave)}</h3>
+		<ul class="divide-y divide-line rounded-md border border-line bg-surface text-sm">
+			{#each w.items as v (v.id)}
+				<li class="px-3 py-2.5">
+					<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+						<span class="font-medium">{v.label}</span>
+						<span class="rounded-full border border-line px-2 text-xs text-muted">{v.verdict}</span>
+						{#if v.published}
+							<span class="rounded-full bg-warn-bg px-2 text-xs text-warn-ink"
+								>utilisée par la projection publiée</span
+							>
+						{/if}
+					</div>
+					<p class="mt-0.5 text-ink-2">{v.summary}</p>
+				</li>
+			{/each}
+		</ul>
+	{/each}
 </section>
 
 <section class="mt-10 max-w-3xl leading-relaxed">

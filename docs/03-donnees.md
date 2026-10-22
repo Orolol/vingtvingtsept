@@ -108,7 +108,7 @@ Une ligne par intention de vote.
 | `poll_id` | str | clé vers `polls` |
 | `round` | int | 1 ou 2 |
 | `hypothesis_id` | str | identifie la configuration de candidats testée (hash trié des ids candidats) |
-| `population` | enum | `registered`, `certain_voters`, `unknown` |
+| `population` | enum | `registered`, `certain_voters`, `unknown` ; une hypothèse publiée sur deux bases a une ligne par base |
 | `candidate_id` | str | clé vers le registre ; `abstention`, `blank`, `undecided` sont des ids réservés |
 | `share` | float | pourcentage, base exprimés sauf mention |
 | `share_base` | enum | `expressed`, `all_respondents`, `unknown` |
@@ -206,8 +206,33 @@ Règles nommées de `curate/rules.py` :
   Presitrack de septembre et octobre 2026, une page inverse Le Pen (4 %) et Zemmour (34 %),
   on retient la version cohérente avec les autres hypothèses du sondage ;
 - population : une hypothèse sans population prend la population unique des hypothèses
-  Commission du même sondage ; la population de MieuxVoter est écartée pour Ifop et Elabe,
-  qu'elle contredit ;
+  Commission du même sondage ; la population de MieuxVoter est écartée pour un institut
+  qu'elle contredit sur la plupart des sondages communs (Elabe ; Ifop aussi jusqu'à la
+  correction du 2026-10-22 ci-dessous, qui a donné raison à MieuxVoter) ;
+- population lue dans les notices (2026-10-22, règles communes au parseur 2027 et aux
+  archives, `notice_population` et `block_population` dans `ingest/commission/notice.py`) : la
+  ligne « Base : … inscrits » d'un tableau ne vaut pas quand la notice déclare publier les
+  certains d'aller voter. Baromètres Ifop : note « sur toutes les personnes inscrites sur les
+  listes électorales et certaines d'aller voter interrogées » ; Toluna Harris Interactive
+  depuis septembre 2026 : pied des tableaux « Base : (Aux) inscrits sur les listes électorales
+  certains d'aller voter et ayant exprimé une intention de vote ». Les 12 sondages Ifop 2027
+  et les 3 Harris de septembre-octobre 2026 passent de `registered` à `certain_voters` ;
+- `second_base` (2026-10-22) : une notice OpinionWay publie chaque tableau sur les inscrits et
+  sur les certains d'aller voter ; les deux hypothèses sont gardées dans `poll_results`, même
+  `hypothesis_id` (configuration publiée), `population` distincte, et la clé d'unicité de la
+  table devient (`poll_id`, `round`, `hypothesis_id`, `population`, `candidate_id`). Les
+  certains (colonne publiée, celle que recopient Wikipédia et MieuxVoter) portent l'hypothèse
+  fusionnée ; les inscrits (redressement de même rang) suivent sans être comparés aux autres
+  sources et reçoivent les mêmes corrections de libellés (`swap_consistency`). 29 hypothèses
+  sur 8 sondages ;
+- `one_base` (2026-10-22) : tout usage qui compte des hypothèses (`load_polls`, donc le modèle
+  et les études ; `poll_results_by_bloc` ; `poll_errors`) ne garde qu'une base par (sondage,
+  tour, hypothèse), dans l'ordre `certain_voters`, `registered`, `unknown`. La règle porte
+  sur l'hypothèse, pas sur le sondage : les populations reprises de MieuxVoter mélangent
+  parfois deux bases dans un même sondage (YouGov septembre 2026) sans qu'aucune hypothèse soit
+  publiée deux fois. `load_polls(2027)` rend exactement les mêmes lignes qu'avant la correction,
+  seules les populations Ifop et Harris changent (empreinte des sondages modifiée, l'ajustement
+  sera refait) ;
 - `is_rolling` : libellé « (rolling) » ou « Presitrack », ou au moins trois vagues aux
   terrains chevauchants espacées de un à quatre jours ; les rollings OpinionWay 2017 ne sont
   pas détectés (point ouvert) ;
@@ -218,7 +243,7 @@ Règles nommées de `curate/rules.py` :
 Points ouverts : Le Maire 2017 classé au centre par le parti de l'année alors qu'il était
 candidat à la primaire LR (cas limite à ajouter dans `blocs.yaml`) ; Pasqua 2002 (RPF) en
 extrême droite, GRS en gauche radicale, Poisson 2022 en droite malgré le ralliement à
-Zemmour, à valider ; 66 hypothèses 2027 sans population.
+Zemmour, à valider ; 62 hypothèses 2027 sans population (66 avant le 2026-10-22).
 
 ### Premières erreurs par bloc (sondages moins résultat, premier tour, points)
 

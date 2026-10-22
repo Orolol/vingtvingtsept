@@ -23,13 +23,13 @@ export type Bloc = 'far_right' | 'right' | 'centre' | 'left' | 'far_left' | 'oth
 export type ConditionId = string;
 export type Probability = number;
 /**
- * Un quantile par semaine, aligné sur `dates`, en points d'exprimés.
- */
-export type QuantileTrack = (number | null)[];
-/**
  * Clé du registre data/registry/pollsters.yaml.
  */
 export type PollsterId = string;
+/**
+ * Un quantile par semaine, aligné sur `dates`, en points d'exprimés.
+ */
+export type QuantileTrack = (number | null)[];
 /**
  * Base de l'échantillon publié : inscrits, ou certains d'aller voter.
  */
@@ -146,6 +146,7 @@ export interface Summary {
 	 * Un résultat par condition autre que `mix` : chaque état de dimension et les configurations les plus probables.
 	 */
 	by_condition: OutcomeSet[];
+	expectations: Expectations;
 }
 /**
  * Ce sur quoi une prévision est conditionnée. `mixture` : mélange de toutes les configurations pondérées par leur probabilité (id `mix`, states vide, probability 1). `dimension_state` : un état d'une dimension, les autres dimensions restant mélangées (states à une clé). `configuration` : une configuration complète (un état par dimension ; petits candidats à leur probabilité de présence).
@@ -189,6 +190,95 @@ export interface Interval {
 	q50: number;
 	q75: number;
 	q95: number;
+}
+/**
+ * « Selon vous, qui sera élu ? » : indicateur d'opinion, hors prévision (runs/2026-10-22-expectations). Données : data/curated/poll_expectations.parquet.
+ */
+export interface Expectations {
+	in_forecast: boolean;
+	note: string;
+	/**
+	 * Dernières mesures 2027 terminées avant `asof` : candidats (`winner`, puis `chances`), puis partis.
+	 */
+	measures: ExpectationMeasure[];
+	/**
+	 * Repères calculés sur la série historique (mesures `winner` vérifiées, avant le premier tour).
+	 */
+	landmarks: {
+		id: string;
+		text: string;
+	}[];
+	/**
+	 * Série 2007-2022 : une entrée par élection, points du plus ancien au plus récent.
+	 */
+	history: {
+		election: number;
+		winner: CandidateId;
+		points: ExpectationPoint[];
+	}[];
+}
+/**
+ * Dernière mesure d'un institut pour une forme de question et un objet (candidat ou parti).
+ */
+export interface ExpectationMeasure {
+	pollster: PollsterId;
+	pollster_name: string;
+	fieldwork_end: IsoDate;
+	/**
+	 * `winner` : une seule réponse parmi les candidats ; `chances` : posée candidat par candidat, les parts ne somment pas à 100.
+	 */
+	question_type: 'winner' | 'chances';
+	kind: 'candidate' | 'party';
+	/**
+	 * Forme de la question (libellé générique, pas la formulation exacte de l'institut).
+	 */
+	question: string;
+	/**
+	 * Base des parts affichées.
+	 */
+	basis: string;
+	sample_size: number | null;
+	source_url: string | null;
+	/**
+	 * @minItems 1
+	 */
+	items: [ExpectationItem, ...ExpectationItem[]];
+}
+export interface ExpectationItem {
+	/**
+	 * Candidat nommé ; null si la question porte sur un parti.
+	 */
+	candidate_id: CandidateId | null;
+	/**
+	 * Parti (Toluna Harris Interactive 2026 : « un candidat du RN… »).
+	 */
+	party: string | null;
+	/**
+	 * Libellé du parti, null pour un candidat.
+	 */
+	label: string | null;
+	/**
+	 * Part publiée, en % des répondants.
+	 */
+	share: number;
+	/**
+	 * Question `winner` : part parmi les répondants qui nomment un candidat ; null pour `chances`.
+	 */
+	share_named: number | null;
+}
+export interface ExpectationPoint {
+	pollster: PollsterId;
+	fieldwork_end: IsoDate;
+	/**
+	 * Jours avant le premier tour.
+	 */
+	days_before: number;
+	/**
+	 * Part normalisée du futur vainqueur ; null s'il n'est pas proposé.
+	 */
+	winner_share_named: number | null;
+	top_candidate_id: CandidateId;
+	top_is_winner: boolean;
 }
 /**
  * Trajectoires hebdomadaires du soutien latent de premier tour par condition et candidat, projection au jour du vote, sondages observés.
@@ -406,6 +496,8 @@ export interface Polls {
 	polls: Poll[];
 	house_effects: HouseEffect[];
 	pollster_ratings: PollsterRatings;
+	dispersion: PollsterDispersion;
+	turnout_gap: TurnoutGap;
 }
 export interface Pollster {
 	id: PollsterId;
@@ -539,6 +631,75 @@ export interface PollsterRating {
 	 * Élections notées.
 	 */
 	n_rated: number;
+}
+/**
+ * Dispersion relative D des instituts (vvs.model.herding) : observée / attendue sous tirage aléatoire, un sondage par institut sur `window_days` jours. Volet explicatif, hors prévision (runs/2026-10-22-herding).
+ */
+export interface PollsterDispersion {
+	in_forecast: boolean;
+	note: string;
+	reading: string;
+	window_days: number;
+	/**
+	 * Dates de calcul, une par semaine ; la dernière vaut asof.
+	 */
+	weeks: IsoDate[];
+	/**
+	 * D 2027 à chaque date ; null sous quatre instituts.
+	 */
+	D: (number | null)[];
+	/**
+	 * D_ref : moyenne géométrique de D aux présidentielles 2002-2022 au même nombre de jours du vote.
+	 */
+	reference: (number | null)[];
+	n_pollsters: number[];
+	current: {
+		asof: IsoDate;
+		horizon_days: number;
+		D: number | null;
+		reference: number | null;
+		pollsters: PollsterId[];
+	};
+	/**
+	 * D de chaque présidentielle passée au même nombre de jours du vote (null : moins de quatre instituts).
+	 */
+	past_same_horizon: {
+		election: number;
+		D: number | null;
+	}[];
+}
+/**
+ * Électorats fragiles : écart certains d'aller voter − inscrits par candidat en 2027, premier tour, sondages publiant les deux bases (data/curated/turnout_gap.parquet). Volet explicatif, hors prévision (runs/2026-10-22-turnout-gap).
+ */
+export interface TurnoutGap {
+	in_forecast: boolean;
+	note: string;
+	/**
+	 * Ce que sont devenus ces électorats en 2017 et en 2022.
+	 */
+	history: string;
+	pollsters: string[];
+	n_polls: number;
+	first_poll: IsoDate | null;
+	last_poll: IsoDate | null;
+	/**
+	 * Triées par écart croissant (les plus fragiles d'abord).
+	 */
+	rows: {
+		candidate_id: CandidateId;
+		/**
+		 * Part chez les certains − part chez les inscrits, en points d'exprimés ; moyenne des sondages.
+		 */
+		gap: number;
+		/**
+		 * Erreur-type (écart type entre sondages / √n) ; null sous deux sondages.
+		 */
+		se: number | null;
+		share_certain: Share;
+		share_registered: Share;
+		n_polls: number;
+		last_poll: IsoDate;
+	}[];
 }
 /**
  * Volet explicatif économie et popularité (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.
@@ -949,7 +1110,7 @@ export interface TestedVariable {
 	id: string;
 	label: string;
 	/**
-	 * « non admise » (échec au backtest) ou « non retenue » (écartée dès l'étude).
+	 * « non admise » (échec au backtest), « non retenue » (écartée dès l'étude) ou « en attente d'accès » (données demandées).
 	 */
 	verdict: string;
 	admitted: boolean;
@@ -961,6 +1122,7 @@ export interface TestedVariable {
 	 * Une ligne.
 	 */
 	summary: string;
+	wave: IsoDate;
 }
 /**
  * history/index.json : concaténation des history/<date>.json par run_date croissante, pour que le site trace l'évolution sans lister le dossier (impossible sur un hébergement statique).

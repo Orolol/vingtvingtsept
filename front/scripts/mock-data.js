@@ -662,12 +662,77 @@ const byCondition = [...dimConditions, ...configConditions].map((cond) => ({
 	candidates: simulate({ t: lastT, tau: tauNow, pool: conditionConfigs(cond), nDraws: 4000 })
 		.candidates
 }));
+// anticipations « qui sera élu ? » factices : les trois favoris du mélange, part normalisée
+// sur les répondants qui nomment un candidat (20 % ne savent pas)
+const favourites = mix.candidates.slice(0, 3).map((c) => c.candidate_id);
+const expectationItems = (shares, named) =>
+	favourites.map((id, i) => ({
+		candidate_id: id,
+		party: null,
+		label: null,
+		share: shares[i],
+		share_named: named ? round((100 * shares[i]) / 80) : null
+	}));
+const expectations = {
+	in_forecast: false,
+	note: 'Données factices : indicateur d’opinion, hors prévision.',
+	measures: [
+		{
+			pollster: 'cluster17',
+			pollster_name: 'Cluster17',
+			fieldwork_end: addDays(ASOF, -88),
+			question_type: 'winner',
+			kind: 'candidate',
+			question: 'Selon vous, qui sera élu ? (une seule réponse)',
+			basis: '% des répondants qui nomment un candidat',
+			sample_size: 1500,
+			source_url: null,
+			items: expectationItems([44, 20, 16], true)
+		},
+		{
+			pollster: 'harris',
+			pollster_name: 'Toluna Harris Interactive',
+			fieldwork_end: addDays(ASOF, -200),
+			question_type: 'chances',
+			kind: 'party',
+			question: 'Peut-il remporter l’élection ? (posée candidat par candidat)',
+			basis: '% de oui, chaque candidat séparément',
+			sample_size: 1300,
+			source_url: null,
+			items: [
+				{
+					candidate_id: null,
+					party: 'rn',
+					label: 'Un candidat du RN',
+					share: 60,
+					share_named: null
+				}
+			]
+		}
+	],
+	landmarks: [{ id: 'mock', text: 'Repère factice.' }],
+	history: [
+		{
+			election: 2022,
+			winner: favourites[0],
+			points: [90, 60, 30, 7].map((d, i) => ({
+				pollster: 'ifop',
+				fieldwork_end: addDays('2022-04-10', -d),
+				days_before: d,
+				winner_share_named: 48 + 4 * i,
+				top_candidate_id: favourites[0],
+				top_is_winner: true
+			}))
+		}
+	]
+};
 const summary = {
 	asof: ASOF,
 	n_draws: N_DRAWS,
 	conditions: [mixCondition, ...dimConditions, ...configConditions],
 	mixture: { condition_id: 'mix', candidates: mix.candidates },
-	by_condition: byCondition
+	by_condition: byCondition,
+	expectations
 };
 
 // --- first_round.json
@@ -899,6 +964,51 @@ const pollsJson = {
 			n_rated: 2
 		})),
 		stability: [{ id: 'precision', label: 'Précision relative', n_pairs: 24, pearson: 0.1, p: 0.6 }]
+	},
+	dispersion: (() => {
+		const dates = Array.from({ length: 12 }, (_, i) => addDays(ASOF, -7 * (11 - i)));
+		const D = dates.map((_, i) => (i % 4 === 0 ? null : round(2.5 + rand() * 2.5, 2)));
+		return {
+			in_forecast: false,
+			note: 'Données factices.',
+			reading: 'Données factices.',
+			window_days: 30,
+			weeks: dates,
+			D,
+			reference: dates.map(() => 2),
+			n_pollsters: D.map((d) => (d === null ? 2 : 5)),
+			current: {
+				asof: ASOF,
+				horizon_days: daysBetween(ASOF, FIRST_ROUND),
+				D: D.at(-1),
+				reference: 2,
+				pollsters: pollsterIds.slice(0, 5)
+			},
+			past_same_horizon: [
+				{ election: 2017, D: null },
+				{ election: 2022, D: 2.4 }
+			]
+		};
+	})(),
+	turnout_gap: {
+		in_forecast: false,
+		note: 'Données factices.',
+		history: 'Données factices.',
+		pollsters: ['OpinionWay'],
+		n_polls: 6,
+		first_poll: addDays(ASOF, -150),
+		last_poll: addDays(ASOF, -6),
+		rows: favourites
+			.map((id, i) => ({ id, gap: round(-0.8 + 0.8 * i, 2) }))
+			.map(({ id, gap }) => ({
+				candidate_id: id,
+				gap,
+				se: 0.2,
+				share_certain: round(20 + gap),
+				share_registered: 20,
+				n_polls: 6,
+				last_poll: addDays(ASOF, -6)
+			}))
 	}
 };
 
@@ -1232,7 +1342,8 @@ const backtest = {
 			verdict: 'non admise',
 			admitted: false,
 			published: false,
-			summary: 'Données factices.'
+			summary: 'Données factices.',
+			wave: RUN_DATE
 		}
 	],
 	variables_tested_reference: 'docs/backtest-log.md',

@@ -206,15 +206,18 @@ def validate_curated_polls(df: pl.DataFrame) -> pl.DataFrame:
 
 def validate_curated_poll_results(df: pl.DataFrame) -> pl.DataFrame:
     """Contrôles de `validate_poll_results`, plus unicité (sondage, tour, hypothèse,
-    candidat), `suspect_reason` renseigné si et seulement si `suspect`."""
+    population, candidat) : une hypothèse publiée sur deux bases a deux populations ;
+    `suspect_reason` renseigné si et seulement si `suspect`."""
     validate_poll_results(df)
     df = df.select(list(CURATED_POLL_RESULTS_SCHEMA.keys())).cast(
         dict(CURATED_POLL_RESULTS_SCHEMA)
     )
     _check_enum(df, "source", POLL_SOURCES)
-    key = ["poll_id", "round", "hypothesis_id", "candidate_id"]
+    key = ["poll_id", "round", "hypothesis_id", "population", "candidate_id"]
     if df.select(key).is_duplicated().any():
-        raise ValueError("poll_results: clé (poll_id, round, hypothesis_id, candidate_id) en double")
+        raise ValueError(
+            "poll_results: clé (poll_id, round, hypothesis_id, population, candidate_id) en double"
+        )
     if df.filter(pl.col("suspect") != pl.col("suspect_reason").is_not_null()).height:
         raise ValueError("poll_results: suspect et suspect_reason incohérents")
     reasons = df["suspect_reason"].drop_nulls().str.split("; ").explode().unique()

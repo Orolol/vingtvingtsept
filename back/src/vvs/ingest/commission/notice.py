@@ -15,14 +15,24 @@ Règles de décision d'un bloc (dans l'ordre) :
 3. les 14 lignes au-dessus évoquent un vote (tour, hypothèse, intention, voteriez…) ;
 4. tous les autres libellés du bloc sont des candidats connus ou des libellés non candidats
    connus (`aliases.NON_CANDIDATE_PREFIXES`) ; sinon `UnknownLabelError` ;
-5. le nombre de valeurs par ligne correspond à un format connu (voir `_column_spec`) ;
+5. le nombre de valeurs par ligne correspond à un format connu (voir `_column_spec`), ou le
+   tableau OpinionWay publie deux bases (`dual_columns`) ;
 6. la somme des parts des candidats est comprise entre 94 et 106 (base exprimés) ;
 7. deux candidats : second tour ; au moins `MIN_FIRST_ROUND_CANDIDATES` : premier tour ;
    entre les deux, bloc écarté.
 
 Un bloc rejeté à une autre étape que la 4 est ignoré (et compté dans le rapport). Une même
-hypothèse vue plusieurs fois dans une notice (page détaillée puis récapitulatif, ou publié
-puis brut/redressé) n'est gardée qu'une fois, de préférence avec son brut.
+hypothèse (tour, candidats, population) vue plusieurs fois dans une notice (page détaillée
+puis récapitulatif, ou publié puis brut/redressé) n'est gardée qu'une fois, de préférence avec
+son brut ; la même configuration publiée sur deux bases donne deux hypothèses.
+
+Population d'un tableau (`notice_population`, `block_population`, règles communes avec les
+archives) : la ligne « Base : … » du tableau, sauf quand la notice déclare que les résultats
+publiés portent sur les certains d'aller voter (note Ifop « sur toutes les personnes inscrites
+sur les listes électorales et certaines d'aller voter interrogées », pied des tableaux Toluna
+Harris Interactive depuis septembre 2026 « Base : (Aux) inscrits sur les listes électorales
+certains d'aller voter… ») : la ligne « inscrits » décrit alors l'échantillon, pas la colonne
+publiée.
 """
 
 from __future__ import annotations
@@ -34,6 +44,7 @@ from pathlib import Path
 
 import pdfplumber
 
+from vvs import schemas
 from vvs.ingest.commission.aliases import candidate_id, is_non_candidate, norm_label
 from vvs.ingest.commission.listing import MONTHS_FR
 
@@ -675,7 +686,113 @@ def _block_population(block: Block) -> str | None:
     return None
 
 
+_DUAL_HEADER = re.compile(r"certain")
+_DUAL_OTHER = re.compile(r"ensemble|inscrit")
+
+
+def dual_columns(block: Block) -> tuple[int, int, int, int] | None:
+    """Tableau OpinionWay à deux bases -> (certains, inscrits, brut certains, brut inscrits).
+
+    1 + 2k valeurs par ligne (k = 4 ou 5), en-tête citant les certains d'aller voter et
+    l'ensemble des inscrits ou des répondants : « Publié » en première colonne, puis k colonnes
+    pour l'ensemble des inscrits (brut et redressements) et k pour les certains d'aller voter,
+    dans le même ordre. La colonne publiée est l'un des redressements des certains ; on la
+    repère à la valeur (somme des écarts minimale à la première colonne) et on prend la colonne
+    des inscrits au même rang : même redressement, seule la base change."""
+    counts = sorted(len(r.values) for _, r in block.candidate_rows)
+    n = counts[len(counts) // 2]
+    if n not in (9, 11):
+        return None
+    head = _n(" ".join(block.context[-14:]))
+    if not (_DUAL_HEADER.search(head) and _DUAL_OTHER.search(head)):
+        return None
+    k = (n - 1) // 2
+    rows = [r.values for _, r in block.candidate_rows if len(r.values) == n]
+
+    def gap(j: int) -> float:
+        return sum(abs(v[j] - v[0]) for v in rows if v[j] is not None and v[0] is not None)
+
+    j = min(range(k + 2, 2 * k + 1), key=gap)  # un redressement des certains, pas le brut
+    return j, j - k, k + 1, 1
+
+
+# Règles de population partagées par le parseur 2027 (`parse`) et les archives (`archive`).
+#
+# La colonne publiée est calculée sur les certains d'aller voter alors que l'en-tête du tableau
+# dit « Base : ensemble des personnes inscrites » (Ifop : « les scores établis tiennent
+# principalement compte des redressements … sur la base des électeurs certains d'aller
+# voter » ; Elabe : « la colonne de référence … regroupant les individus ayant donné une note
+# de 8 à 10 sur l'échelle d'intention d'aller voter »).
+_REFERENCE_CERTAIN = re.compile(
+    r"sur la base des electeurs certains d aller voter"
+    r"|colonne de reference .{0,160}?note de \d+ a 10 sur l echelle d intention d aller voter"
+    r"|colonne de reference .{0,200}?sur les certains d aller voter"
+    r"|resultats? (presentes? )?aupres des personnes certaines d aller voter"
+    r"|base\W{0,3}certains d aller voter"
+    # Ifop 2022 : note sous chaque tableau, « Sur toutes les personnes inscrites sur les listes
+    # électorales et certaines d'aller voter interrogées, N personnes ont exprimé… »
+    r"|personnes inscrites sur les listes electorales et certaines d aller voter interrogees"
+    # Toluna Harris Interactive 2027 (depuis septembre 2026) : base en pied des tableaux
+    # détaillés, « Base : (Aux) inscrits sur les listes électorales certains d'aller voter et
+    # ayant exprimé une intention de vote », alors que le récapitulatif dit « Aux inscrits sur
+    # les listes électorales » pour les mêmes chiffres.
+    r"|base (aux )?inscrits sur les listes electorales certains d aller voter et ayant exprime"
+)
+
+
+def notice_population(pages: list[str], head_population: str) -> str:
+    """Population par défaut des tableaux à une base : `certain_voters` si la notice dit que
+    les résultats publiés portent sur les certains d'aller voter, sinon celle de l'en-tête."""
+    if _REFERENCE_CERTAIN.search(_n("\n".join(pages))):
+        return "certain_voters"
+    return head_population
+
+
+def block_population(block: Block, default_population: str) -> str:
+    """Ligne « Base : … » du tableau, sauf « inscrits » quand la notice déclare publier les
+    certains d'aller voter (la ligne décrit alors l'échantillon, pas la colonne publiée)."""
+    pop = _block_population(block)
+    if pop is None or (pop == "registered" and default_population == "certain_voters"):
+        return default_population
+    return pop
+
+
+def _block_versions(
+    block: Block, pollster: str, default_population: str
+) -> list[tuple[str, list[tuple[str, float, float | None]]]] | None:
+    """(population, résultats) lus dans un tableau ; None si le format est inconnu.
+
+    Tableau OpinionWay à deux bases (`dual_columns`) : deux versions, les certains d'aller voter
+    sur la colonne publiée (première colonne, brut des certains) et les inscrits sur le
+    redressement de même rang (brut des inscrits). Autres tableaux : une version, population de
+    `block_population`."""
+    cands = block.candidate_rows
+
+    def read(share_col: int, raw_col: int | None) -> list[tuple[str, float, float | None]]:
+        out = []
+        for cid, row in cands:
+            share = row.values[share_col] if share_col < len(row.values) else None
+            raw = row.values[raw_col] if raw_col is not None and raw_col < len(row.values) else None
+            if share is None:
+                continue  # candidat non testé dans cette hypothèse (tableau récapitulatif)
+            out.append((cid, share, raw))
+        return out
+
+    dual = dual_columns(block) if pollster == "opinionway" else None
+    if dual:
+        _, reg, raw_cert, raw_reg = dual
+        return [("certain_voters", read(0, raw_cert)), ("registered", read(reg, raw_reg))]
+    spec = _column_spec(block, pollster)
+    if spec is None:
+        return None
+    return [(block_population(block, default_population), read(*spec))]
+
+
 def classify_blocks(blocks: list[Block], pollster: str, default_population: str) -> NoticeResults:
+    """Hypothèses des tableaux d'intentions de vote d'une notice.
+
+    Une hypothèse est identifiée par (tour, candidats, population) : un tableau publié sur deux
+    bases donne deux hypothèses, de même `label` (identifiant de la configuration publiée)."""
     out = NoticeResults()
     seen: dict[tuple, int] = {}
     for block in blocks:
@@ -703,50 +820,46 @@ def classify_blocks(blocks: list[Block], pollster: str, default_population: str)
             raise UnknownLabelError(
                 f"page {block.page} : libellé(s) inconnu(s) dans un tableau de candidats : {unknown}"
             )
-        spec = _column_spec(block, pollster)
-        if spec is None:
+        versions = _block_versions(block, pollster, default_population)
+        if versions is None:
             out.outcomes.append(
                 BlockOutcome(block.page, "unknown_format", f"{len(cands[0][1].values)} valeurs")
             )
             continue
-        share_col, raw_col = spec
-        results = []
-        for cid, row in cands:
-            share = row.values[share_col] if share_col < len(row.values) else None
-            raw = row.values[raw_col] if raw_col is not None and raw_col < len(row.values) else None
-            if share is None:
-                continue  # candidat non testé dans cette hypothèse (tableau récapitulatif)
-            results.append((cid, share, raw))
-        if len({c for c, _, _ in results}) != len(results):
-            out.outcomes.append(BlockOutcome(block.page, "duplicate_candidate"))
-            continue
-        total = sum(s for _, s, _ in results)
-        if not 94 <= total <= 106:
-            out.outcomes.append(BlockOutcome(block.page, "bad_sum", f"somme {total:g}"))
-            continue
-        rnd = 2 if len(results) == 2 else 1
-        if rnd == 1 and len(results) < MIN_FIRST_ROUND_CANDIDATES:
-            out.outcomes.append(BlockOutcome(block.page, "too_few_candidates", str(len(results))))
-            continue
-        if (
-            rnd == 1
-            and _ROUND2.search(_n(" ".join(block.context[-6:])))
-            and not re.search(r"\b(1er|premier) tour\b", _n(" ".join(block.context[-6:])))
-        ):
-            out.outcomes.append(BlockOutcome(block.page, "round_mismatch"))
-            continue
-        population = _block_population(block) or default_population
-        key = (rnd, tuple(sorted(c for c, _, _ in results)))
-        has_raw = any(r is not None for _, _, r in results)
-        hyp = Hypothesis(rnd, population, results, block.page)
-        if key in seen:
-            prev = out.hypotheses[seen[key]]
-            prev_raw = any(r is not None for _, _, r in prev.results)
-            if has_raw and not prev_raw:
-                out.hypotheses[seen[key]] = hyp
-            out.outcomes.append(BlockOutcome(block.page, "duplicate"))
-            continue
-        seen[key] = len(out.hypotheses)
-        out.hypotheses.append(hyp)
-        out.outcomes.append(BlockOutcome(block.page, "accepted"))
+        # Configuration publiée (première version), commune aux deux bases d'un même tableau.
+        label = schemas.hypothesis_id([c for c, _, _ in versions[0][1]])
+        for population, results in versions:
+            if len({c for c, _, _ in results}) != len(results):
+                out.outcomes.append(BlockOutcome(block.page, "duplicate_candidate"))
+                continue
+            total = sum(s for _, s, _ in results)
+            if not 94 <= total <= 106:
+                out.outcomes.append(BlockOutcome(block.page, "bad_sum", f"somme {total:g}"))
+                continue
+            rnd = 2 if len(results) == 2 else 1
+            if rnd == 1 and len(results) < MIN_FIRST_ROUND_CANDIDATES:
+                out.outcomes.append(
+                    BlockOutcome(block.page, "too_few_candidates", str(len(results)))
+                )
+                continue
+            if (
+                rnd == 1
+                and _ROUND2.search(_n(" ".join(block.context[-6:])))
+                and not re.search(r"\b(1er|premier) tour\b", _n(" ".join(block.context[-6:])))
+            ):
+                out.outcomes.append(BlockOutcome(block.page, "round_mismatch"))
+                continue
+            key = (rnd, tuple(sorted(c for c, _, _ in results)), population)
+            has_raw = any(r is not None for _, _, r in results)
+            hyp = Hypothesis(rnd, population, results, block.page, label=label)
+            if key in seen:
+                prev = out.hypotheses[seen[key]]
+                prev_raw = any(r is not None for _, _, r in prev.results)
+                if has_raw and not prev_raw:
+                    out.hypotheses[seen[key]] = hyp
+                out.outcomes.append(BlockOutcome(block.page, "duplicate"))
+                continue
+            seen[key] = len(out.hypotheses)
+            out.hypotheses.append(hyp)
+            out.outcomes.append(BlockOutcome(block.page, "accepted"))
     return out

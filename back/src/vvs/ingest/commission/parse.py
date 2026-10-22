@@ -3,7 +3,9 @@
 Une ligne de `polls` par notice d'intention de vote présidentielle (question « si le premier
 tour avait lieu dimanche prochain… » présente), même quand ses tableaux n'ont pas pu être
 lus : la notice fournit au moins les métadonnées. Une ligne de `poll_results` par candidat,
-hypothèse et tour quand les tableaux ont été extraits (voir `notice` pour les règles).
+hypothèse, tour et population quand les tableaux ont été extraits (voir `notice` pour les
+règles) : un tableau OpinionWay publié sur les inscrits et sur les certains d'aller voter donne
+deux hypothèses de même `hypothesis_id` et de `population` distincte.
 """
 
 from __future__ import annotations
@@ -107,7 +109,8 @@ def parse_notice(path: Path, entry: dict, text: nt.NoticeText | None = None) -> 
                 for b in nt.find_blocks(list(halves)):
                     b.page = page_no
                     blocks.append(b)
-        found = nt.classify_blocks(blocks, res.meta.pollster, res.meta.population)
+        default_pop = nt.notice_population(text.pages, res.meta.population)
+        found = nt.classify_blocks(blocks, res.meta.pollster, default_pop)
     except nt.UnknownLabelError as exc:
         res.error, res.unknown_label = str(exc), True
         return res
@@ -135,12 +138,17 @@ class ParseReport:
             n for n in with_res if any(r is not None for h in n.hypotheses for *_, r in h.results)
         ]
         tables = self.results.select("poll_id", "round", "hypothesis_id").unique().height
+        second = (
+            self.results.select("poll_id", "round", "hypothesis_id", "population").unique().height
+            - tables
+        )
         lines = [
             f"{len(self.notices)} notices lues, {len(iv)} avec intentions de vote présidentielle",
             f"{self.polls.height} sondages écrits dans {POLLS_PATH.name}",
             (
                 f"{len(with_res)} notices avec tableaux extraits ({len(with_raw)} avec résultats"
-                f" bruts) : {tables} tableaux (sondage x tour x hypothèse),"
+                f" bruts) : {tables} tableaux (sondage x tour x hypothèse), dont {second}"
+                " publiés aussi sur une seconde base,"
                 f" {self.results.height} lignes dans {RESULTS_PATH.name}"
             ),
         ]
@@ -228,10 +236,11 @@ def build_tables(parsed: list[NoticeParse]) -> tuple[pl.DataFrame, pl.DataFrame]
                 }
             )
         for h in n.hypotheses:
-            hyp = schemas.hypothesis_id([c for c, _, _ in h.results])
-            if (poll_id, h.round, hyp) in seen_hyp:
+            # `label` : configuration publiée, commune aux deux bases d'un même tableau
+            hyp = h.label or schemas.hypothesis_id([c for c, _, _ in h.results])
+            if (poll_id, h.round, hyp, h.population) in seen_hyp:
                 continue  # hypothèse déjà donnée par une notice précédente du même sondage
-            seen_hyp.add((poll_id, h.round, hyp))
+            seen_hyp.add((poll_id, h.round, hyp, h.population))
             for cid, share, raw in h.results:
                 result_rows.append(
                     {

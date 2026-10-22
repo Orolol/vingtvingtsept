@@ -8,6 +8,11 @@ Les sources sont traitées dans l'ordre de `rules.PRECEDENCE` : un sondage de la
 fonde un sondage fusionné, Wikipédia puis MieuxVoter s'y rattachent ou en fondent un nouveau.
 Une valeur déjà posée par une source prioritaire n'est jamais remplacée ; une valeur absente
 (commanditaire inconnu, mode `unknown`, population `unknown`, résultat brut) est complétée.
+Une hypothèse publiée sur une seconde base par la même source (règle `second_base` de
+`rules`) suit son sondage dans `alt_hyps` : elle n'est ni comparée ni fusionnée avec les autres
+sources, mais reçoit les corrections de libellés de l'hypothèse principale et sort dans
+`poll_results` avec sa population.
+
 Chaque désaccord donne une entrée de journal :
 
     {"poll_id": …, "key": {election, pollster, fieldwork_start, fieldwork_end, sponsor},
@@ -83,6 +88,7 @@ class SourcePoll:
     hyps: dict[HypKey, Hyp] = field(default_factory=dict)
     rolling_label: bool = False
     dropped_population: frozenset[str] = frozenset()
+    alt_hyps: dict[HypKey, Hyp] = field(default_factory=dict)  # seconde base (`second_base`)
 
     @property
     def start(self) -> date:
@@ -103,6 +109,7 @@ class Canon:
     hyps: dict[HypKey, Hyp] = field(default_factory=dict)
     rolling_label: bool = False
     poll_id: str | None = None
+    alt_hyps: dict[HypKey, Hyp] = field(default_factory=dict)  # seconde base (`second_base`)
 
     @property
     def start(self) -> date:
@@ -192,6 +199,7 @@ class Merger:
             hyps={k: h.copy() for k, h in sp.hyps.items()},
             rolling_label=sp.rolling_label,
         )
+        self._attach_alt(c, sp)
         self.canons.append(c)
         self._group(sp).append(c)
         return c
@@ -239,6 +247,7 @@ class Merger:
                     self._merge_meta(c, sp, "precedence")
                 for h in targets.get(id(c), []):
                     self._merge_hyp(c, h, sp)
+                    self._attach_alt(c, sp, [h.key])
             if len(targets) > 1:
                 self.stats["source poll split over several polls"] += 1
             self._log_dropped_population(primary, sp)
@@ -252,6 +261,7 @@ class Merger:
                 self._merge_meta(c, sp, "same_results")
                 for h in sp.hyps.values():
                     self._merge_hyp(c, h, sp)
+                self._attach_alt(c, sp)
                 self._log_dropped_population(c, sp)
                 return c
             n = self._split_wave(c, sp)
@@ -283,6 +293,7 @@ class Merger:
         daté et dimensionné comme `sp`, avec les autres métadonnées (commanditaire, mode…) de
         `c`."""
         moved = {k: c.hyps.pop(k) for k in sp.hyps}
+        moved_alt = {k: c.alt_hyps.pop(k) for k in sp.hyps if k in c.alt_hyps}
         meta = dict(c.meta)
         meta_source = dict(c.meta_source)
         for f in ("fieldwork_start", "fieldwork_end", "sample_size"):
@@ -291,7 +302,8 @@ class Merger:
         value_sources = {h.source for h in moved.values()}
         members = [(s, p, "multi_wave_split") for s, p, _ in c.members if s in value_sources]
         members.append((sp.source, sp.poll_id, "multi_wave_split"))
-        n = Canon(c.election, c.pollster, meta, meta_source, members, moved, sp.rolling_label)
+        n = Canon(c.election, c.pollster, meta, meta_source, members, moved, sp.rolling_label,
+                  alt_hyps=moved_alt)
         self.canons.append(n)
         self._group(sp).append(n)
         self.log(
@@ -306,7 +318,21 @@ class Merger:
         )
         for h in sp.hyps.values():
             self._merge_hyp(n, h, sp)
+        self._attach_alt(n, sp)
         return n
+
+    def _attach_alt(self, c: Canon, sp: SourcePoll, keys=None) -> None:
+        """Règle `second_base` : la seconde base d'une hypothèse suit l'hypothèse principale ;
+        elle n'est reprise que si le sondage fusionné n'en a pas déjà une."""
+        for key in sp.alt_hyps if keys is None else keys:
+            h = sp.alt_hyps.get(key)
+            if h is None:
+                continue
+            if key in c.hyps and key not in c.alt_hyps:
+                c.alt_hyps[key] = h.copy()
+                self.stats[f"second base from {h.source}"] += 1
+            else:
+                self.stats[f"second base dropped from {h.source}"] += 1
 
     # --- valeurs -----------------------------------------------------------------
 
@@ -509,7 +535,23 @@ class Merger:
                         R.alts = {k: v for k, v in R.alts.items() if k != s}
                         R.alts[R.source] = R.share
                         R.share, R.source = alt[cid], s
+                    self._swap_second_base(c, H, pair)
                     break
+
+    def _swap_second_base(self, c: Canon, H: Hyp, pair: tuple[str, str]) -> None:
+        """Libellés inversés sur une page de notice : la seconde base, lue sur le même tableau,
+        porte la même inversion ; ses deux lignes sont échangées et l'échange journalisé."""
+        A = c.alt_hyps.get(H.key)
+        a, b = pair
+        # la valeur écartée de l'hypothèse principale venait de la source de la seconde base
+        if A is None or a not in A.rows or b not in A.rows or A.source not in H.rows[a].alts:
+            return
+        A.rows[a], A.rows[b] = A.rows[b], A.rows[a]
+        self.log(
+            c, "share", {A.source: {a: A.rows[b].share, b: A.rows[a].share}},
+            {a: A.rows[a].share, b: A.rows[b].share}, "swap_consistency",
+            round=A.round, hypothesis_id=A.hypothesis_id, population=A.population,
+        )
 
     def _infer_population(self) -> None:
         for c in self.canons:
@@ -561,7 +603,8 @@ class Merger:
                     "match_rule": rule,
                 })
             race = self.races.get(c.election)
-            for h in sorted(c.hyps.values(), key=lambda h: h.key):
+            hyps = [*c.hyps.values(), *c.alt_hyps.values()]
+            for h in sorted(hyps, key=lambda h: (h.key, rules.population_rank(h.population))):
                 reasons = rules.suspect_reasons(
                     h.round, {cid: (r.share, r.share_base) for cid, r in h.rows.items()},
                     c.start, c.end, race,
@@ -580,7 +623,7 @@ class Merger:
         sources_df = pl.DataFrame(sources, schema=schemas.POLL_SOURCES_SCHEMA)
         polls_df = schemas.validate_curated_polls(polls_df.sort("election", "fieldwork_end", "poll_id"))
         results_df = schemas.validate_curated_poll_results(
-            results_df.sort("poll_id", "round", "hypothesis_id", "candidate_id")
+            results_df.sort("poll_id", "round", "hypothesis_id", "population", "candidate_id")
         )
         sources_df = schemas.validate_poll_sources(
             sources_df.unique(keep="first", maintain_order=True).sort("canonical_poll_id", "source")

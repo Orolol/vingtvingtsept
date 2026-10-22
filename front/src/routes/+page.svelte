@@ -7,6 +7,8 @@
 	import ProbabilityTable from '#lib/components/ProbabilityTable.svelte';
 	import HistoryChart from '#lib/components/HistoryChart.svelte';
 	import CandidateName from '#lib/components/CandidateName.svelte';
+	import ForecastNote from '#lib/components/ForecastNote.svelte';
+	import ExpectationsChart from '#lib/components/ExpectationsChart.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -22,6 +24,43 @@
 			.map((c) => c.candidate_id)
 	);
 	const topDuels = $derived(data.second_round.pairs.slice(0, 4));
+
+	// « Selon vous, qui sera élu ? » : mesures par candidat face à nos probabilités, partis à part.
+	const expectations = $derived(data.summary.expectations);
+	const candidateMeasures = $derived(expectations.measures.filter((m) => m.kind === 'candidate'));
+	const partyMeasures = $derived(expectations.measures.filter((m) => m.kind === 'party'));
+	const pWin = $derived(new Map(mixture.map((c) => [c.candidate_id, c.p_win])));
+	const expectationRows = $derived.by(() => {
+		const ids = new Set(
+			candidateMeasures.flatMap((m) => m.items.map((i) => i.candidate_id as string))
+		);
+		const value = (m: (typeof candidateMeasures)[number], id: string) => {
+			const it = m.items.find((i) => i.candidate_id === id);
+			return it ? (it.share_named ?? it.share) : null;
+		};
+		return [...ids]
+			.map((id) => ({
+				id,
+				values: candidateMeasures.map((m) => value(m, id)),
+				p: pWin.get(id) ?? null
+			}))
+			.filter((r) => r.values.some((v) => v !== null && v >= 1) || (r.p ?? 0) >= 0.005)
+			.sort(
+				(a, b) =>
+					(b.p ?? 0) - (a.p ?? 0) ||
+					(b.values.find((v) => v !== null) ?? 0) - (a.values.find((v) => v !== null) ?? 0)
+			);
+	});
+	const latestWinner = $derived.by(() => {
+		const m = candidateMeasures.find((x) => x.question_type === 'winner');
+		const top = m?.items[0];
+		if (!m || !top?.candidate_id || top.share_named === null) return null;
+		return {
+			days_before: fmt.daysBetween(m.fieldwork_end, data.manifest.election.first_round),
+			share: top.share_named,
+			candidate_id: top.candidate_id
+		};
+	});
 </script>
 
 <PageTitle title="Présidentielle 2027 : la prévision">
@@ -149,3 +188,79 @@
 		</p>
 	</section>
 </div>
+
+<section aria-labelledby="titre-anticipations" class="mt-10">
+	<h2 id="titre-anticipations" class="mb-3 text-lg font-semibold">
+		« Selon vous, qui sera élu ? »
+	</h2>
+	<ForecastNote inForecast={expectations.in_forecast} note={expectations.note} />
+	<p class="mb-3 max-w-3xl text-sm text-ink-2">
+		Ce que les électeurs pensent qu'il va se passer, et non pour qui ils votent : dernières mesures
+		publiées, à côté de notre probabilité de victoire. Une part d'anticipation n'est pas une
+		probabilité : elle mesure un consensus, pas une chance de gagner.
+	</p>
+	{#if expectationRows.length}
+		<div class="overflow-x-auto rounded-md border border-line bg-surface">
+			<table class="w-full text-sm">
+				<caption class="sr-only"
+					>Anticipations de victoire par institut et probabilité de victoire du modèle</caption
+				>
+				<thead class="border-b border-line text-left text-xs text-muted">
+					<tr>
+						<th scope="col" class="px-3 py-2 font-medium">Candidat</th>
+						{#each candidateMeasures as m (m.pollster + m.question_type)}
+							<th scope="col" class="px-3 py-2 text-right font-medium">
+								<span class="block text-ink-2"
+									>{m.pollster_name}, {fmt.dateNum(m.fieldwork_end)}</span
+								>
+								<span class="block font-normal">{m.question}</span>
+								<span class="block font-normal">{m.basis}</span>
+							</th>
+						{/each}
+						<th scope="col" class="px-3 py-2 text-right font-medium"
+							><span class="block text-ink-2">Notre prévision</span>
+							<span class="block font-normal">probabilité de victoire</span></th
+						>
+					</tr>
+				</thead>
+				<tbody>
+					{#each expectationRows as r (r.id)}
+						<tr class="border-b border-line last:border-0">
+							<th scope="row" class="px-3 py-1.5 text-left font-normal whitespace-nowrap">
+								<CandidateName id={r.id} name={candidates.short(r.id)} />
+							</th>
+							{#each r.values as v, i (i)}
+								<td class="tabular px-3 py-1.5 text-right"
+									>{v === null ? '—' : v < 1 ? '< 1 %' : `${fmt.decimal(v, 0)} %`}</td
+								>
+							{/each}
+							<td class="tabular px-3 py-1.5 text-right font-medium"
+								>{r.p === null ? '—' : fmt.prob(r.p)}</td
+							>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	{/if}
+	{#each partyMeasures as m (m.pollster + m.fieldwork_end)}
+		<p class="mt-2 text-sm text-ink-2">
+			{m.pollster_name}, {fmt.date(m.fieldwork_end)}, par parti ({m.basis}) :
+			{m.items.map((i) => `${i.label} ${fmt.decimal(i.share, 0)} %`).join(', ')}.
+		</p>
+	{/each}
+	<h3 class="mt-6 mb-2 font-medium">Les campagnes passées</h3>
+	<ul class="mb-3 max-w-3xl list-disc space-y-1 pl-5 text-sm">
+		{#each expectations.landmarks as l (l.id)}<li>{l.text}</li>{/each}
+	</ul>
+	<ExpectationsChart
+		history={expectations.history}
+		{candidates}
+		current={latestWinner}
+		label="Part du futur vainqueur dans les réponses à « qui sera élu ? », selon le nombre de jours avant le premier tour, 2007-2022"
+	/>
+	<p class="mt-1 text-xs text-muted">
+		Part du futur président parmi les répondants qui nomment un candidat, mesures vérifiées d'avant
+		le premier tour. Le losange est la mesure 2027 la plus récente (candidat le plus cité).
+	</p>
+</section>

@@ -54,17 +54,18 @@
 			"description": "Variable candidate testée contre la référence du backtest (docs/backtest-log.md).",
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["id", "label", "verdict", "admitted", "published", "summary"],
+			"required": ["id", "label", "verdict", "admitted", "published", "summary", "wave"],
 			"properties": {
 				"id": { "type": "string" },
 				"label": { "type": "string" },
 				"verdict": {
 					"type": "string",
-					"description": "« non admise » (échec au backtest) ou « non retenue » (écartée dès l'étude)."
+					"description": "« non admise » (échec au backtest), « non retenue » (écartée dès l'étude) ou « en attente d'accès » (données demandées)."
 				},
 				"admitted": { "type": "boolean" },
 				"published": { "type": "boolean", "description": "Vrai si la projection publiée l'utilise malgré tout (choix éditorial)." },
-				"summary": { "type": "string", "description": "Une ligne." }
+				"summary": { "type": "string", "description": "Une ligne." },
+				"wave": { "$ref": "common.json#/$defs/date", "description": "Date de la vague de tests (docs/backtest-log.md)." }
 			}
 		}
 	},

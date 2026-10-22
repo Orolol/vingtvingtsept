@@ -25,6 +25,7 @@ import numpy as np
 import polars as pl
 
 from vvs import paths
+from vvs.curate.rules import one_base
 from vvs.registry import BLOCS, Registry, default_registry
 from vvs.schemas import RESERVED_CANDIDATE_IDS
 
@@ -98,7 +99,9 @@ def load_polls(
     Source : `polls.parquet` + `poll_results.parquet` (table fusionnée de la curation) s'ils
     existent, sinon `polls_wikipedia_<election>.parquet` et son pendant. Dans la table
     fusionnée, les hypothèses `suspect` sont exclues, les doublons regroupés par
-    `canonical_poll_id` et les vagues de rolling éclaircies (`_thin_rolling`).
+    `canonical_poll_id` et les vagues de rolling éclaircies (`_thin_rolling`) ; une hypothèse
+    publiée sur deux bases n'est gardée que sur une, les certains d'aller voter d'abord
+    (`vvs.curate.rules.one_base`).
 
     Les ids réservés (abstention, indécis…) sont écartés. Seuls les sondages dont
     `fieldwork_end <= asof` sont gardés. La source lue (`curated` ou `wikipedia`) est
@@ -131,10 +134,13 @@ def load_polls(
     if "suspect" in results.columns:
         bad = (
             results.filter(pl.col("suspect").fill_null(False))
-            .select("poll_id", "hypothesis_id")
+            .select("poll_id", "hypothesis_id", "population")
             .unique()
         )
-        results = results.join(bad, on=["poll_id", "hypothesis_id"], how="anti")
+        results = results.join(bad, on=["poll_id", "hypothesis_id", "population"], how="anti")
+    # Une hypothèse publiée sur deux bases (OpinionWay : inscrits et certains d'aller voter)
+    # ne compte qu'une fois, sur les certains d'aller voter (`rules.one_base`).
+    results = one_base(results)
     results = results.filter(
         ~pl.col("candidate_id").is_in(RESERVED_CANDIDATE_IDS) & pl.col("share").is_not_null()
     )

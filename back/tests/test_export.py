@@ -124,8 +124,70 @@ def _toy_explanatory(root):
          for e in (2012, 2017, 2022) for i, lid in enumerate(lineages)
          for j, b in enumerate(("far_right", "left", "other"))]
     ).write_parquet(ratings / "house_effects.parquet")
+    _toy_opinion(curated)
     return {"economy_study": eco, "pollster_ratings": ratings, "curated": curated,
-            "press_nlp_study": root / "press_nlp"}
+            "press_nlp_study": root / "press_nlp", "dispersion": TOY_DISPERSION}
+
+
+# Dispersion des instituts déjà calculée (le calcul réel relit les sondages curated).
+TOY_DISPERSION = {
+    "in_forecast": False, "note": "n", "reading": "r", "window_days": 30,
+    "weeks": [(ASOF - dt.timedelta(weeks=1)).isoformat(), ASOF.isoformat()],
+    "D": [None, 3.5], "reference": [2.0, 2.0], "n_pollsters": [2, 5],
+    "current": {"asof": ASOF.isoformat(), "horizon_days": 180, "D": 3.5, "reference": 2.0,
+                "pollsters": ["elabe", "ifop"]},
+    "past_same_horizon": [{"election": 2022, "D": 2.4}],
+}
+
+
+def _toy_opinion(curated):
+    """Anticipations (« qui sera élu ? ») et écarts certains − inscrits jouets."""
+    rows = []
+
+    def measure(e, pollster, end, qtype, shares, undecided=None, party=False, verified=True,
+                pair=None):
+        for k, s in shares.items():
+            rows.append({
+                "election": e, "pollster": pollster, "fieldwork_end": end, "question_type": qtype,
+                "outcome": "win", "candidate_id": None if party else k,
+                "party": k if party else None, "pair": pair, "share": s, "undecided": undecided,
+                "sample_size": 1000, "source_url": f"https://x/{pollster}/{end}",
+                "file_id": 1, "page": 1, "verified": verified,
+            })
+
+    d = dt.date
+    measure(2027, "cluster17", d(2026, 7, 24), "winner",
+            {"le_pen_marine": 40.0, "philippe_edouard": 20.0, "melenchon_jean_luc": 20.0}, 20.0)
+    measure(2027, "opinionway", d(2026, 7, 9), "chances", {"le_pen_marine": 54.0,
+                                                          "philippe_edouard": 41.0})
+    measure(2027, "harris", d(2026, 3, 22), "chances", {"rn": 63.0, "lfi": 19.0}, party=True)
+    measure(2027, "opinionway", d(2026, 7, 9), "good_president", {"le_pen_marine": 37.0})
+    measure(2027, "elabe", ASOF + dt.timedelta(days=2), "winner", {"le_pen_marine": 99.0})
+    # 2022 : un favori juste, une exception, un pronostic d'entre-deux-tours et une mesure non
+    # vérifiée, écartés
+    measure(2022, "ifop", d(2022, 1, 10), "winner",
+            {"macron_emmanuel": 40.0, "le_pen_marine": 20.0, "zemmour_eric": 20.0}, 20.0)
+    measure(2022, "elabe", d(2022, 2, 10), "winner",
+            {"le_pen_marine": 30.0, "macron_emmanuel": 25.0})
+    measure(2022, "ipsos", d(2022, 4, 15), "winner", {"macron_emmanuel": 70.0})
+    measure(2022, "bva", d(2022, 3, 1), "winner", {"macron_emmanuel": 90.0}, verified=False)
+    pl.DataFrame(rows).write_parquet(curated / "poll_expectations.parquet")
+
+    gaps = []
+    for pid, end, values in (
+        ("p1", d(2026, 9, 1), {"le_pen_marine": [0.5, 1.5], "melenchon_jean_luc": [-1.0]}),
+        ("p2", d(2026, 10, 1), {"le_pen_marine": [2.0], "melenchon_jean_luc": [-0.5]}),
+        ("p3", ASOF + dt.timedelta(days=3), {"le_pen_marine": [9.0]}),
+    ):
+        for cid, gs in values.items():
+            for i, g in enumerate(gs):
+                gaps.append({"poll_id": pid, "election": 2027, "pollster": "opinionway",
+                             "fieldwork_end": end, "round": 1, "hypothesis_id": f"h{i}",
+                             "candidate_id": cid, "share_registered": 20.0,
+                             "share_certain": 20.0 + g, "gap": g})
+    gaps.append({**gaps[0], "round": 2, "gap": 5.0})
+    pl.DataFrame(gaps).with_columns(pl.col("round").cast(pl.Int8)).write_parquet(
+        curated / "turnout_gap.parquet")
 
 
 NLP_WEEKS = [dt.date(2026, 9, 21) + dt.timedelta(weeks=i) for i in range(4)]  # lundis
@@ -335,9 +397,42 @@ def test_explanatory_sections(exported):
 
     bt = json.loads((out / "backtest.json").read_text())
     tested = {v["id"]: v for v in bt["variables_tested"]}
-    assert len(tested) == 7 and not any(v["admitted"] for v in tested.values())
+    assert len(tested) == 12 and not any(v["admitted"] for v in tested.values())
+    assert tested["cevipof"]["verdict"] == "en attente d'accès"
+    assert tested["herding"]["wave"] == "2026-10-22" and tested["bounce"]["wave"] == "2026-10-20"
     assert [k for k, v in tested.items() if v["published"]] == ["substitution"]
     assert tested["press_nlp"]["verdict"] == "non retenue"
+
+
+def test_opinion_indicators(exported):
+    """Anticipations, dispersion et électorats fragiles : hors prévision, bornés à asof."""
+    _, out, _, _ = exported
+    exp = json.loads((out / "summary.json").read_text())["expectations"]
+    assert exp["in_forecast"] is False
+    # candidats d'abord (`winner` puis `chances`), partis ensuite ; « bon président » et mesure
+    # postérieure à asof écartés
+    assert [(m["pollster"], m["question_type"], m["kind"]) for m in exp["measures"]] == [
+        ("cluster17", "winner", "candidate"), ("opinionway", "chances", "candidate"),
+        ("harris", "chances", "party")]
+    c17 = exp["measures"][0]["items"][0]
+    assert (c17["candidate_id"], c17["share"], c17["share_named"]) == ("le_pen_marine", 40.0, 50.0)
+    assert exp["measures"][1]["items"][0]["share_named"] is None
+    assert exp["measures"][2]["items"][0]["label"] == "Un candidat du RN"
+    [h] = exp["history"]
+    assert h["election"] == 2022 and h["winner"] == "macron_emmanuel"
+    assert [(p["days_before"], p["winner_share_named"], p["top_is_winner"]) for p in h["points"]] \
+        == [(90, 50.0, True), (59, 45.5, False)]
+    texts = {x["id"]: x["text"] for x in exp["landmarks"]}
+    assert "dans 1 mesures sur 2 depuis 2022" in texts["top_is_winner"]
+    assert "Marine Le Pen" in texts["top_is_winner"]
+    assert "plus de 50 %" in texts["max_winner_share"]
+
+    polls = json.loads((out / "polls.json").read_text())
+    assert polls["dispersion"]["current"]["D"] == 3.5
+    tg = polls["turnout_gap"]
+    assert tg["in_forecast"] is False and tg["n_polls"] == 2
+    assert [(r["candidate_id"], r["gap"], r["se"], r["n_polls"]) for r in tg["rows"]] == [
+        ("melenchon_jean_luc", -0.75, 0.25, 2), ("le_pen_marine", 1.5, 0.5, 2)]
 
 
 def test_press_nlp_sections(exported):

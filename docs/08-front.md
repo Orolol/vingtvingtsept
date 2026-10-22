@@ -19,14 +19,14 @@ que `manifest.mock` vaut vrai.
 
 | Route | Contenu |
 |---|---|
-| `/` | les probabilités du jour (qualification, victoire), la date du dernier sondage intégré, l'évolution des probabilités, un résumé des scénarios |
+| `/` | les probabilités du jour (qualification, victoire), la date du dernier sondage intégré, l'évolution des probabilités, un résumé des scénarios ; « Selon vous, qui sera élu ? » face à nos probabilités (hors prévision) |
 | `/premier-tour` | courbes de soutien latent par candidat avec intervalles, sondages en points, filtre par configuration |
 | `/second-tour` | matrice des duels : probabilité de chaque paire, score attendu, intervalle ; reports de voix estimés |
 | `/scenarios` | configurations de candidats, leurs probabilités, l'historique des révisions, la prévision conditionnelle à chacune |
-| `/sondages` | table de tous les sondages intégrés, effets maison estimés par institut |
+| `/sondages` | table de tous les sondages intégrés, dispersion des instituts et électorats fragiles (hors prévision), effets maison estimés par institut, palmarès |
 | `/economie` | séries économiques et popularité, corrélations, ce qui entre ou non dans la prévision |
 | `/presse` | presse classée (ton, posture, titres extrêmes, part de voix, agenda, repères 2017 et 2022, qualité), attention Wikipédia, rubriques INA, GDELT, même mention |
-| `/methode` | méthodologie en langage clair, résultats du backtest, limites |
+| `/methode` | méthodologie en langage clair, résultats du backtest, variables testées par vague, limites |
 
 ## Contrat JSON (`front/static/data/`)
 
@@ -83,9 +83,41 @@ phrase de statut, affichée sur la page :
   erreur du dernier sondage, écart à l'institut moyen, biais par bloc, précision, et stabilité
   du classement entre élections consécutives (corrélations poolées), avec la phrase « classement
   non reproductible d'une élection à l'autre, n'entre pas dans la prévision ».
-- `backtest.variables_tested` : les six variables de la vague du 2026-10-20 et la presse classée
-  du 2026-10-22 (une ligne chacune, `published` vrai pour la substitution, utilisée par la
-  projection publiée), affichées sur `/methode`.
+- `backtest.variables_tested` : les six variables de la vague du 2026-10-20, la presse classée
+  et les cinq pistes de la troisième vague du 2026-10-22 (volatilité par candidat, troupeau,
+  anticipations, abstention différentielle, Cevipof « en attente d'accès ») ; une ligne chacune,
+  `published` vrai pour la substitution, utilisée par la projection publiée, et `wave` (date de
+  la vague) qui les groupe sur `/methode`.
+- Indicateurs d'opinion de la troisième vague (ajoutés le 2026-10-22), tous `in_forecast: false`
+  avec leur phrase de statut :
+  - `summary.expectations` (accueil) : « Selon vous, qui sera élu ? »
+    (`poll_expectations.parquet`). `measures` : dernière mesure 2027 terminée avant `asof` par
+    institut, forme de question (`winner` : une réponse, part brute et `share_named`, part parmi
+    les répondants qui nomment un candidat ; `chances` : « peut-il gagner ? » posée candidat par
+    candidat) et objet (`candidate` ou `party`, Toluna Harris Interactive par parti) ; le site
+    les met en regard de `p_win` du mélange. `history` : mesures `winner` vérifiées de 2007 à
+    2022 d'avant le premier tour, part normalisée du futur vainqueur et candidat le plus cité,
+    en petit graphique. `landmarks` : deux repères calculés sur cette série à l'export (le plus
+    cité élu dans 38 mesures sur 39, seule exception l'épisode Fillon ; part du futur
+    vainqueur jamais au-dessus de 70 %, 63 % depuis 2012).
+  - `polls.dispersion` (`/sondages`) : dispersion relative D des instituts
+    (`vvs.model.herding.presidential_dispersion`, un sondage par institut sur 30 jours,
+    configuration connue à la date), un point par semaine sur 26 semaines jusqu'à `asof`, null
+    sous quatre instituts ; `reference` : D_ref des présidentielles 2002-2022 au même nombre de
+    jours du vote (`herding.reference`, interpolé, constant au-delà de 180 jours faute de
+    campagnes mesurables) ; `past_same_horizon` : D de chaque campagne passée à la même distance.
+    Phrase imposée : « les instituts divergent nettement, surtout parce qu'ils testent des
+    configurations différentes ; historiquement, le désaccord accompagne les grosses erreurs, il
+    ne les masque pas ».
+  - `polls.turnout_gap` (`/sondages`) : électorats fragiles, écart certains d'aller voter −
+    inscrits par candidat en 2027 (`turnout_gap.parquet`, OpinionWay, premier tour) : moyenne
+    par sondage puis entre sondages, erreur-type entre sondages (null sous deux sondages), triés
+    du plus fragile au moins fragile, avec le rappel de 2017 et 2022.
+  Invariants de `validate-data` : mesures et sondages datés au plus `asof`, candidat ou parti
+  (pas les deux), part normalisée pour `winner` seulement et au moins égale à la part brute,
+  `top_is_winner` cohérent ; séries de dispersion alignées sur `weeks`, dernière semaine =
+  `asof` ; écarts triés, cohérents avec les deux parts (à l'arrondi près), erreur-type nulle si
+  et seulement si moins de deux sondages ; candidats présents dans le manifeste.
 
 Les schémas sont décrits en JSON Schema dans `back/src/vvs/export/schemas/` et validés à
 l'export ; le front les type via génération TypeScript (`npm run types`) et les valide avec

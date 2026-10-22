@@ -2,6 +2,8 @@
 	import { candidateRegistry, BLOC_LABELS } from '#lib/candidates.js';
 	import * as fmt from '#lib/format.js';
 	import PageTitle from '#lib/components/PageTitle.svelte';
+	import ForecastNote from '#lib/components/ForecastNote.svelte';
+	import TrackChart from '#lib/components/TrackChart.svelte';
 	import type { Bloc } from '#lib/types/data.js';
 	import type { PageProps } from './$types';
 
@@ -122,6 +124,25 @@
 	const RATING_BLOCS = ['far_right', 'right', 'centre', 'left', 'far_left'] as const;
 	const num = (x: number | null, d = 2) => (x === null ? '—' : fmt.decimal(x, d));
 	const signed = (x: number | null) => (x === null ? '—' : fmt.points(x));
+
+	// Dispersion des instituts et électorats fragiles : volets explicatifs, hors prévision.
+	const disp = $derived(data.polls.dispersion);
+	const dispTracks = $derived([
+		{
+			candidate_id: 'd_2027',
+			label: '2027',
+			color: 'var(--color-accent)',
+			values: disp.D
+		},
+		{
+			candidate_id: 'd_ref',
+			label: 'Référence',
+			color: 'var(--color-muted)',
+			values: disp.reference
+		}
+	]);
+	const tg = $derived(data.polls.turnout_gap);
+	const gapMax = $derived(Math.max(1, ...tg.rows.map((r) => Math.abs(r.gap) + (r.se ?? 0))));
 </script>
 
 <PageTitle title="Sondages">
@@ -243,6 +264,119 @@
 		</div>
 	{:else}
 		<p class="text-sm text-muted">Aucun sondage de second tour intégré.</p>
+	{/if}
+</section>
+
+<section aria-labelledby="titre-dispersion" class="mb-10">
+	<h2 id="titre-dispersion" class="mb-3 text-lg font-semibold">Dispersion des instituts</h2>
+	<ForecastNote inForecast={disp.in_forecast} note={disp.note} />
+	{#if disp.current.D !== null}
+		<p class="mb-3 max-w-3xl">
+			Au {fmt.date(disp.current.asof)}, à {disp.current.horizon_days} jours du vote, les sondages des
+			{disp.current.pollsters.length} instituts des {disp.window_days} derniers jours s'écartent
+			<strong class="tabular">{fmt.decimal(disp.current.D)}</strong> fois plus que le seul tirage
+			aléatoire ne le voudrait, contre
+			<strong class="tabular"
+				>{disp.current.reference === null ? '—' : fmt.decimal(disp.current.reference)}</strong
+			> en moyenne aux présidentielles passées au même moment.
+		</p>
+	{:else}
+		<p class="mb-3 max-w-3xl text-sm text-muted">
+			Moins de quatre instituts sur les {disp.window_days} derniers jours : dispersion non calculée.
+		</p>
+	{/if}
+	<TrackChart
+		dates={disp.weeks}
+		tracks={dispTracks}
+		{candidates}
+		format={(v) => fmt.decimal(v, 1)}
+		label="Dispersion relative des instituts par semaine en 2027, et référence des présidentielles passées"
+		height={220}
+	/>
+	<p class="mt-1 max-w-3xl text-xs text-muted">
+		{disp.reading} Ligne interrompue : moins de quatre instituts dans la fenêtre.
+		{#if disp.past_same_horizon.length}
+			Même distance du vote :
+			{disp.past_same_horizon
+				.map((p) => `${p.election} ${p.D === null ? 'non calculable' : fmt.decimal(p.D)}`)
+				.join(', ')}.
+		{/if}
+	</p>
+</section>
+
+<section aria-labelledby="titre-fragiles" class="mb-10">
+	<h2 id="titre-fragiles" class="mb-3 text-lg font-semibold">Électorats fragiles</h2>
+	<ForecastNote inForecast={tg.in_forecast} note={tg.note} />
+	<p class="mb-3 max-w-3xl text-sm text-ink-2">
+		{tg.pollsters.join(', ')}, {tg.n_polls} sondages{tg.first_poll && tg.last_poll
+			? ` du ${fmt.date(tg.first_poll)} au ${fmt.date(tg.last_poll)}`
+			: ''}, premier tour. Écart moyen en points d'exprimés et erreur-type entre sondages.
+		{tg.history}
+	</p>
+	{#if tg.rows.length}
+		<div class="overflow-x-auto rounded-md border border-line bg-surface">
+			<table class="w-full text-sm">
+				<caption class="sr-only"
+					>Écart entre certains d'aller voter et inscrits, par candidat, en 2027</caption
+				>
+				<thead class="border-b border-line text-left text-xs text-muted">
+					<tr>
+						<th scope="col" class="px-3 py-2 font-medium">Candidat</th>
+						<th scope="col" class="px-3 py-2 text-right font-medium">Écart (pts)</th>
+						<th scope="col" class="px-3 py-2 font-medium"><span class="sr-only">Graphique</span></th
+						>
+						<th scope="col" class="px-3 py-2 text-right font-medium">Certains</th>
+						<th scope="col" class="px-3 py-2 text-right font-medium">Inscrits</th>
+						<th scope="col" class="px-3 py-2 text-right font-medium">Sondages</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each tg.rows as r (r.candidate_id)}
+						{@const half = 50 / gapMax}
+						<tr class="border-b border-line last:border-0">
+							<th scope="row" class="px-3 py-1.5 text-left font-normal whitespace-nowrap"
+								>{candidates.short(r.candidate_id)}</th
+							>
+							<td class="tabular px-3 py-1.5 text-right whitespace-nowrap">
+								{fmt.points(r.gap)}
+								<span class="text-xs text-muted"
+									>{r.se === null ? '(1 sondage)' : `± ${fmt.decimal(r.se, 1)}`}</span
+								>
+							</td>
+							<td class="w-40 min-w-28 px-3 py-1.5" aria-hidden="true">
+								<svg viewBox="0 0 100 10" preserveAspectRatio="none" class="block h-3 w-full">
+									<line x1="50" x2="50" y1="0" y2="10" class="stroke-axis" stroke-width="0.6" />
+									<rect
+										x={r.gap < 0 ? 50 + r.gap * half : 50}
+										width={Math.abs(r.gap) * half}
+										y="2"
+										height="6"
+										class={r.gap < 0 ? 'fill-warn-ink' : 'fill-accent'}
+									/>
+									{#if r.se !== null}
+										<line
+											x1={50 + (r.gap - r.se) * half}
+											x2={50 + (r.gap + r.se) * half}
+											y1="5"
+											y2="5"
+											class="stroke-ink"
+											stroke-width="0.8"
+										/>
+									{/if}
+								</svg>
+							</td>
+							<td class="tabular px-3 py-1.5 text-right">{fmt.decimal(r.share_certain)}</td>
+							<td class="tabular px-3 py-1.5 text-right">{fmt.decimal(r.share_registered)}</td>
+							<td class="tabular px-3 py-1.5 text-right text-muted">{r.n_polls}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+		<p class="mt-1 text-xs text-muted">
+			Barre vers la gauche : électorat moins sûr d'aller voter que la moyenne ; trait : ± une
+			erreur-type. Les parts publiées sont arrondies au point, ce qui pèse sur les petits candidats.
+		</p>
 	{/if}
 </section>
 

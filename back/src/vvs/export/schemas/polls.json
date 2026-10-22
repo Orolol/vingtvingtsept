@@ -5,7 +5,7 @@
 	"description": "Tous les sondages intégrés au run (premier et second tour) et effets maison estimés par institut.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "pollsters", "polls", "house_effects", "pollster_ratings"],
+	"required": ["asof", "pollsters", "polls", "house_effects", "pollster_ratings", "dispersion", "turnout_gap"],
 	"$defs": {
 		"pollster": {
 			"title": "Pollster",
@@ -171,6 +171,98 @@
 			"items": { "$ref": "#/$defs/poll" }
 		},
 		"house_effects": { "type": "array", "items": { "$ref": "#/$defs/house_effect" } },
-		"pollster_ratings": { "$ref": "#/$defs/pollster_ratings" }
+		"pollster_ratings": { "$ref": "#/$defs/pollster_ratings" },
+		"dispersion": {
+			"title": "PollsterDispersion",
+			"description": "Dispersion relative D des instituts (vvs.model.herding) : observée / attendue sous tirage aléatoire, un sondage par institut sur `window_days` jours. Volet explicatif, hors prévision (runs/2026-10-22-herding).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "reading", "window_days", "weeks", "D", "reference", "n_pollsters", "current", "past_same_horizon"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string" },
+				"reading": { "type": "string" },
+				"window_days": { "type": "integer", "minimum": 1 },
+				"weeks": {
+					"type": "array",
+					"items": { "$ref": "common.json#/$defs/date" },
+					"description": "Dates de calcul, une par semaine ; la dernière vaut asof."
+				},
+				"D": {
+					"type": "array",
+					"items": { "type": ["number", "null"], "minimum": 0 },
+					"description": "D 2027 à chaque date ; null sous quatre instituts."
+				},
+				"reference": {
+					"type": "array",
+					"items": { "type": ["number", "null"], "minimum": 0 },
+					"description": "D_ref : moyenne géométrique de D aux présidentielles 2002-2022 au même nombre de jours du vote."
+				},
+				"n_pollsters": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+				"current": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["asof", "horizon_days", "D", "reference", "pollsters"],
+					"properties": {
+						"asof": { "$ref": "common.json#/$defs/date" },
+						"horizon_days": { "type": "integer" },
+						"D": { "type": ["number", "null"], "minimum": 0 },
+						"reference": { "type": ["number", "null"], "minimum": 0 },
+						"pollsters": { "type": "array", "items": { "$ref": "common.json#/$defs/pollster_id" } }
+					}
+				},
+				"past_same_horizon": {
+					"type": "array",
+					"description": "D de chaque présidentielle passée au même nombre de jours du vote (null : moins de quatre instituts).",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["election", "D"],
+						"properties": { "election": { "type": "integer" }, "D": { "type": ["number", "null"], "minimum": 0 } }
+					}
+				}
+			}
+		},
+		"turnout_gap": {
+			"title": "TurnoutGap",
+			"description": "Électorats fragiles : écart certains d'aller voter − inscrits par candidat en 2027, premier tour, sondages publiant les deux bases (data/curated/turnout_gap.parquet). Volet explicatif, hors prévision (runs/2026-10-22-turnout-gap).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "history", "pollsters", "n_polls", "first_poll", "last_poll", "rows"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string" },
+				"history": { "type": "string", "description": "Ce que sont devenus ces électorats en 2017 et en 2022." },
+				"pollsters": { "type": "array", "items": { "type": "string" } },
+				"n_polls": { "type": "integer", "minimum": 0 },
+				"first_poll": { "anyOf": [{ "$ref": "common.json#/$defs/date" }, { "type": "null" }] },
+				"last_poll": { "anyOf": [{ "$ref": "common.json#/$defs/date" }, { "type": "null" }] },
+				"rows": {
+					"type": "array",
+					"description": "Triées par écart croissant (les plus fragiles d'abord).",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["candidate_id", "gap", "se", "share_certain", "share_registered", "n_polls", "last_poll"],
+						"properties": {
+							"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+							"gap": {
+								"type": "number",
+								"description": "Part chez les certains − part chez les inscrits, en points d'exprimés ; moyenne des sondages."
+							},
+							"se": {
+								"type": ["number", "null"],
+								"minimum": 0,
+								"description": "Erreur-type (écart type entre sondages / √n) ; null sous deux sondages."
+							},
+							"share_certain": { "$ref": "common.json#/$defs/share" },
+							"share_registered": { "$ref": "common.json#/$defs/share" },
+							"n_polls": { "type": "integer", "minimum": 1 },
+							"last_poll": { "$ref": "common.json#/$defs/date" }
+						}
+					}
+				}
+			}
+		}
 	}
 }

@@ -164,8 +164,17 @@ def test_load_polls_prefers_merged_table(wiki_dir):
             canonical_poll_id="s",
             sources=["wikipedia"],
         ),
+        # OpinionWay : chaque tableau publié sur les certains d'aller voter et les inscrits
+        _poll("o", "opinionway", D(2022, 3, 1), D(2022, 3, 2), 1000, is_rolling=False,
+              canonical_poll_id="o", sources=["commission"]),
+        _poll("o2", "opinionway", D(2022, 2, 1), D(2022, 2, 2), 1000, is_rolling=False,
+              canonical_poll_id="o2", sources=["commission"]),
     ]
     res = []
+    registered = FULL | {"le_pen_marine": 17, "zemmour_eric": 18}
+    for pid in ("o", "o2"):
+        res += _results(pid, FULL, suspect=pid == "o2", population="certain_voters")
+        res += _results(pid, registered, suspect=False, population="registered")
     for pid in ("m1", "m2", "m3", "e1", "e1dup"):
         res += _results(pid, FULL, suspect=False)
     res += _results("s", FULL, suspect=True) + _results("s", NO_ZEMMOUR, suspect=False)
@@ -175,9 +184,15 @@ def test_load_polls_prefers_merged_table(wiki_dir):
     df = load_polls(2022, curated=wiki_dir)
     assert load_polls.last_source == "curated"
     # m3 gardée (la plus récente), m2 recouvre m3, m1 finit avant le début de m3
-    assert set(df["poll_id"]) == {"m1", "m3", "e1", "s"}
+    assert set(df["poll_id"]) == {"m1", "m3", "e1", "s", "o", "o2"}
     hyps = df.filter(pl.col("poll_id") == "s")["hypothesis_id"].unique().to_list()
     assert hyps == [hypothesis_id(list(NO_ZEMMOUR))]
+    # une base par hypothèse : les certains d'aller voter, sauf s'ils sont suspects
+    o = df.filter(pl.col("poll_id") == "o")
+    assert o.height == len(FULL) and o["population"].unique().to_list() == ["certain_voters"]
+    assert dict(o.select("candidate_id", "share").iter_rows())["le_pen_marine"] == 20
+    o2 = df.filter(pl.col("poll_id") == "o2")
+    assert o2.height == len(FULL) and o2["population"].unique().to_list() == ["registered"]
 
 
 def test_encode_hypotheses(wiki_dir):

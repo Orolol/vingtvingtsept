@@ -307,6 +307,52 @@ for (const e of press.landmarks.events) {
 }
 for (const t of press.ina.topics)
 	if (t.shares.length !== press.ina.years.length) fail(`press/ina/${t.label}`, 'longueur ≠ years');
+// indicateurs d'opinion hors prévision : anticipations, dispersion des instituts, électorats
+// fragiles (troisième vague, 2026-10-22)
+const { expectations } = summary;
+for (const m of expectations.measures) {
+	const where = `summary/expectations/${m.pollster}/${m.question_type}`;
+	if (m.fieldwork_end > manifest.asof) fail(where, `mesure du ${m.fieldwork_end} après asof`);
+	for (const it of m.items) {
+		if ((it.candidate_id === null) === (it.party === null))
+			fail(where, 'il faut un candidat ou un parti, pas les deux');
+		if (it.candidate_id !== null) knownCandidate(where, it.candidate_id);
+		if ((m.question_type === 'winner') !== (it.share_named !== null))
+			fail(where, 'part normalisée attendue pour `winner` seulement');
+		if (it.share_named !== null && it.share_named < it.share - EPS)
+			fail(where, `part normalisée ${it.share_named} < part publiée ${it.share}`);
+	}
+}
+for (const e of expectations.history) {
+	const where = `summary/expectations/history/${e.election}`;
+	knownCandidate(where, e.winner);
+	e.points.forEach((p, i) => {
+		knownCandidate(where, p.top_candidate_id);
+		if (p.top_is_winner !== (p.top_candidate_id === e.winner))
+			fail(where, `top_is_winner incohérent au ${p.fieldwork_end}`);
+		if (i > 0 && p.fieldwork_end < e.points[i - 1].fieldwork_end)
+			fail(where, 'points non triés par date');
+	});
+}
+const disp = polls.dispersion;
+for (const k of ['D', 'reference', 'n_pollsters'])
+	if (disp[k].length !== disp.weeks.length) fail(`polls/dispersion/${k}`, 'longueur ≠ weeks');
+disp.weeks.forEach((d, i) => {
+	if (i > 0 && d <= disp.weeks[i - 1])
+		fail('polls/dispersion', 'dates non strictement croissantes');
+});
+if (disp.weeks.at(-1) !== manifest.asof) fail('polls/dispersion', 'dernière semaine ≠ asof');
+if (disp.current.D !== disp.D.at(-1)) fail('polls/dispersion', 'current.D ≠ dernière valeur');
+const tg = polls.turnout_gap;
+tg.rows.forEach((r, i) => {
+	const where = `polls/turnout_gap/${r.candidate_id}`;
+	knownCandidate(where, r.candidate_id);
+	if (i > 0 && r.gap < tg.rows[i - 1].gap - EPS) fail(where, 'non trié par écart croissant');
+	if (r.n_polls < 2 !== (r.se === null)) fail(where, 'erreur-type nulle si et seulement si n < 2');
+	if (r.last_poll > manifest.asof) fail(where, 'sondage après asof');
+	if (!near(r.share_certain - r.share_registered, r.gap, 0.11))
+		fail(where, `écart ${r.gap} ≠ ${r.share_certain} − ${r.share_registered}`);
+});
 const unique = (where, ids) => {
 	const seen = new Set();
 	for (const id of ids) {
@@ -324,9 +370,18 @@ unique(
 );
 if (
 	backtest.variables_tested.some((v) => v.admitted) ||
-	[economy, press, polls.pollster_ratings, press.nlp, press.attention, press.ina, press.gdelt].some(
-		(x) => x.in_forecast
-	)
+	[
+		economy,
+		press,
+		polls.pollster_ratings,
+		press.nlp,
+		press.attention,
+		press.ina,
+		press.gdelt,
+		summary.expectations,
+		polls.dispersion,
+		polls.turnout_gap
+	].some((x) => x.in_forecast)
 )
 	console.warn(
 		'attention : une variable explicative est marquée admise ; vérifier docs/backtest-log.md'

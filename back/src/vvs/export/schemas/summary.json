@@ -5,7 +5,7 @@
 	"description": "Probabilités du jour : mélange de scénarios d'abord (`mixture`), puis détail conditionnel (`by_condition`).",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "n_draws", "conditions", "mixture", "by_condition"],
+	"required": ["asof", "n_draws", "conditions", "mixture", "by_condition", "expectations"],
 	"$defs": {
 		"candidate_outcome": {
 			"title": "CandidateOutcome",
@@ -45,6 +45,69 @@
 					"items": { "$ref": "#/$defs/candidate_outcome" }
 				}
 			}
+		},
+		"expectation_item": {
+			"title": "ExpectationItem",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["candidate_id", "party", "label", "share", "share_named"],
+			"properties": {
+				"candidate_id": {
+					"anyOf": [{ "$ref": "common.json#/$defs/candidate_id" }, { "type": "null" }],
+					"description": "Candidat nommé ; null si la question porte sur un parti."
+				},
+				"party": { "type": ["string", "null"], "description": "Parti (Toluna Harris Interactive 2026 : « un candidat du RN… »)." },
+				"label": { "type": ["string", "null"], "description": "Libellé du parti, null pour un candidat." },
+				"share": { "type": "number", "minimum": 0, "maximum": 100, "description": "Part publiée, en % des répondants." },
+				"share_named": {
+					"type": ["number", "null"],
+					"minimum": 0,
+					"maximum": 100,
+					"description": "Question `winner` : part parmi les répondants qui nomment un candidat ; null pour `chances`."
+				}
+			}
+		},
+		"expectation_measure": {
+			"title": "ExpectationMeasure",
+			"description": "Dernière mesure d'un institut pour une forme de question et un objet (candidat ou parti).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["pollster", "pollster_name", "fieldwork_end", "question_type", "kind", "question", "basis", "sample_size", "source_url", "items"],
+			"properties": {
+				"pollster": { "$ref": "common.json#/$defs/pollster_id" },
+				"pollster_name": { "type": "string" },
+				"fieldwork_end": { "$ref": "common.json#/$defs/date" },
+				"question_type": {
+					"type": "string",
+					"enum": ["winner", "chances"],
+					"description": "`winner` : une seule réponse parmi les candidats ; `chances` : posée candidat par candidat, les parts ne somment pas à 100."
+				},
+				"kind": { "type": "string", "enum": ["candidate", "party"] },
+				"question": { "type": "string", "description": "Forme de la question (libellé générique, pas la formulation exacte de l'institut)." },
+				"basis": { "type": "string", "description": "Base des parts affichées." },
+				"sample_size": { "type": ["integer", "null"], "minimum": 1 },
+				"source_url": { "type": ["string", "null"] },
+				"items": { "type": "array", "items": { "$ref": "#/$defs/expectation_item" }, "minItems": 1 }
+			}
+		},
+		"expectation_point": {
+			"title": "ExpectationPoint",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["pollster", "fieldwork_end", "days_before", "winner_share_named", "top_candidate_id", "top_is_winner"],
+			"properties": {
+				"pollster": { "$ref": "common.json#/$defs/pollster_id" },
+				"fieldwork_end": { "$ref": "common.json#/$defs/date" },
+				"days_before": { "type": "integer", "minimum": 1, "description": "Jours avant le premier tour." },
+				"winner_share_named": {
+					"type": ["number", "null"],
+					"minimum": 0,
+					"maximum": 100,
+					"description": "Part normalisée du futur vainqueur ; null s'il n'est pas proposé."
+				},
+				"top_candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
+				"top_is_winner": { "type": "boolean" }
+			}
 		}
 	},
 	"properties": {
@@ -64,6 +127,46 @@
 			"type": "array",
 			"description": "Un résultat par condition autre que `mix` : chaque état de dimension et les configurations les plus probables.",
 			"items": { "$ref": "#/$defs/outcome_set" }
+		},
+		"expectations": {
+			"title": "Expectations",
+			"description": "« Selon vous, qui sera élu ? » : indicateur d'opinion, hors prévision (runs/2026-10-22-expectations). Données : data/curated/poll_expectations.parquet.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "measures", "landmarks", "history"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string" },
+				"measures": {
+					"type": "array",
+					"description": "Dernières mesures 2027 terminées avant `asof` : candidats (`winner`, puis `chances`), puis partis.",
+					"items": { "$ref": "#/$defs/expectation_measure" }
+				},
+				"landmarks": {
+					"type": "array",
+					"description": "Repères calculés sur la série historique (mesures `winner` vérifiées, avant le premier tour).",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id", "text"],
+						"properties": { "id": { "type": "string" }, "text": { "type": "string" } }
+					}
+				},
+				"history": {
+					"type": "array",
+					"description": "Série 2007-2022 : une entrée par élection, points du plus ancien au plus récent.",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["election", "winner", "points"],
+						"properties": {
+							"election": { "type": "integer" },
+							"winner": { "$ref": "common.json#/$defs/candidate_id" },
+							"points": { "type": "array", "items": { "$ref": "#/$defs/expectation_point" } }
+						}
+					}
+				}
+			}
 		}
 	}
 }

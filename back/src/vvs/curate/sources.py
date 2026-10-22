@@ -32,20 +32,27 @@ def to_source_polls(
 ) -> list[SourcePoll]:
     """Tables `polls` / `poll_results` d'une source -> `SourcePoll` (hypothèses regroupées)."""
     rolling_ids = rolling_ids or set()
-    hyps: dict[str, dict] = {}
+    # (tour, hypothèse, population) : une notice peut publier une hypothèse sur deux bases
+    found: dict[str, dict] = {}
     for r in results.iter_rows(named=True):
-        key = (r["round"], r["hypothesis_id"])
-        by_poll = hyps.setdefault(r["poll_id"], {})
+        key = (r["round"], r["hypothesis_id"], r["population"])
+        by_poll = found.setdefault(r["poll_id"], {})
         h = by_poll.get(key)
         if h is None:
             h = by_poll[key] = Hyp(r["round"], r["hypothesis_id"], r["population"], {}, source)
-        elif h.population != r["population"]:
-            raise ValueError(
-                f"{source} {r['poll_id']} : population incohérente dans l'hypothèse {key}"
-            )
         if r["candidate_id"] in h.rows:
             raise ValueError(f"{source} {r['poll_id']} : {r['candidate_id']} en double dans {key}")
         h.rows[r["candidate_id"]] = Row(r["share"], r["share_base"], r["raw_share"], source)
+    hyps: dict[str, dict] = {}
+    alt_hyps: dict[str, dict] = {}
+    for pid, by_key in found.items():
+        for h in sorted(by_key.values(), key=lambda h: rules.population_rank(h.population)):
+            if h.key not in hyps.setdefault(pid, {}):
+                hyps[pid][h.key] = h
+            elif h.key not in alt_hyps.setdefault(pid, {}):
+                alt_hyps[pid][h.key] = h  # règle `second_base`
+            else:
+                raise ValueError(f"{source} {pid} : plus de deux populations dans {h.key}")
     out = []
     for p in polls.iter_rows(named=True):
         if p["source"] != source:
@@ -57,6 +64,7 @@ def to_source_polls(
         out.append(SourcePoll(
             source, p["poll_id"], p["election"], p["pollster"], meta,
             hyps.pop(p["poll_id"], {}), p["poll_id"] in rolling_ids,
+            alt_hyps=alt_hyps.pop(p["poll_id"], {}),
         ))
     if hyps:
         raise ValueError(f"{source} : résultats sans sondage {sorted(hyps)[:5]}")

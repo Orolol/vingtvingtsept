@@ -7,7 +7,7 @@ par source (`polls_wikipedia_<AAAA>`, `polls_commission`, `polls_mieuxvoter` et 
 | Fichier | Contenu |
 |---|---|
 | `polls.parquet` | un sondage fusionné par ligne, `sources`, `is_rolling` (schéma `CURATED_POLLS_SCHEMA`) |
-| `poll_results.parquet` | intentions de vote fusionnées, `source` de la valeur, `suspect`, `suspect_reason` |
+| `poll_results.parquet` | intentions de vote fusionnées, `source` de la valeur, `suspect`, `suspect_reason` ; une hypothèse publiée sur deux bases y figure deux fois, une par `population` (`rules.one_base` pour n'en garder qu'une) |
 | `poll_sources.parquet` | sondage de chaque source -> `canonical_poll_id`, règle d'appariement |
 | `curation_log.jsonl` | un conflit entre sources (ou une règle appliquée) par ligne |
 | `poll_results_by_bloc.parquet` | parts par bloc et par hypothèse |
@@ -77,7 +77,11 @@ class CurationReport:
         lines.append("combinaisons de sources : " + ", ".join(
             f"{'+'.join(s)} {n}" for s, n in combos.iter_rows()
         ))
-        hyp = r.unique(["poll_id", "round", "hypothesis_id"])
+        hyp = r.unique(["poll_id", "round", "hypothesis_id", "population"])
+        second = hyp.height - r.unique(["poll_id", "round", "hypothesis_id"]).height
+        lines.append(
+            f"hypothèses publiées sur deux bases (règle second_base) : {second}"
+        )
         sus = hyp.filter("suspect")
         reasons = Counter(x for v in sus["suspect_reason"] for x in v.split("; "))
         lines.append(

@@ -33,6 +33,25 @@ Règles de fusion (appliquées par `vvs.curate.merge`) :
   unique des hypothèses Commission du même sondage ; la population MieuxVoter n'est pas reprise
   pour un institut où elle contredit la Commission sur la plupart des sondages communs
   (`mieuxvoter_unreliable_pollsters`).
+- population lue dans les notices (`vvs.ingest.commission.notice`, règles communes aux
+  archives 2017-2022) : un tableau dont la ligne « Base » dit « inscrits » est compté sur les
+  certains d'aller voter quand la notice déclare publier les certains (baromètres Ifop : « sur
+  toutes les personnes inscrites sur les listes électorales et certaines d'aller voter
+  interrogées » ; Toluna Harris Interactive depuis septembre 2026 : « Base : (Aux) inscrits sur
+  les listes électorales certains d'aller voter et ayant exprimé une intention de vote »).
+- `second_base` : une notice qui publie le même tableau sur deux bases (OpinionWay : inscrits
+  et certains d'aller voter) donne deux hypothèses de même `hypothesis_id` et de `population`
+  distincte, toutes deux gardées dans `poll_results` (clé d'unicité étendue à la population).
+  La base prioritaire (`POPULATION_PRIORITY`, les certains d'aller voter d'abord, qui sont la
+  colonne publiée et recopiée par Wikipédia et MieuxVoter) porte l'hypothèse fusionnée ; la
+  seconde base suit son sondage sans être comparée aux autres sources, et reçoit les mêmes
+  corrections de libellés (`swap_consistency`).
+- `one_base` : tout usage qui compte des hypothèses (modèle via `load_polls`, parts par bloc,
+  erreurs historiques) ne garde qu'une base par (sondage, tour, hypothèse), la première de
+  `POPULATION_PRIORITY` présente ; une hypothèse publiée sur une seule base garde la sienne.
+  La règle porte sur l'hypothèse et non sur le sondage entier : les populations reprises de
+  MieuxVoter ou de Wikipédia mélangent parfois deux bases dans un même sondage (YouGov
+  septembre 2026, Odoxa avril 2025) sans qu'aucune hypothèse soit en double.
 """
 
 from __future__ import annotations
@@ -47,6 +66,8 @@ from unidecode import unidecode
 from vvs import schemas
 
 PRECEDENCE: tuple[str, ...] = ("commission", "wikipedia", "mieuxvoter")
+# Base retenue quand une même hypothèse est publiée sur plusieurs populations (`one_base`).
+POPULATION_PRIORITY: tuple[str, ...] = ("certain_voters", "registered", "unknown")
 
 DATE_TOLERANCE_DAYS = 1
 SAME_RESULTS_WINDOW_DAYS = 45
@@ -170,6 +191,22 @@ def prefer_swapped(
     dev_top = sum(abs(top[c] - m) for c, m in zip(pair, meds))
     dev_alt = sum(abs(alt[c] - m) for c, m in zip(pair, meds))
     return dev_alt + SWAP_CONSISTENCY_MARGIN < dev_top
+
+
+def population_rank(population: str) -> int:
+    return POPULATION_PRIORITY.index(population)
+
+
+def one_base(results: pl.DataFrame) -> pl.DataFrame:
+    """Règle `one_base` : une seule population par (sondage, tour, hypothèse), la première de
+    `POPULATION_PRIORITY` présente. Colonnes : poll_id, round, hypothesis_id, population ; une
+    table sans population (unités des scrutins de liste) est rendue telle quelle."""
+    if results.is_empty() or "population" not in results.columns:
+        return results
+    rank = pl.col("population").replace_strict(
+        {p: i for i, p in enumerate(POPULATION_PRIORITY)}, return_dtype=pl.Int8
+    )
+    return results.filter(rank == rank.min().over("poll_id", "round", "hypothesis_id"))
 
 
 # ---------------------------------------------------------------------------

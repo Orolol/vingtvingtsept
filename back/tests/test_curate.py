@@ -29,8 +29,8 @@ def poll(pid, source, start, end, pollster="ifop", sponsor=None, n=1000, mode="u
     }
 
 
-def hyp(pid, shares: dict[str, float], round_=1, population="unknown"):
-    hid = schemas.hypothesis_id(list(shares))
+def hyp(pid, shares: dict[str, float], round_=1, population="unknown", hid=None):
+    hid = hid or schemas.hypothesis_id(list(shares))
     return [
         {"poll_id": pid, "round": round_, "hypothesis_id": hid, "population": population,
          "candidate_id": c, "share": s,
@@ -241,6 +241,63 @@ def test_population_inferred_from_commission_poll_and_mv_unreliable():
     alone = res.results.filter(pl.col("poll_id") == "2027-ifop-20241209-1")
     assert alone["population"].unique().to_list() == ["unknown"]
     assert sum(e["rule"] == "mv_population_unreliable" for e in res.log) == 4
+
+
+# ---------------------------------------------------------------- seconde base
+
+
+def _ow(pid, source):
+    return [poll(pid, source, "2026-10-13", "2026-10-14", pollster="opinionway")]
+
+
+def test_second_base_kept_and_one_base_selects_certain_voters():
+    """OpinionWay 2026 : chaque tableau publié sur les certains d'aller voter (colonne
+    publiée, recopiée par Wikipédia) et sur les inscrits, sans un petit candidat."""
+    cert = first(le_pen_marine=35.0, zemmour_eric=9.5, bouamrane_karim=0.5)
+    reg = first(le_pen_marine=32.0, zemmour_eric=13.0)
+    hid = schemas.hypothesis_id(list(cert))
+    c = src("commission", _ow("c1", "commission"),
+            hyp("c1", cert, population="certain_voters")
+            + hyp("c1", reg, population="registered", hid=hid))
+    w = src("wikipedia", _ow("w1", "wikipedia"), hyp("w1", cert))
+    res = run(commission=c, wikipedia=w)
+    r = res.results.filter(pl.col("poll_id") == "2027-opinionway-20261014-1")
+    assert r["hypothesis_id"].unique().to_list() == [hid]
+    assert sorted(r["population"].unique().to_list()) == ["certain_voters", "registered"]
+    # Wikipédia comparé au publié seulement : aucun conflit
+    assert not [e for e in res.log if e["field"] in ("share", "population")]
+    kept = rules.one_base(res.results)
+    assert kept["population"].unique().to_list() == ["certain_voters"]
+    assert dict(kept.select("candidate_id", "share").iter_rows())["le_pen_marine"] == 35.0
+    # une hypothèse sur une seule base garde la sienne, même si une autre hypothèse du même
+    # sondage est sur une autre base (populations MieuxVoter, YouGov septembre 2026)
+    mixed = pl.DataFrame(
+        hyp("y", first(), population="registered")
+        + hyp("y", first(zemmour_eric=None, le_pen_marine=45.0), population="certain_voters"),
+        schema=schemas.POLL_RESULTS_SCHEMA,
+    )
+    assert rules.one_base(mixed).height == mixed.height
+
+
+def test_second_base_follows_swap_consistency():
+    """La page inversée (Le Pen 4, Zemmour 34) l'est sur les deux bases du même tableau."""
+    typo = first(le_pen_marine=4.0, zemmour_eric=34.0, philippe_edouard=26.0)
+    typo_reg = first(le_pen_marine=5.0, zemmour_eric=31.0, philippe_edouard=28.0)
+    good = first(le_pen_marine=34.0, zemmour_eric=4.0, philippe_edouard=26.0)
+    other = first(le_pen_marine=33.0, zemmour_eric=5.0, philippe_edouard=None, attal_gabriel=26.0)
+    c = src("commission", _ow("c1", "commission"),
+            hyp("c1", typo, population="certain_voters")
+            + hyp("c1", typo_reg, population="registered")
+            + hyp("c1", other, population="certain_voters"))
+    w = src("wikipedia", _ow("w1", "wikipedia"), hyp("w1", good) + hyp("w1", other))
+    res = run(commission=c, wikipedia=w)
+    hid = schemas.hypothesis_id(list(good))
+    r = res.results.filter(pl.col("hypothesis_id") == hid)
+    got = {(p, c): s for p, c, s in r.select("population", "candidate_id", "share").iter_rows()}
+    assert (got[("certain_voters", "le_pen_marine")], got[("certain_voters", "zemmour_eric")]) == (34.0, 4.0)
+    assert (got[("registered", "le_pen_marine")], got[("registered", "zemmour_eric")]) == (31.0, 5.0)
+    swaps = [e for e in res.log if e["rule"] == "swap_consistency"]
+    assert sum(e.get("population") == "registered" for e in swaps) == 1
 
 
 # ---------------------------------------------------------------- rolling

@@ -339,6 +339,35 @@ def test_find_population(text, expected):
     assert notice.find_population(text) == expected
 
 
+@pytest.mark.parametrize(
+    "note",
+    [
+        # baromètres Ifop 2027 : note sous chaque tableau
+        (
+            "(1) Sur toutes les personnes inscrites sur les listes électorales et certaines "
+            "d'aller voter interrogées, 837 personnes ont exprimé une intention de vote."
+        ),
+        # Toluna Harris Interactive depuis septembre 2026 : pied des tableaux détaillés, avec
+        # ou sans « Aux » (notices des 10 septembre et 8 octobre 2026)
+        (
+            "Base : Inscrits sur les listes électorales certains d'aller voter et ayant exprimé "
+            "une intention de vote, soit 1339 personnes"
+        ),
+        (
+            "Base : Aux inscrits sur les listes électorales certains d'aller voter et ayant "
+            "exprimé une intention de vote, soit 1 285 personnes"
+        ),
+    ],
+)
+def test_notice_population_certain_voters_note(note):
+    pages = ["Base : Ensemble des personnes inscrites sur les listes électorales", note]
+    assert notice.notice_population(pages, "registered") == "certain_voters"
+    # la ligne « Base : inscrits » du tableau décrit alors l'échantillon, pas la colonne publiée
+    page = _iv_page(_FIRST_ROUND, header="Base : Aux inscrits sur les listes électorales\n1er tour")
+    [hyp] = notice.classify_blocks(notice.find_blocks([page]), "harris", "certain_voters").hypotheses
+    assert hyp.population == "certain_voters"
+
+
 # ------------------------------------------------------------------ notices figées (PDF)
 
 
@@ -392,13 +421,22 @@ def test_cluster17_brut_and_redresse(parsed):
 def test_opinionway_nine_columns(parsed):
     res = parsed[2334]
     assert res.meta.fieldwork_end == date(2026, 10, 14)
-    [first] = [h for h in res.hypotheses if h.round == 1]
-    results = {c: (s, r) for c, s, r in first.results}
+    first = {h.population: h for h in res.hypotheses if h.round == 1}
+    assert sorted(first) == ["certain_voters", "registered"]
+    results = {c: (s, r) for c, s, r in first["certain_voters"].results}
     # « Publié » en première colonne ; brut des certains d'aller voter en sixième
     assert results["melenchon_jean_luc"] == (15.0, 12.0)
     assert results["bouamrane_karim"] == (0.5, None)
-    assert first.population == "certain_voters"
-    assert len([h for h in res.hypotheses if h.round == 2]) == 3
+    # seconde base : inscrits au même redressement, brut des inscrits en deuxième colonne ;
+    # la déduplication sur (tour, candidats) la perdait
+    registered = {c: (s, r) for c, s, r in first["registered"].results}
+    assert registered["melenchon_jean_luc"] == (18.0, 13.0)
+    assert registered["le_pen_marine"] == (32.0, 36.0)
+    assert "bouamrane_karim" not in registered
+    # même configuration publiée, donc même identifiant d'hypothèse pour les deux bases
+    assert first["certain_voters"].label == first["registered"].label
+    duels = [h for h in res.hypotheses if h.round == 2]
+    assert sorted(h.population for h in duels) == ["certain_voters"] * 3 + ["registered"] * 3
 
 
 def test_build_tables_conform_and_merge(parsed):
@@ -419,9 +457,15 @@ def test_build_tables_conform_and_merge(parsed):
     ]
     assert (polls["source"] == "commission").all()
     assert results.columns == list(schemas.POLL_RESULTS_SCHEMA.keys())
-    keys = ["poll_id", "round", "hypothesis_id", "candidate_id"]
+    keys = ["poll_id", "round", "hypothesis_id", "population", "candidate_id"]
     assert results.select(keys).unique().height == results.height
-    sums = results.group_by(["poll_id", "round", "hypothesis_id"]).agg(pl.col("share").sum())
+    # OpinionWay : chaque hypothèse sur les deux bases, sous le même identifiant
+    ow = results.filter(pl.col("poll_id") == "2027-opinionway-20261014-1")
+    pops = ow.group_by("round", "hypothesis_id").agg(pl.col("population").unique().sort())
+    assert pops["population"].to_list() == [["certain_voters", "registered"]] * 4
+    sums = results.group_by(["poll_id", "round", "hypothesis_id", "population"]).agg(
+        pl.col("share").sum()
+    )
     assert sums["share"].is_between(97, 103).all()
 
 

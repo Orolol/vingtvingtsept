@@ -15,7 +15,10 @@ macro.parquet, attention.parquet, press_ina.parquet, press_timelines.parquet, le
 classés (press_titles, press_labels, press_features), les runs de backtest (premier et second
 tour) et trois études : économie (`runs/<date>-economy/`, corrélations), palmarès des instituts
 (`runs/<date>-pollster-ratings/`) et presse classée (`runs/<date>-press-nlp/` : accords et dates
-de rupture). Ces volets sont
+de rupture). Indicateurs d'opinion de la troisième vague (2026-10-22) : anticipations « qui
+sera élu ? » (`poll_expectations.parquet`, dans summary.json), dispersion des instituts
+(`vvs.model.herding`, recalculée sur les sondages curated) et électorats fragiles
+(`turnout_gap.parquet`), dans polls.json. Ces volets sont
 explicatifs : tous portent `in_forecast: false`. La validation contre les
 schémas se fait côté front (`npm run validate-data`, ajv) : jsonschema n'est pas une
 dépendance du back.
@@ -203,7 +206,8 @@ GDELT_NOTE = (
 RATINGS_NOTE = "Classement non reproductible d'une élection à l'autre, n'entre pas dans la prévision."
 RATINGS_LABELS = {"verian": "Verian (Sofres, Kantar)"}
 VARIABLES_TESTED = (
-    # (id, libellé, verdict, publiée, une ligne) : docs/backtest-log.md, vague du 2026-10-20
+    # (id, libellé, verdict, publiée, une ligne, vague) : docs/backtest-log.md ; vague du
+    # 2026-10-20 (six pistes), presse classée et troisième vague du 2026-10-22
     ("substitution", "Substitution intra-bloc (logit emboîté)", "non admise", True,
      ("Meilleure sur les hypothèses emboîtées de 2022 et 2027, moins bonne en 2017 ; log-score "
       "inchangé à 90 jours, en baisse à 180. Utilisée par la projection publiée par choix "
@@ -226,6 +230,73 @@ VARIABLES_TESTED = (
      ("Titres classés par un modèle local (2026-10-22) : le ton a le signe attendu mais un effet "
       "indistinguable du placebo, la presse bouge avec les sondages ou après eux, l'agenda par "
       "thèmes ne tient pas. Pas essayée au backtest ; test hors échantillon déclaré pour 2027.")),
+    ("volatility_candidate", "Volatilité par candidat", "non admise", False,
+     ("Les soutiens volatils bougent davantage (β = 0,28, p = 0,0005, 0,19 sur 40 pays), mais la "
+      "loi actuelle de l'erreur (taille, mouvement) capte déjà ce signal : κ = 0 dans quatre plis "
+      "sur cinq en validation croisée, 2002 seule bouge, en pire.")),
+    ("herding", "Troupeau des instituts (dispersion)", "non admise", False,
+     ("Les instituts se resserrent bien en fin de campagne (7 élections sur 8), mais dispersion et "
+      "erreur vont ensemble (ρ = +0,50) au lieu de s'opposer ; κ négatif au backtest. Dispersion "
+      "2027 montrée sur la page Sondages.")),
+    ("expectations", "Anticipations « qui va gagner ? »", "non retenue", False,
+     ("110 mesures 2007-2027 : le plus cité devient président, mais sa part, très sous-confiante, "
+      "ne se convertit pas en probabilité et ne bat le modèle sur aucune élection à 90 ou 180 "
+      "jours. Montrées sur l'accueil.")),
+    ("turnout_gap", "Abstention différentielle (certains − inscrits)", "non retenue", False,
+     ("Écart stable par candidat (r ≈ 0,9 entre moitiés de campagne), lié à l'erreur finale en "
+      "2022 seulement, et en sens inverse : les électorats fragiles ont fini au-dessus des "
+      "sondages ; la validation croisée 2022 → 2017 échoue. Pas essayée au backtest.")),
+    ("cevipof", "Microdonnées Cevipof (reports, anticipations)", "en attente d'accès", False,
+     ("80 jeux inventoriés, tous restreints, 47 demandes déposées. L'enquête 2017 publique "
+      "nourrit déjà l'a priori des reports de second tour ; duels par électorat et anticipations "
+      "attendent l'accès au CDSP.")),
+)
+VARIABLE_WAVES = {
+    "substitution": "2026-10-20", "bounce": "2026-10-20", "pollster_ratings": "2026-10-20",
+    "potential": "2026-10-20", "certainty": "2026-10-20", "attention": "2026-10-20",
+}  # les autres : 2026-10-22
+# Indicateurs d'opinion montrés sur le site, hors prévision (troisième vague, 2026-10-22).
+EXPECTATIONS_NOTE = (
+    "Indicateur d'opinion. Les anticipations des électeurs désignent presque toujours le futur "
+    "président, mais leur part ne se lit pas comme une probabilité et n'a battu le modèle sur "
+    "aucune élection passée (runs/2026-10-22-expectations)."
+)
+EXPECTATIONS_QUESTIONS = {
+    "winner": "Selon vous, qui sera élu ? (une seule réponse)",
+    "chances": "Peut-il remporter l'élection ? (posée candidat par candidat)",
+}
+EXPECTATIONS_BASIS = {
+    "winner": "% des répondants qui nomment un candidat",
+    "chances": "% de oui, chaque candidat séparément",
+}
+EXPECTATIONS_PARTIES = {
+    "rn": "Un candidat du RN",
+    "lr": "Un candidat LR",
+    "centre": "Un candidat du centre",
+    "ps": "Un candidat du PS",
+    "lfi": "Un candidat LFI",
+}
+DISPERSION_NOTE = (
+    "Les instituts divergent nettement, surtout parce qu'ils testent des configurations "
+    "différentes ; historiquement, le désaccord accompagne les grosses erreurs, il ne les masque "
+    "pas."
+)
+DISPERSION_READING = (
+    "D = 1 : les sondages ne s'écartent pas plus que le seul tirage aléatoire ne le veut. Un "
+    "sondage par institut sur 30 jours, tendance retirée, candidats d'au moins 2 %. Référence : "
+    "moyenne géométrique de D aux présidentielles 2002-2022 au même nombre de jours du vote. Sur "
+    "dix scrutins, dispersion finale et erreur finale vont ensemble (ρ de Spearman = +0,50)."
+)
+DISPERSION_WEEKS = 26
+TURNOUT_GAP_NOTE = (
+    "Écart entre la part d'un candidat chez les certains d'aller voter et chez l'ensemble des "
+    "inscrits, mesuré dans les sondages OpinionWay qui publient les deux bases. Négatif : une "
+    "part de ses électeurs déclarés dit ne pas être sûre de voter."
+)
+TURNOUT_GAP_HISTORY = (
+    "En 2017 et en 2022, ces électorats « fragiles » ont fini au-dessus des sondages, pas en "
+    "dessous : lien net en 2022 (Mélenchon), faible en 2017. L'écart n'entre pas dans la "
+    "prévision."
 )
 UNIT_LABELS = {
     "percent": "%",
@@ -1270,6 +1341,262 @@ def build_pollster_ratings(study: Path, reg: Registry) -> dict:
     }
 
 
+# --- indicateurs d'opinion (troisième vague, hors prévision)
+
+
+def _normalized_expectations(t: pl.DataFrame) -> pl.DataFrame:
+    """Part normalisée (`share_named`, en %) d'une mesure `winner` : parmi les répondants qui
+    nomment un candidat, 100 − `undecided` quand la mesure le donne, sinon la somme des
+    candidats relevés (même règle que l'étude, back/studies/expectations.py)."""
+    keys = ["election", "pollster", "fieldwork_end", "question_type", "outcome", "pair",
+            "file_id", "page", "source_url"]
+    named = pl.coalesce(100 - pl.col("undecided").max().over(keys),
+                        pl.col("share").sum().over(keys))
+    return t.with_columns((100 * pl.col("share") / named).alias("share_named"))
+
+
+def build_expectations(asof: str, curated: Path, reg: Registry) -> dict:
+    """« Selon vous, qui sera élu ? » (`poll_expectations.parquet`) : dernières mesures 2027
+    par institut et forme de question, série historique 2007-2022 (part normalisée du futur
+    vainqueur, mesures vérifiées d'avant le premier tour) et deux repères calculés sur elle."""
+    exp = pl.read_parquet(curated / "poll_expectations.parquet").filter(
+        (pl.col("outcome") == "win") & pl.col("pair").is_null()
+    )
+    d_asof = dt.date.fromisoformat(asof)
+    cur = exp.filter(
+        (pl.col("election") == 2027) & (pl.col("fieldwork_end") <= d_asof)
+        & pl.col("question_type").is_in(list(EXPECTATIONS_QUESTIONS))
+    )
+    cur = _normalized_expectations(cur).with_columns(
+        pl.when(pl.col("party").is_null()).then(pl.lit("candidate")).otherwise(pl.lit("party"))
+        .alias("kind")
+    )
+    measures = []
+    for (pollster, qtype, kind), g in cur.group_by(
+        ["pollster", "question_type", "kind"], maintain_order=True
+    ):
+        g = g.filter(pl.col("fieldwork_end") == g["fieldwork_end"].max()).sort(
+            "share", descending=True
+        )
+        r0 = g.row(0, named=True)
+        items = []
+        for r in g.iter_rows(named=True):
+            party = r["party"]
+            items.append({
+                "candidate_id": r["candidate_id"],
+                "party": party,
+                "label": EXPECTATIONS_PARTIES.get(party, party) if party else None,
+                "share": _r(r["share"]),
+                "share_named": _r(r["share_named"]) if qtype == "winner" else None,
+            })
+        measures.append({
+            "pollster": pollster,
+            "pollster_name": reg.pollsters[pollster].name if pollster in reg.pollsters else pollster,
+            "fieldwork_end": r0["fieldwork_end"].isoformat(),
+            "question_type": qtype,
+            "kind": kind,
+            "question": EXPECTATIONS_QUESTIONS[qtype],
+            "basis": EXPECTATIONS_BASIS[qtype],
+            "sample_size": r0["sample_size"],
+            "source_url": r0["source_url"],
+            "items": items,
+        })
+    measures.sort(key=lambda m: (m["kind"] == "party", m["question_type"] != "winner",
+                                 m["fieldwork_end"]), reverse=False)
+
+    # série historique : mesures `winner` vérifiées, avant le premier tour
+    past = _normalized_expectations(exp.filter(
+        (pl.col("election") < 2027) & (pl.col("question_type") == "winner")
+        & pl.col("party").is_null() & pl.col("verified")
+    ))
+    elections, points_all = [], []
+    for e in sorted(past["election"].unique().to_list()):
+        el = reg.elections[e]
+        r1 = el.round_(1).date
+        r2 = el.round_(2)
+        winner = max(r2.results, key=lambda r: r.share).candidate_id
+        pts = []
+        sub = past.filter((pl.col("election") == e) & (pl.col("fieldwork_end") < r1))
+        for (_, end), g in sub.group_by(["pollster", "fieldwork_end"], maintain_order=True):
+            top = g.sort("share", descending=True).row(0, named=True)
+            w = g.filter(pl.col("candidate_id") == winner)
+            pt = {
+                "pollster": top["pollster"],
+                "fieldwork_end": end.isoformat(),
+                "days_before": (r1 - end).days,
+                "winner_share_named": _r(w["share_named"][0]) if w.height else None,
+                "top_candidate_id": top["candidate_id"],
+                "top_is_winner": top["candidate_id"] == winner,
+            }
+            pts.append(pt)
+            points_all.append({**pt, "election": e, "winner": winner})
+        pts.sort(key=lambda p: -p["days_before"])
+        elections.append({"election": int(e), "winner": winner, "points": pts})
+    n = len(points_all)
+    misses = [p for p in points_all if not p["top_is_winner"]]
+    shares = [p for p in points_all if p["winner_share_named"] is not None]
+    best = max(shares, key=lambda p: p["winner_share_named"]) if shares else None
+    recent = [p for p in shares if p["election"] >= 2012]
+    best_recent = max(recent, key=lambda p: p["winner_share_named"]) if recent else None
+
+    def who(p: dict) -> str:
+        c = reg.candidates.get(p["winner"])
+        return c.name if c else p["winner"]
+
+    def month(d: str) -> str:
+        months = ("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août",
+                  "septembre", "octobre", "novembre", "décembre")
+        x = dt.date.fromisoformat(d)
+        return f"{months[x.month - 1]} {x.year}"
+
+    def pname(pid: str) -> str:
+        return reg.pollsters[pid].name if pid in reg.pollsters else pid
+
+    landmarks = []
+    if n:
+        exc = "aucune exception" if not misses else "seule exception : " + ", ".join(
+            f"{reg.candidates[m['top_candidate_id']].name} en tête chez {pname(m['pollster'])} "
+            f"({month(m['fieldwork_end'])}, l'épisode Fillon)"
+            if m["top_candidate_id"] == "fillon_francois" else
+            f"{reg.candidates[m['top_candidate_id']].name} ({pname(m['pollster'])}, "
+            f"{month(m['fieldwork_end'])})"
+            for m in misses
+        )
+        landmarks.append({
+            "id": "top_is_winner",
+            "text": (f"Le candidat le plus cité est devenu président dans {n - len(misses)} "
+                     f"mesures sur {n} depuis {min(p['election'] for p in points_all)} ; {exc}."),
+        })
+    if best is not None:
+        text = (f"Avant le premier tour, le futur vainqueur n'a jamais été nommé par plus de "
+                f"{best['winner_share_named']:.0f} % des répondants qui citent quelqu'un "
+                f"({who(best)}, {pname(best['pollster'])}, {month(best['fieldwork_end'])})")
+        if best_recent is not None and best_recent is not best:
+            text += (f" ; depuis 2012, {best_recent['winner_share_named']:.0f} % au plus "
+                     f"({who(best_recent)}, {pname(best_recent['pollster'])}, "
+                     f"{month(best_recent['fieldwork_end'])})")
+        landmarks.append({"id": "max_winner_share", "text": text + "."})
+    return {
+        "in_forecast": False,
+        "note": EXPECTATIONS_NOTE,
+        "measures": measures,
+        "landmarks": landmarks,
+        "history": elections,
+    }
+
+
+def build_dispersion(asof: str, reg: Registry, weeks: int = DISPERSION_WEEKS) -> dict:
+    """Dispersion relative D des instituts (`vvs.model.herding`) : un point par semaine
+    jusqu'à `asof` (fenêtre de 30 jours, configuration connue à la date), et sa référence D_ref
+    des présidentielles 2002-2022 au même horizon (interpolée en log h entre les horizons où
+    elle existe, au moins quatre instituts dans une campagne ; au-delà du plus long, 180 jours
+    au 2026-10-22, la valeur de ce dernier)."""
+    import math
+
+    from vvs.eval.configurations import known_configuration
+    from vvs.model import herding as hd
+    from vvs.model.data import election_date, load_polls
+
+    a0 = dt.date.fromisoformat(asof)
+    vote = election_date(reg, 2027)
+    polls = load_polls(2027, a0)
+    ref = hd.reference(hd.d_values(hd.PRESIDENTIAL, registry=reg), hd.PRESIDENTIAL)
+    dates, values, refs, counts, last = [], [], [], [], None
+    for back in range(weeks - 1, -1, -1):
+        a = a0 - dt.timedelta(weeks=back)
+        h = (vote - a).days
+        d = None
+        try:
+            conf = known_configuration(2027, a, reg, polls=polls).candidates
+        except ValueError:
+            pass
+        else:
+            d = hd.presidential_dispersion(
+                2027, a, conf, [reg.bloc_of(c, 2027) for c in conf],
+                polls.filter(pl.col("fieldwork_end") <= a), hd.WINDOW_DAYS,
+            )
+        ok = d is not None and math.isfinite(d.D)
+        dates.append(a.isoformat())
+        values.append(_r(d.D, 2) if ok else None)
+        counts.append(int(d.m) if d is not None else 0)
+        refs.append(_r(hd.interp_reference(ref, h), 2))
+        if back == 0:
+            last = d
+    h0 = (vote - a0).days
+    past = []
+    for e in hd.PRESIDENTIAL:
+        x = hd.herding_at(e, h0, registry=reg).D
+        past.append({"election": e, "D": _r(x, 2) if math.isfinite(x) else None})
+    return {
+        "in_forecast": False,
+        "note": DISPERSION_NOTE,
+        "reading": DISPERSION_READING,
+        "window_days": hd.WINDOW_DAYS,
+        "weeks": dates,
+        "D": values,
+        "reference": refs,
+        "n_pollsters": counts,
+        "current": {
+            "asof": asof,
+            "horizon_days": h0,
+            "D": values[-1],
+            "reference": refs[-1],
+            "pollsters": sorted(last.pollsters) if last is not None and values[-1] is not None
+            else [],
+        },
+        "past_same_horizon": past,
+    }
+
+
+def build_turnout_gap(asof: str, curated: Path, reg: Registry) -> dict:
+    """Écart certains − inscrits par candidat en 2027 (`turnout_gap.parquet`, premier tour) :
+    par sondage, moyenne des hypothèses ; puis moyenne des sondages et erreur-type (écart type
+    entre sondages / √n, nulle sous deux sondages). Même calcul que l'étude
+    (runs/2026-10-22-turnout-gap, section e)."""
+    g = pl.read_parquet(curated / "turnout_gap.parquet").filter(
+        (pl.col("election") == 2027) & (pl.col("round") == 1)
+        & (pl.col("fieldwork_end") <= dt.date.fromisoformat(asof))
+    )
+    per_poll = g.group_by("poll_id", "pollster", "fieldwork_end", "candidate_id").agg(
+        pl.col("gap").mean(), pl.col("share_certain").mean(), pl.col("share_registered").mean()
+    )
+    agg = (
+        per_poll.group_by("candidate_id")
+        .agg(
+            pl.col("gap").mean(),
+            (pl.col("gap").std() / pl.len().sqrt()).alias("se"),
+            pl.col("share_certain").mean(),
+            pl.col("share_registered").mean(),
+            pl.len().alias("n_polls"),
+            pl.col("fieldwork_end").max().alias("last"),
+        )
+        .sort("gap", "candidate_id")
+    )
+    rows = [
+        {
+            "candidate_id": r["candidate_id"],
+            "gap": _r(r["gap"], 2),
+            "se": _r(r["se"], 2) if r["n_polls"] >= 2 and r["se"] is not None else None,
+            "share_certain": _r(r["share_certain"]),
+            "share_registered": _r(r["share_registered"]),
+            "n_polls": int(r["n_polls"]),
+            "last_poll": r["last"].isoformat(),
+        }
+        for r in agg.iter_rows(named=True)
+    ]
+    pollsters = sorted(per_poll["pollster"].unique().to_list())
+    return {
+        "in_forecast": False,
+        "note": TURNOUT_GAP_NOTE,
+        "history": TURNOUT_GAP_HISTORY,
+        "pollsters": [reg.pollsters[p].name if p in reg.pollsters else p for p in pollsters],
+        "n_polls": per_poll["poll_id"].n_unique(),
+        "first_poll": per_poll["fieldwork_end"].min().isoformat() if per_poll.height else None,
+        "last_poll": per_poll["fieldwork_end"].max().isoformat() if per_poll.height else None,
+        "rows": rows,
+    }
+
+
 def build_backtest(generated_at: str, first: Path, second: Path) -> dict:
     fr = pl.read_parquet(first / "metrics.parquet").filter(pl.col("level") == "summary")
     variant = "floor" if "floor" in fr["variant"].unique().to_list() else fr["variant"][0]
@@ -1328,7 +1655,7 @@ def build_backtest(generated_at: str, first: Path, second: Path) -> dict:
         "rows": rows,
         "variables_tested": [
             {"id": i, "label": lab, "verdict": verdict, "admitted": False, "published": pub,
-             "summary": text}
+             "summary": text, "wave": VARIABLE_WAVES.get(i, "2026-10-22")}
             for i, lab, verdict, pub, text in VARIABLES_TESTED
         ],
         "variables_tested_reference": "docs/backtest-log.md",
@@ -1379,13 +1706,15 @@ def export_run(
     pollster_ratings: Path | None = None,
     curated: Path | None = None,
     press_nlp_study: Path | None = None,
+    dispersion: dict | None = None,
 ) -> dict:
     """Écrit les fichiers du contrat JSON dans `out` ; rend un petit compte rendu.
 
     `economy_study`, `pollster_ratings`, `press_nlp_study` : dossiers des études (défaut
     runs/<ECONOMY_STUDY>, runs/<POLLSTER_RATINGS>, runs/<PRESS_NLP_STUDY>) ; `curated` : dossier
     des parquet explicatifs (macro, attention, presse, titres classés ; défaut data/curated).
-    Injectables pour les tests."""
+    Injectables pour les tests, comme `dispersion` (bloc `polls.dispersion` déjà calculé :
+    le calcul relit les sondages curated de toutes les présidentielles)."""
     run, out = Path(run), Path(out)
     reg = registry or default_registry()
     f = scenarios or load_scenarios(registry=reg)
@@ -1418,6 +1747,10 @@ def export_run(
     scenarios_json = build_scenarios(f)
     ratings = build_pollster_ratings(pollster_ratings or paths.RUNS / POLLSTER_RATINGS, reg)
     polls_json = build_polls(rm, polls, results, house, reg, ratings)
+    curated_dir = curated or paths.CURATED
+    polls_json["dispersion"] = dispersion or build_dispersion(rm["asof"], reg)
+    polls_json["turnout_gap"] = build_turnout_gap(rm["asof"], curated_dir, reg)
+    summary_json["expectations"] = build_expectations(rm["asof"], curated_dir, reg)
     economy = build_economy(rm["asof"], economy_study, curated)
     press = build_press(rm["asof"], curated, [u["candidate_id"] for u in rm["universe"]],
                         press_nlp_study)
@@ -1435,6 +1768,12 @@ def export_run(
     for block in (press["attention"], press["gdelt"], press["tone"]):
         cited |= {t["candidate_id"] for t in block["tracks"]}
     cited |= {e["candidate_id"] for e in press["landmarks"]["events"]}
+    cited |= {r["candidate_id"] for r in polls_json["turnout_gap"]["rows"]}
+    exp = summary_json["expectations"]
+    cited |= {i["candidate_id"] for m in exp["measures"] for i in m["items"] if i["candidate_id"]}
+    for e in exp["history"]:
+        cited.add(e["winner"])
+        cited |= {p["top_candidate_id"] for p in e["points"]}
     candidates = [candidate_entry(c, reg, rm["election"], bloc_hint) for c in sorted(cited)]
 
     last_poll = max(p["fieldwork_end"] for p in polls_json["polls"])

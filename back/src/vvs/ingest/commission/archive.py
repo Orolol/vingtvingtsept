@@ -20,14 +20,11 @@ le texte, les métadonnées, les blocs et les formats de colonnes :
   est un rappel quand les lignes au-dessus citent la présidentielle précédente (2012, 2017 ou
   2022) ;
 - **deux populations** : une hypothèse est identifiée par (tour, candidats, population) et
-  non plus (tour, candidats) ; le parseur 2027 garde la première population vue et écarte
-  l'autre comme doublon ;
-- **tableaux OpinionWay à deux bases** : « Publié » en première colonne, puis k colonnes pour
-  l'ensemble des inscrits (brut et redressements) et k colonnes pour les certains d'aller
-  voter, dans le même ordre (k = 4 en 2017 et 2027, 5 en 2022). La colonne publiée est l'un
-  des redressements des certains ; on la repère à la valeur (somme des écarts minimale à la
-  première colonne) et on prend la colonne des inscrits au même rang : même redressement,
-  seule la base change. Le brut de chaque base est sa première colonne ;
+  non plus (tour, candidats), comme dans le parseur 2027 depuis le 2026-10-22 ;
+- **tableaux OpinionWay à deux bases** (`notice.dual_columns`, k = 4 en 2017 et 2027, 5 en
+  2022) : ici, la version « certains » est le redressement des certains le plus proche du
+  publié (le parseur 2027 garde la colonne publiée elle-même), la version « inscrits » le
+  redressement de même rang ; le brut de chaque base est sa première colonne ;
 - **ligatures** : les notices PrésiTrack 2017 d'OpinionWay rendent « ti » par un glyphe qui
   change d'une police à l'autre (« élec,on », « inten>ons », « échanCllon », « élecAon »,
   « No#ce ») ; on repère ces glyphes dans quelques mots-témoins et on les répare avant toute
@@ -42,7 +39,8 @@ les inscrits en 2022 et les certains dans ses tableaux détaillés depuis septem
 la part de certains d'aller voter au premier et au second tour ; Ifop publie les inscrits
 jusqu'à fin mars 2017 puis les certains ; Elabe, Ipsos, BVA (graphiques non lus) et Kantar
 publient les certains (Ipsos et Kantar donnent la part de certains exprimant un choix).
-Règles de population propres aux archives : `notice_population` et `block_population`.
+Règles de population (`notice_population`, `block_population`) : dans `notice`, communes
+au parseur 2027.
 """
 
 from __future__ import annotations
@@ -62,6 +60,7 @@ from vvs import paths, schemas
 from vvs.ingest.commission import notice as nt
 from vvs.ingest.commission.aliases import archive_candidates, candidate_id, norm_label
 from vvs.ingest.commission.listing import RAW_DIR, archive_dir, load_index
+from vvs.ingest.commission.notice import block_population, dual_columns, notice_population
 from vvs.ingest.commission.parse import EXCLUDED_NOTICES as PARSE_EXCLUDED
 from vvs.ingest.commission.parse import NoticeMeta, NoticeParse, notice_metadata
 
@@ -305,69 +304,6 @@ _SKIP_CONTEXT = re.compile(
 # noms sans ordre fixe (« Emmanuel Macron / 39 / 61 / … / Marine Le Pen ») ; on ne les attribue
 # pas. Écart constaté avec Wikipédia : 30 points (parts inversées).
 UNRELIABLE_ROUND2 = frozenset({"kantar"})
-_DUAL_HEADER = re.compile(r"certain")
-_DUAL_OTHER = re.compile(r"ensemble|inscrit")
-
-
-def dual_columns(block: nt.Block) -> tuple[int, int, int, int] | None:
-    """Tableau OpinionWay à deux bases -> (certains, inscrits, brut certains, brut inscrits).
-
-    1 + 2k valeurs par ligne (k = 4 ou 5), en-tête citant les certains d'aller voter et
-    l'ensemble des inscrits ou des répondants."""
-    counts = sorted(len(r.values) for _, r in block.candidate_rows)
-    n = counts[len(counts) // 2]
-    if n not in (9, 11):
-        return None
-    head = nt._n(" ".join(block.context[-14:]))
-    if not (_DUAL_HEADER.search(head) and _DUAL_OTHER.search(head)):
-        return None
-    k = (n - 1) // 2
-    rows = [r.values for _, r in block.candidate_rows if len(r.values) == n]
-
-    def gap(j: int) -> float:
-        return sum(abs(v[j] - v[0]) for v in rows if v[j] is not None and v[0] is not None)
-
-    j = min(range(k + 2, 2 * k + 1), key=gap)  # un redressement des certains, pas le brut
-    return j, j - k, k + 1, 1
-
-
-# La colonne publiée est calculée sur les certains d'aller voter alors que l'en-tête du tableau
-# dit « Base : ensemble des personnes inscrites » (Ifop : « les scores établis tiennent
-# principalement compte des redressements … sur la base des électeurs certains d'aller
-# voter » ; Elabe : « la colonne de référence … regroupant les individus ayant donné une note
-# de 8 à 10 sur l'échelle d'intention d'aller voter »).
-_REFERENCE_CERTAIN = re.compile(
-    r"sur la base des electeurs certains d aller voter"
-    r"|colonne de reference .{0,160}?note de \d+ a 10 sur l echelle d intention d aller voter"
-    r"|colonne de reference .{0,200}?sur les certains d aller voter"
-    r"|resultats? (presentes? )?aupres des personnes certaines d aller voter"
-    r"|base\W{0,3}certains d aller voter"
-    # Ifop 2022 : note sous chaque tableau, « Sur toutes les personnes inscrites sur les listes
-    # électorales et certaines d'aller voter interrogées, N personnes ont exprimé… »
-    r"|personnes inscrites sur les listes electorales et certaines d aller voter interrogees"
-    # Toluna Harris Interactive 2027 : base en pied des tableaux détaillés, alors que le
-    # récapitulatif dit « Aux inscrits sur les listes électorales » pour les mêmes chiffres.
-    r"|base inscrits sur les listes electorales certains d aller voter et ayant exprime"
-)
-
-
-def notice_population(pages: list[str], head_population: str) -> str:
-    """Population par défaut des tableaux à une base : `certain_voters` si la notice dit que
-    les résultats publiés portent sur les certains d'aller voter, sinon celle de l'en-tête."""
-    if _REFERENCE_CERTAIN.search(nt._n("\n".join(pages))):
-        return "certain_voters"
-    return head_population
-
-
-def block_population(block: nt.Block, default_population: str) -> str:
-    """Ligne « Base : … » du tableau, sauf « inscrits » quand la notice déclare publier les
-    certains d'aller voter (la ligne décrit alors l'échantillon, pas la colonne publiée)."""
-    pop = nt._block_population(block)
-    if pop is None or (pop == "registered" and default_population == "certain_voters"):
-        return default_population
-    return pop
-
-
 @dataclass
 class DualResults:
     hypotheses: list[nt.Hypothesis] = field(default_factory=list)
