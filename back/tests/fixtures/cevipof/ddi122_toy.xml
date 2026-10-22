@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Extrait jouet au format de l'export Dataverse (DDI 1.2.2), inspiré du codebook FES 2017 -->
+<codeBook version="1.2.2" xmlns="http://www.icpsr.umich.edu/DDI">
+  <dataDscr>
+    <var ID="V1" name="A1" files="F1" intrvl="discrete">
+      <labl>
+        ID
+      </labl>
+    </var>
+    <var ID="V2" name="V1" files="F1" intrvl="discrete">
+      <labl>Turnout [President 1st]</labl>
+      <qstn><qstnLit>Could you tell me if you voted during the first round ?</qstnLit></qstn>
+      <catgry><catValu>0</catValu><labl>Did not vote</labl><catStat type="freq">2</catStat></catgry>
+      <catgry><catValu>3</catValu><labl>Voted</labl><catStat type="freq">5</catStat></catgry>
+      <catgry><catValu>77</catValu><labl>Refusal</labl><catStat type="freq">1</catStat></catgry>
+    </var>
+    <var ID="V3" name="V2" files="F1" intrvl="discrete">
+      <labl>Vote choice [President 1st]</labl>
+      <qstn><qstnLit>Who did you vote for ?</qstnLit></qstn>
+      <catgry><catValu>2</catValu><labl>Melenchon</labl><catStat type="freq">2</catStat></catgry>
+      <catgry><catValu>4</catValu><labl>Macron</labl><catStat type="freq">2</catStat></catgry>
+      <catgry><catValu>9</catValu><labl>Le Pen</labl><catStat type="freq">1</catStat></catgry>
+      <catgry><catValu>66</catValu><labl>Not concerned</labl><catStat type="freq">3</catStat></catgry>
+    </var>
+    <var ID="V4" name="V3" files="F1" intrvl="discrete">
+      <labl>Turnout [President 2nd]</labl>
+      <catgry><catValu>0</catValu><labl>Did not vote</labl><catStat type="freq">2</catStat></catgry>
+      <catgry><catValu>3</catValu><labl>Voted</labl><catStat type="freq">6</catStat></catgry>
+    </var>
+    <var ID="V5" name="V4" files="F1" intrvl="discrete">
+      <labl>Vote choice [President 2nd]</labl>
+      <catgry><catValu>0</catValu><labl>Macron</labl><catStat type="freq">4</catStat></catgry>
+      <catgry><catValu>1</catValu><labl>Le Pen</labl><catStat type="freq">1</catStat></catgry>
+      <catgry><catValu>2</catValu><labl>Blank or spoiled</labl><catStat type="freq">1</catStat></catgry>
+      <catgry><catValu>66</catValu><labl>Not concerned</labl><catStat type="freq">2</catStat></catgry>
+    </var>
+    <var ID="V8" name="A3" files="F1" intrvl="discrete">
+      <labl>Primary sampling unit</labl>
+      <catgry><catValu>p1</catValu><catStat type="freq">2</catStat></catgry>
+    </var>
+    <var ID="V6" name="w5" files="F1" intrvl="contin">
+      <labl>weight5 - sociodemographic + diploma + 1st &amp; 2nd round pres elections 2017</labl>
+    </var>
+    <var ID="V7" name="MVS4" files="F1" intrvl="discrete">
+      <labl>Probabilité que Marine Le Pen gagne - Hypothèse Le Pen/Macron</labl>
+      <catgry><catValu>0</catValu><labl>0 Très improbable</labl><catStat type="freq">3</catStat></catgry>
+      <catgry><catValu>8</catValu><labl>8</labl><catStat type="freq">1</catStat></catgry>
+      <catgry><catValu>9996</catValu><labl>Non enquêté(e)</labl><catStat type="freq">4</catStat></catgry>
+    </var>
+  </dataDscr>
+</codeBook>

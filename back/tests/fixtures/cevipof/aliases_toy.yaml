@@ -1,0 +1,24 @@
+# Table d'alias jouet pour les tests (même format que data/registry/aliases_cevipof.yaml)
+candidates:
+  Macron: macron_emmanuel
+  Le Pen: le_pen_marine
+  Melenchon: melenchon_jean_luc
+special:
+  Blank or spoiled: blank
+  Refusal: refused
+  Not concerned: null
+  Non enquêté(e): null
+turnout:
+  Voted: voted
+  Did not vote: abstention
+  Refusal: refused
+datasets:
+  fes2017:
+    reader: csv_zip
+    member: toy_avant_import.csv
+    sep: ";"
+    respondent_id: A1
+    weight: w5
+    cluster: A3
+    vote_round1: {var: V2, kind: recall, turnout: V1}
+    vote_round2: {var: V4, kind: recall, turnout: V3}

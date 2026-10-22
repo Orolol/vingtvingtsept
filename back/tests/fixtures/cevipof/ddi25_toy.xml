@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Extrait jouet au format des codebooks du CDSP (DDI 2.5, *.doc.xml) -->
+<codeBook xmlns="ddi:codebook:2_5" version="2.5">
+  <dataDscr>
+    <var name="xq24" ID="V24">
+      <labl>Intention de vote au 2ème tour Présidentielle</labl>
+      <qstn><qstnLit>Si le second tour de l'élection présidentielle oppose Jacques Chirac à Lionel Jospin, pour lequel des deux ?</qstnLit></qstn>
+      <catgry><catValu>1</catValu><labl>Jacques Chirac</labl><catStat type="freq">10</catStat></catgry>
+      <catgry><catValu>2</catValu><labl>Lionel Jospin</labl><catStat type="freq">12</catStat></catgry>
+      <catgry><catValu>4</catValu><labl>N'ira pas voter</labl></catgry>
+    </var>
+  </dataDscr>
+</codeBook>

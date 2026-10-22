@@ -1,0 +1,3142 @@
+# Enquêtes électorales du Cevipof sur data.sciencespo.fr (Dataverse du CDSP, version 5.14).
+#
+# Une entrée par jeu Dataverse (une vague de panel = un jeu). Relevé le 2026-10-22 par l'API
+# native (/api/search, /api/dataverses/{alias}/contents, /api/datasets/:persistentId) avec le
+# compte de Gaétan ; validé par vvs.ingest.cevipof.registry. `vvs ingest cevipof --check`
+# compare ce fichier à l'API.
+#
+# - `pid` / `url` : DOI du jeu. `version` : version publiée relevée.
+# - `files` : `id` Dataverse (pour /api/access/datafile/{id}), nom, `format` = type MIME du
+#   fichier déposé (`originalFileFormat`, Stata ou SPSS pour les fichiers tabulés), `size` en
+#   octets du fichier déposé, `restricted`. `role: data` = fichier de microdonnées retenu
+#   (Stata d'origine de préférence, lu par pandas). `fetch` = téléchargé par
+#   `vvs ingest cevipof` dans data/raw/cevipof/<key>/ ; `sha256` ajouté au premier
+#   téléchargement.
+# - `access` : `restricted_request` = microdonnées en accès restreint, sur demande via
+#   l'entrepôt (`fileAccessRequest: true`) ; la documentation (questionnaire, codebook DDI,
+#   rapport technique) est publique sauf mention `restricted: true`.
+# - `request` : demande d'accès lancée pour le fichier `data` (`vvs ingest cevipof
+#   --request-access`) ; `priority` : core (reports, duels, anticipations), useful, listed.
+# - `stage` : moment de la vague par rapport à la présidentielle `election` (dates des tours
+#   de elections.yaml) ; `fieldwork_*` : dates de collecte des métadonnées Dataverse.
+# - `questions` : variables utiles repérées dans le codebook DDI public (nom, libellé), par
+#   rôle : vote_round1, vote_round2 (intention ou vote déclaré selon la vague), turnout
+#   (participation déclarée), turnout_intent, certainty, duel_intention (second tour par
+#   hypothèse), expected_winner (anticipations : chances de gagner ou de se qualifier),
+#   preferred (candidat souhaité), second_choice, potential (probabilité de voter pour),
+#   weight, other. ENEF 2022 : codebooks restreints, variables lues dans les questionnaires
+#   PDF publics (`note`). Absent quand rien n'a été relevé.
+# - `stage` de l'ENEF 2022 et dates des vagues 7 à 12 : en-têtes des questionnaires.
+#
+# Ce qui n'existe pas sur l'entrepôt au 2026-10-22 : Présidoscopie et TriÉlec 2012 (aucun
+# résultat de recherche), aucune vague ENEF 2027 (pas de collection ENEF2026 ni ENEF2027 ;
+# l'ENEF 2022 compte 12 vagues plus une 6 bis, pas de vague 13). Toutes les microdonnées
+# sont en accès restreint, sauf deux fichiers signalés (fes2017, fes2022_elipss_v3).
+
+retrieved: 2026-10-22
+server: https://data.sciencespo.fr (Dataverse 5.14)
+datasets:
+- key: pef2002_v1
+  pid: doi:10.21410/7E4/B2TTFT
+  url: https://doi.org/10.21410/7E4/B2TTFT
+  title: Panel électoral français 2002 Vague 1
+  series: pef2002
+  election: 2002
+  wave: '1'
+  wave_order: 1
+  stage: campaign
+  fieldwork_start: 2002-04-06
+  fieldwork_end: 2002-04-20
+  mode: Interview.FaceToFace.CAPIorCAMI
+  sampling: MixedProbabilityNonprobability
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1742, name: CR_Redressement_PEF2002_V1.pdf, format: application/pdf, size: 125918, restricted: false,
+    role: weights_doc, fetch: true, sha256: c9556b334c0bfe8b6c6883a9feac49a8d8568677a137cd271788075e974c4f11}
+  - {id: 310, name: descriptif_ponderations_V1.pdf, format: text/plain, size: 17849, restricted: false,
+    role: weights_doc, fetch: true, sha256: 0fc0a6cdf35d66813f9a3e9458c73fdefe5a669c17ac4e65f92e3ce6ef85c34f}
+  - {id: 1744, name: Documentation_PEF2002_V1.pdf, format: application/pdf, size: 747145, restricted: false,
+    role: documentation, fetch: true, sha256: e948ce43d760f59c682642a396d80d4a2f8dab5990021d4b2b597a1eb1011320}
+  - {id: 11062, name: fr.cdsp.ddi.200204.pef2002_v1.doc.xml, format: text/xml, size: 539721, restricted: false,
+    role: codebook, fetch: true, sha256: 772b1212b24e099243c09961019bede042b0ecaf5a44d77aa9ca488ee490214b}
+  - {id: 3116, name: fr_cdsp_ddi_pef2002v1-1.tab, format: application/x-stata-14, size: 7482150, restricted: true,
+    role: data, fetch: false}
+  - {id: 3118, name: fr_cdsp_ddi_pef2002v1.sas.zip, format: application/zip, size: 1220541, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3798, name: fr.cdsp.ddi.PEFV1_F1.tab, format: application/x-spss-sav, size: 1333147, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3797, name: fr.cdsp.ddi.PEFV1_F1.zip, format: application/zip, size: 518811, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1743, name: Questionnaire_PEF2002_V1.pdf, format: application/pdf, size: 86002, restricted: false,
+    role: questionnaire, fetch: true, sha256: b4c41c514aaf1fd93c5560eb7beb02926b7b4e86ed76ef631d11aa71baaf2e24}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: xq11, label: Intention de vote 1er tour Présidentielle}
+    duel_intention:
+    - {var: xq24, label: Intention de vote au 2ème tour Présidentielle}
+    weight:
+    - {var: poida2, label: pond/ socio-demo & int vote presid02 - 1er tour}
+    turnout_intent:
+    - {var: xq9, label: Intention d'aller voter au 1er tour Présidentielle}
+    - {var: xq9b, label: Certitude d'aller voter au 1er tour Présidentielle}
+    certainty:
+    - {var: xq13, label: Moment du choix 1er tour Présidentielle}
+    preferred:
+    - {var: xq44, label: 1er souhait candidat élu}
+    - {var: xq45, label: 2e souhait candidat élu}
+    expected_winner:
+    - {var: xq46, label: Chances élections 1er souhait}
+    - {var: xq47, label: Chances élections 2e souhait}
+    turnout:
+    - {var: xq23, label: Intention d'aller voter au 2ème tour Présidentielle}
+    - {var: xq23b, label: Certitude de voter au 2ème tour Présidentielle}
+- key: pef2002_v2
+  pid: doi:10.21410/7E4/PBD8VL
+  url: https://doi.org/10.21410/7E4/PBD8VL
+  title: Panel électoral français 2002 Vague 2
+  series: pef2002
+  election: 2002
+  wave: '2'
+  wave_order: 2
+  stage: post_round2
+  fieldwork_start: 2002-05-15
+  fieldwork_end: 2002-06-03
+  mode: Interview.Telephone.CATI
+  sampling: MixedProbabilityNonprobability
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1746, name: CR_Redressement_PEF2002_V2.pdf, format: application/pdf, size: 118853, restricted: false,
+    role: weights_doc, fetch: true, sha256: 5856dee6ea6228d9ebfe45500d17d7cd7be2cc494ea68a6d503b6eab21b6f871}
+  - {id: 314, name: descriptif_Ponderations_V2.pdf, format: text/plain, size: 19091, restricted: false,
+    role: weights_doc, fetch: true, sha256: ec0a6dab8f37ad222699a591d6dc0d2520c1648899bbec176cfb2c079c103c0e}
+  - {id: 1745, name: Documentation_PEF2002_V2.pdf, format: application/pdf, size: 848490, restricted: false,
+    role: documentation, fetch: true, sha256: f40ffbd00d9ba84a7bb1a9c7ea52981afb428db3618069a98e87446b966df6a6}
+  - {id: 11063, name: fr.cdsp.ddi.200205.pef2002_v2.doc.xml, format: text/xml, size: 605086, restricted: false,
+    role: codebook, fetch: true, sha256: 3af88faccd3a5efc722bd9c6c24e941c8d57cd80553d1afb9f01456006b8d57d}
+  - {id: 3122, name: fr_cdsp_ddi_pef2002v2-1.tab, format: application/x-stata-14, size: 6825056, restricted: true,
+    role: data, fetch: false}
+  - {id: 3121, name: fr_cdsp_ddi_pef2002v2.sas.zip, format: application/zip, size: 1252846, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3800, name: fr.cdsp.ddi.PEFV2_F1.tab, format: application/x-spss-sav, size: 1379719, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3799, name: fr.cdsp.ddi.PEFV2_F1.zip, format: application/zip, size: 523506, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1747, name: Questionnaire_PEF2002_V2.pdf, format: application/pdf, size: 91537, restricted: false,
+    role: questionnaire, fetch: true, sha256: 766ad49ce73abd8de7596391c49c9914838df2a2ed48dcaf1f56c1bdde0ede66}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: xq204, label: Vote 1er tour Présidentielle}
+    vote_round2:
+    - {var: xq206, label: Vote au 2ème tour Présidentielle}
+    weight:
+    - {var: ppidb2, label: pondération/ variables socio-démographiques & reconstitution vote presidentielle
+        2002 - 2e tour}
+    other:
+    - {var: xq214, label: Quel vote si 1er tour Présidentielle à refaire}
+- key: pef2002_v3
+  pid: doi:10.21410/7E4/C7VHK7
+  url: https://doi.org/10.21410/7E4/C7VHK7
+  title: Panel électoral français 2002 Vague 3
+  series: pef2002
+  election: 2002
+  wave: '3'
+  wave_order: 3
+  stage: post_legislative
+  fieldwork_start: 2002-06-20
+  fieldwork_end: 2002-06-28
+  mode: Interview.Telephone.CATI
+  sampling: MixedProbabilityNonprobability
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1750, name: CR_Redressement_PEF2002_V3.pdf, format: application/pdf, size: 117495, restricted: false,
+    role: weights_doc, fetch: true, sha256: a058db30c1f9d1283e3e40de9dd0cdfd2584a21e04fbe4598c4b5f43eafcb0b6}
+  - {id: 318, name: descriptif_Ponderations_V3.pdf, format: text/plain, size: 19515, restricted: false,
+    role: weights_doc, fetch: true, sha256: 339c1b2ab141de1cb509638d493315fbda68407bb5f2988cf9132aafeff785b9}
+  - {id: 1749, name: Documentation_PEF2002_V3.pdf, format: application/pdf, size: 545548, restricted: false,
+    role: documentation, fetch: true, sha256: bb01c2f488c98e686d9b846889b4978d2fa04e356ac07235552988ab68aa0132}
+  - {id: 11064, name: fr.cdsp.ddi.200206.pef2002_v3.doc.xml, format: text/xml, size: 410637, restricted: false,
+    role: codebook, fetch: true, sha256: c340fce29849dc18f246027bf6c21faea4105389ef5aae3e7458f289e7d81b34}
+  - {id: 3126, name: fr_cdsp_ddi_pef2002v3-1.tab, format: application/x-stata-14, size: 2018885, restricted: true,
+    role: data, fetch: false}
+  - {id: 3124, name: fr_cdsp_ddi_pef2002v3.sas.zip, format: application/zip, size: 579463, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3801, name: fr.cdsp.ddi.PEFV3_F1.tab, format: application/x-spss-sav, size: 618985, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3802, name: fr.cdsp.ddi.PEFV3_F1.zip, format: application/zip, size: 262844, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1748, name: Questionnaire_PEF2002_V3.pdf, format: application/pdf, size: 67202, restricted: false,
+    role: questionnaire, fetch: true, sha256: cc586a1ca4923426789f35efa3213e4aaea6913dbe0238597cc89c0144a33b9a}
+  request: true
+  priority: useful
+- key: bpf2007_v1
+  pid: doi:10.21410/7E4/2NLT4S
+  url: https://doi.org/10.21410/7E4/2NLT4S
+  title: Baromètre Politique Français 2006-2007 Vague 1
+  series: bpf2007
+  election: 2007
+  wave: '1'
+  wave_order: 1
+  stage: pre_campaign
+  fieldwork_start: 2006-03-20
+  fieldwork_end: 2006-04-03
+  mode: Interview.Telephone.CATI
+  sampling: MixedProbabilityNonprobability
+  version: '7.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 2690, name: Documentation_BPF2007_R1.pdf, format: application/pdf, size: 871863, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11070, name: fr.cdsp.ddi.200603.bpf2006_v1.doc.xml, format: text/xml, size: 891850, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3907, name: fr.cdsp.ddi.BPF2007-R1_F1-1.tab, format: application/x-stata-13, size: 10752649,
+    restricted: true, role: data, fetch: false}
+  - {id: 3905, name: fr.cdsp.ddi.BPF2007-R1_F1.csv.zip, format: application/zip, size: 516596, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3906, name: fr.cdsp.ddi.BPF2007-R1_F1.sas.zip, format: application/zip, size: 809432, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3904, name: fr.cdsp.ddi.BPF2007-R1_F1.tab, format: application/x-spss-sav, size: 1707743, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2692, name: Lexique_Questions_BPF2007.pdf, format: application/pdf, size: 44067, restricted: false,
+    role: other, fetch: false}
+  - {id: 2691, name: Questionnaire_BPF2007_R1.pdf, format: application/pdf, size: 100739, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: bpf2007_v2
+  pid: doi:10.21410/7E4/VCOLUU
+  url: https://doi.org/10.21410/7E4/VCOLUU
+  title: Baromètre Politique Français 2006-2007 Vague 2
+  series: bpf2007
+  election: 2007
+  wave: '2'
+  wave_order: 2
+  stage: pre_campaign
+  fieldwork_start: 2006-09-11
+  fieldwork_end: 2006-09-26
+  mode: Interview.Telephone.CATI
+  sampling: MixedProbabilityNonprobability
+  version: '7.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 2700, name: Documentation_BPF2007_R1.pdf, format: application/pdf, size: 871863, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11071, name: fr.cdsp.ddi.200609.bpf2006_v2.doc.xml, format: text/xml, size: 702505, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3910, name: fr.cdsp.ddi.BPF2007-R2_F1-1.tab, format: application/x-stata-13, size: 8601731, restricted: true,
+    role: data, fetch: false}
+  - {id: 3908, name: fr.cdsp.ddi.BPF2007-R2_F1.csv.zip, format: application/zip, size: 473726, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3909, name: fr.cdsp.ddi.BPF2007-R2_F1.sas.zip, format: application/zip, size: 821367, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3911, name: fr.cdsp.ddi.BPF2007-R2_F1.tab, format: application/x-spss-sav, size: 1445923, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2699, name: Lexique_Questions_BPF2007.pdf, format: application/pdf, size: 44067, restricted: false,
+    role: other, fetch: false}
+  - {id: 2698, name: Questionnaire_BPF2007_R1.pdf, format: application/pdf, size: 100739, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: bpf2007_v3
+  pid: doi:10.21410/7E4/YVYMY8
+  url: https://doi.org/10.21410/7E4/YVYMY8
+  title: Baromètre Politique Français 2006-2007 Vague 3
+  series: bpf2007
+  election: 2007
+  wave: '3'
+  wave_order: 3
+  stage: pre_campaign
+  fieldwork_start: 2006-12-04
+  fieldwork_end: 2006-12-14
+  mode: Interview.Telephone.CATI
+  sampling: MixedProbabilityNonprobability
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 2723, name: Documentation_BPF2007_R3.pdf, format: application/pdf, size: 651572, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11072, name: fr.cdsp.ddi.200612.bpf2006_v3.doc.xml, format: text/xml, size: 504764, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3916, name: fr.cdsp.ddi.BPF2007_R3_F1-1.tab, format: application/x-stata-13, size: 7411363, restricted: true,
+    role: data, fetch: false}
+  - {id: 3945, name: fr.cdsp.ddi.BPF2007_R3_F1.csv.zip, format: application/zip, size: 446689, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3915, name: fr.cdsp.ddi.BPF2007_R3_F1.sas.zip, format: application/zip, size: 798071, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3917, name: fr.cdsp.ddi.BPF2007_R3_F1.tab, format: application/x-spss-sav, size: 1357103, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2717, name: Lexique_Questions_BPF2007.pdf, format: application/pdf, size: 44067, restricted: false,
+    role: other, fetch: false}
+  - {id: 2718, name: Questionnaire_BPF2007_R3.pdf, format: application/pdf, size: 371307, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: bpf2007_v4
+  pid: doi:10.21410/7E4/Q7ZSL4
+  url: https://doi.org/10.21410/7E4/Q7ZSL4
+  title: Baromètre Politique Français 2006-2007 Vague 4
+  series: bpf2007
+  election: 2007
+  wave: '4'
+  wave_order: 4
+  stage: campaign
+  fieldwork_start: 2007-02-07
+  fieldwork_end: 2007-02-19
+  mode: Interview.Telephone.CATI
+  sampling: MixedProbabilityNonprobability
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 2735, name: Documentation_BPF2007_R4.pdf, format: application/pdf, size: 648352, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11073, name: fr.cdsp.ddi.200702.bpf2006_v4.doc.xml, format: text/xml, size: 509665, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3919, name: fr.cdsp.ddi.BPF2007_R4_F1-1.tab, format: application/x-stata-13, size: 7225514, restricted: true,
+    role: data, fetch: false}
+  - {id: 3944, name: fr.cdsp.ddi.BPF2007_R4_F1.csv.zip, format: application/zip, size: 438030, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3918, name: fr.cdsp.ddi.BPF2007_R4_F1.sas.zip, format: application/zip, size: 777543, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3920, name: fr.cdsp.ddi.BPF2007_R4_F1.tab, format: application/x-spss-sav, size: 1294167, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2733, name: Lexique_Questions_BPF2007.pdf, format: application/pdf, size: 44067, restricted: false,
+    role: other, fetch: false}
+  - {id: 2737, name: Questionnaire_BPF2007_R4.pdf, format: application/pdf, size: 392703, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: pef2007_v1
+  pid: doi:10.21410/7E4/NKSI2N
+  url: https://doi.org/10.21410/7E4/NKSI2N
+  title: Panel électoral français 2007 - Vague 1 (pré-présidentielle)
+  series: pef2007
+  election: 2007
+  wave: '1'
+  wave_order: 1
+  stage: campaign
+  fieldwork_start: 2007-03-29
+  fieldwork_end: 2007-04-21
+  mode: Interview.FaceToFace
+  sampling: Nonprobability.Quota
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 4673, name: Documentation_PEF2007V1.pdf, format: application/pdf, size: 693426, restricted: false,
+    role: documentation, fetch: true, sha256: a3dcaf92d4c9a45ad22b9dd8e9648afa034f9f5fa36450cf7337e50041616fc4}
+  - {id: 11074, name: fr.cdsp.ddi.200703.pef2007_pre_v1.doc.xml, format: text/xml, size: 1068945, restricted: false,
+    role: codebook, fetch: true, sha256: 0e95f2b5e6551f2f99df6bfea4bce6ce894789b24709f563db8c7d48579729c0}
+  - {id: 4688, name: fr_cdsp_ddi_pef2007v1-1.tab, format: application/x-stata-13, size: 6207176, restricted: true,
+    role: data, fetch: false}
+  - {id: 4687, name: fr_cdsp_ddi_pef2007v1.csv.zip, format: application/zip, size: 382891, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4686, name: fr_cdsp_ddi_pef2007v1.sas.zip, format: application/zip, size: 679655, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4437, name: fr_cdsp_ddi_pef2007v1.tab, format: application/x-spss-sav, size: 1154843, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4438, name: Questionnaire_PEF2007V1.pdf, format: application/pdf, size: 668108, restricted: false,
+    role: questionnaire, fetch: true, sha256: f3733a214c79feed55d8a77eda7b81eddf7cb4a0393bf6705729c19c0000aff4}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: QIV, label: Intention de vote premier tour}
+    duel_intention:
+    - {var: Q99, label: 'Les rapports de force au second tour : Hypothèse Royal-Sarkozy'}
+    - {var: Q100, label: 'Les rapports de force au second tour : Hypothèse Bayrou-Sarkozy'}
+    - {var: Q101, label: 'Les rapports de force au second tour : Hypothèse Royal-Bayrou'}
+    turnout_intent:
+    - {var: Q93, label: Décision d'aller voter/s'abstenir}
+    - {var: Q97, label: L'intention d'aller voter au second tour}
+    - {var: Q98, label: Fermeté de la décision d'aller (ou pas) voter}
+    preferred:
+    - {var: Q139, label: Le candidat que l'on souhaite voir élu président de la République}
+    expected_winner:
+    - {var: Q140, label: La probabilité d'élection du candidat que l'on souhaite voir élu}
+    potential:
+    - {var: Q82I15, label: 'Les candidats pour lesquels l''interviewé(e) pourrait voter : Réponse 1 donné
+        par l''interviewé(e)'}
+- key: pef2007_v2
+  pid: doi:10.21410/7E4/ETUJUY
+  url: https://doi.org/10.21410/7E4/ETUJUY
+  title: Panel électoral français 2007 - Vague 2 (entre deux tours présentielle)
+  series: pef2007
+  election: 2007
+  wave: '2'
+  wave_order: 2
+  stage: between_rounds
+  fieldwork_start: 2007-04-25
+  fieldwork_end: 2007-05-05
+  mode: Interview.Telephone
+  sampling: Nonprobability.Quota
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 4671, name: Documentation_PEF2007V2.pdf, format: application/pdf, size: 381332, restricted: false,
+    role: documentation, fetch: true, sha256: d6cfbafdfe8f355dd15f70db12c53954c967cbf77d36cc421be91994fa6bbca0}
+  - {id: 11075, name: fr.cdsp.ddi.200704.pef2007_entre_v2.doc.xml, format: text/xml, size: 354646, restricted: false,
+    role: codebook, fetch: true, sha256: c83e0c907270a6650cf9622118e0180b255d274353f75a6e372137e2c9570288}
+  - {id: 4690, name: fr_cdsp_ddi_pef2007v2-1.tab, format: application/x-stata-13, size: 1519459, restricted: true,
+    role: data, fetch: false}
+  - {id: 4689, name: fr_cdsp_ddi_pef2007v2.csv.zip, format: application/zip, size: 131265, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4691, name: fr_cdsp_ddi_pef2007v2.sas.zip, format: application/zip, size: 239193, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4440, name: fr_cdsp_ddi_pef2007v2.tab, format: application/x-spss-sav, size: 415164, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4442, name: Questionnaire_PEFV2.pdf, format: application/pdf, size: 332321, restricted: false,
+    role: questionnaire, fetch: true, sha256: 33732e828e111b78985e5c9699b60cc569029bc8ed9019cd372898895149f005}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: Q200P2, label: Le vote au premier tour de l'élection présidentielle}
+    vote_round2:
+    - {var: Q204P2, label: Les rapports de forces politiques au second tour}
+    weight:
+    - {var: RED1P2, label: Redressement socio démographique+vote 22 avril 2007}
+    turnout_intent:
+    - {var: Q97P2, label: L'intention d'aller voter au second tour}
+    other:
+    - {var: Q203P2, label: Le candidat pour lequel l'interviewé(e) voterait si c'était à refaire}
+- key: pef2007_v3
+  pid: doi:10.21410/7E4/VVD0SO
+  url: https://doi.org/10.21410/7E4/VVD0SO
+  title: Panel électoral français 2007 - Vague 3 (post second tour présidentielle)
+  series: pef2007
+  election: 2007
+  wave: '3'
+  wave_order: 3
+  stage: post_round2
+  fieldwork_start: 2007-05-29
+  fieldwork_end: 2007-06-09
+  mode: Interview.Telephone
+  sampling: Nonprobability.Quota
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 4675, name: Documentation_PEF2007V3.pdf, format: application/pdf, size: 377857, restricted: false,
+    role: documentation, fetch: true, sha256: 906a262c38853568ef4eea4118bee559f90f74147d3b4ef0e9d5c4b952a0db4b}
+  - {id: 11076, name: fr.cdsp.ddi.200705.pef2007_post_v3.doc.xml, format: text/xml, size: 837549, restricted: false,
+    role: codebook, fetch: true, sha256: 9e77c5a1d400f61dfac66d801ebcffda5255e1d1786d9a9fa24725386724e919}
+  - {id: 4693, name: fr_cdsp_ddi_pef2007v3-1.tab, format: application/x-stata-13, size: 1469728, restricted: true,
+    role: data, fetch: false}
+  - {id: 4694, name: fr_cdsp_ddi_pef2007v3.csv.zip, format: application/zip, size: 132067, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4692, name: fr_cdsp_ddi_pef2007v3.sas.zip, format: application/zip, size: 265367, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4443, name: fr_cdsp_ddi_pef2007v3.tab, format: application/x-spss-sav, size: 474768, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4444, name: Questionnaire_PEF2007V3.pdf, format: application/pdf, size: 354143, restricted: false,
+    role: questionnaire, fetch: true, sha256: 010d15620225286e4f6bbaa0507fff8cc1a492c6a30c3f276262367705522944}
+  request: true
+  priority: core
+  questions:
+    vote_round2:
+    - {var: Q909P3, label: Le vote au second tour de l'élection présidentielle}
+    weight:
+    - {var: RED2P2, label: Redressement socio démo+vote 22 avril 2007 + vote 6 mai 2007}
+- key: pef2007_v4
+  pid: doi:10.21410/7E4/BBTY24
+  url: https://doi.org/10.21410/7E4/BBTY24
+  title: Panel électoral français 2007 - Vague 4 (post-législatives)
+  series: pef2007
+  election: 2007
+  wave: '4'
+  wave_order: 4
+  stage: post_legislative
+  fieldwork_start: 2007-06-19
+  fieldwork_end: 2007-06-30
+  mode: Interview.Telephone
+  sampling: Nonprobability.Quota
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 4678, name: Documentation_PEF2007V4.pdf, format: application/pdf, size: 353494, restricted: false,
+    role: documentation, fetch: true, sha256: 21e6ea291ad48b3896e3ff24567a3171d292405f7afbf2799b7be0852e2be5d3}
+  - {id: 11079, name: fr.cdsp.ddi.200706.pef2007_post_v4.doc.xml, format: text/xml, size: 327524, restricted: false,
+    role: codebook, fetch: true, sha256: a3bf2c3685b0b1014ea6d59aaa85f3fcfc960d8e02c36881a75d82ad2ca29ccb}
+  - {id: 4695, name: fr_cdsp_ddi_pef2007v4-1.tab, format: application/x-stata-13, size: 1171103, restricted: true,
+    role: data, fetch: false}
+  - {id: 4696, name: fr_cdsp_ddi_pef2007v4.csv.zip, format: application/zip, size: 89093, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4697, name: fr_cdsp_ddi_pef2007v4.sas.zip, format: application/zip, size: 164265, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4677, name: fr_cdsp_ddi_pef2007v4.tab, format: application/x-spss-sav, size: 303026, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4680, name: Questionnaire_PEF2007V4.pdf, format: application/pdf, size: 365147, restricted: false,
+    role: questionnaire, fetch: true, sha256: 4b7ed22bb97262f4e438bc33b5d1e2629420a1bf81dfc0aef124e4edcb547f1c}
+  request: true
+  priority: useful
+- key: postelec1962
+  pid: doi:10.21410/7E4/2TGFUR
+  url: https://doi.org/10.21410/7E4/2TGFUR
+  title: Enquête post-électorale française 1962
+  series: postelec
+  election: 1962
+  fieldwork_start: 1962-12-15
+  fieldwork_end: 1962-12-30
+  mode: Interview.FaceToFace
+  sampling: Nonprobability.Quota
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1756, name: Documentation_PostElect1962.pdf, format: application/pdf, size: 618486, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 1758, name: Document de travail codage question 19.pdf, format: application/pdf, size: 174707,
+    restricted: false, role: other, fetch: false}
+  - {id: 1755, name: Document de travail codage question 2.pdf, format: application/pdf, size: 213142,
+    restricted: false, role: other, fetch: false}
+  - {id: 11008, name: fr.cdsp.ddi.196212.post_elect1962.doc.xml, format: text/xml, size: 270725, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3105, name: fr_cdsp_ddi_post_elec1962-1.tab, format: application/x-stata-14, size: 1490888, restricted: true,
+    role: data, fetch: false}
+  - {id: 3104, name: fr_cdsp_ddi_post_elec1962.sas.zip, format: application/zip, size: 174830, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3806, name: fr.cdsp.ddi.PostElect1962.tab, format: application/x-spss-sav, size: 217723, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3805, name: fr.cdsp.ddi.PostElect1962.zip, format: application/zip, size: 65820, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1757, name: Questionnaire.pdf, format: application/pdf, size: 400160, restricted: false, role: questionnaire,
+    fetch: false}
+  request: false
+  priority: listed
+- key: postelec1978
+  pid: doi:10.21410/7E4/YAHJ7G
+  url: https://doi.org/10.21410/7E4/YAHJ7G
+  title: Enquête post-électorale française 1978
+  series: postelec
+  election: 1978
+  fieldwork_start: 1978-03-20
+  fieldwork_end: 1978-03-30
+  mode: Interview.FaceToFace
+  sampling: Nonprobability.Quota
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 2858, name: cdsp_post-elec1978-1.tab, format: application/x-stata-14, size: 4417106, restricted: true,
+    role: data, fetch: false}
+  - {id: 2857, name: cdsp_post-elec1978.sas.zip, format: application/zip, size: 634688, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1759, name: Documentation_PostElect1978.pdf, format: application/pdf, size: 473991, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11012, name: fr.cdsp.ddi.197803.post_elect1978.doc.xml, format: text/xml, size: 367015, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3807, name: fr.cdsp.ddi.PostElect1978_F1.tab, format: application/x-spss-sav, size: 689693, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3808, name: fr.cdsp.ddi.PostElect1978_F1.zip, format: application/zip, size: 263459, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1760, name: Questionnaire_PostElect1978.pdf, format: application/pdf, size: 2002817, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: postelec1988
+  pid: doi:10.21410/7E4/PBPOH2
+  url: https://doi.org/10.21410/7E4/PBPOH2
+  title: Enquête post-électorale française 1988
+  series: postelec
+  election: 1988
+  fieldwork_start: 1988-05-09
+  fieldwork_end: 1988-05-20
+  mode: Interview.FaceToFace
+  sampling: Nonprobability.Quota
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1761, name: Documentation_PostElect1988.pdf, format: application/pdf, size: 515339, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11020, name: fr.cdsp.ddi.198805.post_elect1988.doc.xml, format: text/xml, size: 385144, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3113, name: fr_cdsp_ddi_post_elec1988-1.tab, format: application/x-stata-14, size: 5399542, restricted: true,
+    role: data, fetch: false}
+  - {id: 3112, name: fr_cdsp_ddi_post_elec1988.sas.zip, format: application/zip, size: 660155, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3810, name: fr.cdsp.ddi.PostElect1988_F1.tab, format: application/x-spss-sav, size: 888169, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3809, name: fr.cdsp.ddi.PostElect1988_F1.zip, format: application/zip, size: 267206, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1762, name: Questionnaire_PostElect1988.pdf, format: application/pdf, size: 1344391, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: postelec1995
+  pid: doi:10.21410/7E4/MYX5F0
+  url: https://doi.org/10.21410/7E4/MYX5F0
+  title: Enquête post-électorale française 1995
+  series: postelec
+  election: 1995
+  fieldwork_start: 1995-05-08
+  fieldwork_end: 1995-05-23
+  mode: Interview.FaceToFace, Other
+  sampling: Nonprobability.Quota
+  version: '7.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 2630, name: cdsp_post-elec1995-1.tab, format: application/x-stata-14, size: 6342094, restricted: true,
+    role: data, fetch: false}
+  - {id: 2632, name: cdsp_post-elec1995.sas.zip, format: application/zip, size: 890872, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2631, name: Documentation_PostElect1995.pdf, format: application/pdf, size: 502281, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11046, name: fr.cdsp.ddi.199505.post_elect1995.doc.xml, format: text/xml, size: 563513, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3812, name: fr.cdsp.ddi.PostElect1995.tab, format: application/x-spss-sav, size: 1386181, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3811, name: fr.cdsp.ddi.PostElect1995.zip, format: application/zip, size: 359181, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2629, name: Questionnaire_PostElec1995.pdf, format: application/pdf, size: 1627635, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: postelec1997
+  pid: doi:10.21410/7E4/YNNBWE
+  url: https://doi.org/10.21410/7E4/YNNBWE
+  title: Enquête post-électorale française 1997
+  series: postelec
+  election: 1997
+  fieldwork_start: 1997-05-26
+  fieldwork_end: 1997-05-31
+  mode: Interview.FaceToFace, Other
+  sampling: Nonprobability.Quota
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 2602, name: cdsp_post-elec1997-1.tab, format: application/x-stata-14, size: 2318429, restricted: true,
+    role: data, fetch: false}
+  - {id: 2603, name: cdsp_post-elec1997_sas7bdat.zip, format: application/zip, size: 366739, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2881, name: Documentation_PostElect1997.pdf, format: application/pdf, size: 618323, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11051, name: fr.cdsp.ddi.199705.post_elect1997.doc.xml, format: text/xml, size: 224319, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 3814, name: fr.cdsp.ddi.PostElect1997_F1.tab, format: application/x-spss-sav, size: 455207, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3813, name: fr.cdsp.ddi.PostElect1997_F1.zip, format: application/zip, size: 152923, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2880, name: Questionnaire_PostElect1997.pdf, format: application/pdf, size: 34920, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: postelec2007
+  pid: doi:10.21410/7E4/WAZOWF
+  url: https://doi.org/10.21410/7E4/WAZOWF
+  title: Enquête post-électorale présidentielle 2007
+  series: postelec
+  election: 2007
+  stage: post_round2
+  fieldwork_start: 2007-05-09
+  fieldwork_end: 2007-05-23
+  mode: Interview.Telephone
+  sampling: Nonprobability.Quota
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 4684, name: Documentation_POSTELEC2007.pdf, format: application/pdf, size: 730461, restricted: false,
+    role: documentation, fetch: true, sha256: eedc7563ace50d57f2aedc384431ce79efed5660a75fe4a52697014ec49baa8f}
+  - {id: 11077, name: fr.cdsp.ddi.200705.post_elect2007.doc.xml, format: text/xml, size: 621216, restricted: false,
+    role: codebook, fetch: true, sha256: 9d65f4f538511c62146c935c8f1448bae715d6d5901cac40e69f3a34248084c0}
+  - {id: 4699, name: fr_cdsp_ddi_postelec2007-1.tab, format: application/x-stata-13, size: 6409378, restricted: true,
+    role: data, fetch: false}
+  - {id: 4698, name: fr_cdsp_ddi_postelec2007.csv.zip, format: application/zip, size: 418099, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4700, name: fr_cdsp_ddi_postelec2007.sas.zip, format: application/zip, size: 717281, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4683, name: fr_cdsp_ddi_postelec2007.tab, format: application/x-spss-sav, size: 1158579, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 4682, name: Questionnaire_POSTELEC07, format: application/pdf, size: 688997, restricted: false,
+    role: questionnaire, fetch: true, sha256: 8275867f2a339390528a24d60859ef17ba892f04611026df6847ea2ec8d75c2c}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: Q305, label: Le vote au premier tour}
+    vote_round2:
+    - {var: Q309, label: Le vote au second tour}
+- key: postelec2012
+  pid: doi:10.21410/7E4/BNPAXT
+  url: https://doi.org/10.21410/7E4/BNPAXT
+  title: Enquête post-électorale de l'élection présidentielle 2012
+  series: postelec
+  election: 2012
+  stage: post_round2
+  fieldwork_start: 2012-05-10
+  fieldwork_end: 2012-05-29
+  mode: Interview.Telephone.CATI
+  sampling: MixedProbabilityNonprobability
+  version: '8.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1793, name: Dictionnaire_PostElec2012.tab, format: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+    size: 22407, restricted: false, role: codebook, fetch: true, sha256: 4db7e580ed6ed816f60baae8abc42cec1a01776fb37b8a4c8a2bc009c622cb9e}
+  - {id: 1796, name: Documentation_PostElec2012.pdf, format: application/pdf, size: 575223, restricted: false,
+    role: documentation, fetch: true, sha256: 1901d527f3981eac65c2deeb0c2b21a23f945dba144097dab8f343cf2774576c}
+  - {id: 1794, name: Echantillonage_PostElec2012.pdf, format: application/pdf, size: 81353, restricted: false,
+    role: other, fetch: false}
+  - {id: 11081, name: fr.cdsp.ddi.201205.post_elect2012.doc.xml, format: text/xml, size: 647200, restricted: false,
+    role: codebook, fetch: true, sha256: 37038df995d5804d2a7f92cb43d620b405df6125fab68e9caeda5f4a70abedad}
+  - {id: 3093, name: fr_cdsp_ddi_post_elec2012-1.tab, format: application/x-stata-14, size: 6496641, restricted: true,
+    role: data, fetch: false}
+  - {id: 3092, name: fr_cdsp_ddi_post_elec2012.sas7bdat, format: application/x-sas-system, size: 7667712,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 3095, name: fr_cdsp_ddi_post_elec2012.tab, format: application/x-spss-sav, size: 6317413, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3815, name: fr.cdsp.ddi.PostElec2012.tab, format: application/x-spss-sav, size: 992564, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3816, name: fr.cdsp.ddi.PostElec2012.zip, format: application/zip, size: 324337, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 328, name: PonderationPostElec2012.pdf, format: text/plain, size: 94018, restricted: false, role: weights_doc,
+    fetch: true, sha256: a0af16c74c948492a276012b62703524c4daaa87f85b946e1cd5ade2e63c4d36}
+  - {id: 1795, name: Questionnaire_PostElec2012.pdf, format: application/pdf, size: 222458, restricted: false,
+    role: questionnaire, fetch: true, sha256: 30d1b561b3c285caffcc221006ed1288898d6a45b9f5d8b4d4b81d1ab007048a}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: Q16exp, label: Vote au 1er tour de l'élection présidentielle 2012 (recodage)}
+    vote_round2:
+    - {var: Q22exp, label: Vote au 2nd tour de l'élection présidentielle 2012 (recodage)}
+    weight:
+    - {var: weight2, label: Pondération2 (SD+1er+2nd tour élection présidentielle 2012)}
+    - {var: weight0, label: 'Pondération0 (SD - sexe, âge, région, agglomération, profession de chef de
+        famille)'}
+    - {var: weight1, label: Pondération1 (SD+1er tour élection présidentielle 2012)}
+    - {var: weight3, label: Pondération3 (SD+1er+2nd tour élection présidentielle 2012+diplôme du répondant)}
+    other:
+    - {var: Q60exp, label: Vote au 1er tour de élection présidentielle (recodage)}
+    - {var: Q62exp, label: Vote au 2nd tour de élection présidentielle (recodage)}
+- key: fes2007
+  pid: doi:10.21410/7E4/XKHCPM
+  url: https://doi.org/10.21410/7E4/XKHCPM
+  title: French Electoral Study 2007
+  series: fes2007
+  election: 2007
+  stage: post_legislative
+  fieldwork_start: 2007-06-18
+  fieldwork_end: 2007-07-07
+  mode: Interview.Telephone.CATI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '9.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1611, name: Documentation_FES2007.pdf, format: application/pdf, size: 1099860, restricted: false,
+    role: documentation, fetch: true, sha256: 9933483a44776e590e4663e2363a9baf87a33ba1bf12b7516dda6fca33c03522}
+  - {id: 11078, name: fr.cdsp.ddi.200706.fes2007.doc.xml, format: text/xml, size: 1370536, restricted: false,
+    role: codebook, fetch: true, sha256: e3343d88a3a3892b6d7910b1c8de62fb2630d923019d08fb0f9a0c69a361d342}
+  - {id: 2458, name: fr_cdsp_ddi_fes2007.sas.zip, format: application/zip, size: 966099, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3793, name: fr.cdsp.ddi.FES2007.tab, format: application/x-spss-sav, size: 2500560, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2460, name: fr_cdsp_ddi_fes2007.tab-1, format: application/x-stata-14, size: 7635659, restricted: true,
+    role: data, fetch: false}
+  - {id: 3794, name: fr.cdsp.ddi.FES2007.zip, format: application/zip, size: 363537, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1610, name: Questionnaire_FES2007.pdf, format: application/pdf, size: 119432, restricted: false,
+    role: questionnaire, fetch: true, sha256: cafbb2af3cb5c732b1543a4d6a1eca201fc281e6abeed6e6eafda0b1ad7d9da1}
+  request: true
+  priority: useful
+- key: fes2012
+  pid: doi:10.21410/7E4/B3SXDT
+  url: https://doi.org/10.21410/7E4/B3SXDT
+  title: French Electoral Study 2012
+  series: fes2012
+  election: 2012
+  stage: post_round2
+  fieldwork_start: 2012-05-09
+  fieldwork_end: 2012-06-09
+  mode: Interview.FaceToFace.CAPIorCAMI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '10.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 1612, name: Documentation_FES2012.pdf, format: application/pdf, size: 939082, restricted: false,
+    role: documentation, fetch: true, sha256: 2dfe95fd0d9aff3c0321749ac5ad1234c86c83ad589a0fad1704edb8bb46b284}
+  - {id: 11080, name: fr.cdsp.ddi.201205.fes2012.doc.xml, format: text/xml, size: 977354, restricted: false,
+    role: codebook, fetch: true, sha256: 42944c8067c6eab7bdbaf78e56c1997e35b386a9ce6d8cfd89b829a4ace532de}
+  - {id: 3220, name: fr_cdsp_ddi_fes12.sas.zip, format: application/zip, size: 770543, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3222, name: fr_cdsp_ddi_fes2012-1.tab, format: application/x-stata-14, size: 5157573, restricted: true,
+    role: data, fetch: false}
+  - {id: 3795, name: fr.cdsp.ddi.FES2012.tab, format: application/x-spss-sav, size: 890926, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 3796, name: fr.cdsp.ddi.FES2012.zip, format: application/zip, size: 324399, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1613, name: Questionnaire_FES2012.pdf, format: application/pdf, size: 277847, restricted: false,
+    role: questionnaire, fetch: true, sha256: 1cc75d8fe2b19c0bafeac5fc8dc715505d37139c0e7f14450626c582a92aa974}
+  request: true
+  priority: core
+  questions:
+    turnout:
+    - {var: V1, label: Vote au premier tour de l'élection présidentielle 2012}
+    - {var: v6, label: Vote au second tour de l'élection présidentielle 2012}
+    weight:
+    - {var: poids1, label: 'Poids 1 : sociodémographiques'}
+    - {var: poids2, label: 'Poids 2 : résultats des élections présidentielles'}
+    - {var: poids3, label: 'Poids 3 : sociodémographiques + résultats électoraux'}
+- key: enef2017_matched
+  pid: doi:10.21410/7E4/FIVFXR
+  url: https://doi.org/10.21410/7E4/FIVFXR
+  title: Enquête électorale française 2017 (ENEF 2017), jeu de données apparié
+  series: enef2017
+  election: 2017
+  wave: 1-18 apparié
+  stage: pre_campaign
+  fieldwork_start: 2015-11-20
+  fieldwork_end: 2018-05-02
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.3'
+  license: CC BY-NC-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9276, name: Dictionnaire_ENEF2017_base appariee.ods, format: application/vnd.oasis.opendocument.spreadsheet,
+    size: 42694, restricted: false, role: codebook, fetch: true, sha256: ed760abc34d348fe51fcbaec43b6e25918fb09a9713994cf0b893a01694470a1}
+  - {id: 9283, name: Documentation_ENEF2017_appariee.pdf, format: application/pdf, size: 831718, restricted: false,
+    role: documentation, fetch: true, sha256: 82d1bd02de7dc1c336257ce5297ecba32f9fed5b4e12af9910c48d8500d8fb4e}
+  - {id: 9278, name: fr_cdsp_ddi_enef2017_appariee-1.tab, format: text/csv, size: 587894677, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9279, name: fr_cdsp_ddi_enef2017_appariee.tab, format: application/x-stata, size: 238759189,
+    restricted: true, role: data, fetch: false}
+  - {id: 9284, name: fr_cdsp_ddi_enef2017_appariee.xml, format: text/xml, size: 682857, restricted: false,
+    role: codebook, fetch: true, sha256: 69f61556315d4ce08665d7637f6a7d06ec2c82bf7d9e17302bab60bac8b02a94}
+  request: true
+  priority: core
+  notes: Toutes les vagues 1 à 18 appariées (238 Mo en Stata, 588 Mo en CSV) ; licence CC BY-NC-SA, plus
+    restrictive que les vagues séparées.
+- key: enef2017_v01
+  pid: doi:10.21410/7E4/N7HZLA
+  url: https://doi.org/10.21410/7E4/N7HZLA
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 1
+  series: enef2017
+  election: 2017
+  wave: '1'
+  wave_order: 1
+  stage: pre_campaign
+  fieldwork_start: 2015-11-20
+  fieldwork_end: 2015-11-29
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '5.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6703, name: Documentation_ENEF2017_V1.pdf, format: application/pdf, size: 1049705, restricted: false,
+    role: documentation, fetch: true, sha256: ddb04684a4128404080ffc62d0c0abc5c5380bad9645cb38fbd5c0443766ea22}
+  - {id: 6915, name: ENEF2017_V1aV18_Dictionnaire.zip, format: application/zip, size: 126160, restricted: false,
+    role: codebook, fetch: true, sha256: f96375145019439906564fffcce32bb5b81fdacf5beef1803ec934dd4b80c092}
+  - {id: 6701, name: fr_cdsp_ddi_enef2017_v1-1.tab, format: application/x-stata-14, size: 57706340, restricted: true,
+    role: data, fetch: false}
+  - {id: 6707, name: fr_cdsp_ddi_enef2017_v1_csv, format: application/zip, size: 4524512, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6702, name: fr_cdsp_ddi_enef2017_v1_sas, format: application/zip, size: 5907770, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6705, name: fr_cdsp_ddi_enef2017_v1.tab, format: application/x-spss-sav, size: 26677768, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6710, name: fr_cdsp_ddi_enef2017_v1_verbatims.zip, format: application/zip, size: 281823, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6706, name: fr_cdsp_ddi_enef2017_v1.xml, format: text/xml, size: 1049541, restricted: false,
+    role: codebook, fetch: true, sha256: 754490afcc7bc5ec3eea297eb0578ec740cce339e21375f254a40a77d0cb8d45}
+  - {id: 6720, name: Questionnaire_ENEF2017_V1.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 202506, restricted: false, role: questionnaire, fetch: true, sha256: e336f31c5f8c3b7fc73bfad05b655f3c52576834093f4712b8a53e5614d1e4ed}
+  - {id: 6697, name: RapportTechnique_ENEF2017_V1.pdf, format: application/pdf, size: 764809, restricted: false,
+    role: technical_report, fetch: true, sha256: 2a954789c3d8d10cf62e0c8d59faf8ee8e3060461cd056d3ab937014803bed71}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v01bis
+  pid: doi:10.21410/7E4/HEAXDG
+  url: https://doi.org/10.21410/7E4/HEAXDG
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 1Bis
+  series: enef2017
+  election: 2017
+  wave: 1 bis
+  wave_order: 1.5
+  stage: pre_campaign
+  fieldwork_start: 2015-12-16
+  fieldwork_end: 2016-01-03
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '3.2'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6713, name: Documentation_ENEF2017_V1b.pdf, format: application/pdf, size: 227746, restricted: false,
+    role: documentation, fetch: true, sha256: 935f78382aa2ca9ed60f3d253393679755f328198310a486198be9513d0e7a2f}
+  - {id: 6718, name: fr_cdsp_ddi_enef2017_v1b-1.tab, format: application/x-stata-14, size: 16682674, restricted: true,
+    role: data, fetch: false}
+  - {id: 6717, name: fr_cdsp_ddi_enef2017_v1b_csv.zip, format: application/zip, size: 1550401, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6712, name: fr_cdsp_ddi_enef2017_v1b_sas.zip, format: application/zip, size: 1984946, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6711, name: fr_cdsp_ddi_enef2017_v1b.tab, format: application/x-spss-sav, size: 5994392, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6716, name: fr_cdsp_ddi_enef2017_v1b.xml, format: text/xml, size: 175086, restricted: false,
+    role: codebook, fetch: true, sha256: 4f7b47f5e9900b0f082b2c9cfb1c567d790bcc43205ecdfccca9a39097eae8a6}
+  - {id: 6719, name: Questionnaire_ENEF2017_V1b.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 126860, restricted: false, role: questionnaire, fetch: true, sha256: 22dc4a601eb11a92974005ec70792f91eaaf1b33fc9c038e73b80a118b8d78bc}
+  - {id: 6714, name: RapportTechnique_ENEF2017_V1b.pdf, format: application/pdf, size: 969185, restricted: false,
+    role: technical_report, fetch: true, sha256: 7d4216ba6cdbd6071e0f3baec1b37793a695a75b9d2eebfc7fa60c1d43b82df3}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v02
+  pid: doi:10.21410/7E4/SPRKNV
+  url: https://doi.org/10.21410/7E4/SPRKNV
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 2
+  series: enef2017
+  election: 2017
+  wave: '2'
+  wave_order: 2
+  stage: pre_campaign
+  fieldwork_start: 2016-01-22
+  fieldwork_end: 2016-01-31
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.2'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6721, name: Documentation_ENEF2017_V2.pdf, format: application/pdf, size: 382510, restricted: false,
+    role: documentation, fetch: true, sha256: 6ef7131d49ebcf267c3417e2d202d0812acf011f9896315bb4b4d232e50b4205}
+  - {id: 6722, name: fr_cdsp_ddi_enef2017_v2-1.tab, format: application/x-stata-14, size: 24740531, restricted: true,
+    role: data, fetch: false}
+  - {id: 6727, name: fr_cdsp_ddi_enef2017_v2_csv.zip, format: application/zip, size: 2166315, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6726, name: fr_cdsp_ddi_enef2017_v2_sas.zip, format: application/zip, size: 2799746, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6728, name: fr_cdsp_ddi_enef2017_v2.tab, format: application/x-spss-sav, size: 9386442, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6725, name: fr_cdsp_ddi_enef2017_v2_verbatims.zip, format: application/zip, size: 444533, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6729, name: fr_cdsp_ddi_enef2017_v2.xml, format: text/xml, size: 316913, restricted: false, role: codebook,
+    fetch: true, sha256: 8be00772d58808b661d1b61b201ff95482fa51e59b88da28f42d17c3367cdcec}
+  - {id: 6724, name: Questionnaire_ENEF2017_V2.doc, format: application/msword, size: 340992, restricted: false,
+    role: questionnaire, fetch: true, sha256: f4fc16eb6cb3ab5112a92dc2fd6d135bd31ba3af58f4f5b2a09c6441dc429677}
+  - {id: 6723, name: RapportTechnique_ENEF2017_V2.pdf, format: application/pdf, size: 983900, restricted: false,
+    role: technical_report, fetch: true, sha256: e17d7832b4e97bcc67c2f6a5386fa2bc09920356bbf64912f2f521a6d1857dff}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v03
+  pid: doi:10.21410/7E4/O2MURS
+  url: https://doi.org/10.21410/7E4/O2MURS
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 3
+  series: enef2017
+  election: 2017
+  wave: '3'
+  wave_order: 3
+  stage: pre_campaign
+  fieldwork_start: 2016-03-11
+  fieldwork_end: 2016-03-20
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '3.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6865, name: Documentation_ENEF2017_V3.pdf, format: application/pdf, size: 496158, restricted: false,
+    role: documentation, fetch: true, sha256: fee5b9f502daf9a02bff24cf73e8f3653669c9d4b3be1d5f5a0d7d96dfd955dd}
+  - {id: 6735, name: fr_cdsp_ddi_enef2017_v3-1.tab, format: application/x-stata-14, size: 34029930, restricted: true,
+    role: data, fetch: false}
+  - {id: 6736, name: fr_cdsp_ddi_enef2017_v3_csv.zip, format: application/zip, size: 2668393, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6740, name: fr_cdsp_ddi_enef2017_v3_sas.zip, format: application/zip, size: 3540524, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6741, name: fr_cdsp_ddi_enef2017_v3.tab, format: application/x-spss-sav, size: 14249534, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6737, name: fr_cdsp_ddi_enef2017_v3_verbatim.zip, format: application/zip, size: 176348, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6738, name: fr_cdsp_ddi_enef2017_v3.xml, format: text/xml, size: 449823, restricted: false, role: codebook,
+    fetch: true, sha256: 8d34e1d810368eed39e5223eef4782e8e1095bf6e0a7bfd4c1dd6f90d6161ec2}
+  - {id: 6734, name: Questionnaire_ENEF2017_V3.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 270654, restricted: false, role: questionnaire, fetch: true, sha256: b1ffe5df1d6f4951284e70b1943f50eb394e62d91f4d43f9d4c089c0873c330d}
+  - {id: 6733, name: RapportTechnique_ENEF2017_V3.pdf, format: application/pdf, size: 1020235, restricted: false,
+    role: technical_report, fetch: true, sha256: 2422da022bd5a64e677adc86d05c7e3d98c72a82d890c9923e720f0a9466e0e7}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+  questions:
+    expected_winner:
+    - {var: CCANDG2, label: Personne ayant le plus de chances d'accéder au second tour}
+- key: enef2017_v03bis
+  pid: doi:10.21410/7E4/BZOEZN
+  url: https://doi.org/10.21410/7E4/BZOEZN
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 3 Bis
+  series: enef2017
+  election: 2017
+  wave: 3 bis
+  wave_order: 3.5
+  stage: pre_campaign
+  fieldwork_start: 2016-04-15
+  fieldwork_end: 2016-04-25
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6744, name: Documentation_ENEF2017_V3b.pdf, format: application/pdf, size: 223693, restricted: false,
+    role: documentation, fetch: true, sha256: b3b509443295d757ce4ba0a5db2ebae39fcf46aa2ff916188bac1678452b0d77}
+  - {id: 6748, name: fr_cdsp_ddi_enef2017_v3b-1.tab, format: application/x-stata-14, size: 17175146, restricted: true,
+    role: data, fetch: false}
+  - {id: 6749, name: fr_cdsp_ddi_enef2017_v3b_csv.zip, format: application/zip, size: 1670899, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6742, name: fr_cdsp_ddi_enef2017_v3b_sas.zip, format: application/zip, size: 2141931, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6747, name: fr_cdsp_ddi_enef2017_v3b.tab, format: application/x-spss-sav, size: 6417568, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6743, name: fr_cdsp_ddi_enef2017_v3b_verbatim.zip, format: application/zip, size: 177778, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6746, name: fr_cdsp_ddi_enef2017_v3b.xml, format: text/xml, size: 179664, restricted: false,
+    role: codebook, fetch: true, sha256: 671ca5312c4697f5ca05cb8ac5cfbb7b77e5e368f9078e43416fc430f3d50d70}
+  - {id: 6745, name: Questionnaire_ENEF2017_V3b.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 127317, restricted: false, role: questionnaire, fetch: true, sha256: 60cca402dae477393ac07e5e6ebe71b258cbbef7ae0f212d5d36d152ce4153ec}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v04
+  pid: doi:10.21410/7E4/QZTEHO
+  url: https://doi.org/10.21410/7E4/QZTEHO
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 4
+  series: enef2017
+  election: 2017
+  wave: '4'
+  wave_order: 4
+  stage: pre_campaign
+  fieldwork_start: 2015-05-13
+  fieldwork_end: 2015-05-22
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6755, name: Documentation_ENEF2017_V4.pdf, format: application/pdf, size: 550706, restricted: false,
+    role: documentation, fetch: true, sha256: bd827556723ed0164603871e5857b235cc10e3f9505c6369e3e305979e55a589}
+  - {id: 6751, name: fr_cdsp_ddi_enef2017_v4-1.tab, format: application/x-stata-14, size: 39242214, restricted: true,
+    role: data, fetch: false}
+  - {id: 6750, name: fr_cdsp_ddi_enef2017_v4_csv.zip, format: application/zip, size: 2843602, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6753, name: fr_cdsp_ddi_enef2017_v4_sas.zip, format: application/zip, size: 3845169, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6752, name: fr_cdsp_ddi_enef2017_v4.tab, format: application/x-spss-sav, size: 15189003, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6757, name: fr_cdsp_ddi_enef2017_v4_verbatim.zip, format: application/zip, size: 1007292, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6758, name: fr_cdsp_ddi_enef2017_v4.xml, format: text/xml, size: 489958, restricted: false, role: codebook,
+    fetch: true, sha256: 4927b53d82a85b9170a3e1f3e6909ba2a91b47ec055ae972ebc988f3556c9dee}
+  - {id: 6754, name: Questionnaire_ENEF2017_V4.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 254336, restricted: false, role: questionnaire, fetch: true, sha256: 7fd7b91bf291d1b8dda412e3d7d7781e98518614d73bcaf0587fc36523549f3f}
+  - {id: 6756, name: RapportTechnique_ENEF2017_V4.pdf, format: application/pdf, size: 1023886, restricted: false,
+    role: technical_report, fetch: true, sha256: 6551c6eeadc17a348de547eba15adb6f01e4a2b7dc0f902fa3d4b5a09d0143dc}
+  request: false
+  priority: useful
+  notes: 'Les métadonnées Dataverse donnent un terrain du 13 au 22 mai 2015, incohérent avec l''ordre
+    des vagues (V3 bis en avril 2016, V5 en juin 2016) : sans doute mai 2016, à vérifier dans la documentation.'
+- key: enef2017_v05
+  pid: doi:10.21410/7E4/Q1IYIZ
+  url: https://doi.org/10.21410/7E4/Q1IYIZ
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 5
+  series: enef2017
+  election: 2017
+  wave: '5'
+  wave_order: 5
+  stage: pre_campaign
+  fieldwork_start: 2016-06-17
+  fieldwork_end: 2016-06-26
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6765, name: Documentation_ENEF2017_V5.pdf, format: application/pdf, size: 374542, restricted: false,
+    role: documentation, fetch: true, sha256: c3d115390bc889b57dc94ce05942673fa99fb732bfc4936cdaa160a9906ee55a}
+  - {id: 6764, name: fr_cdsp_ddi_enef2017_v5-1.tab, format: application/x-stata-14, size: 27222193, restricted: true,
+    role: data, fetch: false}
+  - {id: 6763, name: fr_cdsp_ddi_enef2017_v5_csv.zip, format: application/zip, size: 2298475, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6761, name: fr_cdsp_ddi_enef2017_v5_sas.zip, format: application/zip, size: 3018230, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6760, name: fr_cdsp_ddi_enef2017_v5.tab, format: application/x-spss-sav, size: 10339856, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6766, name: fr_cdsp_ddi_enef2017_v5.xml, format: text/xml, size: 319039, restricted: false, role: codebook,
+    fetch: true, sha256: 75342043aa71145f27951e95606f339d2b1e82a5fb0d6ffc184f7b8ea3bba783}
+  - {id: 6762, name: Questionnaire_ENEF2017_V5.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 250441, restricted: false, role: questionnaire, fetch: true, sha256: 6721ce7ab1b01b012ee18a49161187a3218ff90f13e72544bd35c71d2f863265}
+  - {id: 6759, name: RapportTechnique_ENEF2017_V5.pdf, format: application/pdf, size: 1024106, restricted: false,
+    role: technical_report, fetch: true, sha256: bcf1c64ca15279604b93d229fa29c2726242764cfada12ea49cc99df2069d6bd}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v06
+  pid: doi:10.21410/7E4/DQFYRV
+  url: https://doi.org/10.21410/7E4/DQFYRV
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 6
+  series: enef2017
+  election: 2017
+  wave: '6'
+  wave_order: 6
+  stage: pre_campaign
+  fieldwork_start: 2016-09-09
+  fieldwork_end: 2016-09-18
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6771, name: Documentation_ENEF2017_V6.pdf, format: application/pdf, size: 465721, restricted: false,
+    role: documentation, fetch: true, sha256: 7061209efe3b21aaab100ab3ee905a0b03d9be493c7def824aa9a7f03dd5f7d5}
+  - {id: 6769, name: fr_cdsp_ddi_enef2017_v6-1.tab, format: application/x-stata-14, size: 30216285, restricted: true,
+    role: data, fetch: false}
+  - {id: 6768, name: fr_cdsp_ddi_enef2017_v6_csv.zip, format: application/zip, size: 2293731, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6775, name: fr_cdsp_ddi_enef2017_v6_sas.zip, format: application/zip, size: 2978287, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6772, name: fr_cdsp_ddi_enef2017_v6.tab, format: application/x-spss-sav, size: 15276033, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6774, name: fr_cdsp_ddi_enef2017_v6_verbatim.zip, format: application/zip, size: 370142, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6773, name: fr_cdsp_ddi_enef2017_v6.xml, format: text/xml, size: 400558, restricted: false, role: codebook,
+    fetch: true, sha256: b581c83a690b69542e8736aa26bcfc176d65742568c8267c8f1f4efd5f909e46}
+  - {id: 6767, name: Questionnaire_ENEF2017_V6.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 255894, restricted: false, role: questionnaire, fetch: true, sha256: f93729c413471edbc51e3094f2205bd38ac837b2beb4f7951aba797f6e69376e}
+  - {id: 6770, name: RapportTechnique_ENEF2017_V6.pdf, format: application/pdf, size: 1022057, restricted: false,
+    role: technical_report, fetch: true, sha256: d042d45851ea0f200e771f32ee454dd8c169a70c973667a9543b3f9c4f28c6d7}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v07
+  pid: doi:10.21410/7E4/KW39HC
+  url: https://doi.org/10.21410/7E4/KW39HC
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 7
+  series: enef2017
+  election: 2017
+  wave: '7'
+  wave_order: 7
+  stage: pre_campaign
+  fieldwork_start: 2016-10-14
+  fieldwork_end: 2016-10-19
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6780, name: Documentation_ENEF2017_V7.pdf, format: application/pdf, size: 769961, restricted: false,
+    role: documentation, fetch: true, sha256: 7219e5893f66232419a8f3730e0916cac3285ad596b71b35bdca7a54033ee022}
+  - {id: 6782, name: fr_cdsp_ddi_enef2017_v7-1.tab, format: application/x-stata-14, size: 57362364, restricted: true,
+    role: data, fetch: false}
+  - {id: 6781, name: fr_cdsp_ddi_enef2017_v7_csv.zip, format: application/zip, size: 2848507, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6783, name: fr_cdsp_ddi_enef2017_v7_sas.zip, format: application/zip, size: 3774612, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6777, name: fr_cdsp_ddi_enef2017_v7.tab, format: application/x-spss-sav, size: 38754541, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6779, name: fr_cdsp_ddi_enef2017_v7.xml, format: text/xml, size: 756720, restricted: false, role: codebook,
+    fetch: true, sha256: 60b15a157bb8b3ad36af5dc299b30048aa6e3e59e080fadc058173b405111e3a}
+  - {id: 6776, name: Questionnaire_ENEF2017_V7.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 247871, restricted: false, role: questionnaire, fetch: true, sha256: 20fb5150196448f21510586332a45c1f4fed28fb6b1c0ea988b081c6d42115f6}
+  - {id: 6778, name: RapportTechnique_ENEF2017_V7.pdf, format: application/pdf, size: 1022185, restricted: false,
+    role: technical_report, fetch: true, sha256: 2244255ec9de0a2a202436551585a560f35a1e2141be7538bfee6540aeeb365d}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+  questions:
+    expected_winner:
+    - {var: GPLPT2_0, label: 'Probabilité d''accès au second tour : François Hollande'}
+    - {var: GPLPT2_1, label: 'Probabilité d''accès au second tour : Nicolas Sarkozy'}
+    - {var: GPLPT2_2, label: 'Probabilité d''accès au second tour : Jean-Luc Mélenchon'}
+    - {var: GPLPT2_3, label: 'Probabilité d''accès au second tour : Alain Juppé'}
+    - {var: GPLPT2_4, label: 'Probabilité d''accès au second tour : Marine Le Pen'}
+    weight:
+    - {var: GPSDP, label: Poids sd & PrésT1}
+- key: enef2017_v08
+  pid: doi:10.21410/7E4/YQMIY7
+  url: https://doi.org/10.21410/7E4/YQMIY7
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 8
+  series: enef2017
+  election: 2017
+  wave: '8'
+  wave_order: 8
+  stage: pre_campaign
+  fieldwork_start: 2016-11-08
+  fieldwork_end: 2016-11-13
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6790, name: Documentation_ENEF2017_V8.pdf, format: application/pdf, size: 510664, restricted: false,
+    role: documentation, fetch: true, sha256: 6d6d4290a93b87dd283d87c9a79cb0da1eda7543758ee4a72c7b634a23ee3d25}
+  - {id: 6787, name: fr_cdsp_ddi_enef2017_v8-1.tab, format: application/x-stata-14, size: 33481563, restricted: true,
+    role: data, fetch: false}
+  - {id: 6785, name: fr_cdsp_ddi_enef2017_v8_csv.zip, format: application/zip, size: 2491031, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6784, name: fr_cdsp_ddi_enef2017_v8_sas.zip, format: application/zip, size: 3305161, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6791, name: fr_cdsp_ddi_enef2017_v8.tab, format: application/x-spss-sav, size: 15356671, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6786, name: fr_cdsp_ddi_enef2017_v8.xml, format: text/xml, size: 449414, restricted: false, role: codebook,
+    fetch: true, sha256: caadb0765514c2771bcc981e52f0137d17c165c348319605016f62763b23cc0e}
+  - {id: 6788, name: Questionnaire_ENEF2017_V8.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 254269, restricted: false, role: questionnaire, fetch: true, sha256: f955e0885a0741a02c9540eb8fbb68ce5db7b7a953c534ac5af35bee207a4d33}
+  - {id: 6789, name: RapportTechnique_ENEF2017_V8.pdf, format: application/pdf, size: 1022033, restricted: false,
+    role: technical_report, fetch: true, sha256: dc1a3c9d43ac30d1d9d25def96dc57fa6e652beaff9d211f4ababc1322283a41}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+  questions:
+    expected_winner:
+    - {var: HX1, label: 'Résultats attendus premier tour : Candidat Parti Socialiste'}
+    - {var: HY1, label: 'Résultats attendus premier tour : Candidat Les Républicains'}
+    - {var: HZ1, label: 'Résultats attendus premier tour : Candidat Front National'}
+    - {var: HX2, label: 'Résultats attendus second tour Hypothèse PS-LR : Candidat Parti Socialiste'}
+    - {var: HY2, label: 'Résultats attendus second tour Hypothèse LR-FN : Candidat Les Républicains'}
+    - {var: HZ2, label: 'Résultats attendus second tour Hypothèse FN-PS : Candidat Front National'}
+- key: enef2017_v08bis
+  pid: doi:10.21410/7E4/QL5I5H
+  url: https://doi.org/10.21410/7E4/QL5I5H
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 8 Bis
+  series: enef2017
+  election: 2017
+  wave: 8 bis
+  wave_order: 8.5
+  stage: pre_campaign
+  fieldwork_start: 2016-11-25
+  fieldwork_end: 2016-11-25
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '5.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11622, name: Documentation_ENEF2017_V8b.pdf, format: application/pdf, size: 207812, restricted: false,
+    role: documentation, fetch: true, sha256: 1495856da4fb747cec5913eb13370a2db8a9964220794e1b494e97af38a4f560}
+  - {id: 6793, name: fr_cdsp_ddi_enef2017_v8b-1.tab, format: application/x-stata-14, size: 18388584, restricted: true,
+    role: data, fetch: false}
+  - {id: 6798, name: fr_cdsp_ddi_enef2017_v8b_csv.zip, format: application/zip, size: 798734, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6796, name: fr_cdsp_ddi_enef2017_v8b_sas.zip, format: application/zip, size: 1216601, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6795, name: fr_cdsp_ddi_enef2017_v8b.tab, format: application/x-spss-sav, size: 8349501, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11623, name: fr_cdsp_ddi_enef2017_v8b.xml, format: text/xml, size: 158126, restricted: false,
+    role: codebook, fetch: true, sha256: 95fc9f5fc173494a82adc990087ffbad96759e91053573c576206dc9ba63ad64}
+  - {id: 6797, name: Questionnaire_ENEF2017_V8b, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 84507, restricted: false, role: questionnaire, fetch: true, sha256: 00894e5d739d434309100b7e8740477ea0c3ea05596c7465702faf3b5800da4e}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v09
+  pid: doi:10.21410/7E4/BU53Z6
+  url: https://doi.org/10.21410/7E4/BU53Z6
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 9
+  series: enef2017
+  election: 2017
+  wave: '9'
+  wave_order: 9
+  stage: pre_campaign
+  fieldwork_start: 2016-12-02
+  fieldwork_end: 2016-12-07
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6804, name: Documentation_ENEF2017_V9.pdf, format: application/pdf, size: 583712, restricted: false,
+    role: documentation, fetch: true, sha256: 2094b5314fa208768d5ab85cd19bf642d6e12b9791b177910754eb231042aee4}
+  - {id: 6801, name: fr_cdsp_ddi_enef2017_v9-1.tab, format: application/x-stata-14, size: 39312877, restricted: true,
+    role: data, fetch: false}
+  - {id: 6805, name: fr_cdsp_ddi_enef2017_v9_csv.zip, format: application/zip, size: 3051104, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6800, name: fr_cdsp_ddi_enef2017_v9_sas.zip, format: application/zip, size: 3986066, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6807, name: fr_cdsp_ddi_enef2017_v9.tab, format: application/x-spss-sav, size: 17658504, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6806, name: fr_cdsp_ddi_enef2017_v9_verbatim.zip, format: application/zip, size: 7718, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6799, name: fr_cdsp_ddi_enef2017_v9.xml, format: text/xml, size: 500186, restricted: false, role: codebook,
+    fetch: true, sha256: dbe94d8bcd8251c871766ee55eb287d379c8b7fa4092cde906bdc8446e27ad74}
+  - {id: 6802, name: Questionnaire_ENEF2017_V9.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 243271, restricted: false, role: questionnaire, fetch: true, sha256: 387e2688668163d7163afe4d71a1cf32e98cf6782392810c707bdf633985ea65}
+  - {id: 6803, name: RapportTechnique_ENEF2017_V9.pdf, format: application/pdf, size: 1058314, restricted: false,
+    role: technical_report, fetch: true, sha256: f1d8a52c4d7f2c985ce7f8af18d98a7aa189d2ef83eca1fceac33a58a03b9d4e}
+  request: false
+  priority: useful
+  notes: 'Microdonnées couvertes par le jeu apparié (enef2017_matched) : pas de demande séparée.'
+- key: enef2017_v10
+  pid: doi:10.21410/7E4/2OHZ4R
+  url: https://doi.org/10.21410/7E4/2OHZ4R
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 10
+  series: enef2017
+  election: 2017
+  wave: '10'
+  wave_order: 10
+  stage: pre_campaign
+  fieldwork_start: 2017-01-10
+  fieldwork_end: 2017-01-16
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6809, name: Documentation_ENEF2017_V10.pdf, format: application/pdf, size: 577138, restricted: false,
+    role: documentation, fetch: true, sha256: c83a0730689e2029736a07f804106b9f21574ab1ef40efecbc4518e5e8b8f26f}
+  - {id: 11083, name: fr.cdsp.ddi.201701.enef2017_v10.doc.xml, format: text/xml, size: 492597, restricted: false,
+    role: codebook, fetch: true, sha256: b2fa8ea65cb440f9d26863853ddc0cca1ad38d28287f8bdbf355bd7aa2e7aa6c}
+  - {id: 6811, name: fr_cdsp_ddi_enef2017_v10-1.tab, format: application/x-stata-14, size: 36494115, restricted: true,
+    role: data, fetch: false}
+  - {id: 6815, name: fr_cdsp_ddi_enef2017_v10_csv.zip, format: application/zip, size: 2472437, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6812, name: fr_cdsp_ddi_enef2017_v10_sas.zip, format: application/zip, size: 3250233, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6808, name: fr_cdsp_ddi_enef2017_v10.tab, format: application/x-spss-sav, size: 18744452, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6813, name: Questionnaire_ENEF2017_V10.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 237993, restricted: false, role: questionnaire, fetch: true, sha256: fb13a774eee3827bc4ae7c14909a5ab8f1ef05b44b8a6d462ddeb8bcee7d78b0}
+  - {id: 6810, name: RapportTechnique_ENEF2017_V10.pdf, format: application/pdf, size: 1040910, restricted: false,
+    role: technical_report, fetch: true, sha256: 5b911b5e88382986a094b1a4a23e7b97c4f72650363c25334cf2520c6a1cf532}
+  request: true
+  priority: core
+- key: enef2017_v11
+  pid: doi:10.21410/7E4/JNDKUR
+  url: https://doi.org/10.21410/7E4/JNDKUR
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 11
+  series: enef2017
+  election: 2017
+  wave: '11'
+  wave_order: 11
+  stage: campaign
+  fieldwork_start: 2017-02-07
+  fieldwork_end: 2017-02-12
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6816, name: Documentation_ENEF2017_V11.pdf, format: application/pdf, size: 583070, restricted: false,
+    role: documentation, fetch: true, sha256: 85f08c8db7e7002256eb0d1e5e26c9fd283ecf975b7a91087edd3b41f89941e0}
+  - {id: 6822, name: fr_cdsp_ddi_enef2017_v11-1.tab, format: application/x-stata-14, size: 37501802, restricted: true,
+    role: data, fetch: false}
+  - {id: 6817, name: fr_cdsp_ddi_enef2017_v11_csv.zip, format: application/zip, size: 2570026, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6819, name: fr_cdsp_ddi_enef2017_v11_sas.zip, format: application/zip, size: 3427160, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6824, name: fr_cdsp_ddi_enef2017_v11.tab, format: application/x-spss-sav, size: 18709468, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6821, name: fr_cdsp_ddi_enef2017_v11_verbatim.zip, format: application/zip, size: 259773, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6818, name: fr_cdsp_ddi_enef2017_v11.xml, format: text/xml, size: 496802, restricted: false,
+    role: codebook, fetch: true, sha256: 98f1418d3d0a86ecc10749323ad317e2b5f0035567c8020c87f667a1548edc17}
+  - {id: 6820, name: Questionnaire_ENEF2017_V11.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 245042, restricted: false, role: questionnaire, fetch: true, sha256: c38ea859c2f897c7d3c9d58eed48cab46576844685178f4a81d3fdd65f6cb162}
+  - {id: 6823, name: RapportTechnique_ENEF2017_V11.pdf, format: application/pdf, size: 1047139, restricted: false,
+    role: technical_report, fetch: true, sha256: 7a4d5a562a574e8cee832d729b70e4a5ad486b18be6c806e4a6f771435240a39}
+  request: true
+  priority: core
+- key: enef2017_v11bis
+  pid: doi:10.21410/7E4/HYPAD0
+  url: https://doi.org/10.21410/7E4/HYPAD0
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 11Bis
+  series: enef2017
+  election: 2017
+  wave: 11 bis
+  wave_order: 11.5
+  stage: campaign
+  fieldwork_start: 2017-03-01
+  fieldwork_end: 2017-03-05
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6831, name: Documentation_ENEF2017_V11b.pdf, format: application/pdf, size: 522234, restricted: false,
+    role: documentation, fetch: true, sha256: ce4d924dbc9e243ddd21632e85c1172fd1167c0ba3a534ba5f3d7a1d66116451}
+  - {id: 6825, name: fr_cdsp_ddi_enef2017_v11b-1.tab, format: application/x-stata-14, size: 34686256,
+    restricted: true, role: data, fetch: false}
+  - {id: 6827, name: fr_cdsp_ddi_enef2017_v11b_csv.zip, format: application/zip, size: 2394746, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6826, name: fr_cdsp_ddi_enef2017_v11b_sas.zip, format: application/zip, size: 3185399, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6829, name: fr_cdsp_ddi_enef2017_v11b.tab, format: application/x-spss-sav, size: 15958237, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6828, name: fr_cdsp_ddi_enef2017_v11b.xml, format: text/xml, size: 449066, restricted: false,
+    role: codebook, fetch: true, sha256: 915111beac0f69a93649ab83d3bd7be727366eeb2c27b0abec6916dfc5ea0a66}
+  - {id: 6830, name: Questionnaire_ENEF2017_V11b.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 231680, restricted: false, role: questionnaire, fetch: true, sha256: 2fbddd6a87db827ca1b5570682930224e01fc1016b4e1fdd9ca7572f4fa940e0}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: KBQ1O, label: Présidentielle premier tour - Hypothèse Hamon sans Bayrou}
+    certainty:
+    - {var: KBQ1OBIS, label: Sûreté du choix de vote au premier tour Hypothèse Hamon sans Bayrou}
+    - {var: KBIVPRE2A2, label: Sûreté du choix de vote au second tour - Hypothèse Macron/Fillon}
+    - {var: KBIVPRE2B2, label: Sûreté du choix de vote au second tour - Hypothèse Macron/Le Pen}
+    - {var: KBIVPRE2C2, label: Sûreté du choix de vote au second tour - Hypothèse Fillon/Le Pen}
+    turnout_intent:
+    - {var: KBQ0BIS, label: Intention de voter au premier tour de l'élection présidentielle}
+    duel_intention:
+    - {var: KBIVPRE2A, label: Présidentielle second tour - Hypothèse Macron/Fillon}
+    - {var: KBIVPRE2B, label: Présidentielle second tour - Hypothèse Macron/Le Pen}
+    - {var: KBIVPRE2C, label: Présidentielle second tour - Hypothèse Fillon/Le Pen}
+    weight:
+    - {var: KBPSDP, label: Poids sd & PrésT1}
+- key: enef2017_v12
+  pid: doi:10.21410/7E4/OUHSSH
+  url: https://doi.org/10.21410/7E4/OUHSSH
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 12
+  series: enef2017
+  election: 2017
+  wave: '12'
+  wave_order: 12
+  stage: campaign
+  fieldwork_start: 2017-03-14
+  fieldwork_end: 2017-03-19
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6838, name: Documentation_ENEF2017_V12.pdf, format: application/pdf, size: 416320, restricted: false,
+    role: documentation, fetch: true, sha256: fa3361f36b253f462987457a8ec357293ef07bbaddc236c699160e87e24cfffd}
+  - {id: 6837, name: fr_cdsp_ddi_enef2017_v12-1.tab, format: application/x-stata-14, size: 29251414, restricted: true,
+    role: data, fetch: false}
+  - {id: 6832, name: fr_cdsp_ddi_enef2017_v12_csv.zip, format: application/zip, size: 2226493, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6836, name: fr_cdsp_ddi_enef2017_v12_sas.zip, format: application/zip, size: 2911839, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6833, name: fr_cdsp_ddi_enef2017_v12.tab, format: application/x-spss-sav, size: 14341904, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6839, name: fr_cdsp_ddi_enef2017_v12_verbatim.zip, format: application/zip, size: 707157, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6834, name: fr_cdsp_ddi_enef2017_v12.xml, format: text/xml, size: 334260, restricted: false,
+    role: codebook, fetch: true, sha256: fbd1356b175584580dbe838c458124bb758318e67027a23f5183d8d78bc914ca}
+  - {id: 6835, name: Questionnaire_ENEF2017_V12.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 232046, restricted: false, role: questionnaire, fetch: true, sha256: e0a413399b79b0c9d5ed382e87d4a4fe9dd0a29d6348d0469ac1befcf4250504}
+  - {id: 6840, name: RapportTechnique_ENEF2017_V12.pdf, format: application/pdf, size: 1039253, restricted: false,
+    role: technical_report, fetch: true, sha256: 9b7dbcc37f5aa52de56dd8f4008914f619952d6606296e5b421ac64600f5d4bd}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: LQ1O, label: Présidentielle premier tour - Hypothèse Hamon sans Bayrou}
+    certainty:
+    - {var: LQ1OBIS, label: Sûreté du choix de vote au premier tour - Hypothèse Hamon sans Bayrou}
+    - {var: LIVPRE2A2, label: Sûreté du choix de vote au second tour - Hypothèse Macron/Fillon}
+    - {var: LIVPRE2B2, label: Sûreté du choix de vote au second tour - Hypothèse Macron/Le Pen}
+    - {var: LIVPRE2C2, label: Sûreté du choix de vote au second tour - Hypothèse Fillon/Le Pen}
+    turnout_intent:
+    - {var: LQ0BIS, label: Intention de voter au premier tour de l'élection présidentielle}
+    duel_intention:
+    - {var: LIVPRE2A, label: Présidentielle second tour - Hypothèse Macron/Fillon}
+    - {var: LIVPRE2B, label: Présidentielle second tour - Hypothèse Macron/Le Pen}
+    - {var: LIVPRE2C, label: Présidentielle second tour - Hypothèse Fillon/Le Pen}
+    weight:
+    - {var: LPSDP, label: Poids sd & PrésT1}
+    preferred:
+    - {var: LSOUHAIT, label: Candidat préféré pour élection présidentielle}
+- key: enef2017_v12bis
+  pid: doi:10.21410/7E4/A2TTY4
+  url: https://doi.org/10.21410/7E4/A2TTY4
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 12 Bis
+  series: enef2017
+  election: 2017
+  wave: 12 bis
+  wave_order: 12.5
+  stage: campaign
+  fieldwork_start: 2017-03-31
+  fieldwork_end: 2017-04-04
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC-BY 4.0
+  access: restricted_request
+  files:
+  - {id: 6855, name: Documentation_ENEF2017_V12b.pdf, format: application/pdf, size: 578585, restricted: false,
+    role: documentation, fetch: true, sha256: 861b1d22671e520c62833d45761c7324a3b289b30d58687a7e028c4b906d5480}
+  - {id: 6854, name: fr_cdsp_ddi_enef2017_v12b-1.tab, format: application/x-stata-14, size: 41125345,
+    restricted: true, role: data, fetch: false}
+  - {id: 6850, name: fr_cdsp_ddi_enef2017_v12b_csv.zip, format: application/zip, size: 2625137, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6851, name: fr_cdsp_ddi_enef2017_v12b_sas.zip, format: application/zip, size: 3439830, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6852, name: fr_cdsp_ddi_enef2017_v12b.tab, format: application/x-spss-sav, size: 22968088, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6853, name: fr_cdsp_ddi_enef2017_v12b.xml, format: text/xml, size: 526188, restricted: false,
+    role: codebook, fetch: true, sha256: c4d77d6b698fe70eb28153422da74f535d42970ea21df66d1eb6ab3bea2e725c}
+  - {id: 6856, name: Questionnaire_ENEF2017_V12b.DOCX, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 240970, restricted: false, role: questionnaire, fetch: true, sha256: 8365810be0f7ba511530fa583ebb127e6acdd4fd5408cae06e17c1766cda278d}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: LBQ1O, label: Présidentielle premier tour - Hypothèse Hamon sans Bayrou}
+    certainty:
+    - {var: LBQ1OBIS, label: Sûreté du choix de vote au premier tour - Hypothèse Hamon sans Bayrou}
+    - {var: LBIVPRE2A2, label: Sûreté du choix de vote au second tour - Hypothèse Macron/Fillon}
+    - {var: LBIVPRE2B2, label: Sûreté du choix de vote au second tour - Hypothèse Macron/Le Pen}
+    - {var: LBIVPRE2C2, label: Sûreté du choix de vote au second tour - Hypothèse Fillon/Le Pen}
+    turnout_intent:
+    - {var: LBQ0BIS, label: Intention de voter au premier tour de l'élection présidentielle}
+    duel_intention:
+    - {var: LBIVPRE2A, label: Présidentielle second tour - Hypothèse Macron/Fillon}
+    - {var: LBIVPRE2B, label: Présidentielle second tour - Hypothèse Macron/Le Pen}
+    - {var: LBIVPRE2C, label: Présidentielle second tour - Hypothèse Fillon/Le Pen}
+    weight:
+    - {var: LBPSDP, label: Poids sd & PrésT1}
+    preferred:
+    - {var: LBSOUHAIT, label: Candidat préféré pour élection présidentielle}
+    second_choice:
+    - {var: LBQ1OTER, label: Second choix au premier tour}
+- key: enef2017_v13
+  pid: doi:10.21410/7E4/SGT2SG
+  url: https://doi.org/10.21410/7E4/SGT2SG
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 13
+  series: enef2017
+  election: 2017
+  wave: '13'
+  wave_order: 13
+  stage: eve_round1
+  fieldwork_start: 2017-04-16
+  fieldwork_end: 2017-04-17
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6846, name: Documentation_ENEF2017_V13.pdf, format: application/pdf, size: 1681694, restricted: false,
+    role: documentation, fetch: true, sha256: f3681b2e349d70052b77903bda6d1376292c23ac37f75d449b0e66a6794e1d7a}
+  - {id: 6848, name: fr_cdsp_ddi_enef2017_v13-1.tab, format: application/x-stata-14, size: 93880556, restricted: true,
+    role: data, fetch: false}
+  - {id: 6844, name: fr_cdsp_ddi_enef2017_v13_csv.zip, format: application/zip, size: 3955324, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6841, name: fr_cdsp_ddi_enef2017_v13_sas.zip, format: application/zip, size: 5383597, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6842, name: fr_cdsp_ddi_enef2017_v13.tab, format: application/x-spss-sav, size: 66892789, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6845, name: fr_cdsp_ddi_enef2017_v13_verbatim.zip, format: application/zip, size: 288630, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6849, name: fr_cdsp_ddi_enef2017_v13.xml, format: text/xml, size: 1571558, restricted: false,
+    role: codebook, fetch: true, sha256: 3b137abb44d8e5804a3aebb8a0cd767ab67504419c7014296fc8cc1bcbc2daec}
+  - {id: 6843, name: Questionnaire_ENEF2017_V13.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 3836217, restricted: false, role: questionnaire, fetch: true, sha256: 98447654554f52bc3090d6c06d914f45b4c92c9a461a53d382d40d23d54e2a7d}
+  - {id: 6847, name: RapportTechnique_ENEF2017_V13.pdf, format: application/pdf, size: 1040802, restricted: false,
+    role: technical_report, fetch: true, sha256: abea92090896139b6f260ed75a76d66a356acac616385f6756ee6969180930d7}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: MQ1O, label: Présidentielle premier tour - Hypothèse Hamon sans Bayrou}
+    certainty:
+    - {var: MQ1OBIS, label: Sûreté du choix de vote au premier tour - Hypothèse Hamon sans Bayrou}
+    turnout_intent:
+    - {var: MQ0BIS, label: Intention de voter au premier tour de l'élection présidentielle}
+    duel_intention:
+    - {var: MIVPRE2A, label: Présidentielle second tour - Hypothèse Macron/Fillon}
+    - {var: MIVPRE2B, label: Présidentielle second tour - Hypothèse Macron/Le Pen}
+    - {var: MIVPRE2C, label: Présidentielle second tour - Hypothèse Fillon/Le Pen}
+    - {var: MIVPRE2D, label: Présidentielle second tour - Hypothèse Mélenchon/Macron}
+    - {var: MIVPRE2E, label: Présidentielle second tour - Hypothèse Mélenchon/Le Pen}
+    - {var: MIVPRE2F, label: Présidentielle second tour - Hypothèse Mélenchon/Fillon}
+    expected_winner:
+    - {var: MVS4, label: Probabilité que Marine Le Pen gagne - Hypothèse Le Pen/Macron}
+    - {var: MVS5, label: Probabilité que François Fillon gagne - Hypothèse Le Pen/Fillon}
+    - {var: MVS6, label: Probabilité que Emmanuel Macron gagne - Hypothèse Fillon/Macron}
+    - {var: MVS7, label: Probabilité que François Fillon gagne - Hypothèse Mélenchon/Fillon}
+    - {var: MVS8, label: Probabilité que Emmanuel Macron gagne - Hypothèse Mélenchon/Macron}
+    - {var: MVS9, label: Probabilité que Marine Le Pen gagne - Hypothèse Mélenchon/Le Pen}
+    - {var: MVS2_2, label: 'Probabilité d''accéder au second tour : Jean-Luc Mélenchon'}
+    - {var: MVS2_3, label: 'Probabilité d''accéder au second tour : Benoît Hamon'}
+    - {var: MVS2_4, label: 'Probabilité d''accéder au second tour : Emmanuel Macron'}
+    - {var: MVS2_6, label: 'Probabilité d''accéder au second tour : François Fillon'}
+    - {var: MVS2_8, label: 'Probabilité d''accéder au second tour : Marine Le Pen'}
+    weight:
+    - {var: MPSDP, label: Poids sd & PrésT1}
+    potential:
+    - {var: MQ40_0, label: 'Probabilité de voter pour : Jean-Luc Mélenchon'}
+    - {var: MQ40_1, label: 'Probabilité de voter pour : Emmanuel Macron'}
+    - {var: MQ40_9, label: 'Probabilité de voter pour : Marine Le Pen'}
+    - {var: MQ40_12, label: 'Probabilité de voter pour : François Fillon'}
+    preferred:
+    - {var: MSOUHAIT, label: Candidat préféré pour élection présidentielle}
+    second_choice:
+    - {var: MQ1OTER, label: Second choix au premier tour}
+- key: enef2017_v14
+  pid: doi:10.21410/7E4/JY3NYN
+  url: https://doi.org/10.21410/7E4/JY3NYN
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 14
+  series: enef2017
+  election: 2017
+  wave: '14'
+  wave_order: 14
+  stage: between_rounds
+  fieldwork_start: 2017-04-30
+  fieldwork_end: 2017-05-03
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '3.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6866, name: Documentation_ENEF2017_V14.pdf, format: application/pdf, size: 428201, restricted: false,
+    role: documentation, fetch: true, sha256: e89973a71b58002c5d036daae11994f4ddb17bc14208e6a71a6af289e8630e93}
+  - {id: 6867, name: fr_cdsp_ddi_enef2017_v14-1.tab, format: application/x-stata-14, size: 29653707, restricted: true,
+    role: data, fetch: false}
+  - {id: 6857, name: fr_cdsp_ddi_enef2017_v14_csv.zip, format: application/zip, size: 2226108, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6878, name: fr_cdsp_ddi_enef2017_v14_sas.zip, format: application/zip, size: 2931000, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6876, name: fr_cdsp_ddi_enef2017_v14.tab, format: application/x-spss-sav, size: 13121719, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6877, name: fr_cdsp_ddi_enef2017_v14.xml, format: text/xml, size: 360827, restricted: false,
+    role: codebook, fetch: true, sha256: 0cda8fcf8b8bb8844a4beb4f6ce1d0aab4d60e25bb82acabaf8779c51b113c40}
+  - {id: 6863, name: Questionnaire_ENEF2017_V14.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 233821, restricted: false, role: questionnaire, fetch: true, sha256: dbfcfd0b9857bd072d9fc538c96d9adbdeee0c7abe6b052c60dab4dba8c2d97c}
+  - {id: 6859, name: RapportTechnique_ENEF2017_V14.pdf, format: application/pdf, size: 1825218, restricted: false,
+    role: technical_report, fetch: true, sha256: fa569c102cc5e8b401588a8998359a535c8d6ffe5a8af9a48c7e8e3cad10e719}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: NPRES17A, label: Vote au premier tour élection présidentielle (recodage)}
+    vote_round2:
+    - {var: NIVPRE2B, label: Présidentielle second tour - Macron/Le Pen}
+    turnout_intent:
+    - {var: NQ0BIST2, label: Intention d'aller voter lors du second tour}
+    expected_winner:
+    - {var: NVS4, label: Probabilité que Marine Le Pen gagne}
+    weight:
+    - {var: NPSDP, label: Poids sd & Prés17T1}
+    certainty:
+    - {var: NIVPRE2B2, label: Sûreté du choix de vote au second tour - Macron/Le Pen}
+    preferred:
+    - {var: NSOUHAIT2, label: Candidat préféré pour élection présidentielle}
+    turnout:
+    - {var: NPARTP17A, label: Participation au premier tour de l'élection présidentielle}
+- key: enef2017_v15
+  pid: doi:10.21410/7E4/TGKI82
+  url: https://doi.org/10.21410/7E4/TGKI82
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 15
+  series: enef2017
+  election: 2017
+  wave: '15'
+  wave_order: 15
+  stage: post_round2
+  fieldwork_start: 2017-05-27
+  fieldwork_end: 2017-06-02
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6868, name: Documentation_ENEF2017_V15.pdf, format: application/pdf, size: 611805, restricted: false,
+    role: documentation, fetch: true, sha256: 16c65c185f861d7b06d61ae039a8c567be057dd1879b61365ed1e4325847e7b2}
+  - {id: 6869, name: fr_cdsp_ddi_enef2017_v15-1.tab, format: application/x-stata-14, size: 43939134, restricted: true,
+    role: data, fetch: false}
+  - {id: 6870, name: fr_cdsp_ddi_enef2017_v15_csv.zip, format: application/zip, size: 2964134, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6875, name: fr_cdsp_ddi_enef2017_v15_sas.zip, format: application/zip, size: 3942702, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6872, name: fr_cdsp_ddi_enef2017_v15.tab, format: application/x-spss-sav, size: 22753217, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6871, name: fr_cdsp_ddi_enef2017_v15.xml, format: text/xml, size: 542826, restricted: false,
+    role: codebook, fetch: true, sha256: a915e2de0f2eb8d96d944dce5c7c99cd5f70afa993b6878979fa724a9c53c5dd}
+  - {id: 6873, name: Questionnaire_ENEF2017_V15.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 298751, restricted: false, role: questionnaire, fetch: true, sha256: f053bfc7d6e62917e3542ea884a45f1e2286d5458fd16c892d85c4e8f2329a6b}
+  - {id: 6874, name: RapportTechnique_ENEF2017_V15.pdf, format: application/pdf, size: 1065236, restricted: false,
+    role: technical_report, fetch: true, sha256: 58970590bdd71af91a5612dd35be40b3a6b002a6b2e87c0813ccd7038c85d9e8}
+  request: true
+  priority: core
+  questions:
+    vote_round2:
+    - {var: OPRES17B, label: Vote au second tour de l’élection présidentielle (recodage)}
+    duel_intention:
+    - {var: OLEGT2A, label: 'Second tour - Hypothèse A : France Insoumise-En Marche'}
+    - {var: OLEGT2B, label: 'Second tour - Hypothèse B : France Insoumise-Les Républicains'}
+    - {var: OLEGT2C, label: 'Second tour - Hypothèse C : France Insoumise-Front National'}
+    - {var: OLEGT2D, label: 'Second tour - Hypothèse D : Parti Socialiste-Les Républicains'}
+    - {var: OLEGT2E, label: 'Second tour - Hypothèse E : Parti Socialiste-Front National'}
+    - {var: OLEGT2F, label: 'Second tour - Hypothèse F : En Marche-Les Républicains'}
+    - {var: OLEGT2G, label: 'Second tour - Hypothèse G : En Marche-Front National'}
+    - {var: OLEGT2H, label: 'Second tour - Hypothèse H : Les Républicains-Front National'}
+    weight:
+    - {var: OPSDP2, label: Poids sd & Prés17T1 & Prés17T2}
+    turnout:
+    - {var: OPARTP17B, label: Participation au second tour de l’élection présidentielle}
+    expected_winner:
+    - {var: OPROBAFI, label: Probabilité que le candidat France Insoumise gagne}
+    - {var: OPROBAREM, label: Probabilité que le candidat République En Marche ! gagne}
+    - {var: OPROBALR, label: Probabilité que le candidat Les Républicains gagne}
+    - {var: OPROBAFN, label: Probabilité que le candidat Front National gagne}
+- key: enef2017_v16
+  pid: doi:10.21410/7E4/HTHN8G
+  url: https://doi.org/10.21410/7E4/HTHN8G
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 16
+  series: enef2017
+  election: 2017
+  wave: '16'
+  wave_order: 16
+  stage: post_legislative
+  fieldwork_start: 2017-06-27
+  fieldwork_end: 2017-06-30
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6887, name: Documentation_ENEF2017_V16.pdf, format: application/pdf, size: 633632, restricted: false,
+    role: documentation, fetch: true, sha256: 62bbeaaade2247e7aa8dbe9bcfc0ee424c7684f678373823e1548b1c7e30f206}
+  - {id: 6882, name: fr_cdsp_ddi_enef2017_v16-1.tab, format: application/x-stata-14, size: 43742229, restricted: true,
+    role: data, fetch: false}
+  - {id: 6886, name: fr_cdsp_ddi_enef2017_v16_csv.zip, format: application/zip, size: 2600373, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6883, name: fr_cdsp_ddi_enef2017_v16_sas.zip, format: application/zip, size: 3435313, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6881, name: fr_cdsp_ddi_enef2017_v16.tab, format: application/x-spss-sav, size: 26626613, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6884, name: fr_cdsp_ddi_enef2017_v16_verbatim.zip, format: application/zip, size: 481913, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6880, name: fr_cdsp_ddi_enef2017_v16.xml, format: text/xml, size: 570910, restricted: false,
+    role: codebook, fetch: true, sha256: 6d4e0faf5e77c8f1dcc98d3c49e7fc952c679f73f377355a42e61aa779199549}
+  - {id: 6879, name: Questionnaire_ENEF2017_V16.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 552172, restricted: false, role: questionnaire, fetch: true, sha256: 9e4ed9c3d129d0b8b5680112d0849247e18055c1250ea6555cfcb5ad2abafa28}
+  - {id: 6885, name: RapportTechnique_ENEF2017_V16.pdf, format: application/pdf, size: 1083001, restricted: false,
+    role: technical_report, fetch: true, sha256: 82cec408e4816c26206d614390cece8391a96ab637dfdc3505edbb147a095620}
+  request: true
+  priority: core
+- key: enef2017_v17
+  pid: doi:10.21410/7E4/VXJKXG
+  url: https://doi.org/10.21410/7E4/VXJKXG
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 17
+  series: enef2017
+  election: 2017
+  wave: '17'
+  wave_order: 17
+  stage: later
+  fieldwork_start: 2017-11-21
+  fieldwork_end: 2017-11-27
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '5.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6892, name: Documentation_ENEF2017_V17.pdf, format: application/pdf, size: 965616, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11085, name: fr.cdsp.ddi.201711.enef2017_v17.doc.xml, format: text/xml, size: 886245, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 6894, name: fr_cdsp_ddi_enef2017_v17-1.tab, format: application/x-stata-14, size: 61255052, restricted: true,
+    role: data, fetch: false}
+  - {id: 6895, name: fr_cdsp_ddi_enef2017_v17_csv.zip, format: application/zip, size: 2762636, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6896, name: fr_cdsp_ddi_enef2017_v17_sas.zip, format: application/zip, size: 3725850, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6890, name: fr_cdsp_ddi_enef2017_v17.tab, format: application/x-spss-sav, size: 41556508, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6888, name: fr_cdsp_ddi_enef2017_v17_verbatim.zip, format: application/zip, size: 506469, restricted: true,
+    role: verbatims, fetch: false}
+  - {id: 6893, name: Questionnaire_ENEF2017_V17.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 563897, restricted: false, role: questionnaire, fetch: false}
+  - {id: 6891, name: RapportTechnique_ENEF2017_V17.pdf, format: application/pdf, size: 962549, restricted: false,
+    role: technical_report, fetch: false}
+  request: false
+  priority: listed
+- key: enef2017_v18
+  pid: doi:10.21410/7E4/T85VW3
+  url: https://doi.org/10.21410/7E4/T85VW3
+  title: Enquête électorale française 2017 (ENEF 2017), Vague 18
+  series: enef2017
+  election: 2017
+  wave: '18'
+  wave_order: 18
+  stage: later
+  fieldwork_start: 2018-04-25
+  fieldwork_end: 2018-05-02
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '3.2'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6899, name: Documentation_ENEF2017_V18.pdf, format: application/pdf, size: 463493, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 6911, name: ENEF2017_V1aV18_Dictionnaire.zip, format: application/zip, size: 126160, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 6901, name: fr_cdsp_ddi_enef2017_v18-1.tab, format: application/x-stata-14, size: 38902672, restricted: true,
+    role: data, fetch: false}
+  - {id: 6903, name: fr_cdsp_ddi_enef2017_v18_csv.zip, format: application/zip, size: 1937829, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6902, name: fr_cdsp_ddi_enef2017_v18_sas.zip, format: application/zip, size: 2714030, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6897, name: fr_cdsp_ddi_enef2017_v18.tab, format: application/x-spss-sav, size: 19104007, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6900, name: fr_cdsp_ddi_enef2017_v18.xml, format: text/xml, size: 395194, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 6898, name: Questionnaire_ENEF2017_V18.docx, format: application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+    size: 210915, restricted: false, role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+- key: fes2017
+  pid: doi:10.21410/7E4/2XE05I
+  url: https://doi.org/10.21410/7E4/2XE05I
+  title: French Electoral Study 2017
+  series: fes2017
+  election: 2017
+  stage: post_round2
+  fieldwork_start: 2017-05-09
+  fieldwork_end: 2017-05-23
+  mode: Interview.FaceToFace.CAPIorCAMI
+  sampling: Nonprobability.Quota
+  version: '9.1'
+  license: CC BY-SA 4.0
+  access: mixed
+  files:
+  - {id: 1615, name: Documentation_FES2017_v2.pdf, format: application/pdf, size: 1047470, restricted: false,
+    role: documentation, fetch: true, sha256: 6d1d4f8cdbd634323693c20f5eac3c8ff803f2e639d4e34b6258ee5fa3fe7135}
+  - {id: 3792, name: FES2017_avant_import.zip, format: application/zip, size: 707570, restricted: false,
+    role: data_alt, fetch: true, sha256: cb693df56d315023074d4d15a6e6d65d3bc18cb3b23844a28119aa3b6bb17ed4}
+  - {id: 9020, name: fr.cdsp.ddi.FES2017-ddi25.xml, format: text/xml, size: 720800, restricted: false,
+    role: codebook, fetch: true, sha256: c6d020c972f2fb66b024f28aacc5dcd250b8973851c9f51102660b8256656921}
+  - {id: 2466, name: fr_cdsp_ddi_fes2017.sas.zip, format: application/zip, size: 884360, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2465, name: ' fr_cdsp_ddi_fes2017.tab', format: application/x-spss-sav, size: 5084901, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 2468, name: fr_cdsp_ddi_fes2017.tab, format: application/x-stata-14, size: 5250394, restricted: true,
+    role: data, fetch: false}
+  - {id: 5342, name: fr_cdsp_ddi_fes2017.zip, format: application/zip, size: 402200, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 1614, name: Questionnaire_FES2017.pdf, format: application/pdf, size: 1065565, restricted: false,
+    role: questionnaire, fetch: true, sha256: b5999aa6254104f016a4d372aba108b3560fa2ac4b5c708bef368b1fa58dd9e8}
+  request: false
+  priority: core
+  notes: 'Le fichier FES2017_avant_import.zip (CSV point-virgule, 1 830 répondants) est public sur l''entrepôt
+    alors que les autres formats sont restreints : seules microdonnées 2017 accessibles sans demande.
+    Libellés et modalités dans le codebook DDI public.'
+  questions:
+    vote_round1:
+    - {var: V2, label: 'Vote choice [President 1st]'}
+    vote_round2:
+    - {var: V4, label: 'Vote choice [President 2nd]'}
+    turnout:
+    - {var: V1, label: 'Turnout [President 1st]'}
+    - {var: V3, label: 'Turnout [President 2nd]'}
+    weight:
+    - {var: w5, label: weight5 - sociodemographic + diploma + 1st & 2nd round pres elections 2017}
+    - {var: w1, label: weight1 - sociodemographic}
+    - {var: w2, label: weight2 - sociodemographic + diploma}
+    - {var: w3, label: weight3 - sociodemographic + diploma + 1st round pres elections 2017}
+    - {var: w4, label: weight4 - sociodemographic + diploma + 2nd round pres elections 2017}
+    - {var: w6, label: weight6 - sociodemographic + 1st & 2nd round pres elections 2017}
+    potential:
+    - {var: V12_1, label: 'PTV : - LO'}
+    - {var: V12_2, label: 'PTV : - PC'}
+    - {var: V12_3, label: 'PTV : - FI'}
+    - {var: V12_4, label: 'PTV : - PS'}
+    - {var: V12_5, label: 'PTV : - EELV'}
+    - {var: V12_6, label: 'PTV : - LREM'}
+    - {var: V12_7, label: 'PTV : - LR'}
+    - {var: V12_8, label: 'PTV : - Debout la France'}
+    - {var: V12_9, label: 'PTV : - FN'}
+    other:
+    - {var: V9, label: 'Vote choice [President 2012 1st]'}
+    - {var: V11, label: 'Vote choice [President 2012 2nd]'}
+- key: enef2019_v19
+  pid: doi:10.21410/7E4/RZX0NB
+  url: https://doi.org/10.21410/7E4/RZX0NB
+  title: Enquête électorale française 2019 (ENEF 2019), Vague 19
+  series: enef2019
+  wave: '19'
+  wave_order: 19
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2019-02 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 8974, name: Documentation_ENEF2019_V19.pdf, format: application/pdf, size: 304469, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 8975, name: ENEF2019_Dictionnaire_variable_2.7z, format: application/x-7z-compressed, size: 22589,
+    restricted: false, role: codebook, fetch: false}
+  - {id: 8969, name: fr_cdsp_ddi_enef2019_v19-1.tab, format: application/x-stata-14, size: 8293325, restricted: true,
+    role: data, fetch: false}
+  - {id: 8967, name: fr_cdsp_ddi_enef2019_v19_csv_2.7z, format: application/x-7z-compressed, size: 562853,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8973, name: fr_cdsp_ddi_enef2019_v19_sas_2.7z, format: application/x-7z-compressed, size: 705729,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8970, name: fr_cdsp_ddi_enef2019_v19.tab, format: application/x-spss-sav, size: 2362837, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 8968, name: fr_cdsp_ddi_enef2019_v19.xml, format: text/xml, size: 231197, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 8971, name: Questionnaire_ENEF2019_Vague 19.pdf, format: application/pdf, size: 588380, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: Européennes 2019 ; listé pour mémoire.
+- key: enef2019_v20
+  pid: doi:10.21410/7E4/4X08L3
+  url: https://doi.org/10.21410/7E4/4X08L3
+  title: Enquête électorale française 2019 (ENEF 2019), Vague 20
+  series: enef2019
+  wave: '20'
+  wave_order: 20
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2019-03 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 8983, name: Documentation_ENEF2019_V20.pdf, format: application/pdf, size: 283271, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 8978, name: ENEF2019_Dictionnaire_variable_2.7z, format: application/x-7z-compressed, size: 22589,
+    restricted: false, role: codebook, fetch: false}
+  - {id: 8977, name: fr_cdsp_ddi_enef2019_v20-1.tab, format: application/x-stata-14, size: 8409991, restricted: true,
+    role: data, fetch: false}
+  - {id: 8982, name: fr_cdsp_ddi_enef2019_v20_csv.7z, format: application/x-7z-compressed, size: 571812,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8980, name: fr_cdsp_ddi_enef2019_v20_sas_2.7z, format: application/x-7z-compressed, size: 740165,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8979, name: fr_cdsp_ddi_enef2019_v20.tab, format: application/x-spss-sav, size: 2853542, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 8981, name: fr_cdsp_ddi_enef2019_v20.xml, format: text/xml, size: 241668, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 8976, name: Questionnaire_ENEF2019_Vague 20.pdf, format: application/pdf, size: 399047, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: Européennes 2019 ; listé pour mémoire.
+- key: enef2019_v21
+  pid: doi:10.21410/7E4/FL3OPK
+  url: https://doi.org/10.21410/7E4/FL3OPK
+  title: Enquête électorale française 2019 (ENEF 2019), Vague 21
+  series: enef2019
+  wave: '21'
+  wave_order: 21
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2019-04 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 8989, name: Documentation_ENEF2019_V21.pdf, format: application/pdf, size: 345218, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 8985, name: ENEF2019_Dictionnaire_variable_2.7z, format: application/x-7z-compressed, size: 22589,
+    restricted: false, role: codebook, fetch: false}
+  - {id: 8986, name: fr_cdsp_ddi_enef2019_v21-1.tab, format: application/x-stata-14, size: 10763797, restricted: true,
+    role: data, fetch: false}
+  - {id: 8988, name: fr_cdsp_ddi_enef2019_v21_csv_2.7z, format: application/x-7z-compressed, size: 705948,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8991, name: fr_cdsp_ddi_enef2019_v21_sas_2.7z, format: application/x-7z-compressed, size: 912274,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8987, name: fr_cdsp_ddi_enef2019_v21.tab, format: application/x-spss-sav, size: 3475124, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 8990, name: fr_cdsp_ddi_enef2019_v21.xml, format: text/xml, size: 288600, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 8984, name: Questionnaire_ENEF2019_Vague 21.pdf, format: application/pdf, size: 435827, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: Européennes 2019 ; listé pour mémoire.
+- key: enef2019_v22
+  pid: doi:10.21410/7E4/AO9RP9
+  url: https://doi.org/10.21410/7E4/AO9RP9
+  title: Enquête électorale française 2019 (ENEF 2019), Vague 22
+  series: enef2019
+  wave: '22'
+  wave_order: 22
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2019-05 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 8999, name: Documentation_ENEF2019_V22.pdf, format: application/pdf, size: 349727, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 8996, name: ENEF2019_Dictionnaire_variable_2.7z, format: application/x-7z-compressed, size: 22589,
+    restricted: false, role: codebook, fetch: false}
+  - {id: 8997, name: fr_cdsp_ddi_enef2019_v22-1.tab, format: application/x-stata-14, size: 11826487, restricted: true,
+    role: data, fetch: false}
+  - {id: 8995, name: fr_cdsp_ddi_enef2019_v22_csv_2.7z, format: application/x-7z-compressed, size: 758843,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8998, name: fr_cdsp_ddi_enef2019_v22_sas_2.7z, format: application/x-7z-compressed, size: 980039,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 8993, name: fr_cdsp_ddi_enef2019_v22.tab, format: application/x-spss-sav, size: 4075034, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 8994, name: fr_cdsp_ddi_enef2019_v22.xml, format: text/xml, size: 300874, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 8992, name: Questionnaire_ENEF2019_Vague 22.pdf, format: application/pdf, size: 415367, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: Européennes 2019 ; listé pour mémoire.
+- key: enef2019_v23
+  pid: doi:10.21410/7E4/J3UXRJ
+  url: https://doi.org/10.21410/7E4/J3UXRJ
+  title: Enquête électorale française 2019 (ENEF 2019), Vague 23
+  series: enef2019
+  wave: '23'
+  wave_order: 23
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2020-03 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9004, name: Documentation_ENEF2019_V23.pdf, format: application/pdf, size: 348048, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 9000, name: ENEF2019_Dictionnaire_variable_2.7z, format: application/x-7z-compressed, size: 22589,
+    restricted: false, role: codebook, fetch: false}
+  - {id: 9007, name: fr_cdsp_ddi_enef2019_v23-1.tab, format: application/x-stata-14, size: 11945228, restricted: true,
+    role: data, fetch: false}
+  - {id: 9002, name: fr_cdsp_ddi_enef2019_v23_csv_2.7z, format: application/x-7z-compressed, size: 604154,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 9005, name: fr_cdsp_ddi_enef2019_v23_sas_2.7z, format: application/x-7z-compressed, size: 799533,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 9003, name: fr_cdsp_ddi_enef2019_v23.tab, format: application/x-spss-sav, size: 5075089, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9006, name: fr_cdsp_ddi_enef2019_v23.xml, format: text/xml, size: 304176, restricted: false,
+    role: codebook, fetch: false}
+  - {id: 9001, name: Questionnaire_ENEF2019_Vague 23.pdf, format: application/pdf, size: 538807, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: Européennes 2019 ; listé pour mémoire.
+- key: fes2022_elipss_v1
+  pid: doi:10.21410/7E4/UQ55HB
+  url: https://doi.org/10.21410/7E4/UQ55HB
+  title: French Election Study 2022, Vague 1 (ELIPSS 2021)
+  series: fes2022_elipss
+  election: 2022
+  wave: '1'
+  wave_order: 1
+  stage: pre_campaign
+  fieldwork_start: 2021-11-11
+  fieldwork_end: 2021-12-16
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '11.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 3822, name: 201803_ponderations_du_panel_elipss_v1.pdf, format: application/pdf, size: 695057,
+    restricted: false, role: weights_doc, fetch: true, sha256: e5cffd87478936fc7bfca2f0934686a844eaa563015dbe3bf33afe15bd8af7b4}
+  - {id: 5072, name: Documentation_FES2022_V1.pdf, format: application/pdf, size: 777821, restricted: false,
+    role: documentation, fetch: true, sha256: 4b7a7507773d9ca2a075dd1c5830fe9b20471d06cb5483490352bd5fd14f7720}
+  - {id: 11106, name: fr.cdsp.ddi.elipss.202111.fes2022_v1.doc.xml, format: text/xml, size: 673042, restricted: false,
+    role: codebook, fetch: true, sha256: 543a656bdf7d1d83fd49104c19bcc23efb049ccdb0366d1cd3599f3b19bf1b96}
+  - {id: 5088, name: fr_cdsp_ddi_elipss_fes2022_V1-1.tab, format: application/x-spss-sav, size: 1319537,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 5068, name: fr_cdsp_ddi_elipss_fes2022_V1.csv.zip, format: application/zip, size: 198876, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5089, name: fr_cdsp_ddi_elipss_fes2022_V1.sas.zip, format: application/zip, size: 327118, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5087, name: fr_cdsp_ddi_elipss_fes2022_V1.tab, format: application/x-stata, size: 684605, restricted: true,
+    role: data, fetch: false}
+  - {id: 3820, name: pond2020.pdf, format: application/pdf, size: 419413, restricted: false, role: weights_doc,
+    fetch: true, sha256: 1073698a4af98abca254b03e5e87f9958fc8eaee81225f01eb009142104f140c}
+  - {id: 3821, name: ponderations_elipss_guide.pdf, format: application/pdf, size: 107164, restricted: false,
+    role: weights_doc, fetch: true, sha256: c9c3086462d28ae3589a8d4f3706c9ed8332d07ff88cd0a093d75eb5e5be20cf}
+  - {id: 3870, name: Questionnaire_fes22_2021_EN.pdf, format: application/pdf, size: 136082, restricted: false,
+    role: questionnaire, fetch: true, sha256: 44ab45fc72c25ebec94279d4411378d4410b47e115fb364096f8ade5e2b6d2ed}
+  - {id: 3960, name: Questionnaire_FES22_V1.pdf, format: application/pdf, size: 201991, restricted: false,
+    role: questionnaire, fetch: true, sha256: 0428ca51fdd736290b8e36eec98468238595f0e855cd2ac8626204e8c6cfc1f6}
+  request: true
+  priority: useful
+- key: fes2022_elipss_v2
+  pid: doi:10.21410/7E4/3DSTMR
+  url: https://doi.org/10.21410/7E4/3DSTMR
+  title: French Election Study 2022 - Vague 2 (ELIPSS 2022)
+  series: fes2022_elipss
+  election: 2022
+  wave: '2'
+  wave_order: 2
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '5.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 5091, name: Documentation_FES22_V2.pdf, format: application/pdf, size: 778602, restricted: false,
+    role: documentation, fetch: true, sha256: 4d8eec09020fe4d275912e2adbd428e46f1d95138777ab0fc379840a12351e5b}
+  - {id: 11107, name: fr.cdsp.ddi.elipss.2022.fes2022_v2.doc.xml, format: text/xml, size: 757175, restricted: false,
+    role: codebook, fetch: true, sha256: f92d085961c1d0cf2a9b3f75fe5d911ff0cdadb22d9964a87fb61a35cdc964f5}
+  - {id: 5092, name: fr_cdsp_ddi_elipss_fes2022_V2-1.tab, format: application/x-spss-sav, size: 1275044,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 5095, name: fr_cdsp_ddi_elipss_fes2022_V2.csv.zip, format: application/zip, size: 200470, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5094, name: fr_cdsp_ddi_elipss_fes2022_V2.sas.zip, format: application/zip, size: 327745, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5093, name: fr_cdsp_ddi_elipss_fes2022_V2.tab, format: application/x-stata, size: 641422, restricted: true,
+    role: data, fetch: false}
+  - {id: 5300, name: QuestionnaireFES2022_V2pdf.pdf, format: application/pdf, size: 179084, restricted: false,
+    role: questionnaire, fetch: true, sha256: dc2922148123fa6e30921bb58852c9e0ff6c9f5403725aeb52ff0fc0ab3c81fd}
+  - {id: 5361, name: QuestionnaireFES_V2pdf_EN.pdf, format: application/pdf, size: 148850, restricted: false,
+    role: questionnaire, fetch: true, sha256: db355d17784d543641cac75037817a53d8e25114c5272a899f0e3b92ef2b5854}
+  request: true
+  priority: useful
+- key: fes2022_elipss_v3
+  pid: doi:10.21410/7E4/DST7ZY
+  url: https://doi.org/10.21410/7E4/DST7ZY
+  title: French Election Study 2022, Vague 3 (ELIPSS 2022)
+  series: fes2022_elipss
+  election: 2022
+  wave: '3'
+  wave_order: 3
+  stage: campaign
+  fieldwork_start: 2022-03-31
+  fieldwork_end: 2022-04-27
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '5.0'
+  license: CC BY-SA 4.0
+  access: mixed
+  files:
+  - {id: 5302, name: Documentation_FES2022_V3.pdf, format: application/pdf, size: 721750, restricted: false,
+    role: documentation, fetch: true, sha256: 26482d400a88ecd9db02fd5ba97f464f04633d03f4a5ed0881fb0505f565e7df}
+  - {id: 11115, name: fr.cdsp.ddi.elipss.202203.fes2022_v3.doc.xml, format: text/xml, size: 635217, restricted: false,
+    role: codebook, fetch: true, sha256: b7083010948d78c76e55385dc006f6f25eec52f190651b9569f5619edc4247cc}
+  - {id: 5296, name: fr.cdsp.ddi.elipss.fes3_2022_V3.csv.zip, format: application/zip, size: 210514, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5297, name: fr.cdsp.ddi.elipss.fes3_2022_V3.sas.zip, format: application/zip, size: 312170, restricted: false,
+    role: data_alt, fetch: true, sha256: aba2ca630200887c03944ade6a495cd3afefa91eaf9f6661cc4c8351899ccd56}
+  - {id: 5298, name: fr.cdsp.ddi.elipss.fes3_2022_V3.tab, format: application/x-stata-13, size: 3398850,
+    restricted: true, role: data, fetch: false}
+  - {id: 5301, name: fr.cdsp.ddi.elipss.fes3_2022_V4.tab, format: application/x-spss-sav, size: 1250315,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 5299, name: Questionnaire_FES2022_V3.pdf, format: application/pdf, size: 172294, restricted: false,
+    role: questionnaire, fetch: true, sha256: 13e30e9b6e9fa40fdb91e26ca732e64956c2174ef308cfac346de2c0aac22e77}
+  - {id: 5369, name: Questionnaire_FESV3_202204_EN.pdf, format: application/pdf, size: 131898, restricted: false,
+    role: questionnaire, fetch: true, sha256: 79bbb0f4ddaa4eafd14c60635db365c3cb8059e040a5c95106946ba18f0dc4bb}
+  request: false
+  priority: core
+  notes: Le fichier SAS (fr.cdsp.ddi.elipss.fes3_2022_V3.sas.zip, sas7bdat sans formats) est public alors
+    que les autres formats sont restreints. Libellés et modalités dans le codebook DDI public.
+- key: fes2022_elipss_v4
+  pid: doi:10.21410/7E4/W76IMT
+  url: https://doi.org/10.21410/7E4/W76IMT
+  title: French Election Study 2022, Vague 4 (ELIPSS 2022)
+  series: fes2022_elipss
+  election: 2022
+  wave: '4'
+  wave_order: 4
+  stage: post_round2
+  fieldwork_start: 2022-04-28
+  fieldwork_end: 2022-05-26
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 5347, name: Documentation_FES2022_V4_CSES.pdf, format: application/pdf, size: 873213, restricted: false,
+    role: documentation, fetch: true, sha256: b9d488ee2d191fea82b30082c46a793d5fa7df540e614de944d68178ad6cef15}
+  - {id: 5348, name: fr_cdsp_ddi_202204fes4_cses.sas.zip, format: application/zip, size: 359453, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11116, name: fr.cdsp.ddi.elipss.202204.fes2022_v4.doc.xml, format: text/xml, size: 996099, restricted: false,
+    role: codebook, fetch: true, sha256: 7dbf07df8e00257164d81edad0e5d9cb41d15451158e7fca023bef4a448c95d7}
+  - {id: 5346, name: fr_cdsp_ddi_elipss_202204fes4_cses-1.tab, format: application/x-spss-sav, size: 1352236,
+    restricted: true, role: data_alt, fetch: false}
+  - {id: 5350, name: fr_cdsp_ddi_elipss_202204fes4_cses.tab, format: application/x-stata, size: 701911,
+    restricted: true, role: data, fetch: false}
+  - {id: 5349, name: fr_cdsp_ddi_elipss_202204fes4_cses.zip, format: application/zip, size: 245243, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5352, name: Questionnaire_CSES_Module6.txt, format: text/plain, size: 134606, restricted: false,
+    role: questionnaire, fetch: true, sha256: 6f9cbe9c86f5e2c145e74d7e3addd0feb5b6755ed7ca7792ae5217514d523c24}
+  - {id: 5345, name: Questionnaire_FES2022_V4_CSES.pdf, format: application/pdf, size: 186703, restricted: false,
+    role: questionnaire, fetch: true, sha256: dc6411556abc7e8861445225c6af9033026823a7ad1c523d22cd9cafe648bdeb}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: fes4_Q10p1.a, label: Vote au premier tour de l'élection présidentielle 2022}
+    vote_round2:
+    - {var: fes4_Q10p2.a, label: Vote au second tour de l'élection présidentielle 2022}
+    weight:
+    - {var: POIDS_fes4, label: Poids individu}
+- key: fes2022_elipss_v5
+  pid: doi:10.21410/7E4/DJRAYB
+  url: https://doi.org/10.21410/7E4/DJRAYB
+  title: French Election Study 2022, Vague 5 (ELIPSS 2022)
+  series: fes2022_elipss
+  election: 2022
+  wave: '5'
+  wave_order: 5
+  stage: post_legislative
+  fieldwork_start: 2022-06-30
+  fieldwork_end: 2022-07-28
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '4.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 5354, name: Documentation_FES2022_V5.pdf, format: application/pdf, size: 869997, restricted: false,
+    role: documentation, fetch: true, sha256: 34fc13e7f37bdf153bfd91f9ceb83d52e0458d201af38e3172b382975960589c}
+  - {id: 11117, name: fr.cdsp.ddi.elipss.202206.fes2022_v5.doc.xml, format: text/xml, size: 758056, restricted: false,
+    role: codebook, fetch: true, sha256: 984eb92e5ac0565eeeca11addf17660296f2d700cc271d955779ee293a027a37}
+  - {id: 5359, name: fr_cdsp_elipss_fes2022_V5-1.tab, format: application/x-stata-13, size: 3720229, restricted: true,
+    role: data, fetch: false}
+  - {id: 5358, name: fr_cdsp_elipss_fes2022_V5.sas.zip, format: application/zip, size: 337160, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5355, name: fr_cdsp_elipss_fes2022_V5.tab, format: application/x-spss-sav, size: 1484375, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5357, name: fr_cdsp_elipss_fes2022_V5.zip, format: application/zip, size: 223246, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5356, name: Questionnaire_202207_fes22_v5.pdf, format: application/pdf, size: 295843, restricted: false,
+    role: questionnaire, fetch: true, sha256: a703b8189cf3ccbc3136fd60ed83831d7b61f02380d053be93b20a2a4c5dddf1}
+  - {id: 5360, name: Questionnaire_FES2022_V5_EN.pdf, format: application/pdf, size: 134198, restricted: false,
+    role: questionnaire, fetch: true, sha256: d3a5eef156d9f27a1b85eca0ce3113b47d37386d33ae73e919cd316fdc5d91a6}
+  request: true
+  priority: useful
+- key: enef2022_v01
+  pid: doi:10.21410/7E4/LQ2PZC
+  url: https://doi.org/10.21410/7E4/LQ2PZC
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 1
+  series: enef2022
+  election: 2022
+  wave: '1'
+  wave_order: 1
+  stage: pre_campaign
+  fieldwork_note: 'terrain : avril 2021 (en-tête du questionnaire ou métadonnées)'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11917, name: Documentation_ENEF2022_V1.pdf, format: application/pdf, size: 465360, restricted: false,
+    role: documentation, fetch: true, sha256: d7acd3a3a1891fa156b26614a3c0cf541c31f7d4d6dc5337c96c6c8a1b86b43f}
+  - {id: 11915, name: fr_cdsp_ddi_enef2022_v1-1.tab, format: application/x-stata-14, size: 13396814, restricted: true,
+    role: data, fetch: false}
+  - {id: 11919, name: fr_cdsp_ddi_enef2022_v1_csv.zip, format: application/zip, size: 1486596, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11916, name: fr_cdsp_ddi_enef2022_v1_sas.zip, format: application/zip, size: 1774398, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11920, name: fr_cdsp_ddi_enef2022_v1.tab, format: application/x-spss-sav, size: 3908834, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11918, name: fr_cdsp_ddi_enef2022_v1.xml, format: text/xml, size: 368306, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11921, name: Questionnaire_ENEF2022_V1.pdf, format: application/pdf, size: 868468, restricted: true,
+    role: questionnaire, fetch: false}
+  request: true
+  priority: core
+- key: enef2022_v02
+  pid: doi:10.21410/7E4/HKCDQK
+  url: https://doi.org/10.21410/7E4/HKCDQK
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 2
+  series: enef2022
+  election: 2022
+  wave: '2'
+  wave_order: 2
+  stage: pre_campaign
+  fieldwork_note: 'terrain : octobre 2021 (en-tête du questionnaire ou métadonnées)'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11924, name: Documentation_enef2022_v2.pdf, format: application/pdf, size: 475531, restricted: false,
+    role: documentation, fetch: true, sha256: 0d8d642c692103615c04472af5ca2a85e9282db1aad77693387d5734328b06cd}
+  - {id: 11923, name: fr_cdsp_ddi_enef2022_v2-1.tab, format: application/x-stata-14, size: 25144693, restricted: true,
+    role: data, fetch: false}
+  - {id: 11927, name: fr_cdsp_ddi_enef2022_v2_csv.zip, format: application/zip, size: 2219871, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11925, name: fr_cdsp_ddi_enef2022_v2_sas.zip, format: application/zip, size: 2745488, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11922, name: fr_cdsp_ddi_enef2022_v2.tab, format: application/x-spss-sav, size: 6129247, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11928, name: fr_cdsp_ddi_enef2022_v2.xml, format: text/xml, size: 397466, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11926, name: Questionnaire_ENEF2022_V2.pdf, format: application/pdf, size: 968354, restricted: false,
+    role: questionnaire, fetch: true, sha256: f0c53dee9cb287028c57249f5ebf4ba2b5198cb0efa58289b9cc761ea01f8e03}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: IV1A-IV1F, label: 'Intentions de premier tour, six hypothèses', note: questionnaire PDF}
+    expected_winner:
+    - {var: QUALT2, label: Qualifié et élu / qualifié mais battu / non qualifié, note: questionnaire PDF}
+- key: enef2022_v03
+  pid: doi:10.21410/7E4/FSHMEP
+  url: https://doi.org/10.21410/7E4/FSHMEP
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 3
+  series: enef2022
+  election: 2022
+  wave: '3'
+  wave_order: 3
+  stage: pre_campaign
+  fieldwork_note: 'terrain : décembre 2021 (pas de date publiée ; questionnaire restreint) (en-tête du
+    questionnaire ou métadonnées)'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11934, name: Documentation_ENEF2022_V3.pdf, format: application/pdf, size: 393950, restricted: false,
+    role: documentation, fetch: true, sha256: ec99bc0019eeeb2c378fdb7e054c53cc733dbc8eb1109262c7a17e1f90e9706a}
+  - {id: 11929, name: fr_cdsp_ddi_enef2022_v3-1.tab, format: application/x-stata-14, size: 15920728, restricted: true,
+    role: data, fetch: false}
+  - {id: 11930, name: fr_cdsp_ddi_enef2022_v3_csv.zip, format: application/zip, size: 1552513, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11933, name: fr_cdsp_ddi_enef2022_v3_sas.zip, format: application/zip, size: 1915308, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11931, name: fr_cdsp_ddi_enef2022_v3.tab, format: application/x-spss-sav, size: 3782410, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11932, name: fr_cdsp_ddi_enef2022_v3.xml, format: text/xml, size: 308064, restricted: true, role: codebook,
+    fetch: false}
+  request: true
+  priority: core
+- key: enef2022_v04
+  pid: doi:10.21410/7E4/BHSJEI
+  url: https://doi.org/10.21410/7E4/BHSJEI
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 4
+  series: enef2022
+  election: 2022
+  wave: '4'
+  wave_order: 4
+  stage: campaign
+  fieldwork_note: 'terrain : janvier 2022 (en-tête du questionnaire ou métadonnées)'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11937, name: Documentation_ENEF2022_V4.pdf, format: application/pdf, size: 410467, restricted: false,
+    role: documentation, fetch: true, sha256: 413e24ab7013592b2d6db0cd0c5f301e88f38a0eb2ad79de4f53b1fee0ffe28d}
+  - {id: 11936, name: fr_cdsp_ddi_enef2022_v4-1.tab, format: application/x-stata-14, size: 17847938, restricted: true,
+    role: data, fetch: false}
+  - {id: 11938, name: fr_cdsp_ddi_enef2022_v4_csv.zip, format: application/zip, size: 1757460, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11941, name: fr_cdsp_ddi_enef2022_v4_sas.zip, format: application/zip, size: 2185825, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11940, name: fr_cdsp_ddi_enef2022_v4.tab, format: application/x-spss-sav, size: 4219891, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11939, name: fr_cdsp_ddi_enef2022_v4.xml, format: text/xml, size: 327584, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11935, name: Questionnaire_ENEF202_V4.pdf, format: application/pdf, size: 727560, restricted: false,
+    role: questionnaire, fetch: true, sha256: a72317cade0a1c62a183427e76d392d4e75c6111e29dcccec8f19c5e8ed62b9b}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: 'IV1E, IV1G', label: 'Intentions de premier tour, deux hypothèses', note: questionnaire PDF}
+    certainty:
+    - {var: 'IV1EDEF, IV1GDEF', label: Choix définitif ou peut encore changer, note: questionnaire PDF}
+    expected_winner:
+    - {var: QUALT2, label: Qualifié et élu / qualifié mais battu / non qualifié, note: questionnaire PDF}
+- key: enef2022_v05
+  pid: doi:10.21410/7E4/8UHXKG
+  url: https://doi.org/10.21410/7E4/8UHXKG
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 5
+  series: enef2022
+  election: 2022
+  wave: '5'
+  wave_order: 5
+  stage: campaign
+  fieldwork_note: 'terrain : début février 2022 (en-tête du questionnaire ou métadonnées)'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11946, name: Documentation_ENEF2022_V5.pdf, format: application/pdf, size: 419398, restricted: false,
+    role: documentation, fetch: true, sha256: 43c2c4d85aeed8db7027ac0a8ddd58ec9ea07e97d82134ea858e53e9ad8d141c}
+  - {id: 11947, name: fr_cdsp_ddi_enef2022_v5-1.tab, format: application/x-stata-14, size: 19810676, restricted: true,
+    role: data, fetch: false}
+  - {id: 11945, name: fr_cdsp_ddi_enef2022_v5_csv.zip, format: application/zip, size: 1797757, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11944, name: fr_cdsp_ddi_enef2022_v5_sas.zip, format: application/zip, size: 2187224, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11942, name: fr_cdsp_ddi_enef2022_v5.tab, format: application/x-spss-sav, size: 5674830, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11943, name: fr_cdsp_ddi_enef2022_v5.xml, format: text/xml, size: 350399, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11948, name: Questionnaire_ENEF2022_V5.pdf, format: application/pdf, size: 693702, restricted: false,
+    role: questionnaire, fetch: true, sha256: 182e9bef64d307d325d19e6618a2e1a7d4f7c81997cf11e4ed6f9e2cdf4d40cf}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: IV1G, label: Intention de vote au premier tour (hypothèse principale), note: 'questionnaire
+        PDF ; IV1A-IV1F en vague 2, IV1E et IV1G en vague 4'}
+    certainty:
+    - {var: IV1GDEF, label: Choix définitif ou peut encore changer, note: questionnaire PDF}
+    duel_intention:
+    - {var: 'IV2A, IV2C, IV2H, IV2I', label: 'Second tour : Macron/Le Pen, Macron/Pécresse, Macron/Zemmour,
+        Mélenchon/Macron', note: questionnaire PDF ; hypothèses « non traitées » absentes de la base selon
+        la vague (voir duels_inventory.csv)}
+    expected_winner:
+    - {var: QUALT2, label: 'Pour chaque candidat : qualifié et élu / qualifié mais battu / non qualifié',
+      note: questionnaire PDF ; 11 candidats en vague 9}
+- key: enef2022_v06
+  pid: doi:10.21410/7E4/XF3VX3
+  url: https://doi.org/10.21410/7E4/XF3VX3
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 6
+  series: enef2022
+  election: 2022
+  wave: '6'
+  wave_order: 6
+  stage: campaign
+  fieldwork_note: 'terrain : fin février 2022 (en-tête du questionnaire ou métadonnées)'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11954, name: Documentation_ENENF2022_V6.pdf, format: application/pdf, size: 461218, restricted: false,
+    role: documentation, fetch: true, sha256: 59618110bc0b2cfdd1dc1985069f94a983bf5040d3b96244b3ddd7e896190e8f}
+  - {id: 11951, name: fr_cdsp_ddi_enef2022_v6.xml, format: text/xml, size: 372260, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11949, name: fr_cdsp_enef2022_v6-1.tab, format: application/x-stata-14, size: 19614997, restricted: true,
+    role: data, fetch: false}
+  - {id: 11955, name: fr_cdsp_enef2022_v6_csv.zip, format: application/zip, size: 1737255, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11952, name: fr_cdsp_enef2022_v6_sas.zip, format: application/zip, size: 2160047, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11953, name: fr_cdsp_enef2022_v6.tab, format: application/x-spss-sav, size: 6307970, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11950, name: Questionnaire_ENEF2022_V6.pdf, format: application/pdf, size: 692987, restricted: false,
+    role: questionnaire, fetch: true, sha256: 37f4199ce002b22015f233d79b09a82bf3f2069e24d42c7205e698922848bf5c}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: IV1G, label: Intention de vote au premier tour (hypothèse principale), note: 'questionnaire
+        PDF ; IV1A-IV1F en vague 2, IV1E et IV1G en vague 4'}
+    certainty:
+    - {var: IV1GDEF, label: Choix définitif ou peut encore changer, note: questionnaire PDF}
+    duel_intention:
+    - {var: 'IV2A, IV2C, IV2H, IV2I', label: 'Second tour : Macron/Le Pen, Macron/Pécresse, Macron/Zemmour,
+        Mélenchon/Macron', note: questionnaire PDF ; hypothèses « non traitées » absentes de la base selon
+        la vague (voir duels_inventory.csv)}
+    expected_winner:
+    - {var: QUALT2, label: 'Pour chaque candidat : qualifié et élu / qualifié mais battu / non qualifié',
+      note: questionnaire PDF ; 11 candidats en vague 9}
+- key: enef2022_v06bis
+  pid: doi:10.21410/7E4/AMDFFQ
+  url: https://doi.org/10.21410/7E4/AMDFFQ
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 6 bis
+  series: enef2022
+  election: 2022
+  wave: 6 bis
+  wave_order: 6.5
+  stage: campaign
+  fieldwork_note: 'terrain : mars 2022 (métadonnées) (en-tête du questionnaire ou métadonnées)'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11959, name: Documentation_ENEF2022_V7.pdf, format: application/pdf, size: 410764, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 11962, name: fr_cdsp_ddi_enef2022_v7-1.tab, format: application/x-stata-14, size: 18926816, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11958, name: fr_cdsp_ddi_enef2022_v7_csv.zip, format: application/zip, size: 1666076, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11957, name: fr_cdsp_ddi_enef2022_v7_sas.zip, format: application/zip, size: 2093466, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11961, name: fr_cdsp_ddi_enef2022_v7.tab, format: application/x-spss-sav, size: 6145964, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11960, name: fr_cdsp_ddi_enef2022_v7.xml, format: text/xml, size: 337022, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11956, name: Questionnaire_ENEF2022_V7.pdf, format: application/pdf, size: 750985, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: 'Dépôt anomal : les fichiers de ce jeu (Documentation_ENEF2022_V7.pdf, fr_cdsp_ddi_enef2022_v7-1.tab,
+    mêmes tailles) sont ceux de la vague 7. Pas de demande d''accès ; à signaler au CDSP.'
+- key: enef2022_v07
+  pid: doi:10.21410/7E4/XFRBMJ
+  url: https://doi.org/10.21410/7E4/XFRBMJ
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 7
+  series: enef2022
+  election: 2022
+  wave: '7'
+  wave_order: 7
+  stage: campaign
+  fieldwork_start: 2022-03-10
+  fieldwork_end: 2022-03-14
+  fieldwork_note: dates de l'en-tête du questionnaire (les métadonnées ne donnent que le mois)
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11965, name: Documentation_ENEF2022_V7.pdf, format: application/pdf, size: 410764, restricted: false,
+    role: documentation, fetch: true, sha256: 96ed9872f2e1d1b7332e0145c93182b9abc0a59cb7bfbcf8a06dbaa7ef0c808d}
+  - {id: 11964, name: fr_cdsp_ddi_enef2022_v7-1.tab, format: application/x-stata-14, size: 18926816, restricted: true,
+    role: data, fetch: false}
+  - {id: 11969, name: fr_cdsp_ddi_enef2022_v7_csv.zip, format: application/zip, size: 1666076, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11963, name: fr_cdsp_ddi_enef2022_v7_sas.zip, format: application/zip, size: 2093466, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11966, name: fr_cdsp_ddi_enef2022_v7.tab, format: application/x-spss-sav, size: 6145964, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11967, name: fr_cdsp_ddi_enef2022_v7.xml, format: text/xml, size: 337022, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11968, name: Questionnaire_ENEF2022_V7.pdf, format: application/pdf, size: 750985, restricted: false,
+    role: questionnaire, fetch: true, sha256: 36c8a1d6e339433f5ae125d8d9cc12ff0c4bfc8b2318f1007c01903d2ec17c7a}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: IV1G, label: Intention de vote au premier tour (hypothèse principale), note: 'questionnaire
+        PDF ; IV1A-IV1F en vague 2, IV1E et IV1G en vague 4'}
+    certainty:
+    - {var: IV1GDEF, label: Choix définitif ou peut encore changer, note: questionnaire PDF}
+    duel_intention:
+    - {var: 'IV2A, IV2C, IV2H, IV2I', label: 'Second tour : Macron/Le Pen, Macron/Pécresse, Macron/Zemmour,
+        Mélenchon/Macron', note: questionnaire PDF ; hypothèses « non traitées » absentes de la base selon
+        la vague (voir duels_inventory.csv)}
+    expected_winner:
+    - {var: QUALT2, label: 'Pour chaque candidat : qualifié et élu / qualifié mais battu / non qualifié',
+      note: questionnaire PDF ; 11 candidats en vague 9}
+- key: enef2022_v08
+  pid: doi:10.21410/7E4/XNOMJM
+  url: https://doi.org/10.21410/7E4/XNOMJM
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 8
+  series: enef2022
+  election: 2022
+  wave: '8'
+  wave_order: 8
+  stage: campaign
+  fieldwork_start: 2022-03-21
+  fieldwork_end: 2022-03-24
+  fieldwork_note: dates de l'en-tête du questionnaire (les métadonnées ne donnent que le mois)
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11976, name: Documentation_ENEF2022_V8.pdf, format: application/pdf, size: 639049, restricted: false,
+    role: documentation, fetch: true, sha256: 42d5241ddbf36c86a86b3982c3ba0f37f2e6aaadb427eeb5f129090baf786686}
+  - {id: 11975, name: fr_cdsp_ddi_enef2022_v8-1.tab, format: application/x-stata-14, size: 27167558, restricted: true,
+    role: data, fetch: false}
+  - {id: 11973, name: fr_cdsp_ddi_enef2022_v8_csv.zip, format: application/zip, size: 2148703, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11970, name: fr_cdsp_ddi_enef2022_v8_sas.zip, format: application/zip, size: 2755173, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11971, name: fr_cdsp_ddi_enef2022_v8.tab, format: application/x-spss-sav, size: 7289408, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11974, name: fr_cdsp_ddi_enef2022_v8.xml, format: text/xml, size: 552532, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11972, name: Questionnaire_ENEF2022_Vague 8.pdf, format: application/pdf, size: 1329815, restricted: false,
+    role: questionnaire, fetch: true, sha256: 7921ed4552a469978a1b9d6c6e4b13b791227a7c52210955decb1f60a372036a}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: IV1G, label: Intention de vote au premier tour (hypothèse principale), note: 'questionnaire
+        PDF ; IV1A-IV1F en vague 2, IV1E et IV1G en vague 4'}
+    certainty:
+    - {var: IV1GDEF, label: Choix définitif ou peut encore changer, note: questionnaire PDF}
+    duel_intention:
+    - {var: 'IV2A, IV2C, IV2H, IV2I', label: 'Second tour : Macron/Le Pen, Macron/Pécresse, Macron/Zemmour,
+        Mélenchon/Macron', note: questionnaire PDF ; hypothèses « non traitées » absentes de la base selon
+        la vague (voir duels_inventory.csv)}
+    expected_winner:
+    - {var: QUALT2, label: 'Pour chaque candidat : qualifié et élu / qualifié mais battu / non qualifié',
+      note: questionnaire PDF ; 11 candidats en vague 9}
+- key: enef2022_v09
+  pid: doi:10.21410/7E4/XKWVNY
+  url: https://doi.org/10.21410/7E4/XKWVNY
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 9
+  series: enef2022
+  election: 2022
+  wave: '9'
+  wave_order: 9
+  stage: eve_round1
+  fieldwork_start: 2022-04-02
+  fieldwork_end: 2022-04-04
+  fieldwork_note: dates de l'en-tête du questionnaire (les métadonnées ne donnent que le mois)
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11981, name: Documentation_ENEF2022_V9.pdf, format: application/pdf, size: 594636, restricted: false,
+    role: documentation, fetch: true, sha256: 3c481b5c1007d717e0448e5ec8c2792343cfc6b15465bb5a27e025771f62e9fc}
+  - {id: 11980, name: fr_cdsp_ddi_enef2022_v9-1.tab, format: application/x-stata-14, size: 21534010, restricted: true,
+    role: data, fetch: false}
+  - {id: 11978, name: fr_cdsp_ddi_enef2022_v9_csv.zip, format: application/zip, size: 1671848, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11979, name: fr_cdsp_ddi_enef2022_v9_sas.zip, format: application/zip, size: 2115594, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11982, name: fr_cdsp_ddi_enef2022_v9.tab, format: application/x-spss-sav, size: 7872505, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11983, name: fr_cdsp_ddi_enef2022_v9.xml, format: text/xml, size: 507430, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11977, name: Questionnaire_ENEF2022_V9.pdf, format: application/pdf, size: 781787, restricted: false,
+    role: questionnaire, fetch: true, sha256: c6b7b9c34c0cc02461c54faa2913ab1d4ac51cf26719e2b13e8aec0bbb2406d5}
+  request: true
+  priority: core
+  questions:
+    vote_round1:
+    - {var: IV1G, label: Intention de vote au premier tour (hypothèse principale), note: 'questionnaire
+        PDF ; IV1A-IV1F en vague 2, IV1E et IV1G en vague 4'}
+    certainty:
+    - {var: IV1GDEF, label: Choix définitif ou peut encore changer, note: questionnaire PDF}
+    duel_intention:
+    - {var: 'IV2A, IV2C, IV2H, IV2I', label: 'Second tour : Macron/Le Pen, Macron/Pécresse, Macron/Zemmour,
+        Mélenchon/Macron', note: questionnaire PDF ; hypothèses « non traitées » absentes de la base selon
+        la vague (voir duels_inventory.csv)}
+    expected_winner:
+    - {var: QUALT2, label: 'Pour chaque candidat : qualifié et élu / qualifié mais battu / non qualifié',
+      note: questionnaire PDF ; 11 candidats en vague 9}
+- key: enef2022_v10
+  pid: doi:10.21410/7E4/M9OMPY
+  url: https://doi.org/10.21410/7E4/M9OMPY
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 10
+  series: enef2022
+  election: 2022
+  wave: '10'
+  wave_order: 10
+  stage: between_rounds
+  fieldwork_start: 2022-04-15
+  fieldwork_end: 2022-04-18
+  fieldwork_note: dates de l'en-tête du questionnaire (les métadonnées ne donnent que le mois)
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11988, name: Documentation_ENEF2022_V10.pdf, format: application/pdf, size: 445303, restricted: false,
+    role: documentation, fetch: true, sha256: 3bc909fca610ab98d1ce86cb5abfe644c690459ce3381287da069e42a0b7a2e2}
+  - {id: 11985, name: fr_cdsp_ddi_enef2022_v10-1.tab, format: application/x-stata-14, size: 18927566,
+    restricted: true, role: data, fetch: false}
+  - {id: 11989, name: fr_cdsp_ddi_enef2022_v10 csv.zip, format: application/zip, size: 1612498, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11986, name: fr_cdsp_ddi_enef2022_v10_sas.zip, format: application/zip, size: 2030138, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11984, name: fr_cdsp_ddi_enef2022_v10.tab, format: application/x-spss-sav, size: 5548836, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11990, name: fr_cdsp_ddi_enef2022_v10.xml, format: text/xml, size: 363896, restricted: true,
+    role: codebook, fetch: false}
+  - {id: 11987, name: Questionnaire_ENEF2022_V10.pdf, format: application/pdf, size: 772346, restricted: false,
+    role: questionnaire, fetch: true, sha256: b180288668637da2cc178de153ec5c1e7c82280794596588630423394729af30}
+  request: true
+  priority: core
+  questions:
+    vote_round2:
+    - {var: IV2A, label: Intention de vote au second tour Macron/Le Pen, note: questionnaire PDF}
+    certainty:
+    - {var: CERT, label: Choix définitif ou peut encore changer, note: questionnaire PDF}
+    expected_winner:
+    - {var: (nom non publié), label: Chances que Marine Le Pen gagne (0-10), note: questionnaire PDF}
+    preferred:
+    - {var: (nom non publié), label: Candidat souhaité vainqueur, note: questionnaire PDF}
+- key: enef2022_v11
+  pid: doi:10.21410/7E4/I1Q0PI
+  url: https://doi.org/10.21410/7E4/I1Q0PI
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 11
+  series: enef2022
+  election: 2022
+  wave: '11'
+  wave_order: 11
+  stage: post_round2
+  fieldwork_start: 2022-05-16
+  fieldwork_end: 2022-05-18
+  fieldwork_note: dates de l'en-tête du questionnaire (les métadonnées ne donnent que le mois)
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11991, name: Documentation_ENEF2022_V11.pdf, format: application/pdf, size: 647584, restricted: false,
+    role: documentation, fetch: true, sha256: d3ab26223e416a554ed69bedb63367d294a8f0ecf81e7ef88d5b84a3c635aa58}
+  - {id: 11995, name: fr_cdsp_ddi_enef2022_v11-1.tab, format: application/x-stata-14, size: 21693234,
+    restricted: true, role: data, fetch: false}
+  - {id: 11993, name: fr_cdsp_ddi_enef2022_v11_csv.zip, format: application/zip, size: 1722077, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11997, name: fr_cdsp_ddi_enef2022_v11_sas.zip, format: application/zip, size: 2163518, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11996, name: fr_cdsp_ddi_enef2022_v11.tab, format: application/x-spss-sav, size: 7283259, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 11992, name: fr_cdsp_ddi_enef202_v11.xml, format: text/xml, size: 640368, restricted: true, role: codebook,
+    fetch: false}
+  - {id: 11994, name: Questionnaire_ENEF2022_V11.pdf, format: application/pdf, size: 875808, restricted: false,
+    role: questionnaire, fetch: true, sha256: 784dff8b6b056aef6df33542e6652af02db50cd3befd1ddbee0f55dffc76e3cd}
+  request: true
+  priority: core
+  questions:
+    vote_round2:
+    - {var: (nom non publié), label: Vote déclaré au second tour présidentiel, note: à vérifier dans le
+        codebook (restreint)}
+    duel_intention:
+    - {var: (nom non publié), label: Duels hypothétiques de second tour des législatives, note: questionnaire
+        PDF}
+- key: enef2022_v12
+  pid: doi:10.21410/7E4/RPUWNZ
+  url: https://doi.org/10.21410/7E4/RPUWNZ
+  title: Enquête électorale française 2022 (ENEF 2022), Vague 12
+  series: enef2022
+  election: 2022
+  wave: '12'
+  wave_order: 12
+  stage: post_round2
+  fieldwork_start: 2022-06-03
+  fieldwork_end: 2022-06-06
+  fieldwork_note: dates de l'en-tête du questionnaire (les métadonnées ne donnent que le mois)
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 11998, name: Documentation_ENEF2022_V12.pdf, format: application/pdf, size: 558699, restricted: false,
+    role: documentation, fetch: true, sha256: 1267f32573bfa5f7ca04f3d852e9a2a23c1fbc958ad8e59f042b53f0c5b16d09}
+  - {id: 12002, name: fr_cdsp_ddi_enef2022_v12-1.tab, format: application/x-stata-14, size: 19225967,
+    restricted: true, role: data, fetch: false}
+  - {id: 12003, name: fr_cdsp_ddi_enef2022_v12_csv.zip, format: application/zip, size: 1550056, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 12000, name: fr_cdsp_ddi_enef2022_v12_sas.zip, format: application/zip, size: 1967544, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 12004, name: fr_cdsp_ddi_enef2022_v12.tab, format: application/x-spss-sav, size: 5008907, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 12001, name: fr_cdsp_ddi_enef2022_v12.xml, format: text/xml, size: 490613, restricted: true,
+    role: codebook, fetch: false}
+  - {id: 11999, name: Questionnaire_ENEF2022_V12.pdf, format: application/pdf, size: 913329, restricted: false,
+    role: questionnaire, fetch: true, sha256: 6f2b23984f025248c7a471cc15ed86a9a3fd8132292fd22a785e90934bb97553}
+  request: true
+  priority: core
+- key: people2022
+  pid: doi:10.21410/7E4/6FMMTC
+  url: https://doi.org/10.21410/7E4/6FMMTC
+  title: Pratiques électorales et opinions lors des élections de 2022 (PEOPLE)
+  series: people2022
+  election: 2022
+  stage: post_round2
+  fieldwork_start: 2022-04-25
+  fieldwork_end: 2022-05-09
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 6323, name: Documentation_PEOPLE2022.pdf, format: application/pdf, size: 519140, restricted: false,
+    role: documentation, fetch: true, sha256: 3fa2f3c6d6807545140b39e1730c870a56bf481e8627dff832ee92746e1d849c}
+  - {id: 6318, name: Documentation_PEOPLE2022.xml, format: text/xml, size: 409619, restricted: false,
+    role: documentation, fetch: true, sha256: 7c989480107324a6065794505507c1cf907f0ea96953b31d0ba8ca519a334a0e}
+  - {id: 6322, name: fr_cdsp_ddi_people2022.csv.zip, format: application/zip, size: 118199, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6321, name: fr_cdsp_ddi_people2022.sas.zip, format: application/zip, size: 190416, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6320, name: fr_cdsp_ddi_people2022.stata.zip, format: application/zip, size: 106075, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 6319, name: fr_cdsp_ddi_people2022.tab, format: application/x-spss-sav, size: 1996162, restricted: true,
+    role: data, fetch: false}
+  - {id: 6313, name: Questionnaire_PEOPLE2022.pdf, format: application/pdf, size: 227085, restricted: false,
+    role: questionnaire, fetch: true, sha256: bd027e73b32d1ace5a5d06da46f8ece989ad29b0a6ed6317d134c9aac40146b9}
+  request: true
+  priority: core
+- key: enef2024_v01
+  pid: doi:10.21410/7E4/AFCJAY
+  url: https://doi.org/10.21410/7E4/AFCJAY
+  title: Enquête électorale française 2024 (ENEF 2024), Vague 1
+  series: enef2024
+  wave: '1'
+  wave_order: 1
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2023-06 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9707, name: Dictionnaire_ENEF2024.ods, format: application/vnd.oasis.opendocument.spreadsheet,
+    size: 51757, restricted: false, role: codebook, fetch: true, sha256: 6aeb46578c6230725bd3256f94ac85bf47b20fcb9eae142f48adde9bd6e25331}
+  - {id: 9708, name: Documentation_ENEF2024_V1.pdf, format: application/pdf, size: 348786, restricted: false,
+    role: documentation, fetch: true, sha256: 7a5a229cafbe78c4a0388e48aa372016ecee43e68aedc8240e1428067c354bf5}
+  - {id: 9711, name: fr_cdsp_ddi_enef2024_v1-1.tab, format: application/x-stata-14, size: 11657635, restricted: true,
+    role: data, fetch: false}
+  - {id: 9710, name: fr_cdsp_ddi_enef2024_v1_csv.zip, format: application/zip, size: 1113770, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9709, name: fr_cdsp_ddi_enef2024_v1_sas.zip, format: application/zip, size: 1370949, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9712, name: fr_cdsp_ddi_enef2024_v1.tab, format: application/x-spss-sav, size: 2870457, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9705, name: fr_cdsp_ddi_enef2024_v1.xml, format: text/xml, size: 279888, restricted: false, role: codebook,
+    fetch: true, sha256: 900de9f4e7fe9e4bb4045d3cade22435b7f816365702d01340ee00d483b20a75}
+  - {id: 9706, name: Questionnaire_ENEF2024_V1.pdf, format: application/pdf, size: 786914, restricted: false,
+    role: questionnaire, fetch: true, sha256: 0809de043d71a78912fbfef9ce8d874b5ffa2a68fa0c70641e0a8957022db463}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: enef2024_v02
+  pid: doi:10.21410/7E4/7HRNPP
+  url: https://doi.org/10.21410/7E4/7HRNPP
+  title: Enquête électorale française 2024 (ENEF 2024), Vague 2
+  series: enef2024
+  wave: '2'
+  wave_order: 2
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2023-11 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9718, name: Documentation_ENEF2024_V2.pdf, format: application/pdf, size: 227906, restricted: false,
+    role: documentation, fetch: true, sha256: 04b3fffe50953bc303a48c2be732bffa5ccbf651b0347e6f12dd4b208bed7712}
+  - {id: 9714, name: fr_cdsp_ddi_enef2024_v2-1.tab, format: application/x-stata-14, size: 7133818, restricted: true,
+    role: data, fetch: false}
+  - {id: 9715, name: fr_cdsp_ddi_enef2024_v2_csv.zip, format: application/zip, size: 919681, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9716, name: fr_cdsp_ddi_enef2024_v2_sas.zip, format: application/zip, size: 1079590, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9719, name: fr_cdsp_ddi_enef2024_v2.tab, format: application/x-spss-sav, size: 2367304, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9717, name: fr_cdsp_ddi_enef2024_v2.xml, format: text/xml, size: 180004, restricted: false, role: codebook,
+    fetch: true, sha256: 00eb0287aade41a4edb71260c62d99affaa545421d080f5cb1b15bb6146702b8}
+  - {id: 9713, name: Questionnaire_ENEF2024_V2.pdf, format: application/pdf, size: 665236, restricted: false,
+    role: questionnaire, fetch: true, sha256: 8bc80708316dce243ff0ec803e5447ee0c16b191351255ff3660ed5b77b36be9}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: enef2024_v03
+  pid: doi:10.21410/7E4/CXKJJR
+  url: https://doi.org/10.21410/7E4/CXKJJR
+  title: Enquête électorale française 2024 (ENEF 2024), Vague 3
+  series: enef2024
+  wave: '3'
+  wave_order: 3
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2024-03 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9724, name: Documentation_ENEF2024_V3.pdf, format: application/pdf, size: 326812, restricted: false,
+    role: documentation, fetch: true, sha256: e1c6354da9e03fbc37731fa2cd958115fac2a0c403886d553dc65ec7a4c789c9}
+  - {id: 9722, name: fr_cdsp_ddi_enef2024_v3-1.tab, format: application/x-stata-14, size: 10137677, restricted: true,
+    role: data, fetch: false}
+  - {id: 9725, name: fr_cdsp_ddi_enef2024_v3_csv.zip, format: application/zip, size: 1179842, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9721, name: fr_cdsp_ddi_enef2024_v3_sas.zip, format: application/zip, size: 1415309, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9723, name: fr_cdsp_ddi_enef2024_v3.tab, format: application/x-spss-sav, size: 3025239, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9726, name: fr_cdsp_ddi_enef2024_v3.xml, format: text/xml, size: 266464, restricted: false, role: codebook,
+    fetch: true, sha256: 3c92dbd8e0628eea5652400b95e5d026116a85d7e550a72f322d446c916de58f}
+  - {id: 9720, name: Questionnaire_ENEF2024_V3.pdf, format: application/pdf, size: 812069, restricted: false,
+    role: questionnaire, fetch: true, sha256: 8a6695ac0870deb691daa3797fd0d2107a4a82287cd8fe624f10a50d338dfdce}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: enef2024_v04
+  pid: doi:10.21410/7E4/SCEWBH
+  url: https://doi.org/10.21410/7E4/SCEWBH
+  title: Enquête électorale française 2024 (ENEF 2024), Vague 4
+  series: enef2024
+  wave: '4'
+  wave_order: 4
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2024-04 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9727, name: Documentation_ENEF2024_V4.pdf, format: application/pdf, size: 423242, restricted: false,
+    role: documentation, fetch: true, sha256: b7d607401c2907a3335c00022fdf833d8d7b911f3c49ed4c12b086f5cbd9826b}
+  - {id: 9733, name: fr_cdsp_ddi_enef2024_v4-1.tab, format: application/x-stata-14, size: 13427525, restricted: true,
+    role: data, fetch: false}
+  - {id: 9730, name: fr_cdsp_ddi_enef2024_v4_csv.zip, format: application/zip, size: 1261721, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9728, name: fr_cdsp_ddi_enef2024_v4_sas.zip, format: application/zip, size: 1578579, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9732, name: fr_cdsp_ddi_enef2024_v4.tab, format: application/x-spss-sav, size: 3153688, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9731, name: fr_cdsp_ddi_enef2024_v4.xml, format: text/xml, size: 335913, restricted: false, role: codebook,
+    fetch: true, sha256: 38bfaafc9fa1a1fff9098e8d909f2ad78d0c5681153a59b0efd03f2d57438ee9}
+  - {id: 9729, name: Questionnaire_ENEF2024_V4.pdf, format: application/pdf, size: 887919, restricted: false,
+    role: questionnaire, fetch: true, sha256: c755528935f675c434d05f942578515b43389f366499865868834f7920962413}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: enef2024_v05
+  pid: doi:10.21410/7E4/BNCPUL
+  url: https://doi.org/10.21410/7E4/BNCPUL
+  title: Enquête électorale française 2024 (ENEF 2024), Vague 5
+  series: enef2024
+  wave: '5'
+  wave_order: 5
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2024-05 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9737, name: Documentation_ENEF2024-V5.pdf, format: application/pdf, size: 611359, restricted: false,
+    role: documentation, fetch: true, sha256: 0ff953cc9fa05aef2a7aa59d9ce253487bffe715bb67c764e0004ecc78fb3b90}
+  - {id: 9734, name: fr_cdsp_ddi_enef2024_v5-1.tab, format: application/x-stata-14, size: 20931727, restricted: true,
+    role: data, fetch: false}
+  - {id: 9739, name: fr_cdsp_ddi_enef2024_v5_csv.zip, format: application/zip, size: 1705552, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9735, name: fr_cdsp_ddi_enef2024_v5_sas.zip, format: application/zip, size: 2193664, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9736, name: fr_cdsp_ddi_enef2024_v5.tab, format: application/x-spss-sav, size: 4278031, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9738, name: fr_cdsp_ddi_enef2024_v5.xml, format: text/xml, size: 487001, restricted: false, role: codebook,
+    fetch: true, sha256: a7e158303749a7c1c8134d9d48abe72861755e21d0b069a189b0bb1fdaebb00f}
+  - {id: 9740, name: Questionnaire_ENEF2024_V5.pdf, format: application/pdf, size: 737168, restricted: false,
+    role: questionnaire, fetch: true, sha256: 6f2d6c6f58275d5e1a6cceab18f491cf55e963e5993d0b0e8bd333e5690e6d87}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: enef2024_v06
+  pid: doi:10.21410/7E4/2DCN6P
+  url: https://doi.org/10.21410/7E4/2DCN6P
+  title: Enquête électorale française 2024 (ENEF 2024), Vague 6
+  series: enef2024
+  wave: '6'
+  wave_order: 6
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2024-06 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.0'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9743, name: Documentation_ENEF2024_V6.pdf, format: application/pdf, size: 489413, restricted: false,
+    role: documentation, fetch: true, sha256: c7dda48084111d7610afb144a37e5f721517dab9f111937758e8f21077efd932}
+  - {id: 9747, name: fr_cdsp_ddi_enef2024_v6-1.tab, format: application/x-stata-14, size: 17262394, restricted: true,
+    role: data, fetch: false}
+  - {id: 9745, name: fr_cdsp_ddi_enef2024_v6_csv.zip, format: application/zip, size: 1525230, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9746, name: fr_cdsp_ddi_enef2024_v6_sas.zip, format: application/zip, size: 1908643, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9742, name: fr_cdsp_ddi_enef2024_v6.tab, format: application/x-spss-sav, size: 6333103, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9744, name: fr_cdsp_ddi_enef2024_v6.xml, format: text/xml, size: 415666, restricted: false, role: codebook,
+    fetch: true, sha256: 1ec11abeab5c12600843060f8549cdc76994ee407db8d62bc81f29e1bb3e9aed}
+  - {id: 9741, name: Questionnaire_ENEF2024_V6.pdf, format: application/pdf, size: 948481, restricted: false,
+    role: questionnaire, fetch: true, sha256: 9142c527c608ef58de7ebb15b131155db94378b5e80714027d2c577d5a7f44ce}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: enef2024_v07
+  pid: doi:10.21410/7E4/SZVODV
+  url: https://doi.org/10.21410/7E4/SZVODV
+  title: Enquête électorale française 2024 (ENEF 2024), Vague 7
+  series: enef2024
+  wave: '7'
+  wave_order: 7
+  stage: other_election
+  fieldwork_note: 'période couverte (métadonnées) : 2024-07 ; dates exactes à lire dans la documentation'
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '2.2'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9750, name: Documentation_ENEF24_V7.pdf, format: application/pdf, size: 541981, restricted: false,
+    role: documentation, fetch: true, sha256: fba2f5f97096ef6309349e9dc3439f5d75ac299de12aa6449c4953fc7078e488}
+  - {id: 9753, name: fr_cdsp_ddi_enef2024_v7-1.tab, format: application/x-stata-14, size: 19710402, restricted: true,
+    role: data, fetch: false}
+  - {id: 9752, name: fr_cdsp_ddi_enef2024_v7_csv.zip, format: application/zip, size: 1612203, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9748, name: fr_cdsp_ddi_enef2024_v7_sas.zip, format: application/zip, size: 2082479, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9754, name: fr_cdsp_ddi_enef2024_v7.tab, format: application/x-spss-sav, size: 5296559, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9751, name: fr_cdsp_ddi_enef2024_v7.xml, format: text/xml, size: 441367, restricted: false, role: codebook,
+    fetch: true, sha256: a8c39bfa647fdebcc2b4d7acc383cbb73195a33f20f64c3050d9a9a3dfd735b5}
+  - {id: 9749, name: Questionnaire_ENEF2024_V7.pdf, format: application/pdf, size: 1011506, restricted: false,
+    role: questionnaire, fetch: true, sha256: fd7c803827bc8a4011541258e26dda177c676ea0d01be35480b5a05a20804aad}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: postleg2024_elipss
+  pid: doi:10.21410/7E4/O58GJQ
+  url: https://doi.org/10.21410/7E4/O58GJQ
+  title: Après les élections législatives 2024 (ELIPSS 2024)
+  series: elipss
+  stage: other_election
+  fieldwork_start: 2024-07-11
+  fieldwork_end: 2024-08-08
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Probability.Cluster.StratifiedRandom
+  version: '6.1'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 9010, name: Documentation_POSTLEG2024.pdf, format: application/pdf, size: 883883, restricted: false,
+    role: documentation, fetch: true, sha256: a4253ed77a9660c5a7b64fc050859c575ea194d4396edb62e99ef345a384c9cc}
+  - {id: 8682, name: fr.cdsp.ddi.postleg2024-1.tab, format: application/x-stata-14, size: 4440512, restricted: true,
+    role: data, fetch: false}
+  - {id: 8685, name: fr.cdsp.ddi.postleg2024.csv.zip, format: application/zip, size: 315439, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 8681, name: fr.cdsp.ddi.postleg2024.tab, format: application/x-spss-sav, size: 1228854, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 8684, name: fr.cdsp.ddi.postleg2024.zip, format: application/zip, size: 446766, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 8735, name: fr.cdsp.ddi.postleg24.xml, format: text/xml, size: 735233, restricted: false, role: codebook,
+    fetch: true, sha256: 3a27608b3c37d0b78f7af02971e294bd7dd369ccab3fe3aa02872b44121b5238}
+  - {id: 8683, name: Questionnaire_Postleg24.pdf, format: application/pdf, size: 334188, restricted: false,
+    role: questionnaire, fetch: true, sha256: 02641bf115b2eccfbdcaca4a66dff6fdc3fc76e82de250ff48acfd33a1876cc5}
+  request: true
+  priority: useful
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: certes2024
+  pid: doi:10.21410/7E4/9K3KP0
+  url: https://doi.org/10.21410/7E4/9K3KP0
+  title: Comportements électoraux et rapports au travail, à l'emploi et aux syndicats 2024 (CERTES 2024)
+  series: certes2024
+  stage: other_election
+  fieldwork_start: 2024-07-09
+  fieldwork_end: 2024-07-16
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '3.1'
+  license: CC-BY 4.0
+  access: restricted_request
+  files:
+  - {id: 9341, name: Documentation_CERTES2024.pdf, format: application/pdf, size: 357520, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 9345, name: fr_cdsp_ddi_certes2024.csv.zip, format: application/zip, size: 387887, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9344, name: fr_cdsp_ddi_certes2024.dta.zip, format: application/zip, size: 508731, restricted: true,
+    role: data, fetch: false}
+  - {id: 9370, name: fr_cdsp_ddi_certes2024.sas.zip, format: application/zip, size: 513137, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9343, name: fr_cdsp_ddi_certes2024.sav.zip, format: application/zip, size: 370189, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9339, name: fr_cdsp_ddi_certes2024.xml, format: text/xml, size: 317486, restricted: false, role: codebook,
+    fetch: false}
+  - {id: 9342, name: Pondération_CERTES2024.pdf, format: application/pdf, size: 156132, restricted: false,
+    role: weights_doc, fetch: false}
+  - {id: 9340, name: Questionnaire_CERTES2024.pdf, format: application/pdf, size: 427993, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: deperu2024
+  pid: doi:10.21410/7E4/OJ1EMY
+  url: https://doi.org/10.21410/7E4/OJ1EMY
+  title: Decision-making Processes under Extreme Radical Uncertainties (DePERU 2024) - Enquêtes législatives
+    2024
+  series: deperu2024
+  stage: other_election
+  fieldwork_start: 2024-06-25
+  fieldwork_end: 2024-07-12
+  mode: SelfAdministeredQuestionnaire.CAWI
+  sampling: Nonprobability.Quota
+  version: '3.1'
+  license: CC-BY 4.0
+  access: restricted_request
+  files:
+  - {id: 9348, name: Documentation_DePERU2024.pdf, format: application/pdf, size: 462140, restricted: false,
+    role: documentation, fetch: false}
+  - {id: 9349, name: fr_cdsp_ddi_deperu2024.csv.zip, format: application/zip, size: 134771, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9352, name: fr_cdsp_ddi_deperu2024.dta.zip, format: application/zip, size: 175469, restricted: true,
+    role: data, fetch: false}
+  - {id: 9371, name: fr_cdsp_ddi_deperu2024.sas.zip, format: application/zip, size: 208521, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9346, name: fr_cdsp_ddi_deperu2024.sav.zip, format: application/zip, size: 135852, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 9347, name: fr_cdsp_ddi_deperu2024.xml, format: text/xml, size: 374053, restricted: false, role: codebook,
+    fetch: false}
+  - {id: 9350, name: Pondération_DePERU2024.pdf, format: application/pdf, size: 228316, restricted: false,
+    role: weights_doc, fetch: false}
+  - {id: 9351, name: Questionnaire_DePERU2024.pdf, format: application/pdf, size: 412964, restricted: false,
+    role: questionnaire, fetch: false}
+  request: false
+  priority: listed
+  notes: 'Scrutins 2024 (européennes du 9 juin, législatives des 30 juin et 7 juillet) : pas de présidentielle
+    de rattachement.'
+- key: harmonized_1958_2017
+  pid: doi:10.21410/7E4/TSQKNX
+  url: https://doi.org/10.21410/7E4/TSQKNX
+  title: Base de données comparatives des enquêtes électorales françaises (1958-2017)
+  series: harmonized
+  fieldwork_note: 'période couverte (métadonnées) : 1958 ; dates exactes à lire dans la documentation'
+  version: '3.2'
+  license: CC BY-SA 4.0
+  access: restricted_request
+  files:
+  - {id: 5071, name: cdsp_meta_electoral_surveys.xlsx, format: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,
+    size: 591119, restricted: false, role: codebook, fetch: true, sha256: f8829a47f6dcad026b174c6719ac176fdf1da513eac6eacdb3ba61f64940b5ae}
+  - {id: 5371, name: fr_cdsp_ee_harmo19582017.spss.zip, format: application/zip, size: 5941897, restricted: true,
+    role: data_alt, fetch: false}
+  - {id: 5370, name: fr_cdsp_ee_harmo19582017.zip, format: application/zip, size: 4221381, restricted: true,
+    role: data, fetch: false}
+  request: true
+  priority: useful
+  notes: Variables harmonisées des enquêtes post-électorales 1958-2017 (vote déclaré aux deux tours) ;
+    pas de fichier Stata, archives zip seulement.

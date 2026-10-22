@@ -723,5 +723,108 @@ def parse_attention(
     typer.echo(report.summary())
 
 
+@ingest_app.command("cevipof")
+def ingest_cevipof(
+    key: Annotated[
+        list[str] | None,
+        typer.Option("--key", help="Clé de cevipof_datasets.yaml (répétable ; défaut : jeux core et useful)"),
+    ] = None,
+    no_data: bool = typer.Option(False, "--no-data", help="Documentation publique seulement"),
+    request_access: bool = typer.Option(
+        False, "--request-access", help="Demande l'accès aux fichiers `data` des jeux `request: true`"
+    ),
+    status: bool = typer.Option(False, "--status", help="Accès accordé ou non, par jeu"),
+    check: bool = typer.Option(False, "--check", help="Compare le registre à l'API"),
+    verbose: bool = typer.Option(False, "--verbose", "-v"),
+) -> None:
+    """Enquêtes du Cevipof (data.sciencespo.fr) -> data/raw/cevipof (jeton DATAVERSE_API_TOKEN)."""
+    import sys
+
+    from vvs.ingest.cevipof import dataverse as dv
+    from vvs.ingest.cevipof import ingest as cv
+
+    who = dv.whoami()
+    typer.echo(f"compte Dataverse : {who or 'aucun jeton (accès public seulement)'}")
+    if check:
+        issues = cv.check()
+        typer.echo("\n".join(issues) if issues else "registre conforme à l'API")
+        return
+    if status:
+        rows = cv.access_status()
+        for k, fid, ok in rows:
+            typer.echo(f"{'accordé ' if ok else 'restreint'} {k} (fichier {fid})")
+        typer.echo(f"{sum(ok for *_, ok in rows)} / {len(rows)} fichiers lisibles")
+        return
+    if request_access:
+        for k, fid, msg in cv.request_access(keys=key):
+            typer.echo(f"{k} (fichier {fid}) : {msg}")
+            sys.stdout.flush()
+        return
+    report = cv.ingest(keys=key, data=not no_data)
+    typer.echo(report.summary(verbose=verbose))
+
+
+@parse_app.command("cevipof")
+def parse_cevipof(
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Détail par jeu"),
+) -> None:
+    """data/raw/cevipof -> data/curated/cevipof_votes.parquet (+ cevipof_codebook.parquet).
+
+    Code de sortie 1 si une modalité de vote n'est pas dans data/registry/aliases_cevipof.yaml.
+    """
+    from vvs.ingest.cevipof.parse import UnknownModality, run
+
+    try:
+        report = run()
+    except UnknownModality as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(code=1) from exc
+    typer.echo(report.summary(verbose=verbose))
+
+
+@ingest_app.command("expectations")
+def ingest_expectations() -> None:
+    """Pages et PDF d'instituts déclarés dans expectations_sources.yaml -> data/raw/expectations.
+
+    Les notices de la Commission et les rapports Ifop sont déjà collectés par
+    `vvs ingest commission-archive` / `commission` et `vvs parse certainty`."""
+    from vvs.ingest.expectations import ingest_web
+
+    stats = ingest_web()
+    typer.echo(f"{stats['downloaded']} copies téléchargées, {stats['present']} déjà présentes, "
+               f"{len(stats['failed'])} en échec")
+    for url, err in stats["failed"]:
+        typer.echo(f"  échec {url} : {err}", err=True)
+
+
+@parse_app.command("expectations")
+def parse_expectations(
+    no_scan: bool = typer.Option(False, "--no-scan", help="Sans l'inventaire des notices"),
+) -> None:
+    """Questions d'anticipation (qui va gagner, chances, souhait, bon président) ->
+    poll_expectations.parquet (+ poll_expectations_inventory.parquet).
+
+    Code de sortie 1 si une source déclarée n'a pas pu être lue ou vérifiée."""
+    from vvs.ingest.expectations import run
+
+    report = run(with_scan=not no_scan)
+    typer.echo(report.summary())
+    if any(x.error for x in report.extracted):
+        raise typer.Exit(code=1)
+
+
+@parse_app.command("commission-archive")
+def parse_commission_archive(
+    election: int = typer.Option(..., help="2017 ou 2022 (archives) ; 2027 : relecture à deux bases"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Détail des notices sans tableau"),
+) -> None:
+    """Notices d'une présidentielle -> polls_archive / poll_results_archive (2017, 2022) ou
+    polls_commission_dual / poll_results_commission_dual (2027), et poll_turnout_intent."""
+    from vvs.ingest.commission.archive import parse_archive
+
+    report = parse_archive(election)
+    typer.echo(report.summary(verbose=verbose))
+
+
 if __name__ == "__main__":
     app()

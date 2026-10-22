@@ -721,3 +721,44 @@ transfers:
         to: {macron_emmanuel: 4, le_pen_marine: 94, blank_or_abstain: 2}
       - from: abstain_or_blank_null
         to: {macron_emmanuel: 37, le_pen_marine: 28, blank_or_abstain: 35}
+- id: cevipof_2017
+  election: 2017
+  pollster: cevipof
+  title: 'Cevipof, French Electoral Study 2017 : reports de voix recalculés sur les microdonnées'
+  url: https://doi.org/10.21410/7E4/2XE05I
+  pages: microdonnées fes2017 ; calcul vvs.ingest.cevipof.transfers (étude back/studies/cevipof_transfers.py,
+    2026-10-22)
+  fieldwork_start: 2017-05-09
+  fieldwork_end: 2017-05-23
+  sample_size: 1752
+  mode: null
+  base: first_round_electorate
+  base_note: 'En % des électeurs de chaque électorat de premier tour (vote déclaré), lignes sommant à
+    100 avec blancs ou nuls et abstention au second tour (vote déclaré). Pondération de l''enquête calée
+    sur les votes des deux tours ; répondants qui refusent ou ne savent pas à l''un des deux tours exclus.
+    Effectif : répondants retenus dans la matrice.'
+  columns: split
+  notes: 'Valeurs à une décimale, calculées et non recopiées. Électorats de moins de 50 répondants omis
+    ; effectifs et intervalles bootstrap à 90 % dans runs/2026-10-22-cevipof/. Enquête post-électorale
+    en face à face (mode CAPI, `mode` laissé vide) : souvenir du vote quelques semaines après, sujet à
+    la reconstruction du vote. Le poids n''est calé que sur les votes exprimés : l''abstention au second
+    tour est sous-représentée et le vote blanc ou nul surdéclaré (marges pondérées contre résultats officiels
+    dans le rapport) ; la répartition entre finalistes (base `expressed` de transfer_prior) est la partie
+    la plus fiable de la matrice.'
+  rows:
+  - from: macron_emmanuel
+    to: {macron_emmanuel: 92.3, le_pen_marine: 2.0, blank_null: 2.0, abstain: 3.7}
+  - from: le_pen_marine
+    to: {macron_emmanuel: 2.4, le_pen_marine: 89.0, blank_null: 4.4, abstain: 4.2}
+  - from: fillon_francois
+    to: {macron_emmanuel: 53.4, le_pen_marine: 12.4, blank_null: 24.5, abstain: 9.7}
+  - from: melenchon_jean_luc
+    to: {macron_emmanuel: 47.8, le_pen_marine: 10.1, blank_null: 25.1, abstain: 17.0}
+  - from: hamon_benoit
+    to: {macron_emmanuel: 79.4, le_pen_marine: 1.0, blank_null: 8.8, abstain: 10.8}
+  - from: dupont_aignan_nicolas
+    to: {macron_emmanuel: 37.5, le_pen_marine: 34.3, blank_null: 22.4, abstain: 5.8}
+  - from: abstain
+    to: {macron_emmanuel: 11.9, le_pen_marine: 5.2, blank_null: 2.9, abstain: 80.0}
+  - from: blank_null
+    to: {macron_emmanuel: 14.7, le_pen_marine: 12.1, blank_null: 63.5, abstain: 9.7}

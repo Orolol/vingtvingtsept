@@ -1,0 +1,319 @@
+# Recodage des enquêtes du Cevipof vers nos codes (lu par vvs.ingest.cevipof.parse).
+#
+# Les clés de libellés sont comparées après normalisation (ASCII minuscule, ponctuation et
+# parenthèses en espaces) : « (A voté blanc) » et « a vote blanc » sont la même clé. Une
+# modalité absente fait échouer le parsing (`vvs parse cevipof`, code de sortie 1) : on
+# complète ce fichier, on ne devine pas.
+#
+# Codes produits : candidate_id de elections.yaml ; bloc de blocs.yaml pour les duels de
+# législatives (les options y sont des partis) ; codes réservés `abstention`, `blank` (blanc
+# ou nul), `undecided` (ne sait pas, ne se souvient pas), `refused` (refus, non-réponse) ;
+# `null` = question non posée au répondant ou non concerné (filtre du questionnaire).
+#
+# Libellés de candidats : nom complet de préférence. Un nom seul (« Le Pen ») vaut pour le
+# candidat de la décennie 2010-2020 ; les jeux de 2002 et 2007 donnent le nom complet.
+#
+# `datasets.<key>` (clé de cevipof_datasets.yaml) : variables relevées dans le codebook DDI
+# public du jeu ; tant que les microdonnées ne sont pas accessibles, `vvs parse cevipof`
+# rapporte le jeu comme `absent`, et `codebook_coverage()` vérifie déjà que toutes les
+# modalités du codebook sont couvertes (étude back/studies/cevipof_transfers.py).
+# - `reader` : stata (défaut, libellés du fichier), spss (pyreadstat, groupe `cevipof`),
+#   csv_zip / sas_zip (codes, libellés pris dans le codebook DDI) ;
+# - `weight` : poids retenu ; pour une matrice de reports, un poids calé sur les votes
+#   déclarés des deux tours quand il existe ;
+# - `vote_round1` / `vote_round2` : `var` (choix), `kind` (intention ou recall), `turnout`
+#   (variable de participation séparée, recodée par la table `turnout`) ;
+# - `duels` : intentions de second tour par hypothèse ; `options` = codes des options dans
+#   l'ordre du questionnaire ; `office` = president ou legislative ;
+# - `expectations` : anticipations sur échelle 0-10 (`question` = win_duel, qualify) ;
+# - `cluster` : unité primaire de sondage des enquêtes en face à face (bootstrap par grappes).
+
+candidates:
+  # 2002
+  Arlette LAGUILLER: laguiller_arlette
+  Daniel GLÜCKSTEIN: gluckstein_daniel
+  Olivier BESANCENOT: besancenot_olivier
+  Robert HUE: hue_robert
+  Lionel JOSPIN: jospin_lionel
+  Christiane TAUBIRA: taubira_christiane
+  Jean-Pierre CHEVÈNEMENT: chevenement_jean_pierre
+  Noël MAMÈRE: mamere_noel
+  Corinne LEPAGE: lepage_corinne
+  Jean SAINT-JOSSE: saint_josse_jean
+  François BAYROU: bayrou_francois
+  Christine BOUTIN: boutin_christine
+  Jacques CHIRAC: chirac_jacques
+  Alain MADELIN: madelin_alain
+  Jean-Marie LE PEN: le_pen_jean_marie
+  Bruno MÉGRET: megret_bruno
+  # 2007
+  Gérard SCHIVARDI: schivardi_gerard
+  José BOVÉ: bove_jose
+  Marie-George BUFFET: buffet_marie_george
+  Ségolène ROYAL: royal_segolene
+  Dominique VOYNET: voynet_dominique
+  Frédéric NIHOUS: nihous_frederic
+  Philippe de VILLIERS: de_villiers_philippe
+  Nicolas SARKOZY: sarkozy_nicolas
+  # 2012
+  Jacques CHEMINADE: cheminade_jacques
+  Nathalie ARTHAUD: arthaud_nathalie
+  Philippe POUTOU: poutou_philippe
+  Jean-Luc MÉLENCHON: melenchon_jean_luc
+  Eva JOLY: joly_eva
+  François HOLLANDE: hollande_francois
+  Nicolas DUPONT-AIGNAN: dupont_aignan_nicolas
+  Marine LE PEN: le_pen_marine
+  # 2017 (noms complets et noms seuls)
+  Nathalie Arthaud (Lutte ouvrière): arthaud_nathalie
+  Philippe Poutou (NPA): poutou_philippe
+  Benoît Hamon: hamon_benoit
+  Emmanuel Macron: macron_emmanuel
+  François Fillon: fillon_francois
+  Jean Lassalle: lassalle_jean
+  François Asselineau: asselineau_francois
+  Arthaud: arthaud_nathalie
+  Poutou: poutou_philippe
+  Melenchon: melenchon_jean_luc
+  Hamon: hamon_benoit
+  Macron: macron_emmanuel
+  Lassalle: lassalle_jean
+  Fillon: fillon_francois
+  Dupont-Aignan: dupont_aignan_nicolas
+  Asselineau: asselineau_francois
+  Le Pen: le_pen_marine
+  Cheminade: cheminade_jacques
+
+parties:
+  # duels de législatives (ENEF 2017 vague 15) : options = partis, codés par bloc
+  France Insoumise: far_left
+  Parti Socialiste: left
+  En Marche: centre
+  Les Républicains: right
+  Front National: far_right
+
+special:
+  # abstention
+  Je n'irais pas voter: abstention
+  N'ira pas voter: abstention
+  Abstention: abstention
+  Vous vous êtes abstenu(e): abstention
+  Vous vous êtes abstenu: abstention
+  Vous vous abstiendrez: abstention
+  S'abstiendrait: abstention
+  Vous n'iriez pas voter: abstention
+  Vous n'êtes pas allé voter: abstention
+  (N'est pas allé voter): abstention
+  # blancs et nuls
+  Je voterais blanc ou nul: blank
+  Je voterias blanc ou nul: blank  # coquille du codebook ENEF 2017 V11 bis
+  Vote blanc ou nul: blank
+  Votera blanc ou nul: blank
+  Blank or spoiled: blank
+  J'ai voté blanc (bulletin blanc ou enveloppe vide): blank
+  J'ai voté nul (deux bulletins, bulletin raturé…): blank
+  Vous avez voté blanc: blank
+  Vous avez voté nul: blank
+  Vous voterez blanc ou nul: blank
+  Vous voteriez blanc ou nul: blank
+  (A voté blanc ou nul): blank
+  (Vous avez voté blanc ou nul): blank
+  Vote blanc: blank
+  Vote nul: blank
+  # ne sait pas, refus, non posé
+  DK: undecided
+  Ne sait pas: undecided
+  Refusal: refused
+  Refus: refused
+  N'a pas répondu: refused
+  Sans réponse: refused
+  Non réponse: refused
+  # PEF 2007 vague 1 : l'intention est recueillie par vote simulé dans une urne ; refuser
+  # l'urne est un refus de répondre, pas un vote blanc
+  Refuse de voter dans l'urne: refused
+  Not concerned: null
+  Non concerné: null
+  Non concerné(e): null
+  Non enquêté(e): null
+
+turnout:
+  # FES 2017 (V1, V3)
+  Voted: voted
+  Did not vote: abstention
+  Wanted to vote, but didn't: abstention
+  Generally vote, but didn't: abstention
+  Refusal: refused
+
+certainty:
+  Définitif: certain
+  Peut encore changer: may_change
+  Non enquêté(e): null
+  Non concerné(e): null
+  N'a pas répondu: null
+
+datasets:
+  fes2017:
+    # French Electoral Study 2017, post-électorale en face à face (9-23 mai 2017),
+    # 1 830 répondants ; seul fichier de microdonnées public (CSV « avant import »).
+    reader: csv_zip
+    member: FES2017_avant_import.csv
+    sep: ";"
+    respondent_id: A1
+    weight: w5  # sociodémographie + diplôme + votes des deux tours de 2017
+    cluster: A3  # unité primaire de sondage (tirage aréolaire) : bootstrap par grappes
+    vote_round1: {var: V2, kind: recall, turnout: V1}
+    vote_round2: {var: V4, kind: recall, turnout: V3}
+    socio: {sex: S2, age: S3}
+
+  enef2017_v13:
+    # ENEF 2017 vague 13 (16-17 avril 2017, veille du premier tour)
+    respondent_id: ID12
+    weight: MPSDP  # sociodémographie + vote au premier tour 2012
+    vote_round1: {var: MQ1O, kind: intention}
+    certainty_round1: MQ1OBIS
+    turnout_intent: MQ0BIS
+    duels:
+      - {var: MIVPRE2A, options: [macron_emmanuel, fillon_francois]}
+      - {var: MIVPRE2B, options: [macron_emmanuel, le_pen_marine]}
+      - {var: MIVPRE2C, options: [fillon_francois, le_pen_marine]}
+      - {var: MIVPRE2D, options: [melenchon_jean_luc, macron_emmanuel]}
+      - {var: MIVPRE2E, options: [melenchon_jean_luc, le_pen_marine]}
+      - {var: MIVPRE2F, options: [melenchon_jean_luc, fillon_francois]}
+    expectations:
+      - {var: MVS4, question: win_duel, target: le_pen_marine, opponent: macron_emmanuel}
+      - {var: MVS5, question: win_duel, target: fillon_francois, opponent: le_pen_marine}
+      - {var: MVS6, question: win_duel, target: macron_emmanuel, opponent: fillon_francois}
+      - {var: MVS7, question: win_duel, target: fillon_francois, opponent: melenchon_jean_luc}
+      - {var: MVS8, question: win_duel, target: macron_emmanuel, opponent: melenchon_jean_luc}
+      - {var: MVS9, question: win_duel, target: le_pen_marine, opponent: melenchon_jean_luc}
+      - {var: MVS2_2, question: qualify, target: melenchon_jean_luc}
+      - {var: MVS2_3, question: qualify, target: hamon_benoit}
+      - {var: MVS2_4, question: qualify, target: macron_emmanuel}
+      - {var: MVS2_6, question: qualify, target: fillon_francois}
+      - {var: MVS2_8, question: qualify, target: le_pen_marine}
+    socio: {sex: SEXE, age_group: AGE_r1}
+
+  enef2017_v14:
+    # ENEF 2017 vague 14 (30 avril - 3 mai 2017, entre les deux tours)
+    respondent_id: ID12
+    weight: NPSDP  # sociodémographie + vote déclaré au premier tour 2017
+    vote_round1: {var: NPRES17A, kind: recall}
+    vote_round2: {var: NIVPRE2B, kind: intention}
+    turnout_intent: NQ0BIST2
+    expectations:
+      - {var: NVS4, question: win_duel, target: le_pen_marine, opponent: macron_emmanuel}
+    socio: {sex: SEXE, age_group: AGE_r1}
+
+  enef2017_v15:
+    # ENEF 2017 vague 15 (27 mai - 2 juin 2017, après le second tour) : vote déclaré au
+    # second tour et duels hypothétiques de législatives (options = partis -> blocs)
+    respondent_id: ID12
+    weight: OPSDP2  # sociodémographie + votes déclarés aux deux tours de 2017
+    vote_round2: {var: OPRES17B, kind: recall}
+    duels:
+      - {var: OLEGT2A, office: legislative, options: [far_left, centre]}
+      - {var: OLEGT2B, office: legislative, options: [far_left, right]}
+      - {var: OLEGT2C, office: legislative, options: [far_left, far_right]}
+      - {var: OLEGT2D, office: legislative, options: [left, right]}
+      - {var: OLEGT2E, office: legislative, options: [left, far_right]}
+      - {var: OLEGT2F, office: legislative, options: [centre, right]}
+      - {var: OLEGT2G, office: legislative, options: [centre, far_right]}
+      - {var: OLEGT2H, office: legislative, options: [right, far_right]}
+    socio: {sex: SEXE, age_group: AGE_r1}
+
+  enef2017_v12bis:
+    # ENEF 2017 vague 12 bis (31 mars - 4 avril 2017)
+    respondent_id: ID12
+    weight: LBPSDP
+    vote_round1: {var: LBQ1O, kind: intention}
+    certainty_round1: LBQ1OBIS
+    turnout_intent: LBQ0BIS
+    duels:
+      - {var: LBIVPRE2A, options: [macron_emmanuel, fillon_francois], certainty: LBIVPRE2A2}
+      - {var: LBIVPRE2B, options: [macron_emmanuel, le_pen_marine], certainty: LBIVPRE2B2}
+      - {var: LBIVPRE2C, options: [fillon_francois, le_pen_marine], certainty: LBIVPRE2C2}
+    socio: {sex: SEXE, age_group: AGE_r1}
+
+  enef2017_v12:
+    # ENEF 2017 vague 12 (14-19 mars 2017)
+    respondent_id: ID12
+    weight: LPSDP
+    vote_round1: {var: LQ1O, kind: intention}
+    certainty_round1: LQ1OBIS
+    turnout_intent: LQ0BIS
+    duels:
+      - {var: LIVPRE2A, options: [macron_emmanuel, fillon_francois], certainty: LIVPRE2A2}
+      - {var: LIVPRE2B, options: [macron_emmanuel, le_pen_marine], certainty: LIVPRE2B2}
+      - {var: LIVPRE2C, options: [fillon_francois, le_pen_marine], certainty: LIVPRE2C2}
+    socio: {sex: SEXE, age_group: AGE_r1}
+
+  enef2017_v11bis:
+    # ENEF 2017 vague 11 bis (1er-5 mars 2017)
+    respondent_id: ID12
+    weight: KBPSDP
+    vote_round1: {var: KBQ1O, kind: intention}
+    certainty_round1: KBQ1OBIS
+    turnout_intent: KBQ0BIS
+    duels:
+      - {var: KBIVPRE2A, options: [macron_emmanuel, fillon_francois], certainty: KBIVPRE2A2}
+      - {var: KBIVPRE2B, options: [macron_emmanuel, le_pen_marine], certainty: KBIVPRE2B2}
+      - {var: KBIVPRE2C, options: [fillon_francois, le_pen_marine], certainty: KBIVPRE2C2}
+    socio: {sex: SEXE, age_group: AGE_r1}
+
+  postelec2012:
+    # Enquête post-électorale 2012 (10-29 mai 2012)
+    respondent_id: null  # à relever dans le fichier (pas d'identifiant au codebook)
+    weight: weight2  # sociodémographie + votes des deux tours 2012
+    vote_round1: {var: Q16exp, kind: recall}
+    vote_round2: {var: Q22exp, kind: recall}
+
+  pef2007_v3:
+    # PEF 2007 vague 3 (29 mai - 9 juin 2007) : vote au second tour ; le vote au premier tour
+    # est en vague 2 (Q200P2), à apparier par identifiant.
+    respondent_id: null  # à relever dans le fichier
+    weight: RED2P2
+    vote_round2: {var: Q909P3, kind: recall}
+
+  pef2007_v2:
+    # PEF 2007 vague 2 (25 avril - 5 mai 2007, entre les deux tours)
+    respondent_id: null  # à relever dans le fichier
+    weight: RED1P2
+    vote_round1: {var: Q200P2, kind: recall}
+    vote_round2: {var: Q204P2, kind: intention}
+
+  pef2007_v1:
+    # PEF 2007 vague 1 (29 mars - 21 avril 2007) : duels hypothétiques et souhait
+    respondent_id: null  # à relever dans le fichier
+    weight: null  # à relever dans le fichier
+    vote_round1: {var: QIV, kind: intention}
+    duels:
+      - {var: Q99, options: [royal_segolene, sarkozy_nicolas]}
+      - {var: Q100, options: [bayrou_francois, sarkozy_nicolas]}
+      - {var: Q101, options: [royal_segolene, bayrou_francois]}
+
+  pef2002_v2:
+    # PEF 2002 vague 2 (15 mai - 3 juin 2002)
+    respondent_id: fxnaca
+    weight: ppidb2  # sociodémographie + vote au second tour 2002
+    vote_round1: {var: xq204, kind: recall}
+    vote_round2: {var: xq206, kind: recall}
+
+  pef2002_v1:
+    # PEF 2002 vague 1 (6-20 avril 2002) : intention et duel Chirac-Jospin
+    respondent_id: fxnaca
+    weight: poida2
+    vote_round1: {var: xq11, kind: intention}
+    duels:
+      - {var: xq24, options: [chirac_jacques, jospin_lionel]}
+
+  enef2017_v07:
+    # ENEF 2017 vague 7 (14-19 octobre 2016) : probabilité d'accès au second tour (0-10),
+    # posée avant les primaires
+    respondent_id: ID12
+    weight: GPSDP
+    expectations:
+      - {var: GPLPT2_0, question: qualify, target: hollande_francois}
+      - {var: GPLPT2_1, question: qualify, target: sarkozy_nicolas}
+      - {var: GPLPT2_2, question: qualify, target: melenchon_jean_luc}
+      - {var: GPLPT2_3, question: qualify, target: juppe_alain}
+      - {var: GPLPT2_4, question: qualify, target: le_pen_marine}
