@@ -15,6 +15,7 @@ silence.
 | [07-evaluation.md](07-evaluation.md) | Backtest, métriques, règle d'admission d'une variable |
 | [08-front.md](08-front.md) | Site statique SvelteKit, pages, contrat JSON |
 | [09-roadmap.md](09-roadmap.md) | Phases et état d'avancement |
+| [10-consolidation.md](10-consolidation.md) | Référence figée, chaîne chronologique jusqu'à la victoire, sensibilité aux scénarios |
 
 Décisions prises le 2026-10-20 (brainstorm initial) :
 

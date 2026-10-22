@@ -33,6 +33,7 @@ Les études utilisent un backtest rétrospectif laissant l'élection évaluée d
 La [consolidation du 22 octobre](docs/10-consolidation.md) fige une référence et ajoute
 une évaluation chronologique de toute la chaîne, de l'offre de candidats à la victoire,
 sur 2012, 2017 et 2022. Les dates de publication manquantes y sont explicitement imputées.
+Version de référence : tag `reference-2026-10-22`, avec résultats et audit versionnés.
 
 ## Pistes étudiées
 

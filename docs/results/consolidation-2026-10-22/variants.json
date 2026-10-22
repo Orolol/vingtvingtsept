@@ -1,0 +1,1741 @@
+[
+  {
+    "id": "reference",
+    "label": "Poids de référence",
+    "ess": 39996.565895266576,
+    "missing_mass": 0.00011916734693877553,
+    "impossible_mass": 0.019999999999999993,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "rn.le_pen.minus",
+    "label": "RN : Le Pen, poids 88% → 78%",
+    "ess": 36539.88359602725,
+    "missing_mass": 0.00019730000000000003,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.78,
+        "bardella": 0.21999999999999997
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "rn.le_pen.plus",
+    "label": "RN : Le Pen, poids 88% → 98%",
+    "ess": 36538.15822856983,
+    "missing_mass": 4.103469387755104e-05,
+    "impossible_mass": 0.019999999999999993,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.98,
+        "bardella": 0.020000000000000018
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "rn.le_pen.certain",
+    "label": "Condition : RN, Le Pen",
+    "ess": 35199.420355471426,
+    "missing_mass": 2.5408163265306122e-05,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 1.0,
+        "bardella": 0.0
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "rn.bardella.minus",
+    "label": "RN : Bardella, poids 12% → 2%",
+    "ess": 36538.15822856983,
+    "missing_mass": 4.103469387755104e-05,
+    "impossible_mass": 0.019999999999999993,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.9799999999999999,
+        "bardella": 0.01999999999999999
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "rn.bardella.plus",
+    "label": "RN : Bardella, poids 12% → 22%",
+    "ess": 36539.88359602724,
+    "missing_mass": 0.00019730000000000003,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.78,
+        "bardella": 0.22
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "rn.bardella.certain",
+    "label": "Condition : RN, Bardella",
+    "ess": 4797.145714256763,
+    "missing_mass": 0.0008067346938775509,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.0,
+        "bardella": 1.0
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.philippe_only.minus",
+    "label": "Bloc central : Philippe seul, poids 50% → 40%",
+    "ess": 38446.55749272395,
+    "missing_mass": 0.00013650491803278685,
+    "impossible_mass": 0.024,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.4,
+        "philippe_attal": 0.42,
+        "attal_only": 0.12,
+        "other": 0.06
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.philippe_only.plus",
+    "label": "Bloc central : Philippe seul, poids 50% → 60%",
+    "ess": 38471.01493822876,
+    "missing_mass": 0.00010197073170731707,
+    "impossible_mass": 0.01600000000000001,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.6,
+        "philippe_attal": 0.27999999999999997,
+        "attal_only": 0.08000000000000002,
+        "other": 0.04000000000000001
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.philippe_only.certain",
+    "label": "Condition : Bloc central, Philippe seul",
+    "ess": 20408.282801853944,
+    "missing_mass": 3.456e-05,
+    "impossible_mass": 0.0,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 1.0,
+        "philippe_attal": 0.0,
+        "attal_only": 0.0,
+        "other": 0.0
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.philippe_attal.minus",
+    "label": "Bloc central : Philippe et Attal, poids 35% → 25%",
+    "ess": 38286.85097993074,
+    "missing_mass": 0.00012852283464566928,
+    "impossible_mass": 0.023076923076923078,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5769230769230769,
+        "philippe_attal": 0.24999999999999997,
+        "attal_only": 0.11538461538461538,
+        "other": 0.05769230769230769
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.philippe_attal.plus",
+    "label": "Bloc central : Philippe et Attal, poids 35% → 45%",
+    "ess": 38308.380076371366,
+    "missing_mass": 0.0001098704225352113,
+    "impossible_mass": 0.01692307692307693,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.4230769230769231,
+        "philippe_attal": 0.44999999999999996,
+        "attal_only": 0.08461538461538462,
+        "other": 0.04230769230769231
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.philippe_attal.certain",
+    "label": "Condition : Bloc central, Philippe et Attal",
+    "ess": 14285.980469044738,
+    "missing_mass": 5.976e-05,
+    "impossible_mass": 0.0,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.0,
+        "philippe_attal": 1.0,
+        "attal_only": 0.0,
+        "other": 0.0
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.attal_only.minus",
+    "label": "Bloc central : Attal seul, poids 10% → 0%",
+    "ess": 36731.94422197858,
+    "missing_mass": 0.00011216000000000001,
+    "impossible_mass": 0.0,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5555555555555556,
+        "philippe_attal": 0.3888888888888889,
+        "attal_only": 0.0,
+        "other": 0.05555555555555556
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.attal_only.plus",
+    "label": "Bloc central : Attal seul, poids 10% → 20%",
+    "ess": 36477.99463883907,
+    "missing_mass": 0.00012646666666666666,
+    "impossible_mass": 0.03999999999999999,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.4444444444444445,
+        "philippe_attal": 0.3111111111111111,
+        "attal_only": 0.2,
+        "other": 0.04444444444444445
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.attal_only.certain",
+    "label": "Condition : Bloc central, Attal seul",
+    "ess": 3264.6216804647916,
+    "missing_mass": 0.000198,
+    "impossible_mass": 0.19999999999999998,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.0,
+        "philippe_attal": 0.0,
+        "attal_only": 1.0,
+        "other": 0.0
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.other.minus",
+    "label": "Bloc central : Autre candidat, poids 5% → 0%",
+    "ess": 37958.884925580205,
+    "missing_mass": 5.810322580645161e-05,
+    "impossible_mass": 0.021052631578947368,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5263157894736842,
+        "philippe_attal": 0.3684210526315789,
+        "attal_only": 0.10526315789473684,
+        "other": 0.0
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.other.plus",
+    "label": "Bloc central : Autre candidat, poids 5% → 15%",
+    "ess": 32956.24221739576,
+    "missing_mass": 0.00024090289389067522,
+    "impossible_mass": 0.017894736842105265,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.4473684210526316,
+        "philippe_attal": 0.3131578947368421,
+        "attal_only": 0.08947368421052632,
+        "other": 0.15000000000000002
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "centre.other.certain",
+    "label": "Condition : Bloc central, Autre candidat",
+    "ess": 2037.6811827647855,
+    "missing_mass": 0.0012549599999999998,
+    "impossible_mass": 0.0,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.0,
+        "philippe_attal": 0.0,
+        "attal_only": 0.0,
+        "other": 1.0
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "left.consolidated.minus",
+    "label": "Gauche hors LFI : Glucksmann seul, poids 35% → 25%",
+    "ess": 38314.76681980106,
+    "missing_mass": 9.820408163265308e-05,
+    "impossible_mass": 0.020000000000000007,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.24999999999999997,
+        "fragmented": 0.75
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "left.consolidated.plus",
+    "label": "Gauche hors LFI : Glucksmann seul, poids 35% → 45%",
+    "ess": 38310.1400062914,
+    "missing_mass": 0.00014013061224489793,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.44999999999999996,
+        "fragmented": 0.55
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "left.consolidated.certain",
+    "label": "Condition : Gauche hors LFI, Glucksmann seul",
+    "ess": 13994.106822331934,
+    "missing_mass": 0.0002554285714285715,
+    "impossible_mass": 0.019999999999999997,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 1.0,
+        "fragmented": 0.0
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "left.fragmented.minus",
+    "label": "Gauche hors LFI : Glucksmann et Tondelier, poids 65% → 55%",
+    "ess": 38310.14000629142,
+    "missing_mass": 0.00014013061224489793,
+    "impossible_mass": 0.02,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.4499999999999999,
+        "fragmented": 0.55
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "left.fragmented.plus",
+    "label": "Gauche hors LFI : Glucksmann et Tondelier, poids 65% → 75%",
+    "ess": 38314.76681980105,
+    "missing_mass": 9.820408163265308e-05,
+    "impossible_mass": 0.020000000000000007,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.25,
+        "fragmented": 0.75
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "left.fragmented.certain",
+    "label": "Condition : Gauche hors LFI, Glucksmann et Tondelier",
+    "ess": 26002.45992474873,
+    "missing_mass": 4.5795918367346936e-05,
+    "impossible_mass": 0.019999999999999997,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.0,
+        "fragmented": 1.0
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lr.retailleau.minus",
+    "label": "LR : Retailleau, poids 80% → 70%",
+    "ess": 37738.698752945704,
+    "missing_mass": 0.00014344948453608248,
+    "impossible_mass": 0.030000000000000002,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.7000000000000001,
+        "rally": 0.30000000000000004
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lr.retailleau.plus",
+    "label": "LR : Retailleau, poids 80% → 90%",
+    "ess": 37827.33724116571,
+    "missing_mass": 9.537575757575757e-05,
+    "impossible_mass": 0.009999999999999997,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.9,
+        "rally": 0.1
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lr.retailleau.certain",
+    "label": "Condition : LR, Retailleau",
+    "ess": 32653.183952425905,
+    "missing_mass": 7.206e-05,
+    "impossible_mass": 0.0,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 1.0,
+        "rally": 0.0
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lr.rally.minus",
+    "label": "LR : Ralliement au centre, poids 20% → 10%",
+    "ess": 37827.33724116571,
+    "missing_mass": 9.537575757575757e-05,
+    "impossible_mass": 0.009999999999999997,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.9,
+        "rally": 0.1
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lr.rally.plus",
+    "label": "LR : Ralliement au centre, poids 20% → 30%",
+    "ess": 37738.698752945704,
+    "missing_mass": 0.00014344948453608248,
+    "impossible_mass": 0.030000000000000002,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.7,
+        "rally": 0.30000000000000004
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lr.rally.certain",
+    "label": "Condition : LR, Ralliement au centre",
+    "ess": 7343.382263991056,
+    "missing_mass": 0.00032853333333333337,
+    "impossible_mass": 0.09999999999999999,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.0,
+        "rally": 1.0
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lfi.melenchon.minus",
+    "label": "LFI : Mélenchon, poids 97% → 87%",
+    "ess": 29836.689283719843,
+    "missing_mass": 0.00048782040816326504,
+    "impossible_mass": 0.019999999999999997,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.87,
+        "substitute": 0.1299999999999999
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lfi.melenchon.plus",
+    "label": "LFI : Mélenchon, poids 97% → 100%",
+    "ess": 38796.095501807366,
+    "missing_mass": 8.571428571428571e-06,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 1.0,
+        "substitute": 0.0
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lfi.melenchon.certain",
+    "label": "Condition : LFI, Mélenchon",
+    "ess": 38796.095501807366,
+    "missing_mass": 8.571428571428571e-06,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 1.0,
+        "substitute": 0.0
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lfi.substitute.minus",
+    "label": "LFI : Remplaçant, poids 3% → 0%",
+    "ess": 38796.095501807366,
+    "missing_mass": 8.571428571428571e-06,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 1.0,
+        "substitute": 0.0
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lfi.substitute.plus",
+    "label": "LFI : Remplaçant, poids 3% → 13%",
+    "ess": 29836.689283719832,
+    "missing_mass": 0.00048782040816326537,
+    "impossible_mass": 0.02,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.87,
+        "substitute": 0.13
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "lfi.substitute.certain",
+    "label": "Condition : LFI, Remplaçant",
+    "ess": 1200.4908827232045,
+    "missing_mass": 0.0036951020408163265,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.0,
+        "substitute": 1.0
+      },
+      "reconquete": {
+        "zemmour": 0.88,
+        "knafo": 0.02,
+        "none": 0.1
+      }
+    }
+  },
+  {
+    "id": "reconquete.zemmour.minus",
+    "label": "Reconquête : Zemmour, poids 88% → 78%",
+    "ess": 36540.462657922864,
+    "missing_mass": 0.0002077591836734694,
+    "impossible_mass": 0.02000000000000001,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.78,
+        "knafo": 0.03666666666666667,
+        "none": 0.18333333333333335
+      }
+    }
+  },
+  {
+    "id": "reconquete.zemmour.plus",
+    "label": "Reconquête : Zemmour, poids 88% → 98%",
+    "ess": 36538.29036235781,
+    "missing_mass": 3.057551020408165e-05,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.98,
+        "knafo": 0.0033333333333333366,
+        "none": 0.016666666666666684
+      }
+    }
+  },
+  {
+    "id": "reconquete.zemmour.certain",
+    "label": "Condition : Reconquête, Zemmour",
+    "ess": 35199.67904722222,
+    "missing_mass": 1.2857142857142856e-05,
+    "impossible_mass": 0.02,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 1.0,
+        "knafo": 0.0,
+        "none": 0.0
+      }
+    }
+  },
+  {
+    "id": "reconquete.knafo.minus",
+    "label": "Reconquête : Knafo, poids 2% → 0%",
+    "ess": 39201.41116854414,
+    "missing_mass": 5.9587671803415236e-05,
+    "impossible_mass": 0.02,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.8979591836734694,
+        "knafo": 0.0,
+        "none": 0.10204081632653061
+      }
+    }
+  },
+  {
+    "id": "reconquete.knafo.plus",
+    "label": "Reconquête : Knafo, poids 2% → 12%",
+    "ess": 26466.810972222418,
+    "missing_mass": 0.0004170657226155769,
+    "impossible_mass": 0.02,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.7902040816326531,
+        "knafo": 0.12000000000000001,
+        "none": 0.08979591836734695
+      }
+    }
+  },
+  {
+    "id": "reconquete.knafo.certain",
+    "label": "Condition : Reconquête, Knafo",
+    "ess": 795.1623254908249,
+    "missing_mass": 0.003038571428571428,
+    "impossible_mass": 0.02,
+    "low_ess": true,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.0,
+        "knafo": 1.0,
+        "none": 0.0
+      }
+    }
+  },
+  {
+    "id": "reconquete.none.minus",
+    "label": "Reconquête : Pas de candidat, poids 10% → 0%",
+    "ess": 35994.83423192299,
+    "missing_mass": 8.009523809523809e-05,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.9777777777777779,
+        "knafo": 0.022222222222222223,
+        "none": 0.0
+      }
+    }
+  },
+  {
+    "id": "reconquete.none.plus",
+    "label": "Reconquête : Pas de candidat, poids 10% → 20%",
+    "ess": 36006.81018119633,
+    "missing_mass": 0.00015823945578231295,
+    "impossible_mass": 0.020000000000000004,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.7822222222222223,
+        "knafo": 0.017777777777777778,
+        "none": 0.2
+      }
+    }
+  },
+  {
+    "id": "reconquete.none.certain",
+    "label": "Condition : Reconquête, Pas de candidat",
+    "ess": 4001.735035267854,
+    "missing_mass": 0.0004708163265306122,
+    "impossible_mass": 0.02,
+    "low_ess": false,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.88,
+        "bardella": 0.12
+      },
+      "centre": {
+        "philippe_only": 0.5,
+        "philippe_attal": 0.35,
+        "attal_only": 0.1,
+        "other": 0.05
+      },
+      "left": {
+        "consolidated": 0.35,
+        "fragmented": 0.65
+      },
+      "lr": {
+        "retailleau": 0.8,
+        "rally": 0.2
+      },
+      "lfi": {
+        "melenchon": 0.97,
+        "substitute": 0.03
+      },
+      "reconquete": {
+        "zemmour": 0.0,
+        "knafo": 0.0,
+        "none": 1.0
+      }
+    }
+  },
+  {
+    "id": "uniform",
+    "label": "Poids uniformes dans chaque dimension",
+    "ess": 648.6338473376118,
+    "missing_mass": 0.14285714285714293,
+    "impossible_mass": 0.12499999999999994,
+    "low_ess": true,
+    "dimension_weights": {
+      "rn": {
+        "le_pen": 0.5,
+        "bardella": 0.5
+      },
+      "centre": {
+        "philippe_only": 0.25,
+        "philippe_attal": 0.25,
+        "attal_only": 0.25,
+        "other": 0.25
+      },
+      "left": {
+        "consolidated": 0.5,
+        "fragmented": 0.5
+      },
+      "lr": {
+        "retailleau": 0.5,
+        "rally": 0.5
+      },
+      "lfi": {
+        "melenchon": 0.5,
+        "substitute": 0.5
+      },
+      "reconquete": {
+        "zemmour": 0.3333333333333333,
+        "knafo": 0.3333333333333333,
+        "none": 0.3333333333333333
+      }
+    }
+  }
+]

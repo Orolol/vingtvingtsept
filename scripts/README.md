@@ -1,5 +1,46 @@
 # scripts/
 
+## `run_consolidation.sh` : référence et évaluation chronologique
+
+Depuis la racine du dépôt, avec l'environnement Python déjà installé
+(`cd back && uv sync --all-groups`) :
+
+```sh
+scripts/run_consolidation.sh
+```
+
+Le script fige la référence définie dans `data/registry/reference_2026-10-22.yaml`, puis
+enchaîne les douze cas (2012, 2017, 2022 × 180, 90, 30, 7 jours), les scores de victoire
+et de qualification, et les 47 variantes de scénarios 2027. Il utilise exclusivement le
+CPU, avec deux calculs simultanés de quatre cœurs par défaut. `VVS_CONSOLIDATION_JOBS=1`
+permet de limiter la concurrence ; un premier argument change le dossier de sortie.
+
+La même commande reprend après interruption : elle vérifie les empreintes du gel et des
+étapes terminées, conserve les ajustements complets, et ne relance que les cas incomplets.
+Un fichier altéré provoque un échec explicite. Les diagnostics insuffisants restent dans
+les résultats et sont signalés ; ils ne provoquent pas un changement automatique du
+protocole ou des seuils. Aucun export live, commit ou push n'est exécuté.
+Un verrou placé à côté du dossier de sortie refuse deux exécutions simultanées sur le
+même gel (code de sortie 75).
+
+Sorties dans `runs/2026-10-22-consolidation/` :
+
+- `reference.json`, `source/`, `published/` : commit, paramètres, versions, empreintes,
+  copie des sources et données, tirages de la projection publiée ;
+- `cases/<année>-<horizon>/run.log` : journal de chaque cas ; `fit/quality.json` :
+  diagnostics ; `calibration.json` et `case.json` : traçabilité des entrées ;
+- `metrics.parquet`, `means.parquet`, `report.md` : résultats complets et synthèse ;
+- `sensitivity/probabilities.csv`, `variants.json`, `report.md` : sensibilités, poids,
+  tailles effectives et bornes dues aux configurations non représentées.
+
+Le dossier `runs/` est ignoré par Git : conserver le gel et les tirages avec les résultats.
+Le fichier `data/registry/reference_2026-10-22.lock.json` épingle le commit, les versions et
+les empreintes des entrées. Recréer ce gel dans un autre dossier reprend donc `a89d304`,
+même si le dépôt a évolué ; des entrées différentes font échouer le gel. Une référence
+sans verrou archive initialement le HEAD courant. Pour comparer une nouvelle version,
+utiliser un nouvel identifiant et un nouveau protocole, sans écraser cette référence.
+Méthode et limites : [10-consolidation.md](../docs/10-consolidation.md).
+
 ## `run_live.sh` : un run live de la prévision
 
 Enchaîne, depuis la racine du dépôt :
@@ -126,8 +167,7 @@ git commit -m "Run live du <date>"
 git push
 ```
 
-Le dépôt distant et l'activation de Pages (Settings → Pages → source « GitHub Actions ») sont
-à créer.
+Le dépôt distant et le site Pages sont en place (URL dans le README).
 
 ## Publication automatique
 

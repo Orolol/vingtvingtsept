@@ -2,19 +2,33 @@
 
 ## Principe
 
-Toute version du modèle, et toute variable candidate, est jugée sur des prévisions faites
-« comme à l'époque » : à la date `asof`, seuls les sondages et données publiés avant cette
-date sont visibles, et le modèle d'erreur est calibré sans l'élection évaluée.
+L'objectif est de juger les prévisions avec l'information disponible à la date `asof`.
+Deux protocoles sont désormais distingués : les études historiques en validation croisée
+par élection, et la consolidation chronologique décrite dans
+[10-consolidation.md](10-consolidation.md).
 
-## Protocole
+Les premières études excluent l'élection évaluée de la calibration, mais peuvent utiliser
+des élections ultérieures, filtrent surtout sur la fin du terrain et emploient parfois des
+correspondances de candidats connues après le scrutin. Leurs résultats restent valables
+comme comparaisons rétrospectives ; ils ne constituent pas une reproduction aveugle de
+l'information disponible à l'époque.
+
+La consolidation retire aussi les élections futures de **toutes** les calibrations actives,
+applique un filtre de publication (date manquante = fin du terrain + 2 jours), reconstruit
+les configurations sans substitution de candidats après coup, puis simule le vainqueur
+sans imposer les finalistes observés. Les classifications et bases rétrospectives restent
+des limites explicites. Elle ne change pas la règle d'admission ci-dessous après lecture
+des scores, ni le statut des options déjà publiées.
+
+## Protocole des études rétrospectives
 
 - **Élections** : 2012, 2017, 2022 en priorité (séries de sondages denses) ; 2007 et 2002
   si la couverture Wikipédia le permet, avec un poids réduit dans la synthèse.
 - **Horizons** : 180, 90, 30, 7 jours avant le premier tour, et la veille du second tour pour
   le modèle de reports.
-- **Scénarios** : pour le passé, on rejoue avec les configurations connues à chaque date
-  (par exemple avant et après la primaire de la droite en novembre 2016), pour ne pas donner
-  au modèle une information qu'il n'avait pas.
+- **Scénarios** : les études historiques comportent des évaluations conditionnelles aux
+  candidats finalement présents et des correspondances de candidats après primaire.
+  Elles sont à distinguer du rejeu sans correspondance ex post de la consolidation.
 - **Validation croisée** : leave-one-election-out pour tout paramètre estimé sur l'histoire
   (modèle d'erreur, facteur de design, biais de bloc, coefficients économiques et presse).
 
@@ -58,3 +72,11 @@ le document de la source.
 `runs/<date>/backtest/` : tableau des métriques par élection, horizon et version ;
 trajectoires des probabilités rejouées ; figures de calibration. Un résumé est copié dans
 `docs/backtest-log.md` à chaque changement de modèle, avec le commit.
+
+La consolidation écrit séparément `runs/2026-10-22-consolidation/` : copie figée des
+entrées, manifests et empreintes, douze ajustements, tirages du premier tour jusqu'à la
+victoire, scores par candidat et par scrutin, diagnostics d'inférence et de repondération,
+audit des sources de calibration et analyses de sensibilité. Le témoin `mean14d` partage
+les scénarios et le second tour avec la référence : il teste l'apport de l'agrégateur.
+Les moyennes donnent un poids égal aux trois élections ; les quatre horizons d'une même
+élection ne sont pas quatre observations indépendantes.

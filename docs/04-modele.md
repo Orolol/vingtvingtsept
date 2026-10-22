@@ -141,14 +141,15 @@ Sorties agrégées : probabilités de qualification et de victoire (globales et 
 configuration), quantiles des parts, matrice des duels (probabilité et score attendu pour
 chaque paire), trajectoire des probabilités au fil des runs.
 
-## État d'implémentation au 2026-10-20
+## État d'implémentation au 2026-10-22
 
 - **Agrégation (section 1)** : implémentée en numpyro (`model/first_round.py`),
   Dirichlet-multinomiale à concentration κ = (f·n − 1)/(1 − f), effectif effectif avec
   plancher 1/n_eff = 1/(f·n) + 1/n_max (n_max ~ LogNormal(log 2500, 0,3), défaut), contraintes
   d'identification par sommes nulles, hypothèses d'un même sondage pondérées 1/H.
 - **Substitution intra-bloc** : logit emboîté par bloc, option `Priors.substitution`,
-  désactivée par défaut. Dans le bloc, softmax de δ ; entre blocs, utilité
+  désactivée dans le constructeur des priors mais activée dans la projection publiée et
+  dans la référence figée du 22 octobre. Dans le bloc, softmax de δ ; entre blocs, utilité
   U_b = B_b + λ_b·log Σ exp(D_c) sur les candidats présents, λ_b ~ Beta(2, 2), λ = 1 redonne
   l'IIA. λ estimés sur toutes les élections : extrême droite 0,38, droite 0,39, centre 0,58,
   gauche 0,47, gauche radicale 0,56. Validation sur les hypothèses emboîtées d'un même
@@ -164,16 +165,22 @@ chaque paire), trajectoire des probabilités au fil des runs.
   39 configurations les plus probables (95 % de la masse) sont portées au second tour une à
   une, le reste regroupé.
 - **Second tour (section 4)** : `model/second_round.py`, échantillonnage d'importance ;
-  biais RN des sondages de duel calibré à 3,0 points et appliqué avec une atténuation
-  linéaire, plein effet à 30 jours ou moins, nul à 180 jours ou plus. **Provisoire** : le
-  backtest montre que le biais aide à la veille du second tour et dégrade à 180 jours, sans
-  mesure intermédiaire fiable.
+  la projection publiée utilise désormais la courbe de biais RN par horizon, remplaçant
+  l'atténuation linéaire. Ce choix, comme la substitution, est publié sans admission
+  stricte ; le couplage des erreurs premier tour / duel et la participation du second tour
+  tirée séparément restent désactivés. Les résultats détaillés sont dans `backtest-log.md`.
 - **Simulation (section 5)** : `model/simulate.py`, 40 000 tirages, participation (part
   d'exprimés parmi les inscrits) logit-normale ajustée sur 2002-2022, candidats à moins de
   trois hypothèses dans la grille tirés d'un prior log-normal centré sur leur médiane ou
   leur dernier résultat, remplaçants sans sondage au niveau de leur bloc. η s'applique aux
   log-parts de la configuration (c'est sur des différences de log-parts qu'il est calibré),
   identique à softmax(θ + η) sous l'IIA.
+
+La [consolidation chronologique](10-consolidation.md) fige ces choix au commit `a89d304`.
+Pour chaque date historique, elle réajuste le premier tour sur les sondages disponibles et
+recalibre l'erreur, les reports et la participation sur les seuls scrutins antérieurs.
+Elle évalue la victoire après simulation des candidatures et des qualifications ; les
+scores conditionnels au duel réellement observé restent des diagnostics distincts.
 
 ## 6. Ce qui est volontairement simple au début
 

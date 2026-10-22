@@ -16,6 +16,7 @@ import datetime as dt
 import hashlib
 import json
 import logging
+import os
 import subprocess
 from pathlib import Path
 
@@ -40,6 +41,9 @@ def official_shares(election: int) -> dict[str, float] | None:
 
 
 def _git_commit() -> str | None:
+    # Un gel de calcul n'est pas un worktree Git : son dossier parent peut avancer.
+    if frozen_commit := os.environ.get("VVS_SOURCE_COMMIT"):
+        return frozen_commit
     try:
         out = subprocess.run(
             ["git", "-C", str(paths.ROOT), "rev-parse", "--short", "HEAD"],

@@ -238,9 +238,12 @@ reste comptée. La méthode et les classifications ont été élaborées rétros
 et les dates de publication historiques sont toutes imputées dans les cas retenus.
 
 Douze ajustements conformes : R-hat maximal 1,0079, ESS minimale des parts 3 073, aucune
-divergence. Reprise vérifiée sans recalcul ; correction limitée à la promotion de type
+divergence. Reprise vérifiée sans recalcul ; correction de la promotion de type
 entier/décimal lors de l'assemblage des métriques, sans modification du gel ou des cas.
-719 tests passent. Scores complets, audit et figures :
+Le verrou versionné épingle le commit et les entrées même lors d'une recréation du gel ;
+l'audit distingue le commit du code figé du HEAD du dépôt parent relevé par l'ancien
+manifest (voir la note de provenance dans `10-consolidation.md`).
+732 tests passent. Scores complets, audit et figures :
 [jeu de résultats versionné](results/consolidation-2026-10-22/README.md).
 
 Sensibilité 2027 : 47 variantes nommées sur les mêmes tirages publiés. Sous les variations
