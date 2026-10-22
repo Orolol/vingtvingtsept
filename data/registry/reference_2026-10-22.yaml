@@ -1,0 +1,64 @@
+id: reference-2026-10-22
+description: Référence publiée du 22 octobre, figée avant la consolidation chronologique.
+asof: '2026-10-22'
+published_run: runs/2026-10-22-simulate-subst
+published_fit: runs/2026-10-22-fit-2027-subst
+elections: [2012, 2017, 2022]
+horizons: [180, 90, 30, 7]
+seed: 20261022
+n_draws: 40000
+fit:
+  weeks: 78
+  chains: 4
+  warmup: 1000
+  samples: 1000
+  target_accept: 0.9
+  max_tree_depth: 10
+priors:
+  sigma_beta: 0.1
+  sigma_delta: 0.1
+  beta0_sd: 1.0
+  delta0_sd: 1.0
+  house_bloc: 0.15
+  house_cand: 0.05
+  pop_sd: 0.15
+  design_a: 12.0
+  design_b: 8.0
+  n_max: 2500.0
+  n_max_sd: 0.3
+  substitution: true
+  lam_a: 2.0
+  lam_b: 2.0
+  pollster_ratings: false
+  certainty: false
+  certainty_kappa: null
+error:
+  use_bias: false
+  with_lists: true
+  list_weight: 0.5
+  list_kinds: [final]
+  nu: auto
+second_round:
+  bias_by_horizon: true
+  couple_far_right: false
+  second_round_turnout: false
+  use_potential: false
+historical_scenarios:
+  window_days: 30
+  max_window_days: 180
+  weighting: equal_poll_then_equal_hypothesis
+  official_list: after_publication_only
+  ex_post_candidate_mapping: false
+availability:
+  missing_publication_delay_days: 2
+  # Sensibilité de disponibilité calculée dans l'audit, sans ajuster ce choix aux scores.
+  audit_delays: [0, 2, 4, 7]
+sensitivity:
+  probability_shift: 0.10
+  include_uniform: true
+  include_conditional_states: true
+  minimum_ess: 1000
+diagnostics:
+  r_hat_max: 1.01
+  share_ess_min: 400
+  max_divergences: 0

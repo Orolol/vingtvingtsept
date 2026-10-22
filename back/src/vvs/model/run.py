@@ -116,6 +116,7 @@ def run_fit(
     save_draws: bool = False,
     figures: bool = True,
     save_trajectories: bool = False,
+    polls: pl.DataFrame | None = None,
 ) -> dict:
     """Ajuste le modèle de premier tour à la date `asof` et écrit les sorties dans `out`.
 
@@ -125,8 +126,10 @@ def run_fit(
     out = Path(out)
     out.mkdir(parents=True, exist_ok=True)
     started = dt.datetime.now()
-    df = load_polls(election, asof)
-    source = load_polls.last_source
+    df = load_polls(election, asof) if polls is None else polls
+    source = load_polls.last_source if polls is None else "provided"
+    if df.filter(pl.col("fieldwork_end") > asof).height:
+        raise ValueError("sondages fournis après la date de prévision")
     data = encode(df, election, asof, n_weeks=weeks, step_days=step_days, reference=reference)
     data.source = source
     if priors is not None and priors.pollster_ratings:
