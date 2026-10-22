@@ -1,0 +1,54 @@
+# Extrait figé des archives de Cagé et Piketty : 10 communes, années 2017 et 2022, colonnes
+# retenues seulement (généré depuis data/raw/conflit_politique le 2026-10-22).
+source:
+  title: extrait figé (tests)
+  url: https://www.unehistoireduconflitpolitique.fr/telecharger.html
+  retrieved: '2026-10-22'
+  licence: voir data/registry/conflit_politique.yaml
+  citation: Cagé et Piketty (2023)
+years:
+- 2017
+- 2022
+files:
+- key: revenus
+  name: Revenus_csv.zip
+  url: file://fixtures/Revenus_csv.zip
+  members:
+  - Revenus_csv/revcommunes.csv
+  sha256: 219cb4c27c133bcd1d758809fb679bfbf414c4be4953a730237a873b7a4cd7df
+  bytes: 938
+- key: diplomes
+  name: Diplomes_csv.zip
+  url: file://fixtures/Diplomes_csv.zip
+  members:
+  - Diplomes_csv/diplomescommunes.csv
+  sha256: 9c868c7f094387dd81db17d5d3066ae5c0c33fdf68b085fd0b70a07f7c4f7875
+  bytes: 654
+- key: proprietaires
+  name: Proprietaires_csv.zip
+  url: file://fixtures/Proprietaires_csv.zip
+  members:
+  - Proprietaires_csv/proprietairescommunes.csv
+  sha256: 250c16870af73196b6d3815794974718658a61e40ea69192e51830e0a44510a6
+  bytes: 592
+- key: csp
+  name: CSP_csv.zip
+  url: file://fixtures/CSP_csv.zip
+  members:
+  - CSP_csv/cspcommunes.csv
+  sha256: f4a48c75a6bf3f2036c2147af846bcff0f6aac46048c8abdba96f3c938399e2b
+  bytes: 1264
+- key: age
+  name: Age_csp.zip
+  url: file://fixtures/Age_csp.zip
+  members:
+  - Age_csp/agesexcommunes.csv
+  sha256: fb2d565207ffe096868e18f35cacae999e2d166053f8fc3eeb67446d551e3af1
+  bytes: 756
+- key: agglo
+  name: Taille_agglo_commune_csv.zip
+  url: file://fixtures/Taille_agglo_commune_csv.zip
+  members:
+  - Taille_agglo_commune_csv/popcommunes.csv
+  sha256: 3c7e3d1c6cae162c8fa0c909fba035948276e2317501a7b785678f00731c5a45
+  bytes: 781

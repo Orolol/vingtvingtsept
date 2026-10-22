@@ -27,3 +27,6 @@ data/curated/results_20??.parquet
 
 # Téléchargements bruts : régénérables, jamais versionnés
 data/raw/
+
+# Indicateurs communaux Cagé-Piketty (35 Mo, régénérables)
+data/curated/communes_socio.parquet

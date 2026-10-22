@@ -826,5 +826,29 @@ def parse_commission_archive(
     typer.echo(report.summary(verbose=verbose))
 
 
+@ingest_app.command("conflit-politique")
+def ingest_conflit_politique(
+    key: Annotated[
+        list[str] | None,
+        typer.Option("--key", help="Clé de data/registry/conflit_politique.yaml (répétable ; défaut : toutes)"),
+    ] = None,
+) -> None:
+    """Indicateurs socio-économiques communaux de Cagé et Piketty -> data/raw/conflit_politique."""
+    from vvs.ingest.conflit_politique import ingest
+
+    for name, status, digest in ingest(keys=key):
+        typer.echo(f"{status:10s} {name} {digest[:16]}")
+
+
+@parse_app.command("conflit-politique")
+def parse_conflit_politique() -> None:
+    """data/raw/conflit_politique -> data/curated/communes_socio.parquet."""
+    from vvs.ingest.conflit_politique import parse
+
+    out, df = parse()
+    years = sorted(df["year"].unique().to_list())
+    typer.echo(f"écrit : {out} ({df.height} lignes, {df['codecommune'].n_unique()} communes, années {years})")
+
+
 if __name__ == "__main__":
     app()

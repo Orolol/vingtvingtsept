@@ -1,0 +1,82 @@
+# Indicateurs socio-économiques par commune de Cagé et Piketty (2023), « Une histoire du
+# conflit politique » : données ouvertes du site du livre.
+#
+# Lu par vvs.ingest.conflit_politique : `vvs ingest conflit-politique` télécharge chaque archive
+# dans data/raw/conflit_politique/<name> avec <name>.meta.json (URL, heure, taille, sha256,
+# licence) ; un fichier présent n'est jamais réécrit, son empreinte est vérifiée.
+# `vvs parse conflit-politique` lit les membres listés et écrit
+# data/curated/communes_socio.parquet (une ligne par commune et par année de `years`).
+#
+# Seules les archives socio-économiques utiles sont téléchargées : pas les résultats
+# électoraux du site (on a les nôtres, ministère de l'Intérieur), ni le capital immobilier,
+# la nationalité, l'alphabétisation, l'enseignement privé (non retenus pour l'étude des
+# reports), ni les « nuances politiques (sources) » (15,9 Go).
+#
+# Relevé le 2026-10-22 sur la page « Télécharger » (Next.js, URL des archives dans
+# __NEXT_DATA__ : pageProps.socioDownloadUrls ; tailles annoncées en Mo dans
+# socioDownloadSizes ; archives déposées les 27 août et 11 septembre 2023, version 1.1.5 du
+# site du 2/9/2025).
+#
+# Format des fichiers communaux : CSV larges, séparateur virgule, UTF-8, une ligne par
+# commune, une colonne par variable et par année (suffixe AAAA : `revratio2017`), séries
+# annuelles interpolées par les auteurs entre recensements. Clé `codecommune` (code INSEE sur
+# 5 caractères) avec `dep`, `nomcommune`.
+
+source:
+  title: "Julia Cagé et Thomas Piketty, Une histoire du conflit politique. Élections et inégalités sociales en France, 1789-2022, données communales"
+  url: https://www.unehistoireduconflitpolitique.fr/telecharger.html
+  retrieved: 2026-10-22
+  licence: >-
+    Pas de licence nommée (ni Etalab, ni Creative Commons) sur le site ; la page de
+    téléchargement indique : « Vous pouvez télécharger librement l'ensemble de ces données qui
+    sont entièrement à votre disposition, mais n'oubliez pas de citer la source ». Usage
+    libre avec obligation de citation ; les bruts ne sont pas redistribués (data/raw/ hors
+    git).
+  citation: >-
+    Julia Cagé et Thomas Piketty (2023), Une histoire du conflit politique. Élections et
+    inégalités sociales en France, 1789-2022, Paris, Le Seuil ; données :
+    https://www.unehistoireduconflitpolitique.fr
+
+# Années extraites dans communes_socio.parquet : premiers tours des présidentielles étudiées
+years: [2002, 2007, 2012, 2017, 2022]
+
+# Archives téléchargées. `members` : fichiers de l'archive lus par le parseur.
+# `sha256` et `bytes` : relevés au premier téléchargement, vérifiés ensuite.
+files:
+  - key: revenus
+    name: Revenus_csv.zip
+    url: https://conflit-politique-data.ams3.cdn.digitaloceanspaces.com/zip/Revenus_csv.zip
+    members: [Revenus_csv/revcommunes.csv]
+    sha256: 87b53872f11bdf945023cfc08a95b15debea288a432ee8d8defda8d9323f4516
+    bytes: 334791958
+  - key: diplomes
+    name: Diplomes_csv.zip
+    url: https://conflit-politique-data.ams3.cdn.digitaloceanspaces.com/zip/Diplomes_csv.zip
+    members: [Diplomes_csv/diplomescommunes.csv]
+    sha256: b84fb07655e8b2cd8dcfcb043e1b346c5513f9158a44e495ad436447ba5ebac4
+    bytes: 67571903
+  - key: proprietaires
+    name: Proprietaires_csv.zip
+    url: https://conflit-politique-data.ams3.cdn.digitaloceanspaces.com/zip/Proprietaires_csv.zip
+    members: [Proprietaires_csv/proprietairescommunes.csv]
+    sha256: 31b5d6b99c69c66ba1ada59a9e6145d86b283678b968d54e1eb7f78dbd2a818f
+    bytes: 27400195
+  - key: csp
+    name: CSP_csv.zip
+    url: https://conflit-politique-data.ams3.cdn.digitaloceanspaces.com/zip/CSP_csv.zip
+    members: [CSP_csv/cspcommunes.csv]
+    sha256: 9926c5103a54d0b36ee727b96c37566b4dbb626ee1b000ce7282ce0a04811522
+    bytes: 278774859
+  - key: age
+    # le nom de l'archive porte « csp » par erreur côté site ; contenu : âge et sexe
+    name: Age_csp.zip
+    url: https://conflit-politique-data.ams3.cdn.digitaloceanspaces.com/zip/Age_csp.zip
+    members: [Age_csp/agesexcommunes.csv]
+    sha256: 39f768b7180d2ffebaeca1530f108aaa433c9c253c19912426483fe08b79ae39
+    bytes: 203442981
+  - key: agglo
+    name: Taille_agglo_commune_csv.zip
+    url: https://conflit-politique-data.ams3.cdn.digitaloceanspaces.com/zip/Taille_agglo_commune_csv.zip
+    members: [Taille_agglo_commune_csv/popcommunes.csv]
+    sha256: 182f5fa61b13c65f57e7a0d08bd41b65c82935d7bf688f37f0660c8ebaad966c
+    bytes: 130185786
