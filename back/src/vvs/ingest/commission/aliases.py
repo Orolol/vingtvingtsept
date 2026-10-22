@@ -9,6 +9,9 @@ locales pourront céder la place au chargeur du registre quand il couvrira les a
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 from unidecode import unidecode
 
@@ -204,19 +207,43 @@ NON_CANDIDATE_PREFIXES: tuple[str, ...] = (
 )
 
 
+# Candidats supplémentaires actifs pour la lecture des notices d'archive (2017, 2022) :
+# {clé `candidate_key` -> id}. Vide par défaut, de sorte que le parseur 2027 ne voit que
+# `CANDIDATES` ; `archive_candidates` les active le temps d'une lecture (voir `archive`).
+_EXTRA_CANDIDATES: ContextVar[Mapping[str, str] | None] = ContextVar(
+    "extra_candidates", default=None
+)
+
+
+@contextmanager
+def archive_candidates(labels: Mapping[str, list[str] | tuple[str, ...]]) -> Iterator[None]:
+    """Active des libellés supplémentaires {id: libellés} pour `candidate_id`."""
+    extra = {candidate_key(label): cid for cid, ls in labels.items() for label in ls}
+    token = _EXTRA_CANDIDATES.set(extra)
+    try:
+        yield
+    finally:
+        _EXTRA_CANDIDATES.reset(token)
+
+
 def candidate_id(label: str) -> str | None:
     """Id du candidat pour un libellé de ligne, None si ce n'est pas un candidat connu.
 
     Un suffixe de parti (« Marine Le Pen - Rassemblement National ») est retiré.
     """
-    if label in CANDIDATES:  # déjà un id (tableaux transposés)
+    extra = _EXTRA_CANDIDATES.get() or {}
+    if label in CANDIDATES or label in extra.values():  # déjà un id (tableaux transposés)
         return label
     variants = [label]
     parts = re.split(r"\s+[-–]\s+", label)
     if len(parts) == 2 and not re.search(r"\d", parts[1]):
         variants.append(parts[0])  # « Marine Le Pen - Rassemblement National » (YouGov)
+    supported = re.split(r",\s*soutenue? par\b", label)
+    if len(supported) == 2:
+        variants.append(supported[0])  # « Yannick Jadot, soutenu par EELV » (Ipsos 2022)
     for variant in variants:
-        cid = CANDIDATE_BY_KEY.get(candidate_key(variant))
+        key = candidate_key(variant)
+        cid = CANDIDATE_BY_KEY.get(key) or extra.get(key)
         if cid:
             return cid
     return None

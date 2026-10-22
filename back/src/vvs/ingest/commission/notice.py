@@ -544,7 +544,10 @@ def find_transposed_blocks(pages: list[str]) -> list[Block]:
             elif (
                 k >= 1 and norm_label(lines[k - 1]) in ("total", "ensemble") and _only_values(line)
             ):
-                values = parse_row("x " + line, 0).values
+                parsed = parse_row("x " + line, 0)
+                if parsed is None:  # ligne réduite à « % » ou « * » (notices archivées)
+                    continue
+                values = parsed.values
                 header = lines[max(0, k - 3) : k - 1]
             else:
                 continue
