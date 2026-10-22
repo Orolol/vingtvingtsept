@@ -1,0 +1,16 @@
+id: historical-scenarios-2026-10-22
+reference: reference-2026-10-22
+reference_run: runs/2026-10-22-consolidation
+window_days: 365
+half_life_days: 60
+variants:
+  - memory
+  - memory_events
+primary_variant: memory_events
+events_source: data/registry/events.yaml
+event_rule: withdraw_and_same_party_nomination
+event_available: next_day
+official_list: unchanged
+fit: reuse_reference_only_if_all_candidates_present
+metrics: unchanged
+selection: none
