@@ -180,3 +180,17 @@ résultat).
 
 Pistes restantes notées : volatilité par candidat pour la composante v_c de η ; consolidation
 limitée à la gauche comme information qualitative sur le site.
+
+## 2026-10-22 — troisième vague : volatilité par candidat, troupeau, anticipations, abstention différentielle, Cevipof
+
+| Piste | Étude | Backtest | Verdict |
+|---|---|---|---|
+| Volatilité par candidat sur v_c | β = 0,28 reproduit (p = 0,0005), Jennings–Wlezien 0,19 sur 40 pays | κ = 0 en leave-one-election-out dans 4 plis sur 5 : la loi actuelle (taille, mouvement) capte déjà le signal ; seule 2002 bouge, en pire | non admise |
+| Troupeau des instituts | resserrement réel en fin de campagne (7 élections sur 8, p = 0,012) ; mais dispersion et erreur vont ensemble (ρ = +0,50), pas en sens inverse | κ négatif ; `lists_herding` perd à 180 j, `lists_herding_final` échoue au critère 2 et éloigne la couverture | non admise ; dispersion 2027 très élevée (D = 3,5 contre 2,0) par divergence des configurations testées |
+| Anticipations « qui va gagner ? » (110 mesures 2007-2027) | le plus cité est le vainqueur dans tous les cas appariés ; part normalisée très sous-confiante (41 à 61 %) | ne bat le modèle sur aucune élection de référence à 90 ou 180 j ; conversion part → probabilité non estimable | non intégrée ; indicateur d'opinion sur le site (Le Pen 54 % chez Cluster17 en juillet 2026, modèle 67 %) |
+| Abstention différentielle (certains − inscrits, OpinionWay seul) | écart stable par candidat (r 0,9 entre moitiés de campagne) ; lien avec l'erreur finale seulement en 2022 et de signe négatif (électorats fragiles finissant au-dessus des sondages) ; validation croisée 2022 → 2017 échoue | non testé au backtest | non intégrée ; base publiée par chaque institut conservée |
+| Cevipof (microdonnées) | 80 jeux inventoriés, tous restreints ; 47 demandes déposées ; FES 2017 publique : matrice de reports complète (abstentionnistes et blancs compris), écart de 10 points avec les instituts sur l'électorat Fillon | source `cevipof_2017` ajoutée au prior des reports ; duels par électorat et anticipations ENEF à venir avec l'accès | en attente du CDSP |
+
+Défauts de curation relevés par l'étude d'abstention, à corriger : les sondages Ifop et
+Harris 2027 marqués `registered` alors que leurs tableaux portent sur les certains d'aller
+voter ; la seconde base d'OpinionWay perdue par la déduplication sur (tour, candidats).

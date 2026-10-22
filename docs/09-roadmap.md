@@ -23,6 +23,10 @@ choix, attention en ligne : aucune admise (voir `backtest-log.md`). Toutes reste
 options désactivées dans le code et des volets explicatifs possibles du site.
 
 ## Questions ouvertes
+- Curation 2027 : population Ifop et Harris à corriger (certains d'aller voter), seconde base
+  OpinionWay à conserver (déduplication sur tour et candidats trop large).
+- Cevipof : 47 demandes d'accès déposées le 2026-10-22 ; dès l'accès, `vvs ingest cevipof`
+  puis `vvs parse cevipof` et l'étude des duels par électorat (ENEF 2017 V13, ENEF 2022).
 - Participation du second tour : elle était implicite, déduite des reports, et mal calibrée
   (78,6 % à la veille de 2017 contre 66 % observés ; ma note précédente qui parlait d'une
   confusion de tours était fausse). Option `second_round_turnout` codée, non admise au
