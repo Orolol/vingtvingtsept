@@ -42,7 +42,8 @@ jobs:
         uses: actions/configure-pages@v6
       - run: npm ci
       - name: Données réelles (pas le jeu factice)
-        run: node -e "process.exit(require('./static/data/manifest.json').mock ? 1 : 0)"
+        run: |
+          node -e "process.exit(require('./static/data/manifest.json').mock ? 1 : 0)"
       - name: Validation des données contre le contrat JSON
         run: npm run validate-data
       - name: Vérification des types
