@@ -2,6 +2,7 @@
 
 import datetime as dt
 import json
+import sys
 from types import SimpleNamespace
 
 import numpy as np
@@ -11,8 +12,11 @@ from toy_run import toy_scenarios
 
 from vvs.eval.consolidation import (
     available_polls,
+    check_pin,
     digest,
     historical_configurations,
+    main,
+    report,
     score_chain,
     verify,
 )
@@ -38,6 +42,23 @@ def test_availability_uses_publication_and_explicit_missing_delay():
     assert available_polls(polls, d, 0)["poll_id"].to_list() == ["known", "unknown"]
     with pytest.raises(ValueError):
         available_polls(polls, d, -1)
+
+
+def test_fit_rejects_supplied_polls_after_forecast_date(tmp_path):
+    from vvs.model.run import run_fit
+
+    asof = dt.date(2022, 4, 3)
+    future = pl.DataFrame({"fieldwork_end": [asof + dt.timedelta(days=1)]})
+    with pytest.raises(ValueError, match="après la date de prévision"):
+        run_fit(2022, asof, tmp_path / "fit", polls=future)
+
+
+def test_fit_metadata_uses_frozen_commit_instead_of_parent_git_head(monkeypatch):
+    from vvs.model.run import _git_commit
+
+    frozen = "a89d304" + "0" * 33
+    monkeypatch.setenv("VVS_SOURCE_COMMIT", frozen)
+    assert _git_commit() == frozen
 
 
 def test_historical_configs_weight_polls_not_number_of_hypotheses():
@@ -116,3 +137,49 @@ def test_frozen_input_mutation_is_rejected(tmp_path):
     file.write_text("changed")
     with pytest.raises(ValueError, match="modifiée"):
         verify(tmp_path)
+
+
+def test_reference_pin_allows_recreation_but_rejects_another_source_commit():
+    pinned = {"id": "reference", "commit": "original", "spec": {}, "versions": {}, "files": {}}
+    check_pin(pinned | {"created_at": "another day"}, pinned)
+    with pytest.raises(ValueError, match="commit"):
+        check_pin(pinned | {"commit": "current-worktree-head"}, pinned)
+
+
+def test_resume_rejects_changed_dependencies_before_starting_cases(tmp_path, monkeypatch):
+    (tmp_path / "reference.json").write_text(json.dumps({"files": {}, "versions": {}}))
+    monkeypatch.setattr(sys, "argv", ["consolidation", "run", "--out", str(tmp_path)])
+    with pytest.raises(ValueError, match="versions de dépendances"):
+        main()
+    assert not (tmp_path / "cases").exists()
+
+
+def test_report_combines_integer_zero_and_fractional_unforecast_share(tmp_path):
+    spec = {"elections": [2012, 2017], "horizons": [7]}
+    (tmp_path / "reference.json").write_text(json.dumps({"files": {}, "spec": spec}))
+    for election, missing in ((2012, 0), (2017, 0.5)):
+        folder = tmp_path / "cases" / f"{election}-007"
+        folder.mkdir(parents=True)
+        frame = pl.DataFrame(
+            [
+                {
+                    "election": election,
+                    "horizon": 7,
+                    "method": "reference",
+                    "p_winner": 0.8,
+                    "log_score_winner": -0.2,
+                    "log_score_pair": -0.3,
+                    "brier_win": 0.1,
+                    "crps": 1.0,
+                    "coverage90": 0.9,
+                    "fit_acceptable": True,
+                    "unforecast_share": missing,
+                }
+            ]
+        )
+        file = folder / "metrics.parquet"
+        frame.write_parquet(file)
+        (folder / "scored.json").write_text(json.dumps({file.name: digest(file)}))
+    report(tmp_path)
+    assert pl.read_parquet(tmp_path / "metrics.parquet")["unforecast_share"].to_list() == [0, 0.5]
+    assert pl.read_parquet(tmp_path / "means.parquet")["n_elections"].item() == 2

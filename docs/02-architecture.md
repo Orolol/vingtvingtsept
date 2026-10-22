@@ -39,7 +39,7 @@ vingtvingtsept/
       curate/                normalisation vers les schémas, règles de correction explicites
       registry/              chargement et validation des YAML
       model/                 modèle d'agrégation, erreur, scénarios, second tour, simulation
-      eval/                  backtest et métriques
+      eval/                  backtest, métriques, consolidation chronologique et sensibilité
       export/                production des JSON pour le front
       cli.py                 point d'entrée `uv run vvs …`
     studies/                 scripts d'étude (économie, presse), sorties dans runs/
@@ -61,6 +61,15 @@ uv run vvs export --run runs/2026-10-20
 Chaque run écrit un `manifest.json` (date, commit, versions des registres, hash des données
 curated, paramètres) pour être rejouable.
 
+La référence de consolidation est définie dans
+`data/registry/reference_2026-10-22.yaml`. `scripts/run_consolidation.sh` archive le code
+commité et ses données sous `runs/2026-10-22-consolidation/source/` ; le fichier `.lock.json`
+associé épingle le commit et les empreintes pour les recréations. Le calcul utilise cette
+copie via `VVS_ROOT` et `PYTHONPATH`. Les tirages publiés sont copiés séparément pour la
+sensibilité ; les calculs historiques réajustent le modèle sur les seules données
+disponibles. Les empreintes contrôlent le gel et chaque étape réutilisée. Détails :
+[10-consolidation.md](10-consolidation.md).
+
 ## Choix techniques
 
 - **Données** : parquet via polars ; duckdb pour les requêtes ad hoc. Pas de base serveur.
@@ -68,8 +77,9 @@ curated, paramètres) pour être rejouable.
   Le code du modèle est isolé dans `vvs/model/` pour pouvoir changer de moteur.
 - **Validation de schémas** : pydantic pour les registres YAML, pandera ou contrôles polars
   pour les parquet.
-- **Automatisation live** : une tâche planifiée (cron local ou GitHub Actions) relance
-  ingestion, fit, export et commit du site. À définir en phase 8.
+- **Automatisation live** : `scripts/run_live.sh` enchaîne ingestion, fit, export, build et
+  publication ; GitHub Actions construit le site à partir des données commitées. La
+  planification locale est documentée dans `scripts/README.md`.
 - **Front** : SvelteKit + adapter-static, déployé sur GitHub Pages. Détails dans
   `08-front.md`.
 

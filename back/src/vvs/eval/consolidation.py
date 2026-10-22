@@ -66,17 +66,31 @@ def load_spec() -> dict:
     return yaml.safe_load((paths.ROOT / REFERENCE).read_text())
 
 
+def check_pin(actual: dict, pinned: dict | None) -> None:
+    if pinned is not None:
+        for key in ("id", "commit", "spec", "versions", "files"):
+            if actual[key] != pinned[key]:
+                raise ValueError(f"référence différente du verrou versionné : {key}")
+
+
 def freeze(out: Path) -> None:
     """Archive Git du code/données suivis, plus les tirages publiés ; jamais d'écrasement."""
+    lock = (paths.ROOT / REFERENCE).with_suffix(".lock.json")
+    pinned = json.loads(lock.read_text()) if lock.exists() else None
     if (out / "reference.json").exists():
-        verify(out)
+        check_pin(verify(out), pinned)
         return
     if out.exists() and any(out.iterdir()):
         raise ValueError(f"gel incomplet ou dossier non vide : {out}")
     spec = load_spec()
-    commit = subprocess.check_output(
-        ["git", "rev-parse", "HEAD"], cwd=paths.ROOT, text=True
-    ).strip()
+    if pinned is not None:
+        if spec != pinned["spec"]:
+            raise ValueError("configuration modifiée : créer une nouvelle référence")
+        commit = pinned["commit"]
+    else:
+        commit = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=paths.ROOT, text=True
+        ).strip()
     members = ["back/src/vvs", "back/uv.lock", "back/pyproject.toml", "data/registry"]
     members += [f"data/curated/{name}" for name in TABLES]
     # Refuse un gel trompeur : les sources exécutées doivent être celles du commit archivé.
@@ -84,7 +98,7 @@ def freeze(out: Path) -> None:
         ["git", "diff", "HEAD", "--name-only", "--", *members], cwd=paths.ROOT, text=True
     ).splitlines()
     relevant_dirty = [p for p in dirty if p != "back/src/vvs/cli.py"]
-    if relevant_dirty:
+    if relevant_dirty and pinned is None:
         raise ValueError(f"committer les entrées du gel d'abord : {relevant_dirty}")
     archive = subprocess.check_output(["git", "archive", commit, *members], cwd=paths.ROOT)
     source = out / "source"
@@ -114,18 +128,17 @@ def freeze(out: Path) -> None:
     }
     from vvs.model.simulate import _versions
 
-    write_json(
-        out / "reference.json",
-        {
-            "id": spec["id"],
-            "commit": commit,
-            "spec": spec,
-            "created_at": dt.datetime.now(dt.UTC).isoformat(),
-            "versions": _versions(),
-            "files": files,
-            "ignored_worktree_changes": dirty,
-        },
-    )
+    record = {
+        "id": spec["id"],
+        "commit": commit,
+        "spec": spec,
+        "created_at": dt.datetime.now(dt.UTC).isoformat(),
+        "versions": _versions(),
+        "files": files,
+        "ignored_worktree_changes": dirty,
+    }
+    check_pin(record, pinned)
+    write_json(out / "reference.json", record)
     print(f"Référence figée : {out} ({len(files)} fichiers)", flush=True)
 
 
@@ -458,7 +471,7 @@ def score_chain(sim: dict, election: int, registry) -> tuple[dict, list[dict]]:
         "crps": float(mt.crps(x, y).mean()),
         "coverage50": float(mt.covered(x, y, 0.5).mean()),
         "coverage90": float(mt.covered(x, y, 0.9).mean()),
-        "unforecast_share": sum(s for c, s in actual.items() if c not in candidates),
+        "unforecast_share": float(sum(s for c, s in actual.items() if c not in candidates)),
         "n_draws": n,
         "n_candidates": len(candidates),
         "n_scoring_candidates": k,
@@ -542,17 +555,18 @@ def complete_score(folder: Path) -> bool:
 
 
 def run_all(out: Path, jobs: int) -> None:
-    spec = load_spec()
+    # Le coordinateur peut être corrigé sans toucher au code statistique du gel.
+    # Chaque cas et la sensibilité s'exécutent exclusivement dans sa copie de sources.
+    spec = verify(out)["spec"]
     cpus = sorted(os.sched_getaffinity(0))
     workers = max(1, min(jobs, len(cpus) // 4 or 1))
     cases = [(e, h) for e in spec["elections"] for h in spec["horizons"]]
-    for e, h in cases:
-        prepare_case(out, e, h, spec)
 
     def worker(group: int):
         own_cpus = cpus[group * 4 : (group + 1) * 4] or cpus
         for e, h in cases[group::workers]:
             folder = out / "cases" / f"{e}-{h:03d}"
+            folder.mkdir(parents=True, exist_ok=True)
             if complete_score(folder):
                 print(f"Réutilisation vérifiée : {e}/{h}", flush=True)
                 continue
@@ -573,21 +587,29 @@ def run_all(out: Path, jobs: int) -> None:
             ]
             print(f"Début {e}/{h} ; journal {folder / 'run.log'}", flush=True)
             with (folder / "run.log").open("w") as log:
-                subprocess.run(command, check=True, stdout=log, stderr=subprocess.STDOUT)
+                subprocess.run(
+                    command,
+                    env=frozen_environment(out),
+                    check=True,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                )
             print(f"Terminé {e}/{h}", flush=True)
 
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = [executor.submit(worker, i) for i in range(workers)]
         for future in as_completed(futures):
             future.result()
-    from vvs.eval.sensitivity import analyze
-
-    analyze(out, spec)
+    subprocess.run(
+        [sys.executable, "-m", "vvs.eval.consolidation", "sensitivity", "--out", str(out)],
+        env=frozen_environment(out),
+        check=True,
+    )
     report(out)
 
 
 def report(out: Path) -> None:
-    spec = load_spec()
+    spec = verify(out)["spec"]
     frames = []
     for e in spec["elections"]:
         for h in spec["horizons"]:
@@ -596,7 +618,9 @@ def report(out: Path) -> None:
                 frames.append(pl.read_parquet(folder / "metrics.parquet"))
     if not frames:
         raise ValueError("aucun cas terminé")
-    metrics = pl.concat(frames).sort("election", "horizon", "method")
+    # Les premiers gels ont écrit 0 (entier) lorsqu'aucun candidat ne manquait,
+    # contre une somme décimale sinon. Promotion de type, sans altérer les scores.
+    metrics = pl.concat(frames, how="vertical_relaxed").sort("election", "horizon", "method")
     metrics.write_parquet(out / "metrics.parquet")
     cols = ["p_winner", "log_score_winner", "log_score_pair", "brier_win", "crps", "coverage90"]
     lines = [
@@ -644,6 +668,20 @@ def report(out: Path) -> None:
     (out / "report.md").write_text("\n".join(lines))
 
 
+def frozen_environment(out: Path) -> dict[str, str]:
+    source = out / "source"
+    return os.environ | {
+        "VVS_ROOT": str(source),
+        "VVS_SOURCE_COMMIT": json.loads((out / "reference.json").read_text())["commit"],
+        "PYTHONPATH": str(source / "back/src"),
+        "JAX_PLATFORMS": "cpu",
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "POLARS_MAX_THREADS": "2",
+        "MPLCONFIGDIR": "/tmp/vvs-mpl-consolidation",
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -659,31 +697,31 @@ def main():
     if args.command == "freeze":
         freeze(out)
         return
-    verify(out)
+    manifest = verify(out)
     if args.command == "verify":
         print("Empreintes de la référence vérifiées.")
         return
+    if args.command in ("run", "case", "sensitivity"):
+        from vvs.model.simulate import _versions
+
+        if _versions() != manifest["versions"]:
+            raise ValueError("versions de dépendances différentes de la référence figée")
+    if args.command == "run":
+        run_all(out, args.jobs)
+        return
+    if args.command == "report":
+        report(out)
+        return
     source = out / "source"
     if paths.ROOT.resolve() != source:
-        env = os.environ | {
-            "VVS_ROOT": str(source),
-            "PYTHONPATH": str(source / "back/src"),
-            "JAX_PLATFORMS": "cpu",
-            "OMP_NUM_THREADS": "1",
-            "OPENBLAS_NUM_THREADS": "1",
-            "POLARS_MAX_THREADS": "2",
-            "MPLCONFIGDIR": "/tmp/vvs-mpl-consolidation",
-        }
         subprocess.run(
-            [sys.executable, "-m", "vvs.eval.consolidation", *sys.argv[1:]], env=env, check=True
+            [sys.executable, "-m", "vvs.eval.consolidation", *sys.argv[1:]],
+            env=frozen_environment(out),
+            check=True,
         )
         return
     if args.command == "case":
         score_case(out, args.election, args.horizon)
-    elif args.command == "run":
-        run_all(out, args.jobs)
-    elif args.command == "report":
-        report(out)
     else:
         from vvs.eval.sensitivity import analyze
 

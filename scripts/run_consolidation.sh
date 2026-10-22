@@ -4,6 +4,12 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 output_dir="${1:-$project_root/runs/2026-10-22-consolidation}"
 output_dir="$(realpath -m "$output_dir")"
+mkdir -p "$(dirname "$output_dir")"
+exec 9>"$output_dir.lock"
+if ! flock -n 9; then
+  printf '%s\n' "Une consolidation utilise déjà $output_dir" >&2
+  exit 75
+fi
 jobs="${VVS_CONSOLIDATION_JOBS:-2}"
 cd "$project_root/back"
 export JAX_PLATFORMS=cpu

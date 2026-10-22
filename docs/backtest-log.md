@@ -191,6 +191,50 @@ limitée à la gauche comme information qualitative sur le site.
 | Abstention différentielle (certains − inscrits, OpinionWay seul) | écart stable par candidat (r 0,9 entre moitiés de campagne) ; lien avec l'erreur finale seulement en 2022 et de signe négatif (électorats fragiles finissant au-dessus des sondages) ; validation croisée 2022 → 2017 échoue | non testé au backtest | non intégrée ; base publiée par chaque institut conservée |
 | Cevipof (microdonnées) | 80 jeux inventoriés, tous restreints ; 47 demandes déposées ; FES 2017 publique : matrice de reports complète (abstentionnistes et blancs compris), écart de 10 points avec les instituts sur l'électorat Fillon | source `cevipof_2017` ajoutée au prior des reports ; duels par électorat et anticipations ENEF à venir avec l'accès | en attente du CDSP |
 
-Défauts de curation relevés par l'étude d'abstention, à corriger : les sondages Ifop et
-Harris 2027 marqués `registered` alors que leurs tableaux portent sur les certains d'aller
-voter ; la seconde base d'OpinionWay perdue par la déduplication sur (tour, candidats).
+Défauts de curation relevés par l'étude d'abstention, corrigés le 2026-10-22 : les sondages
+Ifop et Harris 2027 étaient marqués `registered` alors que leurs tableaux portent sur les
+certains d'aller voter ; la seconde base d'OpinionWay était perdue par la déduplication sur
+(tour, candidats). Règles de correction et de sélection d'une base : `03-donnees.md`.
+
+## 2026-10-22 — Consolidation chronologique de la chaîne complète
+
+Référence statistique figée au commit `a89d304`, bilan conservé sous le tag
+`reference-2026-10-22`. Protocole annoncé avant le calcul :
+[10-consolidation.md](10-consolidation.md). 2012, 2017, 2022 × 180, 90, 30, 7 jours ;
+40 000 tirages par cas et par modèle. Toutes les calibrations actives excluent le scrutin
+évalué et les scrutins futurs. Publication manquante = fin du terrain + 2 jours ; scénarios
+historiques sans correspondance de candidats après coup. Le vainqueur est simulé après
+les candidatures, le premier tour et la qualification, sans imposer le duel observé.
+
+Le témoin `mean14d` partage la loi d'erreur, les scénarios et le second tour avec la
+référence ; cette comparaison mesure l'apport de l'agrégateur.
+
+| Horizon | Δ log-score victoire | Δ log-score paire | Δ CRPS | Lecture |
+|---|---|---|---|---|
+| 180 j | +0,175 | +0,155 | −0,020 | gain surtout porté par 2017 ; couverture 90 % à 66,5 % |
+| 90 j | −0,008 | −0,011 | +0,020 | petite dégradation sur les trois métriques |
+| 30 j | +0,008 | −0,001 | −0,048 | résultat partagé selon la métrique |
+| 7 j | −0,032 | −0,079 | −0,068 | parts mieux prédites au CRPS, événements moins bien scorés |
+
+Différences référence moins témoin ; positif préférable pour les log-scores, négatif pour
+le CRPS. **Pas de domination uniforme, pas de nouvelle admission.** En 2017 à 180 jours,
+les candidats absents des scénarios représentent 28,5 % des voix finales ; cette erreur
+reste comptée. La méthode et les classifications ont été élaborées rétrospectivement,
+et les dates de publication historiques sont toutes imputées dans les cas retenus.
+
+Douze ajustements conformes : R-hat maximal 1,0079, ESS minimale des parts 3 073, aucune
+divergence. Reprise vérifiée sans recalcul ; correction de la promotion de type
+entier/décimal lors de l'assemblage des métriques, sans modification du gel ou des cas.
+Le verrou versionné épingle le commit et les entrées même lors d'une recréation du gel ;
+l'audit distingue le commit du code figé du HEAD du dépôt parent relevé par l'ancien
+manifest (voir la note de provenance dans `10-consolidation.md`).
+732 tests passent. Scores complets, audit et figures :
+[jeu de résultats versionné](results/consolidation-2026-10-22/README.md).
+
+Sensibilité 2027 : 47 variantes nommées sur les mêmes tirages publiés. Sous les variations
+locales de ±10 points des poids, victoire Le Pen 62,1–78,0 %, Bardella 1,4–15,9 %, ensemble
+RN environ 77,6–79,7 %. Les poids uniformes laissent 14,286 % de masse sans tirage et une
+ESS d'environ 649 : les bornes sont publiées, le chiffre central reste conditionnel au
+support représenté. Ces étendues sont des sensibilités aux hypothèses, pas des intervalles
+de confiance ; certaines perturbations binaires sont équivalentes.
+
