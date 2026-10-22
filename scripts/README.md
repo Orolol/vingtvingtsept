@@ -1,5 +1,29 @@
 # scripts/
 
+## `run_historical_scenarios.sh` : reconstruction historique expérimentale
+
+```sh
+scripts/run_historical_scenarios.sh
+```
+
+Requiert le gel complet `runs/2026-10-22-consolidation/`. Compare une mémoire des listes
+sondées sur un an et sa variante filtrée par événements datés, avec le code statistique,
+les ajustements et les métriques du gel. Protocole et résultat négatif dans
+[`docs/11-scenarios-historiques.md`](../docs/11-scenarios-historiques.md).
+
+Écrit seulement dans `runs/2026-10-22-historical-scenarios/` (premier argument pour
+changer ce dossier). Les 409 fichiers de référence, les dépendances et les sources
+de l'étude sont contrôlés par empreintes. Les douze cas terminés sont repris après
+vérification ; les cas incomplets sont rejoués. Un verrou refuse les lancements
+concurrents sur le même dossier, avec le code de sortie 75. Calcul CPU uniquement,
+sans réajustement NUTS, export live ni publication.
+
+Depuis `back/`, le bilan vérifié et ses figures s'exportent dans `review/` :
+
+```sh
+uv run python studies/historical_scenarios_report.py --run ../runs/2026-10-22-historical-scenarios --reference ../runs/2026-10-22-consolidation
+```
+
 ## `run_consolidation.sh` : référence et évaluation chronologique
 
 Depuis la racine du dépôt, avec l'environnement Python déjà installé

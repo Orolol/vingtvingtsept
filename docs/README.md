@@ -16,6 +16,7 @@ silence.
 | [08-front.md](08-front.md) | Site statique SvelteKit, pages, contrat JSON |
 | [09-roadmap.md](09-roadmap.md) | Phases et état d'avancement |
 | [10-consolidation.md](10-consolidation.md) | Référence figée, chaîne chronologique jusqu'à la victoire, sensibilité aux scénarios |
+| [11-scenarios-historiques.md](11-scenarios-historiques.md) | Reconstruction avec mémoire et événements datés : comparaison à la référence, variantes non admises |
 
 Décisions prises le 2026-10-20 (brainstorm initial) :
 

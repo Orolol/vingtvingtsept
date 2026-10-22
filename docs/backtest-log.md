@@ -266,3 +266,39 @@ renseignent pas (Philippe–Glucksmann passerait de 48 à 66 % pour Philippe). C
 non admises. Les réglages du second tour sont désormais injectables
 (`SecondRoundSettings`), défauts inchangés. Effet sur 2027 des variantes : P(Le Pen) 70,0 →
 70,0 à 70,4 %.
+
+## 2026-10-22 — Reconstruction des scénarios historiques : non admise
+
+Protocole committé dans `01bd100` avant les scores, détaillé dans
+[11-scenarios-historiques.md](11-scenarios-historiques.md). Deux variantes de scénarios :
+mémoire des hypothèses sur 365 jours (demi-vie 60 jours), puis même mémoire filtrée par
+retraits et désignations déjà datés dans le registre figé. Aucun réglage après lecture
+des résultats. Même chaîne chronologique `a89d304`, douze cas, deux agrégateurs,
+40 000 simulations par cas, calibrations et ajustements réutilisés à l'identique.
+
+Variante principale, mémoire + événements, agrégateur bayésien ; écarts à la référence :
+
+| Horizon | Δ log victoire | Δ log paire | Δ CRPS | Δ couverture 90 %, points |
+|---|---|---|---|---|
+| 180 j | −0,0426 | −0,0153 | −0,0011 | +2,78 |
+| 90 j | −0,0156 | −0,0005 | +0,0160 | 0,00 |
+| 30 et 7 j | 0 | 0 | 0 | 0 |
+
+En 2017 à 180 jours, les voix finales hors support passent de 28,50 % à 6,36 %, mais
+Fillon n'a que 4,68 % de probabilité de présence. Hamon reste absent. Les listes anciennes
+réduisent aussi la présence de Macron et dégradent le log-score de victoire de 0,137.
+À 90 jours, éliminer les listes contenant Hollande supprime de nouveau Asselineau et
+Lassalle : une hypothèse complète ne permet pas de gérer indépendamment les candidatures.
+
+La mémoire seule réintroduit notamment des hypothèses socialistes périmées en 2012 ;
+le filtre événementiel limite ce défaut, sans rendre l'ensemble supérieur à la référence.
+Seul 2022 améliore le log-score de la paire aux deux horizons longs. Le témoin `mean14d`
+ne fournit pas non plus de domination. **Deux variantes non admises ; référence et
+projection 2027 inchangées.** Cette étude répond à un défaut déjà observé sur ces mêmes
+élections : ses résultats restent exploratoires.
+
+Contrôles : 24 rejeux de référence, issues discrètes identiques et écart maximal sur les
+parts de 2,85 × 10⁻¹⁴ point ; 409 fichiers de référence inchangés ; 737 tests passent
+(quatre avertissements préexistants), reprise des douze cas vérifiée.
+Scores détaillés, présence, événements appliqués et figure :
+[bilan versionné](results/historical-scenarios-2026-10-22/README.md).

@@ -21,6 +21,7 @@ Fichiers :
 | `elections.yaml` | dates des tours, candidats officiels (parti, bloc), résultats nationaux du Conseil constitutionnel |
 | `pollsters.yaml` | instituts, alias de libellés, mode de collecte |
 | `scenarios_2027.yaml` | dimensions de candidatures 2027, petits candidats, contraintes, révisions datées (`vvs.registry.scenarios`) |
+| `historical_scenarios_2026-10-22.yaml` | protocole expérimental de reconstruction historique, séparé de la référence figée ; voir `docs/11-scenarios-historiques.md` |
 | `transfers.yaml` | matrices de reports de voix des seconds tours 2002-2022 par source (`vvs.registry.transfers`) |
 | `outlets.yaml` | panel de titres de presse nationale, domaines, présence dans la collection Media Cloud (`vvs.ingest.press.outlets`) |
 | `press_queries.yaml` | requêtes presse par candidat (alias, exclusions, formes rejetées) et par thème (mots-clés, thèmes GKG, rubriques INA) |

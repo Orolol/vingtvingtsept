@@ -80,3 +80,9 @@ audit des sources de calibration et analyses de sensibilité. Le témoin `mean14
 les scénarios et le second tour avec la référence : il teste l'apport de l'agrégateur.
 Les moyennes donnent un poids égal aux trois élections ; les quatre horizons d'une même
 élection ne sont pas quatre observations indépendantes.
+
+L'[étude de reconstruction historique](11-scenarios-historiques.md) réutilise ce gel et
+ses ajustements pour comparer deux autres lois de scénarios, avec les mêmes scores et
+les deux agrégateurs. Le protocole a été déclaré avant ses calculs ; le défaut initial
+ayant été observé sur les mêmes élections, cette étude reste exploratoire. Aucun score
+ni fichier de la référence n'est remplacé. Les deux variantes ne sont pas admises.
