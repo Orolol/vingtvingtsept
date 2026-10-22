@@ -189,6 +189,62 @@ TURNOUT2_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 HOUSE_SD_FLOOR = 0.5
 
 
+@dataclass(frozen=True)
+class SecondRoundSettings:
+    """Réglages du prior des reports : décalages communs σ_u et σ_v (logit) par type de duel
+    (`analog`, `inedit`) et matrice de proximité (attirances de 0 à 10, bornes de la part « ni
+    l'un ni l'autre »). Sans argument : les constantes du module (`SIGMA_U`, `SIGMA_V`,
+    `PROXIMITY`, `PROXIMITY_NONE`), lues à la construction. Validé à la construction : une
+    ligne par électorat (blocs et `abstain`), une colonne par bloc, attirances dans [0, 10],
+    0 ≤ n_min ≤ n_max < 1, σ positifs pour les deux types de duel."""
+
+    sigma_u: Mapping[str, float] = field(default_factory=lambda: dict(SIGMA_U))
+    sigma_v: Mapping[str, float] = field(default_factory=lambda: dict(SIGMA_V))
+    proximity: Mapping[str, Mapping[str, float]] = field(
+        default_factory=lambda: {k: dict(v) for k, v in PROXIMITY.items()}
+    )
+    proximity_none: Mapping[str, tuple[float, float]] = field(
+        default_factory=lambda: dict(PROXIMITY_NONE)
+    )
+
+    def __post_init__(self) -> None:
+        for name in ("sigma_u", "sigma_v"):
+            s = getattr(self, name)
+            if set(s) != {"analog", "inedit"} or any(not (v >= 0) for v in s.values()):
+                raise ValueError(f"{name} : clés analog et inedit, valeurs positives ({s})")
+        rows = {*BLOCS, ABSTAIN}
+        if set(self.proximity) != rows:
+            raise ValueError(f"matrice de proximité : lignes {sorted(self.proximity)} au lieu de {sorted(rows)}")
+        for r, row in self.proximity.items():
+            if set(row) != set(BLOCS):
+                raise ValueError(f"matrice de proximité, ligne {r} : colonnes {sorted(row)}")
+            if any(not (0.0 <= v <= 10.0) for v in row.values()):
+                raise ValueError(f"matrice de proximité, ligne {r} : attirances hors de [0, 10]")
+        for r, (lo, hi) in self.proximity_none.items():
+            if r not in rows:
+                raise ValueError(f"PROXIMITY_NONE : électorat inconnu {r}")
+            if not (0.0 <= lo <= hi < 1.0):
+                raise ValueError(f"PROXIMITY_NONE[{r}] = ({lo}, {hi}) : 0 ≤ n_min ≤ n_max < 1")
+
+    def with_(self, **kw) -> SecondRoundSettings:
+        """Copie modifiée (`proximity_rows` remplace des lignes entières de la matrice)."""
+        rows = kw.pop("proximity_rows", None)
+        if rows:
+            prox = {k: dict(v) for k, v in self.proximity.items()}
+            for r, vals in rows.items():
+                prox[r] = {**prox[r], **vals}
+            kw["proximity"] = prox
+        return replace(self, **kw)
+
+    def to_dict(self) -> dict:
+        return {
+            "sigma_u": dict(self.sigma_u),
+            "sigma_v": dict(self.sigma_v),
+            "proximity": {k: dict(v) for k, v in self.proximity.items()},
+            "proximity_none": {k: list(v) for k, v in self.proximity_none.items()},
+        }
+
+
 def _logit(p: np.ndarray) -> np.ndarray:
     p = np.clip(p, 1e-6, 1 - 1e-6)
     return np.log(p) - np.log1p(-p)
@@ -668,12 +724,17 @@ class GroupPrior:
         return replace(self, mean=(b, a, c))
 
 
-def proximity_mean(electorate: str, bloc_i: str, bloc_j: str) -> tuple[float, float, float]:
-    """Moyenne des reports (i, j, ni l'un ni l'autre) donnée par la matrice de proximité."""
-    row = PROXIMITY[electorate]
+def proximity_mean(
+    electorate: str, bloc_i: str, bloc_j: str, settings: SecondRoundSettings | None = None
+) -> tuple[float, float, float]:
+    """Moyenne des reports (i, j, ni l'un ni l'autre) donnée par la matrice de proximité
+    (celle de `settings`, à défaut les constantes du module)."""
+    prox = PROXIMITY if settings is None else settings.proximity
+    none = PROXIMITY_NONE if settings is None else settings.proximity_none
+    row = prox[electorate]
     ai, aj = row[bloc_i], row[bloc_j]
     s = 1.0 / (1.0 + math.exp(-PROXIMITY_LAMBDA * (ai - aj)))
-    lo, hi = PROXIMITY_NONE.get(electorate, PROXIMITY_NONE_DEFAULT)
+    lo, hi = none.get(electorate, PROXIMITY_NONE_DEFAULT)
     n = lo + (hi - lo) * (1.0 - max(ai, aj) / 10.0)
     return ((1 - n) * s, (1 - n) * (1 - s), n)
 
@@ -754,6 +815,7 @@ def analog_prior(
     exclude: Iterable[int] = (),
     transfers: tuple[TransferSource, ...] | None = None,
     registry: Registry | None = None,
+    settings: SecondRoundSettings | None = None,
 ) -> tuple[tuple[float, float, float], list[int], str] | None:
     """Moyenne des reports d'un groupe d'après les élections passées au même type de duel.
 
@@ -792,7 +854,7 @@ def analog_prior(
     if nones:
         n = float(np.mean(nones))
     else:
-        n = proximity_mean(electorate, bloc_i, bloc_j)[2]
+        n = proximity_mean(electorate, bloc_i, bloc_j, settings)[2]
         note = "part ni-l'un-ni-l'autre prise dans la matrice (aucune source base électorat)"
     return ((1 - n) * s, (1 - n) * (1 - s), n), used, note
 
@@ -1372,6 +1434,9 @@ class SecondRoundModel:
     du premier tour passée à `sample(..., shared_error=…)` ; ρ = `coupling_rho` ou estimé par
     `far_right_coupling` hors élection ajustée), `second_round_turnout` (participation du
     second tour tirée d'une loi ajustée sur les seconds tours, hors élection ajustée).
+
+    `settings` : réglages du prior des reports (`SecondRoundSettings` : σ_u, σ_v, matrice de
+    proximité) ; défaut : les constantes du module.
     """
 
     def __init__(
@@ -1389,8 +1454,11 @@ class SecondRoundModel:
         couple_far_right: bool = False,
         coupling_rho: float | None = None,
         second_round_turnout: bool = False,
+        settings: SecondRoundSettings | None = None,
     ) -> None:
         self.registry = registry or default_registry()
+        # réglages du prior des reports (σ_u, σ_v, matrice de proximité) ; défaut : constantes
+        self.settings = settings or SecondRoundSettings()
         self.bias_by_horizon = bias_by_horizon
         self.couple_far_right = couple_far_right
         self.coupling_rho = coupling_rho
@@ -1436,7 +1504,7 @@ class SecondRoundModel:
             pair = tuple(pair)  # type: ignore[assignment]
             blocs = tuple(self.registry.bloc_of(c, election) for c in pair)
             groups, inedit, notes = build_groups(
-                pair, blocs, election, excl, own, self.transfers, self.registry
+                pair, blocs, election, excl, own, self.transfers, self.registry, self.settings
             )
             polls = (
                 load_duel_polls(election, asof, pair, self.curated)
@@ -1457,8 +1525,8 @@ class SecondRoundModel:
                 pair=pair,
                 blocs=blocs,
                 groups=groups,
-                sigma_u=SIGMA_U[kind],
-                sigma_v=SIGMA_V[kind],
+                sigma_u=self.settings.sigma_u[kind],
+                sigma_v=self.settings.sigma_v[kind],
                 polls=polls,
                 errors=errors,
                 gap_days=gap,
@@ -1533,8 +1601,10 @@ def build_groups(
     own: tuple[float, float, float],
     transfers: tuple[TransferSource, ...],
     registry: Registry,
+    settings: SecondRoundSettings | None = None,
 ) -> tuple[dict[str, GroupPrior], bool, list[str]]:
-    """Priors de tous les groupes possibles d'un duel ; (groupes, inédit, notes)."""
+    """Priors de tous les groupes possibles d'un duel ; (groupes, inédit, notes). `settings` :
+    matrice de proximité (défaut : constantes du module)."""
     bi, bj = blocs
     groups: dict[str, GroupPrior] = {
         f"own:{pair[0]}": GroupPrior(f"own:{pair[0]}", own, KAPPA_OWN, False, "own"),
@@ -1547,8 +1617,8 @@ def build_groups(
     any_recent = False
     for electorate in [*BLOCS, ABSTAIN]:
         key = ABSTAIN if electorate == ABSTAIN else f"bloc:{electorate}"
-        prox = proximity_mean(electorate, bi, bj)
-        found = analog_prior(electorate, bi, bj, election, exclude, transfers, registry)
+        prox = proximity_mean(electorate, bi, bj, settings)
+        found = analog_prior(electorate, bi, bj, election, exclude, transfers, registry, settings)
         if found is None:
             groups[key] = GroupPrior(key, prox, KAPPA_PROXIMITY, True, "proximity")
             continue
@@ -1679,11 +1749,13 @@ def forecast(
     first_round_days: int = 14,
     registry: Registry | None = None,
     use_potential: bool = False,
+    settings: SecondRoundSettings | None = None,
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
     """Distribution de la part et P(victoire) pour chaque paire, avec des parts de premier tour
     simples : moyenne des `first_round_days` derniers jours (hypothèses contenant la paire),
     bruitée par `noisy_first_round` à l'horizon ; résultats officiels si le premier tour a eu
-    lieu. `use_potential` : plafonds doux du potentiel électoral (docstring du module). Rend
+    lieu. `use_potential` : plafonds doux du potentiel électoral (docstring du module).
+    `settings` : réglages du prior des reports (`SecondRoundSettings`, défaut : constantes). Rend
     (une ligne par paire, une ligne par paire × électorat)."""
     registry = registry or default_registry()
     e = registry.elections[election]
@@ -1691,7 +1763,9 @@ def forecast(
     horizon = (d1 - asof).days if horizon is None else horizon
     pairs = pairs or tested_pairs(election, asof)
     rng = np.random.default_rng(seed)
-    model = SecondRoundModel(registry, use_potential=use_potential).fit(election, asof, pairs)
+    model = SecondRoundModel(registry, use_potential=use_potential, settings=settings).fit(
+        election, asof, pairs
+    )
     kappa = first_round_concentration(max(horizon, 0), exclude={election})
     rows, tr_rows = [], []
     for pair in pairs:
