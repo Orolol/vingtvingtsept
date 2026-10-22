@@ -11,6 +11,7 @@
 #   VVS_RN_BIAS_CURVE=1|0  biais RN du second tour par horizon (1 par défaut : choix publié)
 #   VVS_ASOF=AAAA-MM-JJ    date de prévision (défaut : aujourd'hui)
 #   VVS_DRAWS=N            tirages Monte-Carlo (défaut : celui de `vvs simulate`)
+#   VVS_PUBLISH=1|0        commit de front/static/data et data/curated puis push sur main (1 par défaut)
 #   VVS_ENV_FILE=chemin    fichier d'environnement lu s'il existe (défaut
 #                          ~/.config/vingtvingtsept/env) ; jamais écrit ni journalisé
 #
@@ -153,4 +154,36 @@ if [ "$DRY_RUN" = 1 ]; then
 	exit 0
 fi
 echo "[$(ts)] run terminé en $(($(date +%s) - START)) s ; site construit dans front/build"
-echo "[$(ts)] à publier : commit de front/static/data (et data/curated), puis push"
+
+# Publication : commit des données exportées et curées, puis push (VVS_PUBLISH=0 pour sauter).
+# Seuls front/static/data et data/curated sont ajoutés ; rien n'est commité si rien n'a changé ;
+# on ne publie que depuis main, avec un remote origin.
+case "${VVS_PUBLISH:-1}" in
+1 | true | yes) ;;
+0 | false | no)
+	echo "[$(ts)] publication sautée (VVS_PUBLISH=0) : commit de front/static/data et data/curated, puis push"
+	exit 0
+	;;
+*)
+	echo "VVS_PUBLISH invalide : ${VVS_PUBLISH} (1 ou 0)" >&2
+	exit 2
+	;;
+esac
+BRANCH="$(git -C "$ROOT" rev-parse --abbrev-ref HEAD)"
+if [ "$BRANCH" != "main" ]; then
+	echo "[$(ts)] publication sautée : branche $BRANCH (main attendue)"
+	exit 0
+fi
+if ! git -C "$ROOT" remote get-url origin >/dev/null 2>&1; then
+	echo "[$(ts)] publication sautée : pas de remote origin"
+	exit 0
+fi
+git -C "$ROOT" add front/static/data data/curated
+if git -C "$ROOT" diff --cached --quiet; then
+	echo "[$(ts)] rien à publier : données inchangées"
+	exit 0
+fi
+N_POLLS="$(python3 -c "import json;print(json.load(open('$DATA/manifest.json')).get('n_polls','?'))" 2>/dev/null || echo "?")"
+git -C "$ROOT" commit -q -m "Run du $ASOF : $N_POLLS sondages, projection réexportée (run_live.sh)"
+git -C "$ROOT" push -q origin main
+echo "[$(ts)] publié : commit $(git -C "$ROOT" rev-parse --short HEAD) poussé sur origin/main ; GitHub Pages reconstruit le site"

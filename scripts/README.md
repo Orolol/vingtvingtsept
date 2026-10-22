@@ -128,3 +128,11 @@ git push
 
 Le dépôt distant et l'activation de Pages (Settings → Pages → source « GitHub Actions ») sont
 à créer.
+
+## Publication automatique
+
+À la fin d'un run, le script commite `front/static/data` et `data/curated` (seulement si quelque
+chose a changé), puis pousse sur `origin/main`, ce qui déclenche le workflow GitHub Pages. Il ne
+publie que depuis la branche `main` et seulement si un remote `origin` existe. `VVS_PUBLISH=0`
+désactive cette étape (le site construit reste dans `front/build`). Le push passe par la clé SSH
+de la machine : pour cron, elle doit être utilisable sans agent interactif.
