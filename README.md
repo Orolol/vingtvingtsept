@@ -1,12 +1,99 @@
 # vingtvingtsept
 
-Prévision de l'élection présidentielle française de 2027 : agrégation bayésienne des sondages
-depuis 2002, calibration historique de l'erreur, arbre de scénarios de candidats, simulation du
-premier et du second tour. Sources complémentaires étudiées : indicateurs économiques et titres
-de presse.
+Prévision probabiliste de l'élection présidentielle française de 2027, dans l'esprit de
+FiveThirtyEight : agrégation bayésienne des sondages depuis 2002, erreur calibrée sur
+l'histoire, arbre de scénarios de candidats, second tour par reports de voix, simulation
+Monte-Carlo. Site : https://orolol.github.io/vingtvingtsept/
 
-- Spécifications : [`docs/`](docs/README.md)
-- Back (Python, `uv`) : `back/`
-- Front (SvelteKit statique) : `front/`
+Premier tour le 18 avril 2027, second tour le 2 mai. La projection est mise à jour à chaque
+nouveau sondage.
 
-État : phase 0, squelette et specs. Voir [`docs/09-roadmap.md`](docs/09-roadmap.md).
+## Ce que fait le modèle
+
+1. **Sondages agrégés** : soutien latent par candidat, à deux niveaux (bloc politique et
+   écart propre), marches aléatoires hebdomadaires, effets maison par institut, effectif
+   effectif avec plancher d'erreur, inférence NUTS (numpyro). Option de substitution
+   intra-bloc (logit emboîté) pour les hypothèses de candidats différentes.
+2. **Erreur calibrée** : l'incertitude ne vient pas d'une marge théorique mais des erreurs
+   observées aux présidentielles 2002-2022, complétées par les européennes 2014-2024 et les
+   législatives 2022-2024, corrélées par bloc, croissantes avec l'horizon (forme estimée sur
+   la base internationale de Jennings et Wlezien).
+3. **Scénarios de candidats** : probabilités jugées, datées et sourcées, sur six dimensions
+   (candidat RN, bloc central, gauche, LR, LFI, Reconquête), mélangées dans la simulation.
+4. **Second tour** : reports de voix par électorat, centrés sur dix-neuf sources
+   historiques (instituts et panel Cevipof), corrigés par les sondages de duel avec un biais
+   RN estimé par horizon.
+5. **Simulation** : 40 000 tirages, probabilités de qualification et de victoire, scores
+   avec intervalles, par scénario et au mélange.
+
+Tout changement de modèle passe par un backtest « comme à l'époque » (2002-2022, horizons
+180, 90, 30 et 7 jours) et une règle d'admission écrite : voir `docs/07-evaluation.md` et le
+journal `docs/backtest-log.md`.
+
+## Pistes étudiées
+
+Règle du projet : aucune source n'entre dans la prévision sans gain au backtest, en
+laissant l'élection évaluée de côté. Quatorze signaux ont été testés ; un seul a été admis.
+Les autres restent des options désactivées dans le code et, pour plusieurs, des volets
+explicatifs du site marqués « n'entre pas dans la prévision ».
+
+| # | Piste | Résultat |
+|---|---|---|
+| 1 | Économie (chômage, prix, confiance, popularité) | aucun effet distinguable du hasard sur la dynamique des blocs |
+| 2 | Presse par comptages (part de voix, agenda, affaires) | aucun test ne passe ; mesure les mêmes événements que les sondages |
+| 3 | Presse classée par un modèle local (ton, posture, thèmes de 58 000 titres) | négatif ; ton des 28 derniers jours déclaré test hors échantillon pour 2027 |
+| 4 | Attention en ligne (pages vues Wikipédia, Google Trends) | précède les sondages de 1 à 4 semaines comme rattrapage, nul aux horizons utiles |
+| 5 | Palmarès des instituts | précision et biais non reproductibles d'une élection à l'autre |
+| 6 | Sûrs de leur choix | signe opposé entre 2017 et 2022 |
+| 7 | Potentiel électoral et rejet | pas un plafond général ; seul le RN reste sous le sien |
+| 8 | Rebonds de primaire et d'annonce | forme réelle pour les primaires (saut puis érosion complète) mais dérive non admise |
+| 9 | Vote utile de fin de campagne | réel à gauche seulement, surcorrige ailleurs |
+| 10 | Volatilité de la campagne comme échelle d'erreur | ne prédit pas l'erreur de projection en France |
+| 11 | Volatilité par candidat | signal réel mais déjà capté par la loi d'erreur |
+| 12 | Troupeau des instituts | resserrement réel, mais le désaccord accompagne les erreurs au lieu de les masquer |
+| 13 | Anticipations « qui va gagner ? » (110 mesures) | le plus cité gagne toujours, mais trop sous-confiant pour servir de probabilité |
+| 14 | Abstention différentielle (certains − inscrits) | stable, mais lien avec l'erreur limité à 2022 et de signe inverse |
+| ✓ | **Calibration de l'erreur finale sur dix scrutins** (présidentielles + européennes + législatives) | **admise** : log-score et CRPS meilleurs à 90, 30 et 7 jours |
+
+Corrections de structure évaluées au même protocole : substitution intra-bloc et biais RN
+par horizon (publiées sans admission stricte, choix documenté), couplage des erreurs premier
+tour et duel, participation du second tour tirée à part, biais d'extrême droite depuis 2017
+(rejetés). En cours : reports de voix par inférence écologique sur les communes (données
+Cagé-Piketty), microdonnées Cevipof (demandes d'accès déposées).
+
+## Données
+
+Sondages Wikipédia 2002-2027 et scrutins de liste, notices de la Commission des sondages
+(2017-2027, résultats bruts quand publiés), MieuxVoter, résultats officiels du ministère de
+l'Intérieur jusqu'à la commune, Conseil constitutionnel, Jennings–Wlezien (45 pays), INSEE,
+DARES, Ifop (popularité), Media Cloud, GDELT, INA, Wikimedia, Google Trends, Cevipof
+(Dataverse de Sciences Po). Détail et schémas dans `docs/03-donnees.md`.
+
+## Organisation
+
+- `docs/` : spécifications, journal de backtest, notes de veille (lire `docs/README.md`).
+- `back/` : Python 3.12, `uv` ; paquet `vvs` (ingestion, curation, modèle, évaluation,
+  export), études dans `back/studies/`, tests `uv run pytest`.
+- `front/` : SvelteKit statique, données JSON exportées par le back, déployé par GitHub
+  Pages depuis `front/static/data`.
+- `scripts/run_live.sh` : run quotidien (ingestion, curation, simulation, export, build,
+  commit et push), voir `scripts/README.md`.
+- `data/registry/` : candidats, partis, blocs, élections, instituts, scénarios, reports de
+  voix ; `data/curated/` : tables parquet.
+
+## Démarrer
+
+```bash
+cd back && uv sync --all-groups && uv run pytest -q
+cd ../front && npm ci && npm run dev
+```
+
+La prévision complète : `scripts/run_live.sh` (environ quatre minutes avec réajustement).
+Inférence locale (classification de titres) : llama.cpp avec Qwen3.8-27B, voir
+`docs/06-presse.md`.
+
+## Licence et citation
+
+Code sous licence MIT. Les données tierces restent sous leurs licences respectives (voir les
+registres). Les reports de voix 2017 du Cevipof proviennent de la French Electoral Study
+2017 (doi:10.21410/7E4/2XE05I).
