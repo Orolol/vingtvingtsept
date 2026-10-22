@@ -1,0 +1,475 @@
+# Questions d'anticipation des sondages publiés (« qui sera élu ? », « X peut-il remporter
+# l'élection ? », souhait de victoire, « ferait un bon président »), lues par
+# `vvs.ingest.expectations` (commandes `vvs ingest expectations`, `vvs parse expectations`).
+#
+# Relevé du 2026-10-22 : recherche plein texte des 916 notices 2017 et 2022, des notices
+# 2025-2026 et des rapports quotidiens du rolling Ifop 2022, plus une recherche web (sites des
+# instituts, presse, Wikipédia) pour 2007, 2012, 2022 et 2027. Les questions trouvées dans un
+# questionnaire sans résultats déposés (Elabe, Odoxa 2022, Toluna Harris Interactive 2017) ne
+# figurent ici que si les résultats ont été retrouvés ailleurs.
+#
+# Champs communs :
+#   election, question_type (winner | chances | wish | good_president),
+#   population (all : ensemble de l'échantillon ; registered : inscrits ; certain_voters),
+#   layout : forme du tableau
+#     list       « Candidat v1 v2 … », colonnes choisies par `measures` ;
+#     split_name prénom, valeur, NOM (rapports du rolling Ifop 2022) ;
+#     attribute  bloc par candidat puis une ligne par qualité, celle qui contient `item` ;
+#     labels     un seul candidat (`candidate`), somme des modalités `label` (« ^oui ») ;
+#     manual     valeurs recopiées dans `values` (graphique, colonnes mêlées par la mise en
+#                page) ; chaque nombre doit figurer sur la page ou dans la copie brute ;
+#   measures : [{outcome: win | qualify, columns: [indices sommés]}], défaut win, colonne 0 ;
+#     colonne -1 : dernière valeur de la ligne (sous-total) ;
+#   anchor / stop : regex (texte normalisé ASCII minuscule) bornant les lignes lues ;
+#   n_candidates : nombre de candidats attendu (contrôle) ; row_total : colonnes qui doivent
+#   sommer à 100 sur chaque ligne (contrôle) ; drop : lignes illisibles écartées par règle ;
+#   pair : pronostic de duel (entre les deux tours ou conditionnel) ;
+#   fieldwork [début, fin], sample_size, pollster, sponsor : surchargent les métadonnées lues ;
+#   verified : mesure relue à la main sur le document.
+
+commission:
+  # ------------------------------------------------------------------ 2017
+  # Kantar Sofres - OnePoint pour Le Figaro (et LCI) : baromètre mensuel puis bimensuel ;
+  # « Selon vous, parmi les candidats suivants, lequel remportera l'élection présidentielle
+  # dont le second tour aura lieu le 7 mai 2017 ? » (ensemble, en %).
+  - {election: 2017, file_id: 204, page: 29, question_type: winner, layout: list, population: all, n_candidates: 8, verified: true}
+  - {election: 2017, file_id: 288, page: 29, question_type: winner, layout: list, population: all, n_candidates: 10, verified: true}
+  - {election: 2017, file_id: 309, page: 28, question_type: winner, layout: list, population: all, n_candidates: 5, verified: true}
+  - {election: 2017, file_id: 370, page: 26, question_type: winner, layout: list, population: all, n_candidates: 6, verified: true}
+  - {election: 2017, file_id: 469, page: 42, question_type: winner, layout: list, population: all, n_candidates: 6, verified: true}
+  - election: 2017
+    file_id: 499
+    page: 45
+    question_type: winner
+    layout: manual
+    population: all
+    values: {macron_emmanuel: 37, fillon_francois: 12, le_pen_marine: 11, melenchon_jean_luc: 10, hamon_benoit: 3, poutou_philippe: 1}
+    undecided: 26
+    verified: true
+    note: valeurs placées avant les noms par la mise en page, recopiées
+  # même baromètre : « Parmi les candidats suivants, qui souhaiteriez-vous voir gagner ? »
+  - {election: 2017, file_id: 204, page: 26, question_type: wish, layout: list, population: all, n_candidates: 11, verified: true}
+  - {election: 2017, file_id: 288, page: 26, question_type: wish, layout: list, population: all, n_candidates: 10, verified: true}
+  - {election: 2017, file_id: 309, page: 25, question_type: wish, layout: list, population: all, n_candidates: 9, verified: true}
+  - {election: 2017, file_id: 370, page: 23, question_type: wish, layout: list, population: all, n_candidates: 10, verified: true, note: "Cheminade (0) illisible, non lu"}
+  - {election: 2017, file_id: 469, page: 39, question_type: wish, layout: list, population: all, n_candidates: 8, verified: true, note: "Arthaud, Lassalle, Cheminade (0 ou <0,5) non lus"}
+  - {election: 2017, file_id: 499, page: 42, question_type: wish, layout: list, population: all, n_candidates: 8, verified: true, note: "Arthaud, Lassalle, Cheminade (0 ou <0,5) non lus"}
+  # Ifop-Fiducial, rolling #3 (février 2017), inscrits : « quel candidat l'emportera à
+  # l'issue du second tour de cette élection présidentielle ? » ; colonnes brut, redressé
+  - election: 2017
+    file_id: 214
+    page: 10
+    question_type: winner
+    layout: list
+    population: registered
+    anchor: "l emportera"
+    stop: "^total"
+    measures: [{outcome: win, columns: [1]}]
+    n_candidates: 5
+    verified: true
+  # Ifop pour le JDD, décembre 2016 : « pensez-vous que François Fillon va remporter la
+  # prochaine élection présidentielle ? » (oui certainement + oui probablement)
+  - {election: 2017, file_id: 162, page: 7, question_type: chances, layout: labels, candidate: fillon_francois, label: "^oui", population: all, verified: true}
+  # Viavoice pour Libération, mars 2017 : « des chances très grandes, assez grandes… de
+  # devenir le prochain président ? » ; sous-total « de grandes chances » (dernière colonne)
+  - election: 2017
+    file_id: 338
+    page: 14
+    fieldwork: [2017-03-01, 2017-03-02]
+    question_type: chances
+    layout: list
+    population: all
+    stop: "sympathisants"
+    measures: [{outcome: win, columns: [-1]}]
+    n_candidates: 8
+    verified: true
+  # Ipsos pour France Télévisions, mars 2017 : « c'est certain ou presque qu'il sera élu / de
+  # fortes chances / de faibles chances / impossible » ; certain + fortes chances
+  - election: 2017
+    file_id: 417
+    page: 24
+    question_type: chances
+    layout: list
+    population: all
+    measures: [{outcome: win, columns: [0, 1]}]
+    row_total: [0, 1, 2, 3]
+    n_candidates: 5
+    verified: true
+  # entre les deux tours : Ipsos pour France Télévisions (jour du premier tour, inscrits) et
+  # Viavoice pour Libération (post-électoral)
+  - election: 2017
+    file_id: 535
+    page: 11
+    question_type: winner
+    layout: manual
+    population: registered
+    pair: [macron_emmanuel, le_pen_marine]
+    values: {macron_emmanuel: 72, le_pen_marine: 12}
+    undecided: 16
+    verified: true
+    note: « Selon vous, qui l'emportera au second tour ? », ligne Ensemble
+  - election: 2017
+    file_id: 539
+    page: 23
+    question_type: winner
+    layout: manual
+    population: all
+    pair: [macron_emmanuel, le_pen_marine]
+    values: {macron_emmanuel: 68, le_pen_marine: 16}
+    undecided: 16
+    fieldwork: [2017-04-23, 2017-04-24]
+    verified: true
+
+  # ------------------------------------------------------------------ 2022
+  # Ifop pour Le Figaro, février 2021 : pronostic conditionnel « si le second tour oppose
+  # Emmanuel Macron à Marine Le Pen, lequel l'emportera ? » (brut, redressé)
+  - election: 2022
+    file_id: 1017
+    page: 7
+    question_type: winner
+    layout: list
+    population: all
+    anchor: "pronostic de victoire"
+    pair: [macron_emmanuel, le_pen_marine]
+    measures: [{outcome: win, columns: [1]}]
+    n_candidates: 2
+    verified: true
+  # OpinionWay, Présitrack pour Les Échos (et CNews) : « Selon vous, qui sera élu Président de
+  # la République en avril prochain ? » ; deux questions côte à côte, colonnes brut, redressé
+  - {election: 2022, file_id: 1143, page: 19, question_type: winner, layout: list, population: registered, anchor: "qui sera elu", measures: [{outcome: win, columns: [1]}], n_candidates: 13, verified: true}
+  - {election: 2022, file_id: 1172, page: 20, question_type: winner, layout: list, population: registered, anchor: "qui sera elu", measures: [{outcome: win, columns: [1]}], n_candidates: 14, verified: true}
+  - {election: 2022, file_id: 1197, page: 16, question_type: winner, layout: list, population: registered, anchor: "qui sera elu", measures: [{outcome: win, columns: [1]}], n_candidates: 13, verified: true}
+  # Ifop-Fiducial pour LCI et Le Figaro, décembre 2021 : « pensez-vous que Valérie Pécresse
+  # remportera l'élection présidentielle de 2022 ? » (redressé)
+  - {election: 2022, file_id: 1182, page: 12, question_type: chances, layout: labels, candidate: pecresse_valerie, label: "^oui", measures: [{outcome: win, columns: [1]}], population: all, verified: true}
+  # Ipsos pour France Info et Le Parisien, janvier 2022 : « qui va l'emporter ? »
+  - {election: 2022, file_id: 1211, page: 14, question_type: winner, layout: list, population: all, n_candidates: 7, verified: true, note: "Anne Hidalgo « - » (non citée) non lue"}
+  # BVA pour RTL et Orange, février 2022, inscrits : « qui va remporter la prochaine
+  # élection présidentielle ? »
+  - {election: 2022, file_id: 1287, page: 24, question_type: winner, layout: list, population: registered, anchor: "qui va remporter", n_candidates: 15, verified: true}
+  # Harris Interactive pour Challenges, baromètre hebdomadaire, inscrits : « quel candidat
+  # remportera l'élection présidentielle 2022 ? » (V30 à V44)
+  - {election: 2022, file_id: 1243, page: 43, question_type: winner, layout: list, population: registered, n_candidates: 15, verified: true}
+  - {election: 2022, file_id: 1260, page: 39, question_type: winner, layout: list, population: registered, n_candidates: 15, verified: true, note: "deux colonnes (vague et rappel), la première lue"}
+  - {election: 2022, file_id: 1279, page: 47, question_type: winner, layout: list, population: registered, n_candidates: 14, verified: true, note: "trois colonnes (vague et rappels), la première lue"}
+  - {election: 2022, file_id: 1297, page: 45, question_type: winner, layout: list, population: registered, n_candidates: 14, verified: true}
+  - {election: 2022, file_id: 1323, page: 38, question_type: winner, layout: list, population: registered, n_candidates: 14, verified: true}
+  - {election: 2022, file_id: 1334, page: 42, question_type: winner, layout: list, population: registered, n_candidates: 14, verified: true}
+  - {election: 2022, file_id: 1371, page: 42, question_type: winner, layout: list, population: registered, n_candidates: 12, verified: true}
+  - {election: 2022, file_id: 1400, page: 43, question_type: winner, layout: list, population: registered, n_candidates: 12, verified: true}
+  - {election: 2022, file_id: 1430, page: 43, question_type: winner, layout: list, population: registered, n_candidates: 12, verified: true}
+  - {election: 2022, file_id: 1459, page: 43, question_type: winner, layout: list, population: registered, n_candidates: 12, verified: true}
+  - {election: 2022, file_id: 1516, page: 44, question_type: winner, layout: list, population: registered, n_candidates: 12, verified: true}
+  - {election: 2022, file_id: 1518, page: 42, question_type: winner, layout: list, population: registered, n_candidates: 12, verified: true}
+  - {election: 2022, file_id: 1531, page: 21, fieldwork: [2022-04-10, 2022-04-11], question_type: winner, layout: list, population: registered, pair: [macron_emmanuel, le_pen_marine], n_candidates: 2, verified: true}
+  - {election: 2022, file_id: 1568, page: 22, question_type: winner, layout: list, population: registered, pair: [macron_emmanuel, le_pen_marine], n_candidates: 2, verified: true}
+  - {election: 2022, file_id: 1588, page: 28, question_type: winner, layout: list, population: registered, pair: [macron_emmanuel, le_pen_marine], n_candidates: 2, verified: true}
+  # même baromètre, qualificatifs d'Emmanuel Macron : « Est capable de remporter l'élection
+  # présidentielle » (correspond bien, inscrits) ; novembre 2021 (V22) et 22 avril 2022 (V44,
+  # première colonne, la seconde est la vague du 20 avril)
+  - {election: 2022, file_id: 1170, page: 58, question_type: chances, layout: labels, candidate: macron_emmanuel, label: "capable de remporter", population: registered, verified: true}
+  - {election: 2022, file_id: 1588, page: 35, question_type: chances, layout: labels, candidate: macron_emmanuel, label: "capable de remporter", population: registered, verified: true}
+  # même baromètre : « Quel candidat souhaiteriez-vous voir remporter l'élection ? »
+  - {election: 2022, file_id: 1243, page: 42, question_type: wish, layout: list, population: registered, verified: true}
+  - {election: 2022, file_id: 1260, page: 38, question_type: wish, layout: list, population: registered, verified: true}
+  - {election: 2022, file_id: 1279, page: 46, question_type: wish, layout: list, population: registered, verified: true}
+  # Ipsos - Cevipof - Fondation Jean-Jaurès pour Le Monde, Enquête électorale française
+  # (panel, inscrits) : « pour chacun de ces candidats, vous pensez que… il sera qualifié pour
+  # le second tour et élu / qualifié mais battu / pas qualifié » ; élu = colonne 0,
+  # qualifié = colonnes 0 + 1. Les microdonnées du panel sont traitées à part (ingest/cevipof).
+  - {election: 2022, file_id: 1155, page: 53, question_type: chances, layout: list, population: registered, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], n_candidates: 9, fieldwork: [2021-10-07, 2021-10-13], verified: true, note: "vague 2"}
+  - {election: 2022, file_id: 1196, page: 47, question_type: chances, layout: list, population: registered, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], n_candidates: 7, fieldwork: [2021-12-07, 2021-12-13], verified: true, note: "vague 3"}
+  - {election: 2022, file_id: 1235, page: 60, question_type: chances, layout: list, population: registered, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], drop: [hidalgo_anne], n_candidates: 7, fieldwork: [2022-01-14, 2022-01-17], verified: true, note: "vague 4 ; ligne Hidalgo illisible (« 16 92 1 7 »)"}
+  - {election: 2022, file_id: 1282, page: 69, question_type: chances, layout: list, population: registered, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], drop: [hidalgo_anne], n_candidates: 7, fieldwork: [2022-02-03, 2022-02-07], verified: true, note: "vague 5 ; ligne Hidalgo illisible (« 25 93 »)"}
+  - {election: 2022, file_id: 1408, page: 46, question_type: chances, layout: list, population: registered, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], drop: [jadot_yannick], n_candidates: 5, fieldwork: [2022-03-10, 2022-03-14], verified: true, note: "vague 7 ; ligne Jadot illisible (« 25 93 7 »)"}
+  - {election: 2022, file_id: 1447, page: 66, question_type: chances, layout: list, population: registered, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], drop: [jadot_yannick], n_candidates: 5, fieldwork: [2022-03-21, 2022-03-24], verified: true, note: "vague 8 ; ligne Jadot illisible"}
+  - {election: 2022, file_id: 1490, page: 59, question_type: chances, layout: list, population: registered, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], drop: [jadot_yannick], n_candidates: 5, fieldwork: [2022-04-02, 2022-04-04], verified: true, note: "vague 9 ; ligne Jadot illisible"}
+  # Ipsos - Sopra Steria pour France Info et Le Parisien, baromètre quotidien : même question
+  # (ensemble de l'échantillon)
+  - {election: 2022, file_id: 1390, page: 14, question_type: chances, layout: list, population: all, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], n_candidates: 6, verified: true}
+  - {election: 2022, file_id: 1418, page: 19, question_type: chances, layout: list, population: all, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], n_candidates: 6, verified: true}
+  - {election: 2022, file_id: 1452, page: 20, question_type: chances, layout: list, population: all, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], drop: [jadot_yannick], n_candidates: 5, verified: true, note: "ligne Jadot illisible (« 34 92 1 7 »)"}
+  - {election: 2022, file_id: 1508, page: 19, question_type: chances, layout: list, population: all, measures: [{outcome: win, columns: [0]}, {outcome: qualify, columns: [0, 1]}], row_total: [0, 1, 2], n_candidates: 6, verified: true}
+  # même baromètre entre les deux tours : « Selon vous, qui l'emportera au second tour ? » ;
+  # ligne Ensemble dans un graphique, recopiée (Le Pen = 100 − Macron − ne sait pas, les trois
+  # nombres figurent sur la page)
+  - {election: 2022, file_id: 1537, page: 14, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 59, le_pen_marine: 22}, undecided: 19, verified: true, note: "vague 25"}
+  - {election: 2022, file_id: 1541, page: 15, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 60, le_pen_marine: 22}, undecided: 18, verified: true, note: "vague 26"}
+  - {election: 2022, file_id: 1548, page: 16, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 59, le_pen_marine: 23}, undecided: 18, verified: true, note: "vague 27"}
+  - {election: 2022, file_id: 1553, page: 16, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 59, le_pen_marine: 22}, undecided: 19, verified: true, note: "vague 28"}
+  - {election: 2022, file_id: 1558, page: 16, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 59, le_pen_marine: 22}, undecided: 19, verified: true, note: "vague 29"}
+  - {election: 2022, file_id: 1560, page: 16, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 62, le_pen_marine: 21}, undecided: 17, verified: true, note: "vague 30"}
+  - {election: 2022, file_id: 1570, page: 16, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 63, le_pen_marine: 20}, undecided: 17, verified: true, note: "vague 31"}
+  - {election: 2022, file_id: 1581, page: 15, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 64, le_pen_marine: 20}, undecided: 16, verified: true, note: "vague 32"}
+  - {election: 2022, file_id: 1589, page: 15, question_type: winner, layout: manual, population: all, pair: [macron_emmanuel, le_pen_marine], values: {macron_emmanuel: 67, le_pen_marine: 17}, undecided: 16, verified: true, note: "vague 33"}
+
+  # ------------------------------------------------------------------ 2027
+  # Cluster17 pour Le Grand Continent, août 2026 : « indépendamment de vos préférences
+  # personnelles, quelle personnalité a aujourd'hui le plus de chances d'être élue présidente
+  # de la République en 2027 ? » (brut, redressé)
+  - {election: 2027, file_id: 2256, page: 23, question_type: winner, layout: list, population: registered, anchor: "plus de chances", measures: [{outcome: win, columns: [1]}], n_candidates: 11, verified: true}
+  # OpinionWay, Présitrack pour Les Échos, juillet 2026 : « pour chacune des personnalités
+  # suivantes, diriez-vous qu'elle… peut remporter l'élection présidentielle / ferait un bon
+  # président ? » (% oui, colonnes brut et redressé)
+  - {election: 2027, file_id: 2229, page: 19, question_type: chances, layout: attribute, item: "peut remporter", population: registered, measures: [{outcome: win, columns: [1]}], n_candidates: 3, verified: true}
+  - {election: 2027, file_id: 2229, page: 20, question_type: chances, layout: attribute, item: "peut remporter", population: registered, measures: [{outcome: win, columns: [1]}], n_candidates: 3, verified: true}
+  - {election: 2027, file_id: 2229, page: 21, question_type: chances, layout: attribute, item: "peut remporter", population: registered, measures: [{outcome: win, columns: [1]}], n_candidates: 2, verified: true}
+  - {election: 2027, file_id: 2229, page: 19, question_type: good_president, layout: attribute, item: "ferait (un bon president|une bonne presidente)", population: registered, measures: [{outcome: win, columns: [1]}], n_candidates: 3, verified: true}
+  - {election: 2027, file_id: 2229, page: 20, question_type: good_president, layout: attribute, item: "ferait (un bon president|une bonne presidente)", population: registered, measures: [{outcome: win, columns: [1]}], n_candidates: 3, verified: true}
+  - {election: 2027, file_id: 2229, page: 21, question_type: good_president, layout: attribute, item: "ferait (un bon president|une bonne presidente)", population: registered, measures: [{outcome: win, columns: [1]}], n_candidates: 2, verified: true}
+  # Toluna Harris Interactive, mars 2026 : « pensez-vous qu'un(e) candidat(e) issu(e) de
+  # chacun des partis suivants a des chances de remporter l'élection présidentielle de
+  # 2027 ? » (inscrits, total oui) ; porte sur des partis, une ligne par parti
+  - {election: 2027, file_id: 2165, page: 28, fieldwork: [2026-03-22, 2026-03-22], question_type: chances, layout: manual, population: registered, party: rn, values: {rn: 63}, verified: true, note: "« un(e) candidat(e) du Rassemblement national », 24 certainement + 39 probablement"}
+  - {election: 2027, file_id: 2165, page: 28, fieldwork: [2026-03-22, 2026-03-22], question_type: chances, layout: manual, population: registered, party: lr, values: {lr: 48}, verified: true, note: "« un(e) candidat(e) des Républicains »"}
+  - {election: 2027, file_id: 2165, page: 28, fieldwork: [2026-03-22, 2026-03-22], question_type: chances, layout: manual, population: registered, party: centre, values: {centre: 47}, verified: true, note: "« un(e) candidat(e) d'une formation du centre (Renaissance, Horizons, MoDem, UDI) »"}
+  - {election: 2027, file_id: 2165, page: 28, fieldwork: [2026-03-22, 2026-03-22], question_type: chances, layout: manual, population: registered, party: ps, values: {ps: 33}, verified: true, note: "« un(e) candidat(e) du Parti socialiste »"}
+  - {election: 2027, file_id: 2165, page: 28, fieldwork: [2026-03-22, 2026-03-22], question_type: chances, layout: manual, population: registered, party: lfi, values: {lfi: 19}, verified: true, note: "« un(e) candidat(e) de la France insoumise »"}
+
+ifop_report:
+  # Rolling Ifop-Fiducial 2022 pour Paris Match, LCI et Sud Radio, indicateur hebdomadaire
+  # « Selon vous, quel candidat l'emportera à l'issue du second tour ? » (inscrits). Les
+  # rapports collectés (data/raw/institutes/ifop/2022) ne portent la page que cinq vendredis ;
+  # les mesures de janvier ne se lisent que sur un graphique d'évolution sans légende sûre.
+  - {election: 2022, file: ROL22_2022.02.18.pdf, page: 12, question_type: winner, layout: split_name, population: registered, n_candidates: 8, verified: true}
+  - {election: 2022, file: ROL22_2022.02.25.pdf, page: 12, question_type: winner, layout: split_name, population: registered, n_candidates: 8, verified: true}
+  - {election: 2022, file: ROL22_2022.03.04.pdf, page: 13, question_type: winner, layout: split_name, population: registered, n_candidates: 8, verified: true}
+  - {election: 2022, file: ROL22_2022.03.18.pdf, page: 13, question_type: winner, layout: split_name, population: registered, n_candidates: 7, verified: true}
+  - {election: 2022, file: ROL22_2022.04.01.pdf, page: 17, question_type: winner, layout: split_name, population: registered, n_candidates: 7, verified: true}
+
+web:
+  # ------------------------------------------------------------------ 2007 (téléphone)
+  # Ifop : « Selon vous, qui, parmi les candidats suivants à l'élection présidentielle, sera
+  # élu Président de la République ? »
+  - election: 2007
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: ifop
+    sponsor: Profession Politique
+    fieldwork: [2007-01-15, 2007-01-15]
+    sample_size: 963
+    url: https://www.ifop.com/wp-content/uploads/2018/03/PP-PRONO1-0107.pdf
+    file: 2007/ifop_PP-PRONO1-0107.pdf
+    values: {sarkozy_nicolas: 51, royal_segolene: 38, le_pen_jean_marie: 4, bayrou_francois: 2, laguiller_arlette: 1}
+    undecided: 4
+    verified: true
+    note: autre candidat non suggéré 1, NSP 3
+  - election: 2007
+    question_type: wish
+    layout: manual
+    population: all
+    pollster: ifop
+    sponsor: Profession Politique
+    fieldwork: [2007-01-15, 2007-01-15]
+    sample_size: 963
+    url: https://www.ifop.com/wp-content/uploads/2018/03/PP-PRONO1-0107.pdf
+    file: 2007/ifop_PP-PRONO1-0107.pdf
+    values: {sarkozy_nicolas: 35, royal_segolene: 32, bayrou_francois: 12, le_pen_jean_marie: 8, buffet_marie_george: 3, besancenot_olivier: 2, laguiller_arlette: 2, de_villiers_philippe: 1, voynet_dominique: 1}
+    verified: true
+  - election: 2007
+    question_type: winner
+    layout: manual
+    population: registered
+    pollster: ifop
+    fieldwork: [2007-02-12, 2007-02-12]
+    sample_size: 879
+    url: https://ifop.com/wp-content/uploads/2018/03/pronovictoire1402.pdf
+    file: 2007/ifop_pronovictoire1402.pdf
+    values: {sarkozy_nicolas: 64, royal_segolene: 29, bayrou_francois: 3, le_pen_jean_marie: 1}
+    undecided: 3
+    verified: true
+  - election: 2007
+    question_type: winner
+    layout: manual
+    population: registered
+    pollster: ifop
+    sponsor: Paris Match
+    fieldwork: [2007-03-08, 2007-03-09]
+    sample_size: 881
+    url: https://www.ifop.com/wp-content/uploads/2018/03/pronovictoire1403.pdf
+    file: 2007/ifop_pronovictoire1403.pdf
+    values: {sarkozy_nicolas: 59, royal_segolene: 20, bayrou_francois: 16, le_pen_jean_marie: 2}
+    undecided: 3
+    verified: true
+  - election: 2007
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: ifop
+    sponsor: Paris Match
+    fieldwork: [2007-04-05, 2007-04-06]
+    sample_size: 1010
+    url: https://www.ifop.com/wp-content/uploads/2018/03/tablodebordpm1204.pdf
+    file: 2007/ifop_tablodebordpm1204.pdf
+    values: {sarkozy_nicolas: 67, royal_segolene: 16, bayrou_francois: 10, le_pen_jean_marie: 3}
+    undecided: 4
+    verified: true
+    note: base de la question non précisée (échantillon de 1 010 personnes)
+  - election: 2007
+    question_type: winner
+    layout: manual
+    population: registered
+    pollster: csa
+    sponsor: Le Parisien, Aujourd'hui en France, i>Télé
+    fieldwork: [2007-04-04, 2007-04-05]
+    sample_size: 881
+    url: https://www.cisco.com/web/FR/csa/pronostics_de_victoire.pdf
+    file: 2007/csa_pronostics_de_victoire.pdf
+    values: {sarkozy_nicolas: 59, royal_segolene: 18, bayrou_francois: 8, le_pen_jean_marie: 1}
+    undecided: 14
+    verified: true
+  # ------------------------------------------------------------------ 2012 (en ligne)
+  # Harris Interactive pour M6, MSN, RTL (2012etvous.fr)
+  - election: 2012
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: harris
+    sponsor: M6, MSN, RTL
+    fieldwork: [2012-01-11, 2012-01-13]
+    sample_size: 1240
+    url: https://tolunacorporate.com/wp-content/uploads/2025/06/Results_HIFR_M6MSNRTL_13012012.pdf
+    file: 2012/harris_Results_HIFR_M6MSNRTL_13012012.pdf
+    values: {hollande_francois: 34, sarkozy_nicolas: 33, bayrou_francois: 8, le_pen_marine: 6, melenchon_jean_luc: 1, de_villepin_dominique: 1, joly_eva: 1}
+    undecided: 16
+    verified: true
+  - election: 2012
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: harris
+    sponsor: M6, MSN, RTL
+    fieldwork: [2012-04-23, 2012-04-25]
+    sample_size: 1394
+    pair: [hollande_francois, sarkozy_nicolas]
+    url: https://tolunacorporate.com/wp-content/uploads/2025/06/CP_HIFR_M6MSNRTL_26042012.pdf
+    file: 2012/harris_CP_HIFR_M6MSNRTL_26042012.pdf
+    values: {hollande_francois: 63, sarkozy_nicolas: 35}
+    undecided: 2
+    verified: true
+  - election: 2012
+    question_type: wish
+    layout: manual
+    population: all
+    pollster: harris
+    sponsor: M6, MSN, RTL
+    fieldwork: [2012-04-23, 2012-04-25]
+    sample_size: 1394
+    pair: [hollande_francois, sarkozy_nicolas]
+    url: https://tolunacorporate.com/wp-content/uploads/2025/06/CP_HIFR_M6MSNRTL_26042012.pdf
+    file: 2012/harris_CP_HIFR_M6MSNRTL_26042012.pdf
+    values: {hollande_francois: 50, sarkozy_nicolas: 44}
+    verified: true
+  # Ifop pour Paris Match, tableau de bord de mars 2012 : trait d'image « le plus capable de
+  # l'emporter à l'élection présidentielle » entre les deux favoris (ni l'un ni l'autre : 24)
+  - election: 2012
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: ifop
+    sponsor: Paris Match
+    fieldwork: [2012-03-01, 2012-03-02]
+    sample_size: 1005
+    pair: [hollande_francois, sarkozy_nicolas]
+    url: https://www.ifopgroup.com/wp-content/uploads/2018/03/1785-1-study_file.pdf
+    file: 2012/ifop_1785-1-study_file.pdf
+    values: {hollande_francois: 44, sarkozy_nicolas: 32}
+    undecided: 24
+    verified: true
+    note: question de duel posée avant le premier tour (« le plus capable de l'emporter »)
+  # ------------------------------------------------------------------ 2022
+  # Elabe pour BFMTV, L'Express et SFR : « Selon vous, qui va gagner l'élection présidentielle
+  # en avril 2022 ? » (ensemble) ; les notices ne déposent que le questionnaire
+  - election: 2022
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    fieldwork: [2022-01-14, 2022-01-17]
+    url: https://elabe.fr/wp-content/uploads/2022/01/v.pdf
+    file: 2022/elabe_2022_01_v.pdf
+    values: {macron_emmanuel: 48, pecresse_valerie: 14, le_pen_marine: 14, zemmour_eric: 6, melenchon_jean_luc: 5, hidalgo_anne: 2, taubira_christiane: 2, poutou_philippe: 1, roussel_fabien: 1, jadot_yannick: 1, lassalle_jean: 1, dupont_aignan_nicolas: 1, philippot_florian: 1, thouy_helene: 1}
+    undecided: 2
+    verified: true
+  - election: 2022
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    fieldwork: [2022-03-20, 2022-03-21]
+    url: https://elabe.fr/wp-content/uploads/2022/04/les-francais-et-lelection-presidentielle-2022.pdf
+    file: 2022/elabe_2022_04_les-francais-et-lelection-presidentielle-2022.pdf
+    values: {macron_emmanuel: 64, le_pen_marine: 13, melenchon_jean_luc: 8, zemmour_eric: 5, pecresse_valerie: 4}
+    verified: false
+    note: déduit de la vague suivante (valeur moins évolution), rapport de la vague non retrouvé ; petits candidats non relevés
+  - election: 2022
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    fieldwork: [2022-03-31, 2022-04-01]
+    sample_size: 1472
+    url: https://elabe.fr/wp-content/uploads/2022/04/les-francais-et-lelection-presidentielle-2022.pdf
+    file: 2022/elabe_2022_04_les-francais-et-lelection-presidentielle-2022.pdf
+    values: {macron_emmanuel: 57, le_pen_marine: 20, melenchon_jean_luc: 10, zemmour_eric: 4, pecresse_valerie: 3}
+    undecided: 2
+    verified: true
+    note: graphique, cinq premiers candidats relevés ; « 2 % sans opinion »
+  - election: 2022
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    fieldwork: [2022-04-04, 2022-04-05]
+    sample_size: 1538
+    url: https://elabe.fr/wp-content/uploads/2022/04/les-francais-et-lelection-presidentielle-2022-.pdf
+    file: 2022/elabe_2022_04_les-francais-et-lelection-presidentielle-2022-.pdf
+    values: {macron_emmanuel: 60, le_pen_marine: 20, melenchon_jean_luc: 8, zemmour_eric: 4, pecresse_valerie: 2}
+    undecided: 2
+    verified: true
+    note: graphique, cinq premiers candidats relevés
+  - election: 2022
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    fieldwork: [2022-04-07, 2022-04-08]
+    sample_size: 1801
+    url: https://elabe.fr/wp-content/uploads/2022/04/les-francais-et-lelection-presidentielle-2022-1.pdf
+    file: 2022/elabe_2022_04_les-francais-et-lelection-presidentielle-2022-1.pdf
+    values: {macron_emmanuel: 54, le_pen_marine: 22, melenchon_jean_luc: 10, zemmour_eric: 3, pecresse_valerie: 2}
+    undecided: 2
+    verified: true
+    note: graphique, cinq premiers candidats relevés
+  - election: 2022
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    fieldwork: [2022-04-12, 2022-04-13]
+    pair: [macron_emmanuel, le_pen_marine]
+    url: https://elabe.fr/wp-content/uploads/2022/04/les-francais-et-le-second-tour-de-lelection-presidentielle-2022.pdf
+    file: 2022/elabe_2022_04_les-francais-et-le-second-tour-de-lelection-presidentielle-2022.pdf
+    values: {macron_emmanuel: 72, le_pen_marine: 26}
+    undecided: 2
+    verified: true
+  - election: 2022
+    question_type: winner
+    layout: manual
+    population: all
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    fieldwork: [2022-04-18, 2022-04-19]
+    pair: [macron_emmanuel, le_pen_marine]
+    url: https://elabe.fr/wp-content/uploads/2022/04/2nd-tour-de-lelection-presidentielle-2022.pdf
+    file: 2022/elabe_2022_04_2nd-tour-de-lelection-presidentielle-2022.pdf
+    values: {macron_emmanuel: 72, le_pen_marine: 26}
+    undecided: 2
+    verified: true
