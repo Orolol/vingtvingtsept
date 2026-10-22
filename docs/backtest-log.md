@@ -196,6 +196,21 @@ Ifop et Harris 2027 étaient marqués `registered` alors que leurs tableaux port
 certains d'aller voter ; la seconde base d'OpinionWay était perdue par la déduplication sur
 (tour, candidats). Règles de correction et de sélection d'une base : `03-donnees.md`.
 
+## 2026-10-22 — reports de voix par inférence écologique (communes, Cagé-Piketty) : non validée
+
+Goodman contraint pondéré par les inscrits et version par strates revenu × type de commune
+sur les cinq seconds tours (`runs/2026-10-22-ecological/`). Critère : moins de 8 points
+d'écart avec les enquêtes post-électorales sur la répartition entre finalistes. Échec :
+biais d'agrégation (Fillon 2017 +16, Mélenchon 2022 +29 vers Macron). Une variante par
+contexte RN passe pour 6 électorats sur 7 mais est fragile (2002 absurde). La décomposition
+sociale appliquée à la composition 2022 ne fait pas mieux que les reports 2017 bruts : le
+passage 2017 → 2022 est un décalage commun (érosion du front républicain de 0,6 à 0,8 en
+logit), pas un effet de composition. Sources `ei_<année>` non fusionnées.
+
+Propositions issues de l'étude, à évaluer au protocole du second tour : σ_u analogue 0,30 →
+0,5, σ_u inédit 0,6 → 0,8, σ_v 0,25 → 0,30 et 0,40 → 0,45 ; ligne `far_right` de PROXIMITY :
+centre 2,5 → 6,5, droite 6 → 7, « ni l'un ni l'autre » (0,10 ; 0,55).
+
 ## 2026-10-22 — Consolidation chronologique de la chaîne complète
 
 Référence statistique figée au commit `a89d304`, bilan conservé sous le tag
@@ -237,6 +252,20 @@ RN environ 77,6–79,7 %. Les poids uniformes laissent 14,286 % de masse sans ti
 ESS d'environ 649 : les bornes sont publiées, le chiffre central reste conditionnel au
 support représenté. Ces étendues sont des sensibilités aux hypothèses, pas des intervalles
 de confiance ; certaines perturbations binaires sont équivalentes.
+
+## 2026-10-22 — second tour : σ élargis et ligne far_right, non admis
+
+Évaluation appariée (5 élections, 3 graines, `runs/2026-10-22-second-round-prior/`).
+σ_u analogue 0,30 → 0,5 et σ_u inédit 0,6 → 0,8 : CRPS meilleur à tous les horizons (2017 et
+2022 gagnent, 2012 perd) mais log-score en baisse avant le premier tour (8 couples graine ×
+horizon sur 9), couverture strictement inchangée : la loi a posteriori est tenue par les
+sondages de duel, l'intervalle à 90 % ne s'élargit que de 0,1 à 0,7 point. Ligne `far_right`
+de PROXIMITY : n'agit qu'en 2002 (électorat Mégret) et s'appliquerait en 2027 à tout
+l'électorat RN dès que le RN est absent du second tour, cas que les cellules d'origine ne
+renseignent pas (Philippe–Glucksmann passerait de 48 à 66 % pour Philippe). Combinaisons :
+non admises. Les réglages du second tour sont désormais injectables
+(`SecondRoundSettings`), défauts inchangés. Effet sur 2027 des variantes : P(Le Pen) 70,0 →
+70,0 à 70,4 %.
 
 ## 2026-10-22 — Reconstruction des scénarios historiques : non admise
 

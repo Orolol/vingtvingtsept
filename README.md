@@ -42,7 +42,7 @@ variantes restent expérimentales ; la référence et la projection publiée son
 ## Pistes étudiées
 
 Règle du projet : aucune source n'entre dans la prévision sans gain au backtest, en
-laissant l'élection évaluée de côté. Quatorze signaux ont été testés ; un seul a été admis.
+laissant l'élection évaluée de côté. Quinze signaux ont été testés ; un seul a été admis.
 Les autres restent des options désactivées dans le code et, pour plusieurs, des volets
 explicatifs du site marqués « n'entre pas dans la prévision ».
 
@@ -62,13 +62,13 @@ explicatifs du site marqués « n'entre pas dans la prévision ».
 | 12 | Troupeau des instituts | resserrement réel, mais le désaccord accompagne les erreurs au lieu de les masquer |
 | 13 | Anticipations « qui va gagner ? » (110 mesures) | le plus cité gagne toujours, mais trop sous-confiant pour servir de probabilité |
 | 14 | Abstention différentielle (certains − inscrits) | stable, mais lien avec l'erreur limité à 2022 et de signe inverse |
+| 15 | Reports de voix par inférence écologique sur les communes (données Cagé-Piketty) | biais d'agrégation ; la sociologie des communes ne prédit pas l'érosion du front républicain |
 | ✓ | **Calibration de l'erreur finale sur dix scrutins** (présidentielles + européennes + législatives) | **admise** : log-score et CRPS meilleurs à 90, 30 et 7 jours |
 
 Corrections de structure évaluées au même protocole : substitution intra-bloc et biais RN
 par horizon (publiées sans admission stricte, choix documenté), couplage des erreurs premier
 tour et duel, participation du second tour tirée à part, biais d'extrême droite depuis 2017
-(rejetés). En cours : reports de voix par inférence écologique sur les communes (données
-Cagé-Piketty), microdonnées Cevipof (demandes d'accès déposées).
+(rejetés). En cours : microdonnées Cevipof (demandes d'accès déposées).
 
 ## Données
 

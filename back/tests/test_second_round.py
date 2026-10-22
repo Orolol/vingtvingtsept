@@ -10,10 +10,16 @@ import pytest
 from vvs.model.second_round import (
     ABSTAIN,
     BIAS_NODES,
+    PROXIMITY,
+    PROXIMITY_NONE,
+    SIGMA_U,
+    SIGMA_V,
     DuelPolls,
     ErrorParams,
     GroupPrior,
     PairFit,
+    SecondRoundModel,
+    SecondRoundSettings,
     analog_prior,
     bias_curve,
     duel_share,
@@ -157,6 +163,64 @@ def test_proximity_mean_is_a_distribution():
         assert all(0 < x < 1 for x in m)
     i, j, _ = proximity_mean("left", "centre", "far_right")
     assert i > j
+
+
+def test_default_settings_are_the_module_constants():
+    """Sans réglages, le modèle lit les constantes : mêmes moyennes de proximité partout."""
+    s = SecondRoundSettings()
+    assert dict(s.sigma_u) == SIGMA_U and dict(s.sigma_v) == SIGMA_V
+    assert s.proximity == PROXIMITY and dict(s.proximity_none) == PROXIMITY_NONE
+    for e in s.proximity:
+        for bi in PROXIMITY["left"]:
+            for bj in PROXIMITY["left"]:
+                assert proximity_mean(e, bi, bj, s) == proximity_mean(e, bi, bj)
+    assert SecondRoundModel(registry=object()).settings == s  # type: ignore[arg-type]
+
+
+def test_settings_are_injected_and_leave_constants_alone():
+    s = SecondRoundSettings().with_(
+        sigma_u={"analog": 0.5, "inedit": 0.8},
+        proximity_rows={"far_right": {"centre": 6.5, "right": 7}},
+        proximity_none={**PROXIMITY_NONE, "far_right": (0.10, 0.55)},
+    )
+    assert PROXIMITY["far_right"]["centre"] == SecondRoundSettings().proximity["far_right"]["centre"]
+    assert s.proximity["far_right"]["left"] == PROXIMITY["far_right"]["left"]  # ligne complétée
+    i0, j0, _ = proximity_mean("far_right", "centre", "far_right")
+    i1, j1, n1 = proximity_mean("far_right", "centre", "far_right", s)
+    assert i1 / (i1 + j1) > i0 / (i0 + j0) and n1 == pytest.approx(0.10)
+    # σ_u et la matrice passent par le modèle jusqu'au PairFit (duel inédit : matrice seule)
+    from vvs.registry import default_registry
+
+    reg = default_registry()
+    pair = ("le_pen_marine", "melenchon_jean_luc")
+    fits = [
+        SecondRoundModel(reg, errors=ERR, use_polls=False, settings=x).fit(2027, ASOF, [pair])
+        .pair_fit(pair)
+        for x in (None, s)
+    ]
+    assert fits[0].inedit and fits[0].sigma_u == SIGMA_U["inedit"] and fits[1].sigma_u == 0.8
+    g0, g1 = (f.groups["bloc:far_right"] for f in fits)
+    assert g0.source == g1.source == "proximity"
+    assert g1.mean == pytest.approx(proximity_mean("far_right", "far_right", "far_left", s))
+    assert g0.mean == pytest.approx(proximity_mean("far_right", "far_right", "far_left"))
+
+
+@pytest.mark.parametrize(
+    "kw",
+    [
+        {"sigma_u": {"analog": 0.3}},  # type de duel manquant
+        {"sigma_v": {"analog": 0.3, "inedit": -0.1}},
+        {"proximity": {k: v for k, v in PROXIMITY.items() if k != ABSTAIN}},  # ligne manquante
+        {"proximity_rows": {"far_right": {"centre": 11.0}}},  # attirance hors de [0, 10]
+        {"proximity_rows": {"centre": {"martian": 3.0}}},  # colonne inconnue
+        {"proximity_none": {"far_right": (0.6, 0.5)}},  # n_min > n_max
+        {"proximity_none": {"far_right": (0.1, 1.0)}},
+        {"proximity_none": {"martian": (0.1, 0.5)}},
+    ],
+)
+def test_settings_validation(kw):
+    with pytest.raises(ValueError):
+        SecondRoundSettings().with_(**kw)
 
 
 def test_analog_prior_leaves_target_out():

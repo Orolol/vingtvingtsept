@@ -647,6 +647,7 @@ def simulate(
     registry: Registry | None = None,
     error_model=None,
     second_round_errors=None,
+    second_round_settings=None,
     trajectory_draws: int | None = None,
 ) -> SimulationResult:
     """Simulation complète ; écrit les sorties dans `out` si donné.
@@ -657,7 +658,9 @@ def simulate(
     `error_with_lists` : η calibré aussi sur les scrutins de liste (`ErrorModel.fit`).
     `n_condition_configs` : configurations résumées individuellement (défaut : celles qui
     couvrent `config_mass`). `error_model`, `second_round_errors`, `scenarios`, `registry` :
-    injectables pour les tests (défaut : calibrés sur 2002-2022, fichiers du dépôt)."""
+    injectables pour les tests (défaut : calibrés sur 2002-2022, fichiers du dépôt).
+    `second_round_settings` : réglages du prior des reports (`SecondRoundSettings` : σ_u, σ_v,
+    matrice de proximité ; défaut : constantes de second_round.py), écrits dans le manifeste."""
     from vvs.model.error import ErrorModel
     from vvs.model.second_round import SecondRoundModel, calibrate_errors
 
@@ -733,6 +736,7 @@ def simulate(
         exclude={election},
         couple_far_right=couple_far_right,
         second_round_turnout=second_round_turnout,
+        settings=second_round_settings,
     ).fit(election, asof, pair_list)
     cell = np.where(cfg < n_top, cfg, OTHER_CELL)
     share_a = np.full(n_draws, np.nan)
@@ -847,6 +851,7 @@ def simulate(
             "turnout2": model.turnout2,
             "turnout2_draws": quantile_dict(turnout2),
             "calibrated_on": list(errors.calibrated_on),
+            "settings": model.settings.to_dict(),
             "n_pairs": len(pair_list),
             "n_cells": len(cells),
         },

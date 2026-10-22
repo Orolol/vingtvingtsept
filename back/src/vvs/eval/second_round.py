@@ -360,7 +360,8 @@ def proximity_check(
 
 # --- options structurelles du second tour (comparaison appariée)
 
-# variante -> (premier tour : "dirichlet" comme `run` ou "eta" pour le modèle d'erreur η, options)
+# variante -> (premier tour : "dirichlet" comme `run` ou "eta" pour le modèle d'erreur η, options) ;
+# option `settings` : réglages du prior des reports (`SecondRoundSettings`, σ_u, σ_v, proximité)
 STRUCT_VARIANTS: dict[str, tuple[str, dict]] = {
     "base": ("dirichlet", {}),
     # atténuation linéaire du biais constant (défaut de la simulation avant la courbe)
@@ -427,9 +428,11 @@ def run_structural(
     n: int = 8000,
     seed: int = 0,
     registry: Registry | None = None,
-    variants: tuple[str, ...] = tuple(STRUCT_VARIANTS),
+    variants: tuple[str, ...] | None = None,
+    specs: dict[str, tuple[str, dict]] | None = None,
 ) -> dict[str, pl.DataFrame]:
-    """Backtest apparié des options structurelles (`STRUCT_VARIANTS`).
+    """Backtest apparié des options structurelles (`STRUCT_VARIANTS`, ou `specs` de même forme,
+    dont l'option `settings` : réglages du prior des reports passés à `SecondRoundModel`).
 
     Pour chaque élection et horizon, toutes les variantes d'une même famille de premier tour
     partagent les mêmes tirages de premier tour (`case` ou `case_eta`, graine du cas) et la
@@ -445,14 +448,20 @@ def run_structural(
     from vvs.model.second_round import turnout2_model
 
     registry = registry or default_registry()
+    specs = STRUCT_VARIANTS if specs is None else specs
+    variants = tuple(specs) if variants is None else variants
+    families = {specs[v][0] for v in variants}
     rows, fold_rows = [], []
     for election in elections:
         errors = calibrate_errors(exclude={election}, registry=registry)
         errors_h = calibrate_errors(exclude={election}, registry=registry, bias_by_horizon=True)
         coupling = far_right_coupling({election}, registry=registry, errors=errors)
         t2 = turnout2_model(registry, exclude={election})
-        em = ErrorModel.fit(elections=ELECTIONS, exclude=[election], registry=registry,
-                            use_bias=False)
+        em = (
+            ErrorModel.fit(elections=ELECTIONS, exclude=[election], registry=registry,
+                           use_bias=False)
+            if "eta" in families else None
+        )
         fold_rows.append(
             {
                 "election": election,
@@ -474,14 +483,18 @@ def run_structural(
         obs_turnout = r2.expressed / r2.registered
         for h_idx, label in enumerate(horizons):
             hseed = list(HORIZONS).index(label)
-            cases = {
-                "dirichlet": case(election, label, np.random.default_rng([seed, election, hseed, 1]),
-                                  registry),
-                "eta": case_eta(election, label, np.random.default_rng([seed, election, hseed, 2]),
-                                registry, em, coupling["sd_x"]),
-            }
+            cases = {}
+            if "dirichlet" in families:
+                cases["dirichlet"] = case(
+                    election, label, np.random.default_rng([seed, election, hseed, 1]), registry
+                )
+            if "eta" in families:
+                cases["eta"] = case_eta(
+                    election, label, np.random.default_rng([seed, election, hseed, 2]), registry,
+                    em, coupling["sd_x"],
+                )
             for name in variants:
-                family, opts = STRUCT_VARIANTS[name]
+                family, opts = specs[name]
                 c = cases[family]
                 errs = errors_h if opts.get("bias_by_horizon") else errors
                 if opts.get("bias_linear"):
@@ -494,6 +507,7 @@ def run_structural(
                     couple_far_right=opts.get("couple_far_right", False),
                     coupling_rho=coupling["rho"],
                     second_round_turnout=opts.get("second_round_turnout", False),
+                    settings=opts.get("settings"),
                 )
                 m.fit(election, c.asof, [c.pair])
                 shared = c.shared if opts.get("couple_far_right") else None
@@ -516,6 +530,7 @@ def run_structural(
                         "n_polls": s["n_polls"],
                         "poll_bias": s["poll_bias"],
                         "coupling_kappa": s["coupling_kappa"],
+                        "inedit": s["inedit"],
                         "ess": d.ess,
                         "turnout2_median": float(np.median(d.turnout)),
                         "turnout2_q05": float(np.quantile(d.turnout, 0.05)),
