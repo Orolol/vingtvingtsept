@@ -32,8 +32,8 @@ from vvs.eval import metrics as mt
 from vvs.eval.backtest import ELECTION_WEIGHT, VARIANT_ERROR_KWARGS, asof_for, fit_dir
 from vvs.eval.baselines import last_by_pollster, poll_mean
 from vvs.eval.configurations import official_map
-from vvs.model.data import load_polls
 from vvs.model.consolidation import variant_drift  # rebonds et consolidation
+from vvs.model.data import load_polls
 from vvs.model.error import ErrorModel
 from vvs.model.run import draws_log_shares
 from vvs.registry import BLOCS, Registry, default_registry
@@ -322,6 +322,12 @@ def score_backtest(
                 cblocs = [str(b) for b in dr["blocs"]]
                 kblocs = [cblocs[cands.index(c)] for c in K]
                 rng = np.random.default_rng([seed, e, h])
+                cvol = getattr(variant_models[(v, e)], "cand_volatility", None)
+                if cvol is not None:  # volatilité par candidat (variantes volcand) à asof
+                    variant_models[(v, e)].cand_scale = cvol.scaler(e, asof, polls, reg)
+                herd = getattr(variant_models[(v, e)], "herding", None)
+                if herd is not None:  # troupeau des instituts (variantes herding) à asof
+                    variant_models[(v, e)].herd_scale = herd.scale_at(e, asof, h, K, kblocs, polls)
                 points = {}
                 if v == variants[0]:
                     points["mean14"] = poll_mean(e, asof, K, days=14, registry=reg, polls=polls)

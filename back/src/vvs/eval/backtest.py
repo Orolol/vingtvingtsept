@@ -69,6 +69,18 @@ VARIANTS: dict[str, Priors] = {
     # score (option `far_right_bias_since_2017` de ErrorModel.fit)
     "fr2017": Priors(n_max=2500.0),
     "lists_fr2017": Priors(n_max=2500.0),
+    # volatilité réalisée par candidat : mêmes ajustements que floor, écart type de v_c mis à
+    # l'échelle par (V_c / V_ref)^κ à la date de prévision, κ et η réestimés sans l'élection
+    # évaluée (vvs.model.volatility_candidate, option `candidate_volatility` de ErrorModel.fit)
+    "volcand": Priors(n_max=2500.0),
+    "lists_volcand": Priors(n_max=2500.0),
+    # troupeau des instituts : mêmes ajustements que floor, η mis à l'échelle par
+    # (D_ref / D)^κ, D dispersion relative des instituts à la date de prévision, κ et η
+    # réestimés sans l'élection évaluée (vvs.model.herding, option `herding` de ErrorModel.fit) ;
+    # `_final` : seule l'erreur finale σ²_final + ρ/p est mise à l'échelle
+    "herding": Priors(n_max=2500.0),
+    "lists_herding": Priors(n_max=2500.0),
+    "lists_herding_final": Priors(n_max=2500.0),
 }
 # Options de `ErrorModel.fit` propres à une variante, appliquées au score par
 # `vvs.eval.scoring.score_backtest` (en plus de `error_kwargs`).
@@ -76,6 +88,11 @@ VARIANT_ERROR_KWARGS: dict[str, dict] = {
     "lists": {"with_lists": True},
     "fr2017": {"far_right_bias_since_2017": True},
     "lists_fr2017": {"with_lists": True, "far_right_bias_since_2017": True},
+    "volcand": {"candidate_volatility": True},
+    "lists_volcand": {"with_lists": True, "candidate_volatility": True},
+    "herding": {"herding": True},
+    "lists_herding": {"with_lists": True, "herding": True},
+    "lists_herding_final": {"with_lists": True, "herding": "final"},
 }
 DEFAULT_VARIANT = "floor"
 DEFAULT_ELECTIONS = (2012, 2017, 2022)

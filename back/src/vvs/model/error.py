@@ -503,6 +503,14 @@ class ErrorModel:
         # Volatilité réalisée (vvs.model.volatility.VolatilityScale), None par défaut : échelle
         # de l'écart type de η (ou de sa seule part de mouvement) à la date de prévision.
         self.vol_scale = None
+        # Volatilité réalisée par candidat (vvs.model.volatility_candidate.CandidateVolatility),
+        # None par défaut : posée par `fit(candidate_volatility=True)` ; sa méthode `scaler`
+        # rend la fonction à poser dans `cand_scale` à la date de prévision.
+        self.cand_volatility = None
+        # Troupeau des instituts (vvs.model.herding), None par défaut : `herding` (HerdingFit)
+        # posé par `fit(herding=…)`, `herd_scale` (HerdingScale) l'échelle à la date de prévision.
+        self.herding = None
+        self.herd_scale = None
 
     # estimation
 
@@ -519,6 +527,8 @@ class ErrorModel:
         extra_items: list[Item] | None = None,
         with_lists: bool = False,
         far_right_bias_since_2017: bool = False,
+        candidate_volatility: bool = False,
+        herding: bool | str = False,
     ) -> ErrorModel:
         """Calibre η sur `elections` privées de `exclude` (leave-one-election-out).
 
@@ -529,7 +539,10 @@ class ErrorModel:
         jamais exclus, pondérés par `Item.weight` ; `with_lists` : y ajoute le défaut de
         `vvs.model.error_lists` (erreurs finales des scrutins de liste, poids 0,5).
         `far_right_bias_since_2017` : biais d'extrême droite des scrutins depuis 2017
-        (docstring du module)."""
+        (docstring du module). `candidate_volatility` : échelle de v_c par la volatilité
+        réalisée du candidat, κ et η réestimés sur `train` (`vvs.model.volatility_candidate`).
+        `herding` : échelle de η par la dispersion relative des instituts (True ou une forme de
+        `vvs.model.herding.FORMS`), items mis à l'échelle, κ en validation croisée interne."""
         reg = registry or default_registry()
         excl = {int(e) for e in np.atleast_1d(exclude)} if exclude is not None else set()
         train = [e for e in elections if e not in excl]
@@ -553,6 +566,11 @@ class ErrorModel:
         if gamma is None:
             jw = jw_shape(exclude=tuple(JW_ELECTION_ID[e] for e in excl if e in JW_ELECTION_ID))
             gamma = jw["gamma"]
+        herd = None
+        if herding:  # troupeau des instituts : items mis à l'échelle, κ en CV interne
+            from vvs.model.herding import fit_scaled_items
+
+            items, herd = fit_scaled_items(items, groups, float(gamma), herding, use_bias, reg)
         bias, bias_diag = stable_bias(items) if use_bias else ({}, {})
 
         # biais d'extrême droite depuis 2017 : estimé sur les erreurs finales d'apprentissage,
@@ -620,7 +638,15 @@ class ErrorModel:
             "far_right_bias_since_2017": fr_diag,
             "jw": jw,
         }
-        return cls(params, info)
+        if herd is not None:
+            info["herding"] = herd.to_dict()
+        model = cls(params, info)
+        model.herding = herd
+        if candidate_volatility:
+            from vvs.model.volatility_candidate import attach
+
+            attach(model, train, extra, float(gamma), bias, reg, use_bias=use_bias)
+        return model
 
     # covariance et tirages
 
@@ -639,6 +665,11 @@ class ErrorModel:
             vb, vc = self.vol_scale.apply(
                 vb, vc, wb * pr.sigma_bloc_final**2,
                 pr.sigma_cand_final**2 + pr.rho / np.maximum(p, 1e-4), list(blocs),
+            )
+        if self.herd_scale is not None:  # troupeau des instituts (vvs.model.herding)
+            vb, vc = self.herd_scale.apply(
+                vb, vc, wb * pr.sigma_bloc_final**2,
+                pr.sigma_cand_final**2 + pr.rho / np.maximum(p, 1e-4),
             )
         return vb, vc
 
