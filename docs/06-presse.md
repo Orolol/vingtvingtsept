@@ -139,3 +139,30 @@ Décision : **aucune variable de presse au backtest**. Media Cloud reste pour la
 « Presse » du site (part de voix et agenda, environ 300 requêtes par semaine), marquée
 « n'entre pas dans la prévision ». La classification NLP des titres n'a plus d'objet
 prédictif ; elle reste possible pour l'affichage.
+
+### Classification des titres par modèle local (2026-10-22, `runs/2026-10-22-press-nlp/report.md`)
+
+178 000 articles Media Cloud (2017, 2022, 2027), 58 000 titres classés par Qwen3.8-27B via
+llama.cpp (ton −1/0/+1, posture, thèmes ; grammaire contrainte, 9,5 titres/s, prompts
+versionnés dans `data/registry/nlp_prompts.yaml`). Accord entre deux formulations : posture
+fiable (κ 0,74), ton à la limite (κ 0,60), thèmes non fiables (F1 0,55, à cause
+d'« institutions »). Échantillon `sample_300.csv` à relire à la main.
+
+**Résultat : négatif pour la prévision.** Le ton a le signe attendu dans les trois cycles
+mais un effet indistinguable du placebo ; autour des chocs, la presse enregistre en même
+temps que les sondages (Fillon) ou après (Pécresse) ; l'agenda par thèmes classés ne tient
+pas. Seule piste : le ton des 28 derniers jours contre l'erreur finale des sondages (β +6,
+p = 0,06, n = 23, porté par 2022), déclaré **test hors échantillon pour 2027** : pour chaque
+candidat officiel, ton moyen des 28 jours avant le premier tour (même prompt, même modèle)
+contre résultat moins moyenne des sondages des 14 derniers jours, prédiction β > 0.
+
+Apport réel du NLP : descriptif. Il sépare une couverture abondante et favorable d'une
+couverture abondante et hostile, ce que les comptages confondent. Le site l'affiche avec la
+mention « n'entre pas dans la prévision » : ton hebdomadaire, posture, titres extrêmes, part
+de voix, agenda limité aux thèmes concordants. Coût live : environ six minutes de GPU par
+semaine.
+
+Incident du 2026-10-22 : un premier essai avec vLLM (NVFP4, mémoire GPU 0,82) a gelé la
+machine pendant la capture des graphes CUDA. Règle du projet : inférence locale par
+llama.cpp ; vLLM seulement avec workers de compilation limités, swap de 32 Go, mémoire GPU
+réduite et accord explicite.
