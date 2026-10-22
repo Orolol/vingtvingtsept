@@ -5,7 +5,8 @@ FiveThirtyEight : agrégation bayésienne des sondages depuis 2002, erreur calib
 l'histoire, arbre de scénarios de candidats, second tour par reports de voix, simulation
 Monte-Carlo. Site : https://orolol.github.io/vingtvingtsept/
 
-Premier tour le 18 avril 2027, second tour le 2 mai. La projection est mise à jour à chaque
+Dates de travail : premier tour le 18 avril 2027, second tour le 2 mai, à confirmer par le
+décret de convocation. La projection est mise à jour à chaque
 nouveau sondage.
 
 ## Ce que fait le modèle
@@ -26,14 +27,17 @@ nouveau sondage.
 5. **Simulation** : 40 000 tirages, probabilités de qualification et de victoire, scores
    avec intervalles, par scénario et au mélange.
 
-Tout changement de modèle passe par un backtest « comme à l'époque » (2002-2022, horizons
-180, 90, 30 et 7 jours) et une règle d'admission écrite : voir `docs/07-evaluation.md` et le
-journal `docs/backtest-log.md`.
+Les études utilisent un backtest rétrospectif laissant l'élection évaluée de côté
+(2002-2022, horizons 180, 90, 30 et 7 jours) et une règle d'admission écrite : voir
+[le protocole](docs/07-evaluation.md) et [le journal](docs/backtest-log.md).
+La [consolidation du 22 octobre](docs/10-consolidation.md) fige une référence et ajoute
+une évaluation chronologique de toute la chaîne, de l'offre de candidats à la victoire,
+sur 2012, 2017 et 2022. Les dates de publication manquantes y sont explicitement imputées.
 
 ## Pistes étudiées
 
 Règle du projet : aucune source n'entre dans la prévision sans gain au backtest, en
-laissant l'élection évaluée de côté. Quatorze signaux ont été testés ; un seul a été admis.
+laissant l'élection évaluée de côté. Quinze signaux ont été testés ; un seul a été admis.
 Les autres restent des options désactivées dans le code et, pour plusieurs, des volets
 explicatifs du site marqués « n'entre pas dans la prévision ».
 
@@ -53,13 +57,13 @@ explicatifs du site marqués « n'entre pas dans la prévision ».
 | 12 | Troupeau des instituts | resserrement réel, mais le désaccord accompagne les erreurs au lieu de les masquer |
 | 13 | Anticipations « qui va gagner ? » (110 mesures) | le plus cité gagne toujours, mais trop sous-confiant pour servir de probabilité |
 | 14 | Abstention différentielle (certains − inscrits) | stable, mais lien avec l'erreur limité à 2022 et de signe inverse |
+| 15 | Reports de voix par inférence écologique sur les communes (données Cagé-Piketty) | biais d'agrégation ; la sociologie des communes ne prédit pas l'érosion du front républicain |
 | ✓ | **Calibration de l'erreur finale sur dix scrutins** (présidentielles + européennes + législatives) | **admise** : log-score et CRPS meilleurs à 90, 30 et 7 jours |
 
 Corrections de structure évaluées au même protocole : substitution intra-bloc et biais RN
 par horizon (publiées sans admission stricte, choix documenté), couplage des erreurs premier
 tour et duel, participation du second tour tirée à part, biais d'extrême droite depuis 2017
-(rejetés). En cours : reports de voix par inférence écologique sur les communes (données
-Cagé-Piketty), microdonnées Cevipof (demandes d'accès déposées).
+(rejetés). En cours : microdonnées Cevipof (demandes d'accès déposées).
 
 ## Données
 
@@ -78,6 +82,8 @@ DARES, Ifop (popularité), Media Cloud, GDELT, INA, Wikimedia, Google Trends, Ce
   Pages depuis `front/static/data`.
 - `scripts/run_live.sh` : run quotidien (ingestion, curation, simulation, export, build,
   commit et push), voir `scripts/README.md`.
+- `scripts/run_consolidation.sh` : gel, douze backtests chronologiques, témoin moyen sur
+  14 jours et 47 variantes de poids des scénarios, avec reprise vérifiée sur CPU.
 - `data/registry/` : candidats, partis, blocs, élections, instituts, scénarios, reports de
   voix ; `data/curated/` : tables parquet.
 

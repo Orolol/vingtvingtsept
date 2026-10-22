@@ -191,6 +191,22 @@ limitée à la gauche comme information qualitative sur le site.
 | Abstention différentielle (certains − inscrits, OpinionWay seul) | écart stable par candidat (r 0,9 entre moitiés de campagne) ; lien avec l'erreur finale seulement en 2022 et de signe négatif (électorats fragiles finissant au-dessus des sondages) ; validation croisée 2022 → 2017 échoue | non testé au backtest | non intégrée ; base publiée par chaque institut conservée |
 | Cevipof (microdonnées) | 80 jeux inventoriés, tous restreints ; 47 demandes déposées ; FES 2017 publique : matrice de reports complète (abstentionnistes et blancs compris), écart de 10 points avec les instituts sur l'électorat Fillon | source `cevipof_2017` ajoutée au prior des reports ; duels par électorat et anticipations ENEF à venir avec l'accès | en attente du CDSP |
 
-Défauts de curation relevés par l'étude d'abstention, à corriger : les sondages Ifop et
-Harris 2027 marqués `registered` alors que leurs tableaux portent sur les certains d'aller
-voter ; la seconde base d'OpinionWay perdue par la déduplication sur (tour, candidats).
+Défauts de curation relevés par l'étude d'abstention, corrigés le 2026-10-22 : les sondages
+Ifop et Harris 2027 étaient marqués `registered` alors que leurs tableaux portent sur les
+certains d'aller voter ; la seconde base d'OpinionWay était perdue par la déduplication sur
+(tour, candidats). Règles de correction et de sélection d'une base : `03-donnees.md`.
+
+## 2026-10-22 — reports de voix par inférence écologique (communes, Cagé-Piketty) : non validée
+
+Goodman contraint pondéré par les inscrits et version par strates revenu × type de commune
+sur les cinq seconds tours (`runs/2026-10-22-ecological/`). Critère : moins de 8 points
+d'écart avec les enquêtes post-électorales sur la répartition entre finalistes. Échec :
+biais d'agrégation (Fillon 2017 +16, Mélenchon 2022 +29 vers Macron). Une variante par
+contexte RN passe pour 6 électorats sur 7 mais est fragile (2002 absurde). La décomposition
+sociale appliquée à la composition 2022 ne fait pas mieux que les reports 2017 bruts : le
+passage 2017 → 2022 est un décalage commun (érosion du front républicain de 0,6 à 0,8 en
+logit), pas un effet de composition. Sources `ei_<année>` non fusionnées.
+
+Propositions issues de l'étude, à évaluer au protocole du second tour : σ_u analogue 0,30 →
+0,5, σ_u inédit 0,6 → 0,8, σ_v 0,25 → 0,30 et 0,40 → 0,45 ; ligne `far_right` de PROXIMITY :
+centre 2,5 → 6,5, droite 6 → 7, « ni l'un ni l'autre » (0,10 ; 0,55).
