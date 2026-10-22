@@ -34,6 +34,10 @@ La [consolidation du 22 octobre](docs/10-consolidation.md) fige une référence 
 une évaluation chronologique de toute la chaîne, de l'offre de candidats à la victoire,
 sur 2012, 2017 et 2022. Les dates de publication manquantes y sont explicitement imputées.
 Version de référence : tag `reference-2026-10-22`, avec résultats et audit versionnés.
+Une [étude des scénarios historiques incomplets](docs/11-scenarios-historiques.md)
+teste une mémoire des hypothèses et un filtre par événements datés : elle réduit les
+candidats hors support en 2017, mais n'améliore pas globalement les scores. Les deux
+variantes restent expérimentales ; la référence et la projection publiée sont inchangées.
 
 ## Pistes étudiées
 
@@ -85,6 +89,8 @@ DARES, Ifop (popularité), Media Cloud, GDELT, INA, Wikimedia, Google Trends, Ce
   commit et push), voir `scripts/README.md`.
 - `scripts/run_consolidation.sh` : gel, douze backtests chronologiques, témoin moyen sur
   14 jours et 47 variantes de poids des scénarios, avec reprise vérifiée sur CPU.
+- `scripts/run_historical_scenarios.sh` : comparaison isolée des reconstructions
+  historiques, avec les fonctions statistiques et les ajustements du gel existant.
 - `data/registry/` : candidats, partis, blocs, élections, instituts, scénarios, reports de
   voix ; `data/curated/` : tables parquet.
 

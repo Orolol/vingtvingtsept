@@ -13,6 +13,7 @@
 | 8 | Live : automatisation des runs, mise à jour à chaque sondage, historique des probabilités | `scripts/run_live.sh`, `.github/workflows/pages.yml` | chaîne et publication implémentées ; installation de la planification locale à vérifier sur la machine |
 | 9 | Législatives (seconde étape, hors périmètre actuel) | nouvelle spec | plus tard |
 | 10 | Référence figée, backtest chronologique de la chaîne jusqu'à la victoire, sensibilité aux scénarios | `scripts/run_consolidation.sh`, `10-consolidation.md` | fait le 2026-10-22 : douze cas, diagnostics conformes, 47 variantes ; tag `reference-2026-10-22`, résultats et limites dans `10-consolidation.md` |
+| 11 | Reconstruction des scénarios historiques incomplets | `scripts/run_historical_scenarios.sh`, `11-scenarios-historiques.md` | fait le 2026-10-22 : mémoire annuelle et filtre événementiel testés sur le même gel ; support élargi, variantes non admises |
 
 Les phases 6 et 7 sont indépendantes l'une de l'autre et de la 5 ; elles peuvent démarrer
 dès que la 3 fournit un backtest de référence.
@@ -25,6 +26,10 @@ néanmoins activée dans la projection publiée, avec ce statut explicite ; les 
 restent désactivées et servent, le cas échéant, au volet explicatif.
 
 ## Questions ouvertes
+- Scénarios historiques : la mémoire des listes sondées ne suffit pas (étude `11`).
+  Construire des états de candidature datés et des règles de compatibilité indépendantes
+  des listes complètes ; couvrir aussi les candidats jamais sondés et les candidatures
+  finalement absentes, avant une nouvelle comparaison annoncée.
 - Curation : maintenir les audits de population et de doublons ; corrections Ifop, Harris
   et OpinionWay terminées (voir `03-donnees.md`). Retrouver les dates de publication
   historiques pour remplacer le délai imputé du backtest chronologique.
