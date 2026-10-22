@@ -11,9 +11,11 @@
   sont retirées au premier export réel.
 
 Sources en plus du run : registres (candidats, instituts, scénarios), sondages curated 2027,
-macro.parquet, attention.parquet, press_ina.parquet, press_timelines.parquet, les runs de
-backtest (premier et second tour) et deux études : économie (`runs/<date>-economy/`,
-corrélations) et palmarès des instituts (`runs/<date>-pollster-ratings/`). Ces volets sont
+macro.parquet, attention.parquet, press_ina.parquet, press_timelines.parquet, les titres
+classés (press_titles, press_labels, press_features), les runs de backtest (premier et second
+tour) et trois études : économie (`runs/<date>-economy/`, corrélations), palmarès des instituts
+(`runs/<date>-pollster-ratings/`) et presse classée (`runs/<date>-press-nlp/` : accords et dates
+de rupture). Ces volets sont
 explicatifs : tous portent `in_forecast: false`. La validation contre les
 schémas se fait côté front (`npm run validate-data`, ajv) : jsonschema n'est pas une
 dépendance du back.
@@ -61,6 +63,35 @@ ATTENTION_WEEKS = 78  # profondeur du témoin d'actualité, comme la grille du p
 ATTENTION_MAX_CANDIDATES = 12
 INA_ELECTIONS = (2002, 2007, 2012, 2017)  # sujets de JT disponibles de 2000 à 2020
 GDELT_SINCE = dt.date(2017, 1, 1)
+PRESS_NLP_STUDY = "2026-10-22-press-nlp"
+NLP_VERSION = "title-v3"  # prompt retenu (data/registry/nlp_prompts.yaml)
+NLP_CYCLE = 2027
+NLP_MIN_TITLES = 10  # sous ce nombre de titres classés, ton, postures et agenda sont masqués
+NLP_TONE_WEEKS = 2  # fenêtre glissante du ton
+NLP_STANCE_WEEKS = 4  # « dernier mois » des postures
+NLP_BOOTSTRAP = 1000
+NLP_SEED = 20261022
+NLP_HEADLINES = 3
+NLP_STANCES = (
+    ("announcement", "Annonce"), ("programme", "Programme"), ("support", "Soutien"),
+    ("attack", "Attaques subies"), ("scandal", "Affaires"), ("poll", "Sondages"),
+    ("other", "Autre"),
+)
+NLP_AGENDA_THEMES = (
+    ("immigration", "Immigration"), ("purchasing_power", "Pouvoir d'achat"),
+    ("international", "International"), ("security", "Sécurité"),
+)
+NLP_LANDMARKS = (
+    # (événement de shocks.csv, libellé, résumé) : runs/<PRESS_NLP_STUDY>/report.md, partie (b)
+    ("fillon_affair_2017", "Fillon 2017 : l'affaire des emplois",
+     ("Le Canard enchaîné publie le 25 janvier 2017. La posture « affaire » passe de 2 % à 78 % "
+      "des titres entre le 24 et le 26 janvier, le ton de −0,1 à −0,7 ; les sondages décrochent "
+      "le 27, après un trou du 20 au 27. Presse et sondages enregistrent le choc ensemble.")),
+    ("pecresse_zenith_2022", "Pécresse 2022 : le meeting du Zénith",
+     ("Les sondages décrochent le 5 février 2022, huit jours avant le meeting du Zénith du 13 ; le "
+      "ton suit le 11 et la posture « affaire » le 21. La presse suit les sondages.")),
+)
+NLP_LANDMARK_DAYS = (28, 42)  # jours avant et après le choc
 Z90 = {"q05": -1.6449, "q25": -0.6745, "q50": 0.0, "q75": 0.6745, "q95": 1.6449}
 STUDY_BLOCS = ("far_right", "right", "centre", "incumbent", "left", "far_left")
 STUDY_BLOC_LABELS = {
@@ -97,8 +128,61 @@ PRESS_NOTE = (
     "La presse et l'attention en ligne n'entrent pas dans la prévision. L'attention Wikipédia "
     "a été testée (docs/06-presse.md) : elle précède les sondages d'une à quatre semaines "
     "autour des événements, mais l'effet disparaît hors événements et la causalité inverse est "
-    "aussi significative ; elle n'est pas retenue. La classification des titres (part de voix, "
-    "ton, agenda) reste à faire."
+    "aussi significative ; elle n'est pas retenue. Les titres classés par un modèle local (ton, "
+    "posture, thèmes) ont été testés à leur tour : résultat négatif, ils sont montrés à titre "
+    "descriptif."
+)
+NLP_NOTE = (
+    "Environ 58 000 titres de presse (Media Cloud, campagnes 2017, 2022 et 2027) classés par un "
+    "modèle de langue local : ton, posture, thèmes. Volet "
+    "descriptif : il sépare une couverture abondante et favorable d'une couverture abondante et "
+    "hostile, ce que les comptages confondent."
+)
+NLP_VERDICT = (
+    ("Le ton a le signe attendu dans les trois campagnes, mais son effet sur les sondages des "
+     "deux semaines suivantes ne se distingue pas du hasard (placebo p = 0,59)."),
+    ("Autour des chocs, la presse enregistre en même temps que les sondages (Fillon 2017) ou "
+     "après eux (Pécresse 2022), et l'agenda par thèmes classés ne précède rien."),
+)
+NLP_OUT_OF_SAMPLE = (
+    "Test hors échantillon déclaré pour 2027 : pour chaque candidat officiel, ton moyen des 28 "
+    "jours avant le premier tour (même prompt, même modèle) contre résultat moins moyenne des "
+    "sondages des 14 derniers jours ; prédiction : un meilleur ton va avec une surperformance "
+    "(β > 0). En 2017 et 2022 : β = +6, p = 0,06, n = 23, porté par 2022."
+)
+NLP_TONE_NOTE = (
+    "Ton moyen des titres qui nomment le candidat, de −1 (hostile) à +1 (favorable), sur deux "
+    "semaines glissantes ; bande : intervalle à 90 % par rééchantillonnage des titres. Masqué sous "
+    "10 titres classés. Le ton est la mesure la moins fiable des trois (accord κ = 0,60 entre deux "
+    "formulations du prompt)."
+)
+NLP_STANCE_NOTE = (
+    "Posture de chaque titre vis-à-vis du candidat, une seule par titre. « Attaques subies » : "
+    "le candidat est la cible d'une critique ; « annonce » comprend ses propres attaques contre "
+    "un adversaire. Masqué sous 10 titres classés."
+)
+NLP_HEADLINES_NOTE = (
+    "Titres classés hostiles (−1) et favorables (+1) de la semaine, les plus récents d'abord : "
+    "le ton n'a que trois niveaux, il n'y a pas de « plus négatif » parmi eux. Un titre peut être "
+    "mal classé."
+)
+NLP_SOV_NOTE = (
+    "Part de voix : titres qui nomment le candidat, en part des titres nommant l'un des candidats "
+    "suivis (un titre qui en nomme deux compte pour chacun). Attention : pages vues Wikipédia des "
+    "mêmes candidats, en part de leur total, mêmes semaines."
+)
+NLP_AGENDA_NOTE = (
+    "Part des titres classés de la semaine (tous candidats suivis) qui portent le thème ; un "
+    "titre peut en porter plusieurs. Seuls les quatre thèmes où deux formulations du prompt "
+    "s'accordent (κ ≥ 0,6) sont montrés ; « institutions », « affaires » et les autres ne sont "
+    "pas fiables."
+)
+NLP_LANDMARKS_NOTE = (
+    "Deux chocs de campagnes passées, classés avec le même modèle et le même prompt : ton et part "
+    "de la posture « affaire » jour par jour (moyenne sur trois jours, jours de moins de 3 titres "
+    "écartés). Les traits verticaux marquent le choc et la première rupture de chaque série ; "
+    "rupture des sondages : premier sondage à plus de 2 points sous la moyenne des 28 jours "
+    "d'avant."
 )
 ATTENTION_NOTE = (
     "Témoin d'actualité, n'entre pas dans la prévision : pages vues des articles Wikipédia des "
@@ -138,6 +222,10 @@ VARIABLES_TESTED = (
     ("attention", "Attention en ligne (Wikipédia, Google Trends)", "non retenue", False,
      ("Wikipédia précède les sondages autour des événements seulement, effet nul hors événements "
       "et aux horizons de la règle ; Trends ne réplique pas.")),
+    ("press_nlp", "Presse classée (ton, posture, thèmes)", "non retenue", False,
+     ("Titres classés par un modèle local (2026-10-22) : le ton a le signe attendu mais un effet "
+      "indistinguable du placebo, la presse bouge avec les sondages ou après eux, l'agenda par "
+      "thèmes ne tient pas. Pas essayée au backtest ; test hors échantillon déclaré pour 2027.")),
 )
 UNIT_LABELS = {
     "percent": "%",
@@ -838,16 +926,280 @@ def build_gdelt(asof: str, curated: Path) -> dict:
     }
 
 
-def build_press(asof: str, curated: Path | None = None, universe: list[str] | None = None) -> dict:
+# --- presse classée (docs/06-presse.md, runs/<PRESS_NLP_STUDY>/)
+
+
+def _share_list(counts: list[int], n: int, nd: int = 3) -> list[float] | None:
+    """Parts arrondies d'une partition ; None sous `NLP_MIN_TITLES` titres."""
+    if n < NLP_MIN_TITLES:
+        return None
+    return [round(c / n, nd) for c in counts]
+
+
+def nlp_labels(curated: Path, model: str) -> pl.DataFrame:
+    """Étiquettes `NLP_VERSION` de `model` sur l'univers classé (titres qui nomment le candidat,
+    plafonnés par candidat et par semaine : celui de press_features), une ligne par titre ×
+    candidat, avec cycle, date, semaine, média, titre et lien."""
+    from vvs.nlp.features import cap_sample
+
+    u = cap_sample(pl.read_parquet(curated / "press_titles.parquet"))
+    lab = (pl.read_parquet(curated / "press_labels.parquet")
+           .filter((pl.col("prompt_version") == NLP_VERSION) & (pl.col("model") == model))
+           .select("story_id", "candidate_id", "tone", "stance", "themes")
+           .unique(["story_id", "candidate_id"], keep="first"))
+    return u.join(lab, on=["story_id", "candidate_id"])
+
+
+def _nlp_grid(asof: dt.date, feats: pl.DataFrame, universe: list[str]
+              ) -> tuple[list[dt.date], list[str]]:
+    """Semaines complètes du cycle 2027 (7 jours dans la fenêtre de collecte, finies avant
+    `asof`) et candidats suivis de l'univers, du plus au moins classé sur le dernier mois."""
+    f = feats.filter(pl.col("cycle") == NLP_CYCLE)
+    weeks = sorted(f.filter((pl.col("days") == 7)
+                            & (pl.col("week") + pl.duration(days=6) <= asof))
+                   ["week"].unique().to_list())
+    recent = weeks[-NLP_STANCE_WEEKS:]
+    rank = (f.filter(pl.col("candidate_id").is_in(universe))
+            .group_by("candidate_id")
+            .agg(pl.col("n_labeled").filter(pl.col("week").is_in(recent)).sum().alias("n"),
+                 pl.col("n_labeled").sum().alias("n_all"))
+            .sort(["n", "n_all", "candidate_id"], descending=[True, True, False]))
+    return weeks, rank["candidate_id"].to_list()
+
+
+def build_nlp_tone(lab: pl.DataFrame, weeks: list[dt.date], cands: list[str]) -> dict:
+    """Ton moyen sur `NLP_TONE_WEEKS` semaines glissantes (la semaine et la précédente), par
+    candidat ; intervalle par bootstrap des titres (tirage multinomial des trois niveaux de
+    ton, `NLP_BOOTSTRAP` tirages, graine fixe) ; masqué sous `NLP_MIN_TITLES` titres."""
+    rng = np.random.default_rng(NLP_SEED)
+    c = (lab.group_by("candidate_id", "week")
+         .agg(*[(pl.col("tone") == v).sum().alias(f"t{v}") for v in (-1, 0, 1)]))
+    counts = {(r["candidate_id"], r["week"]): (r["t-1"], r["t0"], r["t1"])
+              for r in c.iter_rows(named=True)}
+    tracks = []
+    for cid in cands:
+        q05, q50, q95, ns = [], [], [], []
+        for w in weeks:
+            k = np.zeros(3, dtype=np.int64)
+            for j in range(NLP_TONE_WEEKS):
+                k += np.array(counts.get((cid, w - dt.timedelta(weeks=j)), (0, 0, 0)))
+            n = int(k.sum())
+            ns.append(n)
+            if n < NLP_MIN_TITLES:
+                q05.append(None), q50.append(None), q95.append(None)
+                continue
+            d = rng.multinomial(n, k / n, size=NLP_BOOTSTRAP)
+            q = np.quantile((d[:, 2] - d[:, 0]) / n, [0.05, 0.5, 0.95])
+            q05.append(round(float(q[0]), 2)), q50.append(round(float(q[1]), 2))
+            q95.append(round(float(q[2]), 2))
+        tracks.append({"candidate_id": cid, "q05": q05, "q50": q50, "q95": q95, "n": ns})
+    return {"note": NLP_TONE_NOTE, "window_weeks": NLP_TONE_WEEKS,
+            "min_titles": NLP_MIN_TITLES, "weeks": [w.isoformat() for w in weeks],
+            "tracks": tracks}
+
+
+def build_nlp_stance(lab: pl.DataFrame, weeks: list[dt.date], cands: list[str]) -> dict:
+    """Parts de chaque posture (ordre `NLP_STANCES`) sur les `NLP_STANCE_WEEKS` dernières
+    semaines et semaine par semaine ; parts entre 0 et 1, masquées sous `NLP_MIN_TITLES`."""
+    ids = [k for k, _ in NLP_STANCES]
+    c = lab.group_by("candidate_id", "week", "stance").len()
+    counts = {(r["candidate_id"], r["week"], r["stance"]): r["len"]
+              for r in c.iter_rows(named=True)}
+    recent = weeks[-NLP_STANCE_WEEKS:]
+    last, tracks = [], []
+    for cid in cands:
+        per_week = [[counts.get((cid, w, s), 0) for s in ids] for w in weeks]
+        tot = [sum(k) for k in per_week[-NLP_STANCE_WEEKS:]]
+        agg = [sum(k[i] for k in per_week[-NLP_STANCE_WEEKS:]) for i in range(len(ids))]
+        n = sum(tot)
+        last.append({"candidate_id": cid, "n": n, "shares": _share_list(agg, n)})
+        tracks.append({"candidate_id": cid, "n": [sum(k) for k in per_week],
+                       "shares": [_share_list(k, sum(k)) for k in per_week]})
+    return {
+        "note": NLP_STANCE_NOTE,
+        "categories": [{"id": k, "label": lab_} for k, lab_ in NLP_STANCES],
+        "min_titles": NLP_MIN_TITLES,
+        "last_weeks": {"start": recent[0].isoformat(),
+                       "end": (recent[-1] + dt.timedelta(days=6)).isoformat(),
+                       "rows": last},
+        "weeks": [w.isoformat() for w in weeks],
+        "tracks": tracks,
+    }
+
+
+def build_nlp_headlines(lab: pl.DataFrame, week: dt.date, cands: list[str]) -> dict:
+    """Pour la dernière semaine complète, par candidat, `NLP_HEADLINES` titres classés −1 et +1,
+    les plus récents d'abord (titres identiques dédoublonnés, ordre stable par story_id)."""
+    w = lab.filter(pl.col("week") == week).with_columns(
+        pl.col("title").str.strip_chars().str.to_lowercase().alias("_key"))
+    rows = []
+    for cid in cands:
+        wc = w.filter(pl.col("candidate_id") == cid)
+
+        def pick(tone: int, wc=wc) -> list[dict]:
+            t = (wc.filter(pl.col("tone") == tone)
+                 .sort(["publish_date", "story_id"], descending=[True, False])
+                 .unique("_key", keep="first", maintain_order=True).head(NLP_HEADLINES))
+            return [{"title": r["title"].strip(), "outlet": r["outlet"] or "",
+                     "date": r["publish_date"].isoformat(), "url": r["url"],
+                     "stance": r["stance"]} for r in t.iter_rows(named=True)]
+
+        rows.append({"candidate_id": cid, "n": wc.height, "negative": pick(-1),
+                     "positive": pick(1)})
+    return {"note": NLP_HEADLINES_NOTE, "week": week.isoformat(),
+            "week_end": (week + dt.timedelta(days=6)).isoformat(), "candidates": rows}
+
+
+def build_nlp_share_of_voice(feats: pl.DataFrame, curated: Path, weeks: list[dt.date],
+                             cands: list[str]) -> dict:
+    """Part de voix (titres qui nomment le candidat, `mentions` de press_features) parmi les
+    candidats suivis, et part des pages vues Wikipédia des mêmes candidats, mêmes semaines
+    (semaines de 7 jours de pages vues, sinon null) ; parts entre 0 et 1."""
+    f = feats.filter((pl.col("cycle") == NLP_CYCLE) & pl.col("candidate_id").is_in(cands)
+                     & pl.col("week").is_in(weeks))
+    men = {(r["candidate_id"], r["week"]): r["mentions"] for r in f.iter_rows(named=True)}
+    tot = {w: sum(men.get((c, w), 0) for c in cands) for w in weeks}
+    a = pl.read_parquet(curated / "attention.parquet").filter(
+        (pl.col("source") == "wikipedia") & (pl.col("election") == NLP_CYCLE)
+        & pl.col("candidate_id").is_in(cands)
+    ).with_columns(pl.col("date").dt.truncate("1w").alias("week")).filter(
+        pl.col("week").is_in(weeks))
+    full = set(a.group_by("week").agg(pl.col("date").n_unique().alias("d"))
+               .filter(pl.col("d") == 7)["week"].to_list())
+    views = {(r["candidate_id"], r["week"]): r["value"]
+             for r in a.group_by("candidate_id", "week").agg(pl.col("value").sum())
+             .iter_rows(named=True)}
+    vtot = {w: sum(views.get((c, w), 0.0) for c in cands) for w in weeks}
+
+    def frac(x: float, t: float, ok: bool = True) -> float | None:
+        return round(x / t, 4) if ok and t > 0 else None
+
+    return {
+        "note": NLP_SOV_NOTE,
+        "weeks": [w.isoformat() for w in weeks],
+        "tracks": [{"candidate_id": c,
+                    "values": [frac(men.get((c, w), 0), tot[w]) for w in weeks]}
+                   for c in cands],
+        "attention": [{"candidate_id": c,
+                       "values": [frac(views.get((c, w), 0.0), vtot[w], w in full)
+                                  for w in weeks]}
+                      for c in cands],
+    }
+
+
+def build_nlp_agenda(lab: pl.DataFrame, weeks: list[dt.date], cands: list[str]) -> dict:
+    """Part hebdomadaire des titres classés (candidats suivis réunis) portant chacun des thèmes
+    concordants ; multi-étiquette, entre 0 et 1, masquée sous `NLP_MIN_TITLES` titres."""
+    lw = lab.filter(pl.col("candidate_id").is_in(cands) & pl.col("week").is_in(weeks))
+    agg = lw.group_by("week").agg(
+        pl.len().alias("n"),
+        *[pl.col("themes").list.contains(k).sum().alias(k) for k, _ in NLP_AGENDA_THEMES])
+    by = {r["week"]: r for r in agg.iter_rows(named=True)}
+    n = [int(by[w]["n"]) if w in by else 0 for w in weeks]
+    themes = []
+    for k, label in NLP_AGENDA_THEMES:
+        vals = [round(by[w][k] / by[w]["n"], 4) if ni >= NLP_MIN_TITLES else None
+                for w, ni in zip(weeks, n)]
+        themes.append({"id": k, "label": label, "values": vals})
+    return {"note": NLP_AGENDA_NOTE, "min_titles": NLP_MIN_TITLES,
+            "weeks": [w.isoformat() for w in weeks], "n": n, "themes": themes}
+
+
+def build_nlp_landmarks(lab: pl.DataFrame, study: Path) -> dict:
+    """Repères 2017 et 2022 : ton et part de la posture « affaire », jour par jour, moyennés sur
+    trois jours (jours de moins de 3 titres écartés, comme l'étude), de `NLP_LANDMARK_DAYS[0]`
+    jours avant le choc à `NLP_LANDMARK_DAYS[1]` après ; dates de rupture lues dans
+    `shocks.csv` de l'étude."""
+    shocks = {r["event"]: r for r in pl.read_csv(study / "shocks.csv", try_parse_dates=True)
+              .iter_rows(named=True)}
+    events = []
+    for ev, label, summary in NLP_LANDMARKS:
+        sh = shocks[ev]
+        cid, day = sh["candidate_id"], sh["date"]
+        cycle = day.year if day.month <= 6 else day.year + 1  # présidentielle au printemps
+        before, after = NLP_LANDMARK_DAYS
+        start, end = day - dt.timedelta(days=before), day + dt.timedelta(days=after)
+        d = (lab.filter((pl.col("candidate_id") == cid) & (pl.col("cycle") == cycle))
+             .group_by("publish_date")
+             .agg(pl.len().alias("n"), pl.col("tone").cast(pl.Float64).mean().alias("tone"),
+                  (pl.col("stance") == "scandal").mean().alias("scandal")))
+        cal = pl.DataFrame({"publish_date": pl.date_range(start - dt.timedelta(days=2), end,
+                                                          "1d", eager=True)})
+        d = (cal.join(d, on="publish_date", how="left").sort("publish_date")
+             .with_columns(pl.col("n").fill_null(0))
+             .with_columns([pl.when(pl.col("n") >= 3).then(pl.col(c)).otherwise(None)
+                           .rolling_mean(3, min_samples=2).alias(c)
+                            for c in ("tone", "scandal")])
+             .filter(pl.col("publish_date") >= start))
+
+        def iso(x) -> str | None:
+            return None if x is None else x.isoformat()
+
+        events.append({
+            "id": ev, "label": label, "candidate_id": cid, "cycle": cycle,
+            "event_date": day.isoformat(), "summary": summary,
+            "dates": [x.isoformat() for x in d["publish_date"]],
+            "tone": [_r(x, 2) for x in d["tone"]],
+            "scandal_share": [_r(x, 3) for x in d["scandal"]],
+            "n": [int(x) for x in d["n"]],
+            "breaks": {"polls": iso(sh["poll_break"]), "tone": iso(sh["break_tone_3d"]),
+                       "scandal": iso(sh["break_scandal_share_3d"])},
+        })
+    return {"note": NLP_LANDMARKS_NOTE, "events": events}
+
+
+def build_nlp_quality(study: Path, model: dict, lab: pl.DataFrame) -> dict:
+    """Accords entre deux formulations du prompt (`agreement.json` de l'étude), modèle et
+    version de prompt, titres classés par cycle."""
+    ag = json.loads((study / "agreement.json").read_text())
+    s = ag["sample"]
+    per_cycle = lab.group_by("cycle").len().sort("cycle")
+    return {
+        "model": model["id"],
+        "model_label": f"{Path(model.get('file', model['id'])).stem} ({model.get('engine', '?')})",
+        "prompt_version": NLP_VERSION,
+        "n_sample": int(s["n"]),
+        "tone_kappa": round(float(s["tone_kappa"]), 3),
+        "stance_kappa": round(float(s["stance_kappa"]), 3),
+        "themes_f1": round(float(s["themes_f1"]), 3),
+        "thresholds": {k: float(v) for k, v in ag["thresholds"].items()},
+        "passes": {k: bool(v) for k, v in ag["passes"].items()},
+        "labeled": [{"cycle": int(r["cycle"]), "n": int(r["len"])}
+                    for r in per_cycle.iter_rows(named=True)],
+        "reference": f"runs/{study.name}/report.md",
+    }
+
+
+def build_press(asof: str, curated: Path | None = None, universe: list[str] | None = None,
+                nlp_study: Path | None = None) -> dict:
+    """press.json : attention, INA, GDELT, et presse classée (`nlp_study` : dossier de l'étude,
+    défaut runs/<PRESS_NLP_STUDY>, pour les accords et les dates de rupture)."""
+    from vvs.nlp.prompts import load_prompts
+
     curated = curated or paths.CURATED
+    nlp_study = nlp_study or paths.RUNS / PRESS_NLP_STUDY
+    prompts = load_prompts()
+    if {k for k, _ in NLP_STANCES} != set(prompts.stances):
+        raise ValueError(f"postures du registre {list(prompts.stances)} ≠ NLP_STANCES")
+    feats = pl.read_parquet(curated / "press_features.parquet")
+    lab = nlp_labels(curated, prompts.model["id"])
+    weeks, cands = _nlp_grid(dt.date.fromisoformat(asof), feats, universe or [])
+    if not weeks or not cands:
+        raise ValueError("presse classée : aucune semaine complète ou aucun candidat suivi")
+    lab27 = lab.filter(pl.col("cycle") == NLP_CYCLE)
     return {
         "asof": asof,
         "in_forecast": False,
         "in_forecast_note": PRESS_NOTE,
-        "weeks": [],
-        "share_of_voice": [],
-        "tone": [],
-        "agenda": [],
+        "nlp": {"in_forecast": False, "note": NLP_NOTE, "verdict": list(NLP_VERDICT),
+                "out_of_sample_test": NLP_OUT_OF_SAMPLE, "reference": "docs/06-presse.md"},
+        "tone": build_nlp_tone(lab27, weeks, cands),
+        "stance": build_nlp_stance(lab27, weeks, cands),
+        "headlines": build_nlp_headlines(lab27, weeks[-1], cands),
+        "share_of_voice": build_nlp_share_of_voice(feats, curated, weeks, cands),
+        "agenda_nlp": build_nlp_agenda(lab27, weeks, cands),
+        "landmarks": build_nlp_landmarks(lab, nlp_study),
+        "quality": build_nlp_quality(nlp_study, prompts.model, lab),
         "attention": build_attention(asof, curated, universe or []),
         "ina": build_ina(curated),
         "gdelt": build_gdelt(asof, curated),
@@ -1026,12 +1378,14 @@ def export_run(
     economy_study: Path | None = None,
     pollster_ratings: Path | None = None,
     curated: Path | None = None,
+    press_nlp_study: Path | None = None,
 ) -> dict:
     """Écrit les fichiers du contrat JSON dans `out` ; rend un petit compte rendu.
 
-    `economy_study`, `pollster_ratings` : dossiers des études (défaut runs/<ECONOMY_STUDY>,
-    runs/<POLLSTER_RATINGS>) ; `curated` : dossier des parquet explicatifs (macro, attention,
-    presse ; défaut data/curated). Injectables pour les tests."""
+    `economy_study`, `pollster_ratings`, `press_nlp_study` : dossiers des études (défaut
+    runs/<ECONOMY_STUDY>, runs/<POLLSTER_RATINGS>, runs/<PRESS_NLP_STUDY>) ; `curated` : dossier
+    des parquet explicatifs (macro, attention, presse, titres classés ; défaut data/curated).
+    Injectables pour les tests."""
     run, out = Path(run), Path(out)
     reg = registry or default_registry()
     f = scenarios or load_scenarios(registry=reg)
@@ -1065,7 +1419,8 @@ def export_run(
     ratings = build_pollster_ratings(pollster_ratings or paths.RUNS / POLLSTER_RATINGS, reg)
     polls_json = build_polls(rm, polls, results, house, reg, ratings)
     economy = build_economy(rm["asof"], economy_study, curated)
-    press = build_press(rm["asof"], curated, [u["candidate_id"] for u in rm["universe"]])
+    press = build_press(rm["asof"], curated, [u["candidate_id"] for u in rm["universe"]],
+                        press_nlp_study)
     backtest = build_backtest(
         generated_at,
         backtest_first or paths.RUNS / BACKTEST_FIRST_ROUND,
@@ -1077,8 +1432,9 @@ def export_run(
     for p in second_round["pairs"]:
         cited |= {p["candidate_a"], p["candidate_b"]}
     cited |= {t["from"] for t in second_round["transfers"]}
-    for block in (press["attention"], press["gdelt"]):
+    for block in (press["attention"], press["gdelt"], press["tone"]):
         cited |= {t["candidate_id"] for t in block["tracks"]}
+    cited |= {e["candidate_id"] for e in press["landmarks"]["events"]}
     candidates = [candidate_entry(c, reg, rm["election"], bloc_hint) for c in sorted(cited)]
 
     last_poll = max(p["fieldwork_end"] for p in polls_json["polls"])

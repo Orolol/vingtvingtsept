@@ -101,6 +101,8 @@ def _toy_explanatory(root):
         }
     ).write_parquet(curated / "press_timelines.parquet")
 
+    _toy_press_nlp(curated, root / "press_nlp")
+
     lineages = ["ifop", "elabe", "verian"]
     pl.DataFrame(
         {
@@ -122,7 +124,78 @@ def _toy_explanatory(root):
          for e in (2012, 2017, 2022) for i, lid in enumerate(lineages)
          for j, b in enumerate(("far_right", "left", "other"))]
     ).write_parquet(ratings / "house_effects.parquet")
-    return {"economy_study": eco, "pollster_ratings": ratings, "curated": curated}
+    return {"economy_study": eco, "pollster_ratings": ratings, "curated": curated,
+            "press_nlp_study": root / "press_nlp"}
+
+
+NLP_WEEKS = [dt.date(2026, 9, 21) + dt.timedelta(weeks=i) for i in range(4)]  # lundis
+# ton par (candidat, semaine) : (−1, 0, +1) titres classés ; zemmour hors univers jouet
+NLP_TONES = {
+    "le_pen_marine": [(10, 0, 0), (0, 0, 10), (2, 0, 2), (5, 0, 0)],
+    "melenchon_jean_luc": [(0, 4, 0), (0, 3, 0), (0, 0, 2), (0, 30, 0)],
+    "zemmour_eric": [(0, 20, 0)] * 4,
+}
+
+
+def _toy_press_nlp(curated, study):
+    """Titres, étiquettes et variables jouets de 2027 (quatre semaines complètes jusqu'au
+    dimanche 2026-10-18 et le lundi 2026-10-19, semaine incomplète) et de 2017 (repère Fillon),
+    plus l'étude (accords, dates de rupture)."""
+    from vvs.nlp.prompts import load_prompts
+
+    model = load_prompts().model["id"]
+    titles, labels, feats = [], [], []
+
+    def add(cid, cycle, day, tone, stance, themes, k, version="title-v3"):
+        sid = f"{cid}-{day}-{k}"
+        titles.append({"story_id": sid, "candidate_id": cid, "cycle": cycle, "publish_date": day,
+                       "outlet": "exemple.fr", "title": f"Titre {sid}",
+                       "url": f"https://example.org/{sid}", "language": "fr", "in_title": True})
+        labels.append({"story_id": sid, "candidate_id": cid, "prompt_version": version,
+                       "model": model, "tone": tone, "stance": stance, "themes": themes})
+
+    for cid, per_week in NLP_TONES.items():
+        for w, counts in zip(NLP_WEEKS, per_week):
+            k = 0
+            for tone, n in zip((-1, 0, 1), counts):
+                for _ in range(n):
+                    stance = {-1: "attack", 0: "announcement", 1: "support"}[tone]
+                    themes = ["immigration"] if k % 2 == 0 else ["security", "europe"]
+                    add(cid, 2027, w + dt.timedelta(days=k % 7), tone, stance, themes, k)
+                    k += 1
+            feats.append({"cycle": 2027, "candidate_id": cid, "week": w, "mentions": k,
+                          "n_labeled": k, "days": 7})
+    # une étiquette favorable d'une autre version de prompt sur un titre classé : ignorée
+    labels.append(labels[-1] | {"story_id": f"le_pen_marine-{NLP_WEEKS[-1]}-0",
+                                 "candidate_id": "le_pen_marine", "prompt_version": "title-v2",
+                                 "tone": 1, "stance": "support"})
+    # semaine du lundi 2026-10-19 : incomplète, hors grille
+    feats.append({"cycle": 2027, "candidate_id": "le_pen_marine", "week": dt.date(2026, 10, 19),
+                  "mentions": 1, "n_labeled": 0, "days": 1})
+    # repère Fillon 2017 : neutre, puis « affaire » hostile à partir du 25 janvier
+    for i in range(-30, 43):
+        day = dt.date(2017, 1, 25) + dt.timedelta(days=i)
+        for k in range(4):
+            if i < 0:
+                add("fillon_francois", 2017, day, 0, "announcement", [], k)
+            else:
+                add("fillon_francois", 2017, day, -1, "scandal", ["scandals"], k)
+    pl.DataFrame(titles).with_columns(pl.col("cycle").cast(pl.Int32)).write_parquet(
+        curated / "press_titles.parquet")
+    pl.DataFrame(labels).with_columns(pl.col("tone").cast(pl.Int8)).write_parquet(
+        curated / "press_labels.parquet")
+    pl.DataFrame(feats).with_columns(pl.col("cycle").cast(pl.Int32),
+                                     pl.col("n_labeled", "days").cast(pl.UInt32)).write_parquet(
+        curated / "press_features.parquet")
+    study.mkdir()
+    (study / "agreement.json").write_text(json.dumps({
+        "sample": {"n": 300, "tone_kappa": 0.5958, "stance_kappa": 0.739, "themes_f1": 0.546},
+        "thresholds": {"tone_kappa": 0.6, "stance_kappa": 0.5, "themes_f1": 0.6},
+        "passes": {"tone_kappa": False, "stance_kappa": True, "themes_f1": False}}))
+    (study / "shocks.csv").write_text(
+        "event,candidate_id,date,sign,poll_break,break_tone_3d,break_scandal_share_3d\n"
+        "fillon_affair_2017,fillon_francois,2017-01-25,-1,2017-01-27,2017-01-26,2017-01-24\n"
+        "pecresse_zenith_2022,pecresse_valerie,2022-02-13,-1,2022-02-05,2022-02-11,\n")
 
 
 def _toy_backtest(root):
@@ -262,8 +335,76 @@ def test_explanatory_sections(exported):
 
     bt = json.loads((out / "backtest.json").read_text())
     tested = {v["id"]: v for v in bt["variables_tested"]}
-    assert len(tested) == 6 and not any(v["admitted"] for v in tested.values())
+    assert len(tested) == 7 and not any(v["admitted"] for v in tested.values())
     assert [k for k, v in tested.items() if v["published"]] == ["substitution"]
+    assert tested["press_nlp"]["verdict"] == "non retenue"
+
+
+def test_press_nlp_sections(exported):
+    _, out, _, _ = exported
+    press = json.loads((out / "press.json").read_text())
+    assert press["nlp"]["in_forecast"] is False and len(press["nlp"]["verdict"]) == 2
+    weeks = [w.isoformat() for w in NLP_WEEKS]
+
+    tone = press["tone"]
+    assert tone["weeks"] == weeks  # semaine du 19 octobre incomplète, écartée
+    tr = {t["candidate_id"]: t for t in tone["tracks"]}
+    assert set(tr) == {"le_pen_marine", "melenchon_jean_luc"}  # zemmour hors univers
+    lp, me = tr["le_pen_marine"], tr["melenchon_jean_luc"]
+    # deux semaines glissantes : 10 hostiles, puis 10 + 10, puis 10 favorables + 2 + 2, etc.
+    assert lp["n"] == [10, 20, 14, 9]
+    assert lp["q50"][0] == -1.0 and lp["q05"][0] == lp["q95"][0] == -1.0
+    assert lp["q05"][1] < lp["q50"][1] < lp["q95"][1] and abs(lp["q50"][1]) <= 0.15
+    assert lp["q50"][3] is None and lp["q05"][3] is None  # 9 titres : masqué
+    assert me["n"] == [4, 7, 5, 32] and me["q50"][:3] == [None] * 3 and me["q50"][3] is not None
+
+    st = press["stance"]
+    ids = [c["id"] for c in st["categories"]]
+    rows = {r["candidate_id"]: r for r in st["last_weeks"]["rows"]}
+    assert rows["le_pen_marine"]["n"] == 29 and st["last_weeks"]["end"] == "2026-10-18"
+    shares = dict(zip(ids, rows["le_pen_marine"]["shares"]))
+    assert shares["attack"] == pytest.approx(17 / 29, abs=1e-3)
+    assert shares["support"] == pytest.approx(12 / 29, abs=1e-3)
+    assert sum(shares.values()) == pytest.approx(1, abs=0.01)
+    wk = {t["candidate_id"]: t for t in st["tracks"]}["melenchon_jean_luc"]
+    assert wk["n"] == [4, 3, 2, 30] and wk["shares"][:3] == [None] * 3
+
+    hl = {c["candidate_id"]: c for c in press["headlines"]["candidates"]}
+    assert press["headlines"]["week"] == weeks[-1]
+    neg = hl["le_pen_marine"]["negative"]
+    assert len(neg) == 3 and [h["date"] for h in neg] == sorted((h["date"] for h in neg),
+                                                                reverse=True)
+    assert hl["le_pen_marine"]["positive"] == [] and hl["melenchon_jean_luc"]["negative"] == []
+
+    sov = press["share_of_voice"]
+    v = {t["candidate_id"]: t["values"] for t in sov["tracks"]}
+    assert v["le_pen_marine"][0] == pytest.approx(10 / 14, abs=1e-4)
+    assert v["melenchon_jean_luc"][3] == pytest.approx(30 / 35, abs=1e-4)
+    att = {t["candidate_id"]: t["values"] for t in sov["attention"]}
+    # pages vues jouets : 300 contre 100 sur les semaines complètes du 28/09 au 12/10
+    assert att["le_pen_marine"] == [None, 0.75, 0.75, 0.75]
+
+    ag = press["agenda_nlp"]
+    assert [t["id"] for t in ag["themes"]] == ["immigration", "purchasing_power",
+                                               "international", "security"]
+    th = {t["id"]: t["values"] for t in ag["themes"]}
+    assert ag["n"][0] == 14 and th["immigration"][0] == pytest.approx(round(7 / 14, 4))
+    assert th["purchasing_power"][0] == 0.0
+
+    lm = {e["id"]: e for e in press["landmarks"]["events"]}
+    f = lm["fillon_affair_2017"]
+    assert f["cycle"] == 2017 and f["dates"][0] == "2016-12-28" and f["dates"][-1] == "2017-03-08"
+    i = f["dates"].index("2017-01-25")
+    assert f["tone"][i - 2] == 0.0 and f["tone"][i + 2] == -1.0 and f["scandal_share"][i + 2] == 1.0
+    assert f["breaks"] == {"polls": "2017-01-27", "tone": "2017-01-26", "scandal": "2017-01-24"}
+    p = lm["pecresse_zenith_2022"]
+    assert p["breaks"]["scandal"] is None and all(x is None for x in p["tone"])
+
+    q = press["quality"]
+    assert q["prompt_version"] == "title-v3" and q["tone_kappa"] == 0.596
+    assert q["passes"] == {"tone_kappa": False, "stance_kappa": True, "themes_f1": False}
+    m = json.loads((out / "manifest.json").read_text())
+    assert {"fillon_francois", "pecresse_valerie"} <= {c["id"] for c in m["candidates"]}
 
 
 @pytest.mark.skipif(

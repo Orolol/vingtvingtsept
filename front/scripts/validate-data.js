@@ -216,7 +216,95 @@ function checkTracks(where, dates, tracks) {
 }
 checkTracks('press/attention', press.attention.weeks, press.attention.tracks);
 checkTracks('press/gdelt', press.gdelt.months, press.gdelt.tracks);
-checkTracks('press', press.weeks, [...press.share_of_voice, ...press.tone]);
+// presse classée : ton dans [−1, 1], parts qui somment à 1 (à 0,01 près), masquage sous
+// `min_titles` titres classés (valeur nulle si et seulement si trop peu de titres)
+const sumsToOne = (xs) =>
+	near(
+		xs.reduce((a, v) => a + v, 0),
+		1,
+		0.01
+	);
+function checkMasked(where, n, value, min) {
+	if (n < min !== (value === null)) fail(where, `n = ${n} mais valeur ${JSON.stringify(value)}`);
+}
+const { tone, stance, headlines, share_of_voice: sov, agenda_nlp: agendaNlp } = press;
+checkTracks(
+	'press/tone',
+	tone.weeks,
+	tone.tracks.map((t) => ({ candidate_id: t.candidate_id, values: t.q50 }))
+);
+for (const t of tone.tracks) {
+	const where = `press/tone/${t.candidate_id}`;
+	if ([t.q05, t.q95, t.n].some((a) => a.length !== tone.weeks.length))
+		fail(where, 'longueur ≠ weeks');
+	t.n.forEach((n, i) => {
+		const q = [t.q05[i], t.q50[i], t.q95[i]];
+		checkMasked(`${where}[${i}]`, n, q[1], tone.min_titles);
+		if (q.some((v) => v === null) && q.some((v) => v !== null))
+			fail(`${where}[${i}]`, 'quantiles partiellement nuls');
+		if (q[0] === null) return;
+		if (q.some((v) => v < -1 || v > 1)) fail(`${where}[${i}]`, `ton hors de [−1, 1] : ${q}`);
+		if (q[0] > q[1] + EPS || q[1] > q[2] + EPS)
+			fail(`${where}[${i}]`, `quantiles non croissants ${q}`);
+	});
+}
+const nCat = stance.categories.length;
+function checkShares(where, n, shares) {
+	checkMasked(where, n, shares, stance.min_titles);
+	if (shares === null) return;
+	if (shares.length !== nCat) fail(where, `${shares.length} parts pour ${nCat} postures`);
+	if (!sumsToOne(shares)) fail(where, `parts de somme ${shares.reduce((a, v) => a + v, 0)}`);
+}
+for (const r of stance.last_weeks.rows) {
+	knownCandidate('press/stance', r.candidate_id);
+	checkShares(`press/stance/last_weeks/${r.candidate_id}`, r.n, r.shares);
+}
+if (stance.last_weeks.end > manifest.asof) fail('press/stance', 'fin du dernier mois > asof');
+checkTracks(
+	'press/stance',
+	stance.weeks,
+	stance.tracks.map((t) => ({ candidate_id: t.candidate_id, values: t.shares }))
+);
+for (const t of stance.tracks) {
+	if (t.n.length !== stance.weeks.length)
+		fail(`press/stance/${t.candidate_id}`, 'longueur ≠ weeks');
+	t.n.forEach((n, i) => checkShares(`press/stance/${t.candidate_id}[${i}]`, n, t.shares[i]));
+}
+if (headlines.week !== tone.weeks.at(-1))
+	fail('press/headlines', `semaine ${headlines.week} ≠ dernière semaine du ton`);
+for (const c of headlines.candidates) {
+	knownCandidate('press/headlines', c.candidate_id);
+	for (const h of [...c.negative, ...c.positive])
+		if (h.date < headlines.week || h.date > headlines.week_end)
+			fail(`press/headlines/${c.candidate_id}`, `titre du ${h.date} hors de la semaine`);
+}
+checkTracks('press/share_of_voice', sov.weeks, sov.tracks);
+checkTracks('press/share_of_voice/attention', sov.weeks, sov.attention);
+for (const [name, tracks] of [
+	['tracks', sov.tracks],
+	['attention', sov.attention]
+])
+	sov.weeks.forEach((w, i) => {
+		const xs = tracks.map((t) => t.values[i]).filter((v) => v !== null);
+		if (xs.length && !sumsToOne(xs)) fail(`press/share_of_voice/${name}/${w}`, 'parts ≠ 1');
+	});
+if (agendaNlp.n.length !== agendaNlp.weeks.length) fail('press/agenda_nlp', 'longueur ≠ weeks');
+for (const th of agendaNlp.themes) {
+	if (th.values.length !== agendaNlp.weeks.length)
+		fail(`press/agenda_nlp/${th.id}`, 'longueur ≠ weeks');
+	th.values.forEach((v, i) =>
+		checkMasked(`press/agenda_nlp/${th.id}[${i}]`, agendaNlp.n[i], v, agendaNlp.min_titles)
+	);
+}
+for (const e of press.landmarks.events) {
+	const where = `press/landmarks/${e.id}`;
+	knownCandidate(where, e.candidate_id);
+	if ([e.tone, e.scandal_share, e.n].some((a) => a.length !== e.dates.length))
+		fail(where, 'longueur ≠ dates');
+	if (e.tone.some((v) => v !== null && (v < -1 || v > 1))) fail(where, 'ton hors de [−1, 1]');
+	for (const d of [e.event_date, ...Object.values(e.breaks)])
+		if (d !== null && (d < e.dates[0] || d > e.dates.at(-1))) fail(where, `date ${d} hors fenêtre`);
+}
 for (const t of press.ina.topics)
 	if (t.shares.length !== press.ina.years.length) fail(`press/ina/${t.label}`, 'longueur ≠ years');
 const unique = (where, ids) => {
@@ -236,7 +324,7 @@ unique(
 );
 if (
 	backtest.variables_tested.some((v) => v.admitted) ||
-	[economy, press, polls.pollster_ratings, press.attention, press.ina, press.gdelt].some(
+	[economy, press, polls.pollster_ratings, press.nlp, press.attention, press.ina, press.gdelt].some(
 		(x) => x.in_forecast
 	)
 )

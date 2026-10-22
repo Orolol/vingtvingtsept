@@ -38,6 +38,14 @@ export type Population = 'registered' | 'certain_voters' | 'unknown';
  * Part en points de pourcentage des suffrages exprimés.
  */
 export type Share = number;
+/**
+ * Ton de −1 (hostile) à +1 (favorable) ; null si masqué.
+ */
+export type PressToneValue = number | null;
+/**
+ * Part entre 0 et 1.
+ */
+export type PressFraction = number;
 
 /**
  * Fichiers de static/data/ par clé de chargement (voir src/lib/data.ts).
@@ -620,39 +628,201 @@ export interface EconomyStudy {
 	reference: string;
 }
 /**
- * Volet explicatif presse (docs/06-presse.md) : part de voix, ton, agenda (classification à venir), attention Wikipédia, rubriques des JT (INA), volume GDELT. N'entre dans la prévision que si `in_forecast` est vrai.
+ * Volet explicatif presse (docs/06-presse.md) : titres classés par un modèle local (ton, posture, titres extrêmes, part de voix, agenda, repères 2017 et 2022, qualité), attention Wikipédia, rubriques des JT (INA), volume GDELT. N'entre dans la prévision que si `in_forecast` est vrai. Parts des titres classés entre 0 et 1.
  */
 export interface Press {
 	asof: IsoDate;
 	in_forecast: boolean;
 	in_forecast_note: string;
-	weeks: IsoDate[];
-	/**
-	 * Part des mentions de candidats, en % des mentions de la semaine.
-	 */
-	share_of_voice: PressCandidateTrack[];
-	/**
-	 * Ton moyen des articles qui citent le candidat, de −1 (négatif) à +1 (positif).
-	 */
-	tone: PressCandidateTrack[];
-	agenda: PressAgendaWeek[];
+	nlp: PressNlpStatus;
+	tone: PressTone;
+	stance: PressStance;
+	headlines: PressHeadlines;
+	share_of_voice: PressShareOfVoice;
+	agenda_nlp: PressAgendaNlp;
+	landmarks: PressLandmarks;
+	quality: PressNlpQuality;
 	attention: PressAttention;
 	ina: PressIna;
 	gdelt: PressGdelt;
 }
 /**
- * Une valeur par période, alignée sur la liste de dates du bloc qui la porte (`weeks` ou `months`).
+ * Statut de la presse classée : n'entre pas dans la prévision, verdict de l'étude (deux phrases) et test hors échantillon déclaré pour 2027.
  */
-export interface PressCandidateTrack {
+export interface PressNlpStatus {
+	in_forecast: boolean;
+	note: string;
+	/**
+	 * @minItems 1
+	 */
+	verdict: [string, ...string[]];
+	out_of_sample_test: string;
+	reference: string;
+}
+/**
+ * Ton moyen des titres classés qui nomment le candidat, sur `window_weeks` semaines glissantes finissant à la semaine indiquée ; quantiles bootstrap q05, q50, q95 ; null quand `n` < `min_titles`.
+ */
+export interface PressTone {
+	note: string;
+	window_weeks: number;
+	min_titles: number;
+	/**
+	 * Lundi de chaque semaine complète.
+	 */
+	weeks: IsoDate[];
+	tracks: PressToneTrack[];
+}
+export interface PressToneTrack {
+	candidate_id: CandidateId;
+	q05: PressToneValue[];
+	q50: PressToneValue[];
+	q95: PressToneValue[];
+	/**
+	 * Titres classés dans la fenêtre.
+	 */
+	n: number[];
+}
+/**
+ * Parts de chaque posture (ordre de `categories`) par candidat, sur les dernières semaines (`last_weeks`) et semaine par semaine ; une liste de parts qui somme à 1, ou null sous `min_titles` titres.
+ */
+export interface PressStance {
+	note: string;
+	categories: PressStanceCategory[];
+	min_titles: number;
+	last_weeks: PressStanceLastWeeks;
+	weeks: IsoDate[];
+	tracks: PressStanceTrack[];
+}
+export interface PressStanceCategory {
+	id: string;
+	label: string;
+}
+export interface PressStanceLastWeeks {
+	start: IsoDate;
+	end: IsoDate;
+	rows: PressStanceRow[];
+}
+export interface PressStanceRow {
+	candidate_id: CandidateId;
+	n: number;
+	shares: PressFraction[] | null;
+}
+export interface PressStanceTrack {
+	candidate_id: CandidateId;
+	n: number[];
+	/**
+	 * Une entrée par semaine de `weeks`.
+	 */
+	shares: (PressFraction[] | null)[];
+}
+/**
+ * Dernière semaine complète : par candidat, titres classés hostiles (−1) et favorables (+1), les plus récents d'abord.
+ */
+export interface PressHeadlines {
+	note: string;
+	week: IsoDate;
+	week_end: IsoDate;
+	candidates: PressHeadlinesCandidate[];
+}
+export interface PressHeadlinesCandidate {
+	candidate_id: CandidateId;
+	n: number;
+	negative: PressHeadline[];
+	positive: PressHeadline[];
+}
+export interface PressHeadline {
+	title: string;
+	outlet: string;
+	date: IsoDate;
+	url: string;
+	stance: string;
+}
+/**
+ * Part des titres nommant chaque candidat parmi les candidats suivis, et part des pages vues Wikipédia des mêmes candidats, mêmes semaines (chaque semaine somme à 1).
+ */
+export interface PressShareOfVoice {
+	note: string;
+	weeks: IsoDate[];
+	tracks: PressFractionTrack[];
+	attention: PressFractionTrack[];
+}
+/**
+ * Une part (0 à 1) par semaine, alignée sur `weeks`.
+ */
+export interface PressFractionTrack {
 	candidate_id: CandidateId;
 	values: (number | null)[];
 }
-export interface PressAgendaWeek {
-	week: IsoDate;
-	topics: {
-		label: string;
-		share: Share;
-	}[];
+/**
+ * Part hebdomadaire des titres classés portant chacun des thèmes concordants (multi-étiquette : pas de somme à 1) ; null sous `min_titles` titres.
+ */
+export interface PressAgendaNlp {
+	note: string;
+	min_titles: number;
+	weeks: IsoDate[];
+	n: number[];
+	themes: PressAgendaTheme[];
+}
+export interface PressAgendaTheme {
+	id: string;
+	label: string;
+	values: (number | null)[];
+}
+/**
+ * Repères de campagnes passées : ton et part de la posture « affaire » jour par jour (moyenne sur trois jours) autour d'un choc, et dates de première rupture.
+ */
+export interface PressLandmarks {
+	note: string;
+	events: PressLandmark[];
+}
+export interface PressLandmark {
+	id: string;
+	label: string;
+	candidate_id: CandidateId;
+	cycle: number;
+	event_date: IsoDate;
+	summary: string;
+	dates: IsoDate[];
+	tone: PressToneValue[];
+	scandal_share: (number | null)[];
+	/**
+	 * Titres classés du jour.
+	 */
+	n: number[];
+	breaks: PressLandmarkBreaks;
+}
+export interface PressLandmarkBreaks {
+	polls: IsoDate | null;
+	tone: IsoDate | null;
+	scandal: IsoDate | null;
+}
+/**
+ * Accord entre deux formulations du prompt sur un échantillon de titres (κ de Cohen pour le ton et la posture, F1 pour les thèmes), modèle et version de prompt.
+ */
+export interface PressNlpQuality {
+	model: string;
+	model_label: string;
+	prompt_version: string;
+	n_sample: number;
+	tone_kappa: number;
+	stance_kappa: number;
+	themes_f1: PressFraction;
+	thresholds: {
+		tone_kappa: number;
+		stance_kappa: number;
+		themes_f1: number;
+	};
+	passes: {
+		tone_kappa: boolean;
+		stance_kappa: boolean;
+		themes_f1: boolean;
+	};
+	labeled: PressNlpLabeled[];
+	reference: string;
+}
+export interface PressNlpLabeled {
+	cycle: number;
+	n: number;
 }
 /**
  * Témoin d'actualité : part hebdomadaire des pages vues Wikipédia de chaque candidat parmi les candidats suivis pour 2027 (data/curated/attention.parquet), en %.
@@ -669,6 +839,13 @@ export interface PressAttention {
 	 * Une valeur par semaine (%), alignée sur `weeks`.
 	 */
 	tracks: PressCandidateTrack[];
+}
+/**
+ * Une valeur par période, alignée sur la liste de dates du bloc qui la porte (`weeks` ou `months`).
+ */
+export interface PressCandidateTrack {
+	candidate_id: CandidateId;
+	values: (number | null)[];
 }
 /**
  * Rubriques des sujets de JT (INA, data/curated/press_ina.parquet) : part de chaque rubrique dans les sujets de chaque année électorale, en %.

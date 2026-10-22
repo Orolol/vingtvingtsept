@@ -25,7 +25,7 @@ que `manifest.mock` vaut vrai.
 | `/scenarios` | configurations de candidats, leurs probabilités, l'historique des révisions, la prévision conditionnelle à chacune |
 | `/sondages` | table de tous les sondages intégrés, effets maison estimés par institut |
 | `/economie` | séries économiques et popularité, corrélations, ce qui entre ou non dans la prévision |
-| `/presse` | part de voix, ton, agenda de la semaine, même mention |
+| `/presse` | presse classée (ton, posture, titres extrêmes, part de voix, agenda, repères 2017 et 2022, qualité), attention Wikipédia, rubriques INA, GDELT, même mention |
 | `/methode` | méthodologie en langage clair, résultats du backtest, limites |
 
 ## Contrat JSON (`front/static/data/`)
@@ -58,15 +58,34 @@ phrase de statut, affichée sur la page :
   (`attention.parquet`, semaines complètes, 78 dernières, douze candidats les plus vus sur douze
   semaines) ; `press.ina` : part des rubriques INA dans les sujets de JT de 2002, 2007, 2012 et
   2017, et sur 2000-2020 ; `press.gdelt` : part mensuelle des articles GDELT citant chaque
-  candidat suivi depuis 2017 (volume sur volume surveillé). `share_of_voice`, `tone` et
-  `agenda` restent vides tant que les titres ne sont pas classés.
+  candidat suivi depuis 2017 (volume sur volume surveillé).
+- Presse classée (ajoutée le 2026-10-22, `runs/2026-10-22-press-nlp/`, prompt `title-v3`,
+  titres plafonnés de `press_features`) : `press.nlp` porte `in_forecast: false`, la note, le
+  verdict de l'étude en deux phrases et le test hors échantillon déclaré pour 2027. Parts entre
+  0 et 1, candidats suivis de l'univers 2027 classés par titres du dernier mois, semaines
+  complètes (lundi) finies avant `asof`. `press.tone` : ton moyen sur deux semaines glissantes,
+  quantiles bootstrap `q05`, `q50`, `q95` (tirage multinomial des trois niveaux, 1 000 tirages,
+  graine fixe) et `n` titres, null sous 10 titres ; `press.stance` : parts des sept postures
+  (`categories`) sur les quatre dernières semaines (`last_weeks`) et par semaine, null sous 10
+  titres ; `press.headlines` : dernière semaine, par candidat, trois titres classés −1 et trois
+  +1 (titre, média, date, url, posture), les plus récents d'abord ; `press.share_of_voice` :
+  part des titres nommant chaque candidat (`mentions`) et, mêmes semaines et candidats, part de
+  leurs pages vues Wikipédia (`attention`) ; `press.agenda_nlp` : part hebdomadaire des titres
+  portant immigration, pouvoir d'achat, international, sécurité (seuls thèmes concordants),
+  null sous 10 titres ; `press.landmarks` : Fillon 2017 et Pécresse 2022, ton et part « affaire »
+  jour par jour (moyenne trois jours) de 28 jours avant à 42 jours après le choc, dates de
+  rupture lues dans `shocks.csv` ; `press.quality` : κ et F1 d'`agreement.json`, modèle, version
+  de prompt, titres classés par cycle. Les anciens champs vides `weeks` et `agenda` sont retirés.
+  Invariants vérifiés par `validate-data` : ton dans [−1, 1] et quantiles croissants, parts de
+  postures et de voix de somme 1 à 0,01 près, valeur nulle si et seulement si moins de
+  `min_titles` titres, titres extrêmes datés dans la semaine, dates de rupture dans la fenêtre.
 - `polls.pollster_ratings` : palmarès 2002-2022 par lignée (`runs/<date>-pollster-ratings/`) :
   erreur du dernier sondage, écart à l'institut moyen, biais par bloc, précision, et stabilité
   du classement entre élections consécutives (corrélations poolées), avec la phrase « classement
   non reproductible d'une élection à l'autre, n'entre pas dans la prévision ».
-- `backtest.variables_tested` : les six variables de la vague du 2026-10-20 (une ligne chacune,
-  `published` vrai pour la substitution, utilisée par la projection publiée), affichées sur
-  `/methode`.
+- `backtest.variables_tested` : les six variables de la vague du 2026-10-20 et la presse classée
+  du 2026-10-22 (une ligne chacune, `published` vrai pour la substitution, utilisée par la
+  projection publiée), affichées sur `/methode`.
 
 Les schémas sont décrits en JSON Schema dans `back/src/vvs/export/schemas/` et validés à
 l'export ; le front les type via génération TypeScript (`npm run types`) et les valide avec

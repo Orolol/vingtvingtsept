@@ -2,39 +2,46 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://schemas.vingtvingtsept.invalid/v1/press.json",
 	"title": "Press",
-	"description": "Volet explicatif presse (docs/06-presse.md) : part de voix, ton, agenda (classification à venir), attention Wikipédia, rubriques des JT (INA), volume GDELT. N'entre dans la prévision que si `in_forecast` est vrai.",
+	"description": "Volet explicatif presse (docs/06-presse.md) : titres classés par un modèle local (ton, posture, titres extrêmes, part de voix, agenda, repères 2017 et 2022, qualité), attention Wikipédia, rubriques des JT (INA), volume GDELT. N'entre dans la prévision que si `in_forecast` est vrai. Parts des titres classés entre 0 et 1.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "in_forecast", "in_forecast_note", "weeks", "share_of_voice", "tone", "agenda", "attention", "ina", "gdelt"],
+	"required": [
+		"asof",
+		"in_forecast",
+		"in_forecast_note",
+		"nlp",
+		"tone",
+		"stance",
+		"headlines",
+		"share_of_voice",
+		"agenda_nlp",
+		"landmarks",
+		"quality",
+		"attention",
+		"ina",
+		"gdelt"
+	],
 	"$defs": {
 		"candidate_track": {
 			"title": "PressCandidateTrack",
 			"description": "Une valeur par période, alignée sur la liste de dates du bloc qui la porte (`weeks` ou `months`).",
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["candidate_id", "values"],
+			"required": [
+				"candidate_id",
+				"values"
+			],
 			"properties": {
-				"candidate_id": { "$ref": "common.json#/$defs/candidate_id" },
-				"values": { "type": "array", "items": { "type": ["number", "null"] } }
-			}
-		},
-		"agenda_week": {
-			"title": "PressAgendaWeek",
-			"type": "object",
-			"additionalProperties": false,
-			"required": ["week", "topics"],
-			"properties": {
-				"week": { "$ref": "common.json#/$defs/date" },
-				"topics": {
+				"candidate_id": {
+					"$ref": "common.json#/$defs/candidate_id"
+				},
+				"values": {
 					"type": "array",
 					"items": {
-						"type": "object",
-						"additionalProperties": false,
-						"required": ["label", "share"],
-						"properties": {
-							"label": { "type": "string" },
-							"share": { "$ref": "common.json#/$defs/share", "description": "Part des articles de la semaine (%)." }
-						}
+						"type": [
+							"number",
+							"null"
+						]
 					}
 				}
 			}
@@ -44,20 +51,36 @@
 			"description": "Témoin d'actualité : part hebdomadaire des pages vues Wikipédia de chaque candidat parmi les candidats suivis pour 2027 (data/curated/attention.parquet), en %.",
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["in_forecast", "note", "source", "weeks", "tracks"],
+			"required": [
+				"in_forecast",
+				"note",
+				"source",
+				"weeks",
+				"tracks"
+			],
 			"properties": {
-				"in_forecast": { "type": "boolean" },
-				"note": { "type": "string" },
-				"source": { "type": "string" },
+				"in_forecast": {
+					"type": "boolean"
+				},
+				"note": {
+					"type": "string"
+				},
+				"source": {
+					"type": "string"
+				},
 				"weeks": {
 					"type": "array",
 					"description": "Lundi de chaque semaine complète.",
-					"items": { "$ref": "common.json#/$defs/date" }
+					"items": {
+						"$ref": "common.json#/$defs/date"
+					}
 				},
 				"tracks": {
 					"type": "array",
 					"description": "Une valeur par semaine (%), alignée sur `weeks`.",
-					"items": { "$ref": "#/$defs/candidate_track" }
+					"items": {
+						"$ref": "#/$defs/candidate_track"
+					}
 				}
 			}
 		},
@@ -66,27 +89,58 @@
 			"description": "Rubriques des sujets de JT (INA, data/curated/press_ina.parquet) : part de chaque rubrique dans les sujets de chaque année électorale, en %.",
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["in_forecast", "note", "source", "years", "all_years_label", "topics"],
+			"required": [
+				"in_forecast",
+				"note",
+				"source",
+				"years",
+				"all_years_label",
+				"topics"
+			],
 			"properties": {
-				"in_forecast": { "type": "boolean" },
-				"note": { "type": "string" },
-				"source": { "type": "string" },
-				"years": { "type": "array", "items": { "type": "integer" } },
-				"all_years_label": { "type": "string", "description": "Période de référence de `share_all_years` (« 2000-2020 »)." },
+				"in_forecast": {
+					"type": "boolean"
+				},
+				"note": {
+					"type": "string"
+				},
+				"source": {
+					"type": "string"
+				},
+				"years": {
+					"type": "array",
+					"items": {
+						"type": "integer"
+					}
+				},
+				"all_years_label": {
+					"type": "string",
+					"description": "Période de référence de `share_all_years` (« 2000-2020 »)."
+				},
 				"topics": {
 					"type": "array",
 					"items": {
 						"type": "object",
 						"additionalProperties": false,
-						"required": ["label", "shares", "share_all_years"],
+						"required": [
+							"label",
+							"shares",
+							"share_all_years"
+						],
 						"properties": {
-							"label": { "type": "string" },
+							"label": {
+								"type": "string"
+							},
 							"shares": {
 								"type": "array",
 								"description": "Une part (%) par année de `years`.",
-								"items": { "$ref": "common.json#/$defs/share" }
+								"items": {
+									"$ref": "common.json#/$defs/share"
+								}
 							},
-							"share_all_years": { "$ref": "common.json#/$defs/share" }
+							"share_all_years": {
+								"$ref": "common.json#/$defs/share"
+							}
 						}
 					}
 				}
@@ -97,38 +151,804 @@
 			"description": "Part mensuelle des articles surveillés par GDELT qui citent le candidat (data/curated/press_timelines.parquet, volume sur volume surveillé), en %.",
 			"type": "object",
 			"additionalProperties": false,
-			"required": ["in_forecast", "note", "source", "months", "tracks"],
+			"required": [
+				"in_forecast",
+				"note",
+				"source",
+				"months",
+				"tracks"
+			],
 			"properties": {
-				"in_forecast": { "type": "boolean" },
-				"note": { "type": "string" },
-				"source": { "type": "string" },
-				"months": { "type": "array", "description": "Premier jour de chaque mois.", "items": { "$ref": "common.json#/$defs/date" } },
+				"in_forecast": {
+					"type": "boolean"
+				},
+				"note": {
+					"type": "string"
+				},
+				"source": {
+					"type": "string"
+				},
+				"months": {
+					"type": "array",
+					"description": "Premier jour de chaque mois.",
+					"items": {
+						"$ref": "common.json#/$defs/date"
+					}
+				},
 				"tracks": {
 					"type": "array",
 					"description": "Une valeur par mois (%), alignée sur `months`.",
-					"items": { "$ref": "#/$defs/candidate_track" }
+					"items": {
+						"$ref": "#/$defs/candidate_track"
+					}
+				}
+			}
+		},
+		"fraction": {
+			"title": "PressFraction",
+			"description": "Part entre 0 et 1.",
+			"type": "number",
+			"minimum": 0,
+			"maximum": 1
+		},
+		"tone_value": {
+			"title": "PressToneValue",
+			"description": "Ton de −1 (hostile) à +1 (favorable) ; null si masqué.",
+			"type": [
+				"number",
+				"null"
+			],
+			"minimum": -1,
+			"maximum": 1
+		},
+		"nlp_status": {
+			"title": "PressNlpStatus",
+			"description": "Statut de la presse classée : n'entre pas dans la prévision, verdict de l'étude (deux phrases) et test hors échantillon déclaré pour 2027.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"in_forecast",
+				"note",
+				"verdict",
+				"out_of_sample_test",
+				"reference"
+			],
+			"properties": {
+				"in_forecast": {
+					"type": "boolean"
+				},
+				"note": {
+					"type": "string"
+				},
+				"verdict": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"minItems": 1
+				},
+				"out_of_sample_test": {
+					"type": "string"
+				},
+				"reference": {
+					"type": "string"
+				}
+			}
+		},
+		"tone": {
+			"title": "PressTone",
+			"description": "Ton moyen des titres classés qui nomment le candidat, sur `window_weeks` semaines glissantes finissant à la semaine indiquée ; quantiles bootstrap q05, q50, q95 ; null quand `n` < `min_titles`.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"note",
+				"window_weeks",
+				"min_titles",
+				"weeks",
+				"tracks"
+			],
+			"properties": {
+				"note": {
+					"type": "string"
+				},
+				"window_weeks": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"min_titles": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"weeks": {
+					"type": "array",
+					"items": {
+						"$ref": "common.json#/$defs/date"
+					},
+					"description": "Lundi de chaque semaine complète."
+				},
+				"tracks": {
+					"type": "array",
+					"items": {
+						"title": "PressToneTrack",
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"candidate_id",
+							"q05",
+							"q50",
+							"q95",
+							"n"
+						],
+						"properties": {
+							"candidate_id": {
+								"$ref": "common.json#/$defs/candidate_id"
+							},
+							"q05": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/tone_value"
+								}
+							},
+							"q50": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/tone_value"
+								}
+							},
+							"q95": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/tone_value"
+								}
+							},
+							"n": {
+								"type": "array",
+								"description": "Titres classés dans la fenêtre.",
+								"items": {
+									"type": "integer",
+									"minimum": 0
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"stance": {
+			"title": "PressStance",
+			"description": "Parts de chaque posture (ordre de `categories`) par candidat, sur les dernières semaines (`last_weeks`) et semaine par semaine ; une liste de parts qui somme à 1, ou null sous `min_titles` titres.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"note",
+				"categories",
+				"min_titles",
+				"last_weeks",
+				"weeks",
+				"tracks"
+			],
+			"properties": {
+				"note": {
+					"type": "string"
+				},
+				"categories": {
+					"type": "array",
+					"items": {
+						"title": "PressStanceCategory",
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"id",
+							"label"
+						],
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"label": {
+								"type": "string"
+							}
+						}
+					}
+				},
+				"min_titles": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"last_weeks": {
+					"title": "PressStanceLastWeeks",
+					"type": "object",
+					"additionalProperties": false,
+					"required": [
+						"start",
+						"end",
+						"rows"
+					],
+					"properties": {
+						"start": {
+							"$ref": "common.json#/$defs/date"
+						},
+						"end": {
+							"$ref": "common.json#/$defs/date"
+						},
+						"rows": {
+							"type": "array",
+							"items": {
+								"title": "PressStanceRow",
+								"type": "object",
+								"additionalProperties": false,
+								"required": [
+									"candidate_id",
+									"n",
+									"shares"
+								],
+								"properties": {
+									"candidate_id": {
+										"$ref": "common.json#/$defs/candidate_id"
+									},
+									"n": {
+										"type": "integer",
+										"minimum": 0
+									},
+									"shares": {
+										"type": [
+											"array",
+											"null"
+										],
+										"items": {
+											"$ref": "#/$defs/fraction"
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"weeks": {
+					"type": "array",
+					"items": {
+						"$ref": "common.json#/$defs/date"
+					}
+				},
+				"tracks": {
+					"type": "array",
+					"items": {
+						"title": "PressStanceTrack",
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"candidate_id",
+							"n",
+							"shares"
+						],
+						"properties": {
+							"candidate_id": {
+								"$ref": "common.json#/$defs/candidate_id"
+							},
+							"n": {
+								"type": "array",
+								"items": {
+									"type": "integer",
+									"minimum": 0
+								}
+							},
+							"shares": {
+								"type": "array",
+								"description": "Une entrée par semaine de `weeks`.",
+								"items": {
+									"type": [
+										"array",
+										"null"
+									],
+									"items": {
+										"$ref": "#/$defs/fraction"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"headline": {
+			"title": "PressHeadline",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"title",
+				"outlet",
+				"date",
+				"url",
+				"stance"
+			],
+			"properties": {
+				"title": {
+					"type": "string"
+				},
+				"outlet": {
+					"type": "string"
+				},
+				"date": {
+					"$ref": "common.json#/$defs/date"
+				},
+				"url": {
+					"type": "string",
+					"format": "uri"
+				},
+				"stance": {
+					"type": "string"
+				}
+			}
+		},
+		"headlines": {
+			"title": "PressHeadlines",
+			"description": "Dernière semaine complète : par candidat, titres classés hostiles (−1) et favorables (+1), les plus récents d'abord.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"note",
+				"week",
+				"week_end",
+				"candidates"
+			],
+			"properties": {
+				"note": {
+					"type": "string"
+				},
+				"week": {
+					"$ref": "common.json#/$defs/date"
+				},
+				"week_end": {
+					"$ref": "common.json#/$defs/date"
+				},
+				"candidates": {
+					"type": "array",
+					"items": {
+						"title": "PressHeadlinesCandidate",
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"candidate_id",
+							"n",
+							"negative",
+							"positive"
+						],
+						"properties": {
+							"candidate_id": {
+								"$ref": "common.json#/$defs/candidate_id"
+							},
+							"n": {
+								"type": "integer",
+								"minimum": 0
+							},
+							"negative": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/headline"
+								}
+							},
+							"positive": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/headline"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"fraction_track": {
+			"title": "PressFractionTrack",
+			"description": "Une part (0 à 1) par semaine, alignée sur `weeks`.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"candidate_id",
+				"values"
+			],
+			"properties": {
+				"candidate_id": {
+					"$ref": "common.json#/$defs/candidate_id"
+				},
+				"values": {
+					"type": "array",
+					"items": {
+						"type": [
+							"number",
+							"null"
+						],
+						"minimum": 0,
+						"maximum": 1
+					}
+				}
+			}
+		},
+		"share_of_voice": {
+			"title": "PressShareOfVoice",
+			"description": "Part des titres nommant chaque candidat parmi les candidats suivis, et part des pages vues Wikipédia des mêmes candidats, mêmes semaines (chaque semaine somme à 1).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"note",
+				"weeks",
+				"tracks",
+				"attention"
+			],
+			"properties": {
+				"note": {
+					"type": "string"
+				},
+				"weeks": {
+					"type": "array",
+					"items": {
+						"$ref": "common.json#/$defs/date"
+					}
+				},
+				"tracks": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/fraction_track"
+					}
+				},
+				"attention": {
+					"type": "array",
+					"items": {
+						"$ref": "#/$defs/fraction_track"
+					}
+				}
+			}
+		},
+		"agenda_nlp": {
+			"title": "PressAgendaNlp",
+			"description": "Part hebdomadaire des titres classés portant chacun des thèmes concordants (multi-étiquette : pas de somme à 1) ; null sous `min_titles` titres.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"note",
+				"min_titles",
+				"weeks",
+				"n",
+				"themes"
+			],
+			"properties": {
+				"note": {
+					"type": "string"
+				},
+				"min_titles": {
+					"type": "integer",
+					"minimum": 1
+				},
+				"weeks": {
+					"type": "array",
+					"items": {
+						"$ref": "common.json#/$defs/date"
+					}
+				},
+				"n": {
+					"type": "array",
+					"items": {
+						"type": "integer",
+						"minimum": 0
+					}
+				},
+				"themes": {
+					"type": "array",
+					"items": {
+						"title": "PressAgendaTheme",
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"id",
+							"label",
+							"values"
+						],
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"label": {
+								"type": "string"
+							},
+							"values": {
+								"type": "array",
+								"items": {
+									"type": [
+										"number",
+										"null"
+									],
+									"minimum": 0,
+									"maximum": 1
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"landmarks": {
+			"title": "PressLandmarks",
+			"description": "Repères de campagnes passées : ton et part de la posture « affaire » jour par jour (moyenne sur trois jours) autour d'un choc, et dates de première rupture.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"note",
+				"events"
+			],
+			"properties": {
+				"note": {
+					"type": "string"
+				},
+				"events": {
+					"type": "array",
+					"items": {
+						"title": "PressLandmark",
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"id",
+							"label",
+							"candidate_id",
+							"cycle",
+							"event_date",
+							"summary",
+							"dates",
+							"tone",
+							"scandal_share",
+							"n",
+							"breaks"
+						],
+						"properties": {
+							"id": {
+								"type": "string"
+							},
+							"label": {
+								"type": "string"
+							},
+							"candidate_id": {
+								"$ref": "common.json#/$defs/candidate_id"
+							},
+							"cycle": {
+								"type": "integer"
+							},
+							"event_date": {
+								"$ref": "common.json#/$defs/date"
+							},
+							"summary": {
+								"type": "string"
+							},
+							"dates": {
+								"type": "array",
+								"items": {
+									"$ref": "common.json#/$defs/date"
+								}
+							},
+							"tone": {
+								"type": "array",
+								"items": {
+									"$ref": "#/$defs/tone_value"
+								}
+							},
+							"scandal_share": {
+								"type": "array",
+								"items": {
+									"type": [
+										"number",
+										"null"
+									],
+									"minimum": 0,
+									"maximum": 1
+								}
+							},
+							"n": {
+								"type": "array",
+								"description": "Titres classés du jour.",
+								"items": {
+									"type": "integer",
+									"minimum": 0
+								}
+							},
+							"breaks": {
+								"title": "PressLandmarkBreaks",
+								"type": "object",
+								"additionalProperties": false,
+								"required": [
+									"polls",
+									"tone",
+									"scandal"
+								],
+								"properties": {
+									"polls": {
+										"anyOf": [
+											{
+												"$ref": "common.json#/$defs/date"
+											},
+											{
+												"type": "null"
+											}
+										]
+									},
+									"tone": {
+										"anyOf": [
+											{
+												"$ref": "common.json#/$defs/date"
+											},
+											{
+												"type": "null"
+											}
+										]
+									},
+									"scandal": {
+										"anyOf": [
+											{
+												"$ref": "common.json#/$defs/date"
+											},
+											{
+												"type": "null"
+											}
+										]
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"quality": {
+			"title": "PressNlpQuality",
+			"description": "Accord entre deux formulations du prompt sur un échantillon de titres (κ de Cohen pour le ton et la posture, F1 pour les thèmes), modèle et version de prompt.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"model",
+				"model_label",
+				"prompt_version",
+				"n_sample",
+				"tone_kappa",
+				"stance_kappa",
+				"themes_f1",
+				"thresholds",
+				"passes",
+				"labeled",
+				"reference"
+			],
+			"properties": {
+				"model": {
+					"type": "string"
+				},
+				"model_label": {
+					"type": "string"
+				},
+				"prompt_version": {
+					"type": "string"
+				},
+				"n_sample": {
+					"type": "integer",
+					"minimum": 0
+				},
+				"tone_kappa": {
+					"type": "number",
+					"minimum": -1,
+					"maximum": 1
+				},
+				"stance_kappa": {
+					"type": "number",
+					"minimum": -1,
+					"maximum": 1
+				},
+				"themes_f1": {
+					"$ref": "#/$defs/fraction"
+				},
+				"thresholds": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": [
+						"tone_kappa",
+						"stance_kappa",
+						"themes_f1"
+					],
+					"properties": {
+						"tone_kappa": {
+							"type": "number"
+						},
+						"stance_kappa": {
+							"type": "number"
+						},
+						"themes_f1": {
+							"type": "number"
+						}
+					}
+				},
+				"passes": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": [
+						"tone_kappa",
+						"stance_kappa",
+						"themes_f1"
+					],
+					"properties": {
+						"tone_kappa": {
+							"type": "boolean"
+						},
+						"stance_kappa": {
+							"type": "boolean"
+						},
+						"themes_f1": {
+							"type": "boolean"
+						}
+					}
+				},
+				"labeled": {
+					"type": "array",
+					"items": {
+						"title": "PressNlpLabeled",
+						"type": "object",
+						"additionalProperties": false,
+						"required": [
+							"cycle",
+							"n"
+						],
+						"properties": {
+							"cycle": {
+								"type": "integer"
+							},
+							"n": {
+								"type": "integer",
+								"minimum": 0
+							}
+						}
+					}
+				},
+				"reference": {
+					"type": "string"
 				}
 			}
 		}
 	},
 	"properties": {
-		"asof": { "$ref": "common.json#/$defs/date" },
-		"in_forecast": { "type": "boolean" },
-		"in_forecast_note": { "type": "string" },
-		"weeks": { "type": "array", "items": { "$ref": "common.json#/$defs/date" } },
-		"share_of_voice": {
-			"type": "array",
-			"description": "Part des mentions de candidats, en % des mentions de la semaine.",
-			"items": { "$ref": "#/$defs/candidate_track" }
+		"asof": {
+			"$ref": "common.json#/$defs/date"
+		},
+		"in_forecast": {
+			"type": "boolean"
+		},
+		"in_forecast_note": {
+			"type": "string"
+		},
+		"nlp": {
+			"$ref": "#/$defs/nlp_status"
 		},
 		"tone": {
-			"type": "array",
-			"description": "Ton moyen des articles qui citent le candidat, de −1 (négatif) à +1 (positif).",
-			"items": { "$ref": "#/$defs/candidate_track" }
+			"$ref": "#/$defs/tone"
 		},
-		"agenda": { "type": "array", "items": { "$ref": "#/$defs/agenda_week" } },
-		"attention": { "$ref": "#/$defs/attention" },
-		"ina": { "$ref": "#/$defs/ina" },
-		"gdelt": { "$ref": "#/$defs/gdelt" }
+		"stance": {
+			"$ref": "#/$defs/stance"
+		},
+		"headlines": {
+			"$ref": "#/$defs/headlines"
+		},
+		"share_of_voice": {
+			"$ref": "#/$defs/share_of_voice"
+		},
+		"agenda_nlp": {
+			"$ref": "#/$defs/agenda_nlp"
+		},
+		"landmarks": {
+			"$ref": "#/$defs/landmarks"
+		},
+		"quality": {
+			"$ref": "#/$defs/quality"
+		},
+		"attention": {
+			"$ref": "#/$defs/attention"
+		},
+		"ina": {
+			"$ref": "#/$defs/ina"
+		},
+		"gdelt": {
+			"$ref": "#/$defs/gdelt"
+		}
 	}
 }

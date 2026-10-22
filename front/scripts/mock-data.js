@@ -1006,15 +1006,159 @@ const economy = {
 };
 const mockWeeks = Array.from({ length: 12 }, (_, i) => addDays('2026-07-27', 7 * i));
 const mockMonths = Array.from({ length: 6 }, (_, i) => `2026-0${4 + i}-01`);
+// presse classée factice : six candidats, douze semaines, masquage sous 10 titres
+const nlpCands = roster.slice(0, 6);
+const stanceIds = ['announcement', 'programme', 'support', 'attack', 'scandal', 'poll', 'other'];
+const stanceLabels = [
+	'Annonce',
+	'Programme',
+	'Soutien',
+	'Attaques subies',
+	'Affaires',
+	'Sondages',
+	'Autre'
+];
+const mockN = (ci) => mockWeeks.map(() => Math.max(0, Math.round(80 / (ci + 1) + 10 * normal())));
+const nByCand = nlpCands.map((_, ci) => mockN(ci));
+function partition(k) {
+	const w = Array.from({ length: k }, () => rand() + 0.05);
+	const t = w.reduce((a, v) => a + v, 0);
+	const out = w.map((v) => round(v / t, 3));
+	out[k - 1] = round(1 - out.slice(0, -1).reduce((a, v) => a + v, 0), 3);
+	return out;
+}
+const normalise = (xs) => {
+	const t = xs.reduce((a, v) => a + v, 0);
+	return xs.map((v) => round(v / t, 4));
+};
+const sovRaw = mockWeeks.map(() => normalise(nlpCands.map(() => rand() + 0.1)));
+const attRaw = mockWeeks.map(() => normalise(nlpCands.map(() => rand() + 0.1)));
+const lastMockWeek = mockWeeks.at(-1);
+const landmarkDates = (day) => Array.from({ length: 71 }, (_, i) => addDays(day, i - 28));
+const mockLandmark = (id, cid, cycle, day) => {
+	const dates = landmarkDates(day);
+	return {
+		id,
+		label: `Repère factice ${cycle}`,
+		candidate_id: cid,
+		cycle,
+		event_date: day,
+		summary: 'Données factices.',
+		dates,
+		tone: dates.map((d) => round(Math.max(-1, Math.min(1, d < day ? -0.1 : -0.6)), 2)),
+		scandal_share: dates.map((d) => (d < day ? 0.02 : 0.6)),
+		n: dates.map(() => 30),
+		breaks: { polls: addDays(day, 2), tone: addDays(day, 1), scandal: day }
+	};
+};
+const headline = (cid, k, sign) => ({
+	title: `Titre factice ${sign > 0 ? 'favorable' : 'hostile'} ${k + 1}`,
+	outlet: 'exemple.fr',
+	date: addDays(lastMockWeek, 6 - k),
+	url: `https://example.org/${cid}/${sign > 0 ? 'pos' : 'neg'}/${k + 1}`,
+	stance: sign > 0 ? 'support' : 'attack'
+});
 const press = {
 	asof: ASOF,
 	in_forecast: false,
-	in_forecast_note:
-		"La presse n'entre pas dans la prévision : l'ingestion (Media Cloud, GDELT) est prévue en phase 7, et une variable n'est admise qu'après un gain au backtest.",
-	weeks: [],
-	share_of_voice: [],
-	tone: [],
-	agenda: [],
+	in_forecast_note: "La presse n'entre pas dans la prévision (données factices).",
+	nlp: {
+		in_forecast: false,
+		note: 'Données factices.',
+		verdict: ['Données factices : aucune étude publiée.'],
+		out_of_sample_test: 'Données factices.',
+		reference: 'docs/06-presse.md'
+	},
+	tone: {
+		note: 'Données factices.',
+		window_weeks: 2,
+		min_titles: 10,
+		weeks: mockWeeks,
+		tracks: nlpCands.map((cid, ci) => {
+			const n = nByCand[ci];
+			const mid = n.map((k) => (k < 10 ? null : round(0.3 * normal() * 0.5, 2)));
+			const half = n.map((k) => (k < 10 ? null : round(1 / Math.sqrt(k), 2)));
+			return {
+				candidate_id: cid,
+				q05: mid.map((m, i) => (m === null ? null : round(Math.max(-1, m - half[i]), 2))),
+				q50: mid,
+				q95: mid.map((m, i) => (m === null ? null : round(Math.min(1, m + half[i]), 2))),
+				n
+			};
+		})
+	},
+	stance: {
+		note: 'Données factices.',
+		categories: stanceIds.map((id, i) => ({ id, label: stanceLabels[i] })),
+		min_titles: 10,
+		last_weeks: {
+			start: mockWeeks.at(-4),
+			end: addDays(lastMockWeek, 6),
+			rows: nlpCands.map((cid, ci) => {
+				const n = nByCand[ci].slice(-4).reduce((a, v) => a + v, 0);
+				return { candidate_id: cid, n, shares: n < 10 ? null : partition(stanceIds.length) };
+			})
+		},
+		weeks: mockWeeks,
+		tracks: nlpCands.map((cid, ci) => ({
+			candidate_id: cid,
+			n: nByCand[ci],
+			shares: nByCand[ci].map((k) => (k < 10 ? null : partition(stanceIds.length)))
+		}))
+	},
+	headlines: {
+		note: 'Données factices.',
+		week: lastMockWeek,
+		week_end: addDays(lastMockWeek, 6),
+		candidates: nlpCands.map((cid, ci) => ({
+			candidate_id: cid,
+			n: nByCand[ci].at(-1),
+			negative: [0, 1, 2].map((k) => headline(cid, k, -1)),
+			positive: ci % 2 ? [] : [0, 1].map((k) => headline(cid, k, 1))
+		}))
+	},
+	share_of_voice: {
+		note: 'Données factices.',
+		weeks: mockWeeks,
+		tracks: nlpCands.map((cid, ci) => ({ candidate_id: cid, values: sovRaw.map((w) => w[ci]) })),
+		attention: nlpCands.map((cid, ci) => ({ candidate_id: cid, values: attRaw.map((w) => w[ci]) }))
+	},
+	agenda_nlp: {
+		note: 'Données factices.',
+		min_titles: 10,
+		weeks: mockWeeks,
+		n: mockWeeks.map(() => 400),
+		themes: [
+			['immigration', 'Immigration'],
+			['purchasing_power', "Pouvoir d'achat"],
+			['international', 'International'],
+			['security', 'Sécurité']
+		].map(([id, label]) => ({
+			id,
+			label,
+			values: mockWeeks.map(() => round(Math.max(0, 0.04 + 0.02 * normal()), 4))
+		}))
+	},
+	landmarks: {
+		note: 'Données factices.',
+		events: [
+			mockLandmark('mock_2017', roster[0], 2017, '2017-01-25'),
+			mockLandmark('mock_2022', roster[1], 2022, '2022-02-13')
+		]
+	},
+	quality: {
+		model: 'factice',
+		model_label: 'modèle factice',
+		prompt_version: 'mock',
+		n_sample: 300,
+		tone_kappa: 0.6,
+		stance_kappa: 0.74,
+		themes_f1: 0.55,
+		thresholds: { tone_kappa: 0.6, stance_kappa: 0.5, themes_f1: 0.6 },
+		passes: { tone_kappa: true, stance_kappa: true, themes_f1: false },
+		labeled: [{ cycle: 2027, n: 1000 }],
+		reference: 'runs/mock/report.md'
+	},
 	attention: {
 		in_forecast: false,
 		note: 'Données factices.',
