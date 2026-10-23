@@ -1,0 +1,619 @@
+# Registre historique daté des candidatures — présidentielle 2012 (docs/12, lot 1).
+# Validé et interrogé par `vvs.registry.candidacies` (`load_candidacies(2012)`, `state_at`).
+#
+# Structure (commune à candidacies_<année>.yaml ; reprise telle quelle pour 2027) :
+# - `collection` : sources et périodes parcourues d'avance pour constituer la liste des
+#   personnes, et règle d'exclusion. La liste des candidats finalement présents n'a pas servi
+#   de liste de collecte.
+# - `references` : alias -> {url, title, outlet, published}. `published` = date de mise en
+#   ligne de la source (pour une révision Wikipédia : date UTC de son horodatage).
+# - `persons` : `id` (candidate_id ; hors candidates.yaml, `name`, `first_name`, `last_name`
+#   obligatoires et id = candidate_id_for(nom, prénom)), `party` (id de parties.yaml) ou
+#   `party_label` (texte libre), `bloc` au moment de l'élection, `final_status` :
+#   `official` (liste du Conseil constitutionnel), `declared_absent` (déclaré ou engagé dans
+#   une primaire, absent de la liste), `never_declared` (seulement envisagé ou pressenti).
+# - `processes` : primaires, congrès, consultations à plusieurs participants. `rounds` : date
+#   du vote, date de publication du résultat, `qualified` = participants encore en lice après
+#   ce tour (le dernier ne qualifie que le vainqueur). Le chargeur en déduit les sorties
+#   (`primary_exit`) et la désignation : le vainqueur exclut les autres participants, et
+#   seulement eux, sauf engagement documenté (`commitments` : non-participant qui s'est engagé
+#   à ne pas se présenter si l'un des `winners` l'emporte).
+# - `events` : `type` parmi mention (personne publiquement envisagée ou qui dit envisager),
+#   declaration, primary_entry, primary_exit, designation, investiture, sponsorship_filing,
+#   withdrawal (retrait d'une candidature déclarée), renouncement (renoncement sans déclaration
+#   préalable), official_list ; `date` = jour de l'événement (null si seule la publication est
+#   connue), `published` = jour où l'information devient publique, `published_basis` =
+#   `source` (date de la source la plus ancienne citée), `wikipedia_revision` (horodatage de
+#   la première révision consultée qui l'enregistre : borne par excès) ou `imputed`
+#   (`imputation` obligatoire) ; `events_yaml` renvoie à l'événement correspondant de
+#   events.yaml sans le dupliquer.
+#
+# Lecture : `state_at(date)` n'utilise que les événements publiés strictement avant la date.
+# Les données restent reconstruites en 2026 à partir de sources contemporaines datées ; une
+# date de première trace est celle des sources parcourues, pas la première trace réelle.
+
+election: 2017
+#
+# Particularités 2012 : les deux pages françaises sont parcourues dès le 1er janvier 2011 (la
+# page « Candidatures » existe dès janvier 2011) ; les tableaux de résultats de 2007 inclus dans
+# la page « Élection » (Voynet, Bové, Laguiller…) ne valent pas mention. Les désignations
+# internes (LO, FN, NPA, Génération écologie, Bloc identitaire, Union de la droite nationale)
+# sont des `investiture` hors processus, sauf quand une source montre plusieurs participants
+# (congrès FN de Tours, conférence nationale du NPA : voir `notes` des processus).
+
+election: 2012
+
+collection:
+  collected_on: 2026-10-23
+  protocol: >-
+    Liste des personnes : tout nom qui apparaît, dans les sources ci-dessous et pendant la
+    période, comme candidat déclaré (à l'élection ou à une primaire), candidat à la
+    candidature, personnalité pressentie, ayant exprimé son intérêt, évoquée par les
+    commentateurs, ou ayant décliné. Instantanés Wikipédia : révision en vigueur à 00:00 UTC
+    le 1er et le 15 de chaque mois, aux quatre dates du backtest 2012 et le jour de la liste
+    officielle (back/studies/candidacies_wikipedia.py, manifeste et empreintes dans
+    runs/2026-10-23-candidacies/wikipedia/). Dossier de presse : un article de presse
+    nationale « qui sont les candidats » publié dans les 30 jours avant chacune des quatre
+    dates du backtest (60 jours si aucun). Les dates des déclarations, retraits et
+    désignations viennent des articles de presse cités par ces révisions ou retrouvés
+    ensuite ; à défaut, de la révision elle-même (borne par excès). Les candidats à la
+    candidature d'une primaire qui n'ont pas déposé leur candidature à la clôture des dépôts
+    sont retirés à la date de l'article qui publie la liste close (règle propre à ce fichier,
+    voir les `note`).
+  sources:
+    - id: wp_fr_election
+      kind: wikipedia_revisions
+      title: Élection présidentielle française de 2012
+      url: https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2012
+      period: [2011-01-01, 2012-04-22]
+      cadence: 1er et 15 du mois, 2011-10-25, 2012-01-23, 2012-03-19 (liste), 2012-03-23, 2012-04-15
+      note: Sections dont le titre contient « candidat » ou « primaire ».
+    - id: wp_fr_candidacies
+      kind: wikipedia_revisions
+      title: Candidatures à l'élection présidentielle française de 2012
+      url: https://fr.wikipedia.org/wiki/Candidatures_%C3%A0_l%27%C3%A9lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2012
+      period: [2011-01-01, 2012-04-22]
+      cadence: idem
+      note: Page entière hors notes, sondages et articles connexes ; première révision retenue le 2011-01-30.
+    - id: wp_en_election
+      kind: wikipedia_revisions
+      title: 2012 French presidential election
+      url: https://en.wikipedia.org/wiki/2012_French_presidential_election
+      period: [2011-01-01, 2012-04-22]
+      cadence: idem
+      note: Sections « candidates » et « primary » ; n'a ajouté aucune personne retenue.
+    - id: press_dossiers
+      kind: press
+      title: Dossier de presse aux dates du backtest
+      period: [2011-09-25, 2012-04-15]
+      note: >-
+        Le Figaro, « Quatorze candidats dans la course à l'Élysée » (2011-10-19, capture
+        2011-10-24) ; Le Nouvel Observateur, « Les principaux candidats déclarés ou probables à la
+        présidentielle 2012 » (2011-12-25, capture 2012-01-08) ; Le Monde, « Dix candidats
+        engagés dans la course à l'Elysée » (2012-03-19) et « Qui cherche encore des
+        parrainages ? » (2012-03-16), lus en capture web.archive.org. Aucun nom absent des
+        révisions Wikipédia.
+    - id: press_followup
+      kind: press
+      title: Articles retrouvés après coup pour dater les transitions
+      period: [2009-06-01, 2012-03-19]
+      note: >-
+        Recherche ciblée (WebSearch, archives web.archive.org, sites des médias) des articles
+        datant une déclaration, un ralliement ou un retrait quand la révision Wikipédia ne cite
+        pas de source datée ; chaque article est une référence ci-dessous.
+    - id: wp_primaries
+      kind: wikipedia_page
+      title: Pages des primaires (citoyenne PS-PRG 2011, écologiste 2011, consultation du PCF 2011)
+      note: Version courante, pour les participants et les tours ; dates vérifiées sur la presse citée.
+    - id: cc_list
+      kind: official
+      title: Décision n° 2012-145 PDR du 19 mars 2012
+      url: https://www.conseil-constitutionnel.fr/decision/2012/2012145PDR.htm
+  exclusions: >-
+    Écartés de la liste : personnalités étrangères (Evo Morales, Hugo Chávez, Lula, Rafael
+    Correa) ou historiques (Georges Marchais, Charles de Gaulle, Konrad Adenauer) ; candidats
+    de scrutins antérieurs cités dans les tableaux de résultats (Arlette Laguiller, Dominique
+    Voynet, José Bové) ; journalistes, soutiens, porte-parole, organisateurs et dirigeants qui
+    commentent (Jean-Jacques Bourdin, Fabrice Robert, Jean-Luc Laurent, Annick Martin, Robert
+    Spieler, Martin Hirsch, Bruno Gaccio, Stéphane Ayrault, Antoine Waechter, Jean-Christophe
+    Lagarde, Jean-Marie Bockel, Patrick Balkany, François Baroin, Jean Leonetti, Michèle
+    Alliot-Marie, Brigitte Girardin) ; candidatures fictives ou symboliques (Christophe
+    Alévêque et son personnage « Super Rebelle », Marion Cotillard, Mélanie Laurent, Zaz et
+    Pierre Rabhi dans la campagne « Tous candidats », Éric Cantona, dont la démarche est
+    présentée dès la première source comme non candidate).
+
+references:
+  20minutes_20110509_goldberg: {url: "http://www.20minutes.fr/article/720163/presidentielle-2012-candidate-transexuelle-prete-battre-campagne", title: "Présidentielle 2012: Une candidate transexuelle prête à battre la campagne", outlet: "20 minutes", published: 2011-05-09, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  7sur7_20110918_dsk: {url: "http://www.7sur7.be/7s7/fr/10316/Monde/article/detail/1320803/2011/09/18/DSK-voulait-etre-candidat-mais-ne-le-sera-evidemment-pas.dhtml", title: "DSK voulait être candidat mais ne le sera « évidemment pas »", outlet: "7sur7", published: 2011-09-18}
+  borie_20120314_blog: {url: "http://jacques.borie.over-blog.com/article-declaration-de-jacques-borie-porte-parole-de-europe-liberte-14-mars-2012-101548757.html", title: "Déclaration de Jacques Borie, porte-parole de Europe-Liberté, 14 mars 2012", outlet: "blog de Jacques Borie", published: 2012-03-14}
+  cc_2012145pdr: {url: "https://www.conseil-constitutionnel.fr/decision/2012/2012145PDR.htm", title: "Décision n° 2012-145 PDR du 19 mars 2012 portant liste des candidats", outlet: "Conseil constitutionnel", published: 2012-03-19}
+  charentelibre_20110218_tricot: {url: "http://www.charentelibre.fr/2011/02/18/aurelien-tricot-adjoint-ps-a-poitiers-candidat-aux-primaires-socialistes,1022129.php", title: "Aurélien Tricot, adjoint PS à Poitiers, candidat aux primaires socialistes", outlet: "La Charente libre", published: 2011-02-18}
+  courrierdelouest_20120316_bourdouleix: {url: "http://www.courrierdelouest.fr/actualite/maine-et-loire-gilles-bourdouleix-ne-sera-pas-candidat-a-la-presidentielle-16-03-2012-6840", title: "Maine-et-Loire : Gilles Bourdouleix ne sera pas candidat à la présidentielle", outlet: "Le Courrier de l'Ouest", published: 2012-03-16}
+  europe1_20110116_fn: {url: "https://www.europe1.fr/politique/Congres-FN-Gollnisch-felicite-Marine-Le-Pen-456890", title: "Congrès-FN : Gollnisch félicite Marine Le Pen", outlet: "Europe 1", published: 2011-01-16}
+  europe1_20110504_chevenement: {url: "http://www.europe1.fr/Politique/Chevenement-sera-candidat-en-2012-525743/", title: "Chevènement sera candidat en 2012", outlet: "Europe 1", published: 2011-05-04}
+  europe1_20110524_fabius: {url: "https://www.europe1.fr/politique/Primaire-PS-Fabius-opte-pour-Aubry-568760", title: "Primaire PS : Fabius opte pour Aubry", outlet: "Europe 1", published: 2011-05-24}
+  europe1_20110527_primaire: {url: "https://www.europe1.fr/politique/Qui-sont-les-candidats-a-la-primaire-PS-318568", title: "Qui sont les candidats à la primaire PS ?", outlet: "Europe 1", published: 2011-05-27}
+  europe1_20110625_poutou: {url: "https://www.europe1.fr/politique/Le-NPA-veut-tourner-la-page-avec-Poutou-322808", title: "Le NPA veut tourner la page avec Poutou", outlet: "Europe 1", published: 2011-06-25}
+  europe1_20110713_primaire: {url: "https://www.europe1.fr/politique/Primaire-PS-six-candidats-en-lice-404732", title: "Primaire PS : six candidats en lice", outlet: "Europe 1", published: 2011-07-13, note: "Clôture des dépôts de candidature à la primaire citoyenne le 13 juillet 2011."}
+  europe1_20111105_chevenement: {url: "https://www.europe1.fr/politique/Chevenement-candidat-a-la-presidentielle-405344", title: "Chevènement candidat à la présidentielle", outlet: "Europe 1", published: 2011-11-05}
+  europe1_20111211_villepin: {url: "https://www.europe1.fr/politique/Dominique-de-Villepin-se-lance-pour-2012-500064", title: "Dominique de Villepin se lance pour 2012", outlet: "Europe 1", published: 2011-12-11}
+  europe1_20120314_bourson: {url: "http://www.europe1.fr/Politique/Un-ex-FN-se-desiste-malgre-502-parrainages-989473/", title: "Un ex-FN se désiste malgré 502 parrainages", outlet: "Europe 1", published: 2012-03-14}
+  france3_20120308_derrien: {url: "http://bretagne.france3.fr/info/dede-l-abeillaud-n-aurait-pas-ses-500-signatures-72846293.html", title: "Dédé l'Abeillaud n'aurait pas ses 500 signatures", outlet: "France 3 Bretagne", published: 2012-03-08, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  francesoir_20120201_chevenement: {url: "http://www.francesoir.fr/actualite/politique/presidentielle-chevenement-jette-l-eponge-179878.html", title: "Présidentielle : Chevènement jette l'éponge", outlet: "France-Soir", published: 2012-02-01}
+  guena_20111211_blog: {url: "http://guena2012.tumblr.com/post/14061869315/pourquoi-je-suis-candidat", title: "Pourquoi je suis candidat", outlet: "blog de Christopher Guéna", published: 2011-12-11, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  humanite_20110605_gerin: {url: "http://www.humanite.fr/05_06_2011-2012-andr%C3%A9-gerin-retire-sa-candidature-473573", title: "2012 : André Gerin retire sa candidature", outlet: "L'Humanité", published: 2011-06-05}
+  ladepeche_20100722_baud: {url: "http://www.ladepeche.fr/article/2010/07/22/877497-Robert-Baud-candidat-a-la-presidentielle-de-2012.html", title: "Robert Baud, candidat à la présidentielle de 2012", outlet: "La Dépêche du Midi", published: 2010-07-22}
+  ladepeche_20110305_nyamat: {url: "http://www.ladepeche.fr/article/2011/03/05/1028418-Un-Tarbais-de-Londres-candidat-aux-primaires.html", title: "Un Tarbais de Londres candidat aux primaires", outlet: "La Dépêche du Midi", published: 2011-03-05}
+  ladepeche_20111109_morin: {url: "http://www.ladepeche.fr/article/2011/11/09/1211837-herve-morin-annoncera-sa-candidature-le-27-novembre.html", title: "Hervé Morin annoncera sa candidature le 27 novembre", outlet: "La Dépêche du Midi", published: 2011-11-09}
+  ladepeche_20120222_toulousains: {url: "http://www.ladepeche.fr/article/2012/02/22/1289639-ces-toulousains-qui-revent-de-l-elysee.html", title: "Ces Toulousains qui rêvent de l'Elysée", outlet: "La Dépêche du Midi", published: 2012-02-22}
+  lavoixdunord_20090829_bocquet: {url: "http://www.lavoixdunord.fr/Region/actualite/Secteur_Region/2009/08/29/article_la-recette-d-alain-bocquet-en-cas-de-cou.shtml", title: null, outlet: "La Voix du Nord", published: 2009-08-29}
+  lci_20110622_boutin: {url: "http://lci.tf1.fr/politique/2011-06/2012-boutin-candidate-6543473.html", title: "2012 : Boutin candidate", outlet: "LCI", published: 2011-06-22, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  lcp_20110401_couasnon: {url: "http://www.lcp.fr/actualites/politique/14068-presidentielle-le-poete-escaladeur-perigourdin-annonce-sa-candidature", title: "Présidentielle : le « poète escaladeur périgourdin » annonce sa candidature", outlet: "LCP (AFP)", published: 2011-04-01, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  ledauphine_20111214_bontaz: {url: "http://www.ledauphine.com/haute-savoie/2011/12/14/yves-bontaz-candidat-a-la-presidence-de-la-republique", title: "Yves Bontaz veut être candidat à la présidence de la République", outlet: "Le Dauphiné libéré", published: 2011-12-14}
+  lefigaro_20090708_sarkozy: {url: "http://www.lefigaro.fr/politique/2009/07/08/01002-20090708ARTFIG00007-sarkozy-se-voit-a-l-elysee-pour-encore-sept-ans-et-demi-.php", title: "Sarkozy se voit à l'Élysée pour encore « sept ans et demi »", outlet: "Le Figaro", published: 2009-07-08}
+  lefigaro_20090930_delanoe: {url: "http://www.lefigaro.fr/politique/2009/09/30/01002-20090930ARTFIG00072-bertrand-delanoe-ne-se-reve-plus-en-candidat-en-2012-.php", title: "Bertrand Delanoë ne se rêve plus en candidat en 2012", outlet: "Le Figaro", published: 2009-09-30}
+  lefigaro_20100414_borloo: {url: "http://www.lefigaro.fr/politique/2010/04/14/01002-20100414ARTFIG00731-jean-louis-borloo-face-au-casse-tete-de-2012-.php", title: "Jean-Louis Borloo face au casse-tête de 2012", outlet: "Le Figaro", published: 2010-04-14}
+  lefigaro_20100504_buffet: {url: "http://www.lefigaro.fr/politique/2010/05/04/01002-20100504ARTFIG00316-marie-george-buffet-ne-sera-pas-candidate-en-2012-.php", title: "Marie-George Buffet ne sera pas candidate en 2012", outlet: "Le Figaro", published: 2010-05-04}
+  lefigaro_20100910_chassaigne: {url: "http://www.lefigaro.fr/flash-actu/2010/09/10/97001-20100910FILWWW00593-front-de-gauche-chassaigne-candidat.php", title: "Front de gauche : Chassaigne candidat", outlet: "Le Figaro (AFP)", published: 2010-09-10}
+  lefigaro_20110121_melenchon: {url: "http://www.lefigaro.fr/flash-actu/2011/01/21/97001-20110121FILWWW00338-melechon-candidat-a-la-presidentielle.php", title: "Mélenchon candidat à la présidentielle", outlet: "Le Figaro (AFP)", published: 2011-01-21}
+  lefigaro_20110414_benzaid: {url: "http://www.lefigaro.fr/flash-actu/2011/04/14/97001-20110414FILWWW00605-louisa-benzaid-candidate-des-cites-aux-primaires-ee-lv.php", title: "Louisa Benzaïd, candidate des cités aux primaires EE-LV", outlet: "Le Figaro (AFP)", published: 2011-04-14}
+  lefigaro_20110516_lepen: {url: "http://www.lefigaro.fr/flash-actu/2011/05/16/97001-20110516FILWWW00642-la-candidature-le-pen-validee-par-le-fn.php", title: "La candidature Le Pen validée par le FN", outlet: "Le Figaro (AFP)", published: 2011-05-16}
+  lefigaro_20110529_pietrasanta: {url: "http://www.lefigaro.fr/flash-actu/2011/05/29/97001-20110529FILWWW00130-2012-generation-ecologie-a-un-candidat.php", title: "2012 : Génération écologie a un candidat", outlet: "Le Figaro (AFP)", published: 2011-05-29}
+  lefigaro_20110616_nihous: {url: "http://www.lefigaro.fr/politique/2011/06/16/01002-20110616ARTFIG00627-frederic-nihous-je-suis-candidat-a-la-presidentielle.php", title: "Frédéric Nihous : « Je suis candidat à la présidentielle »", outlet: "Le Figaro", published: 2011-06-16}
+  lefigaro_20110617_npa: {url: "http://www.lefigaro.fr/flash-actu/2011/06/17/97001-20110617FILWWW00423-2012-le-npa-hesite-entre-quatre-candidats.php", title: "2012: le NPA hésite entre 4 candidats", outlet: "Le Figaro (AFP)", published: 2011-06-17}
+  lefigaro_20111013_weber: {url: "http://www.lefigaro.fr/flash-actu/2011/10/13/97001-20111013FILWWW00555-un-senior-alsacien-candidat-en-2012.php", title: "Un sénior alsacien candidat en 2012", outlet: "Le Figaro (AFP)", published: 2011-10-13}
+  lefigaro_20120207_pietrasanta: {url: "http://www.lefigaro.fr/flash-actu/2012/02/07/97001-20120207FILWWW00494-2012-pietrasanta-retire-sa-candidature.php", title: "2012 : Pietrasanta retire sa candidature", outlet: "Le Figaro (AFP)", published: 2012-02-07}
+  lefigaro_20120213_boutin: {url: "http://www.lefigaro.fr/politique/2012/02/13/01002-20120213ARTFIG00695-christine-boutin-retire-sa-candidature.php", title: "Christine Boutin retire sa candidature", outlet: "Le Figaro", published: 2012-02-13}
+  lefigaro_20120222_nihous: {url: "http://elections.lefigaro.fr/flash-presidentielle/2012/02/22/97006-20120222FILWWW00617-nihous-cpnt-renonce-et-soutient-sarkozy.php", title: "Nihous (CPNT) renonce et soutient Sarkozy", outlet: "Le Figaro", published: 2012-02-22}
+  lefigaro_20120316_lang: {url: "http://elections.lefigaro.fr/flash-presidentielle/2012/03/16/97006-20120316FILWWW00396-carl-lang-n-a-pas-ses-parrainages.php", title: "Carl Lang n'a pas ses parrainages", outlet: "Le Figaro", published: 2012-03-16}
+  lejdd_20110107_delanoe: {url: "https://www.lejdd.fr/Politique/Bertrand-Delanoe-revient-sur-le-bilan-de-Francois-Mitterrand-et-sur-l-avenir-du-PS-interview-252619-3107324", title: "Delanoë : bilan de François Mitterrand et avenir du PS (entretien)", outlet: "Le JDD", published: 2011-01-07}
+  lejdd_20110123_joly: {url: "https://www.lejdd.fr/Politique/Eva-Joly-confirme-sa-candidature-aux-primaires-d-Europe-Ecologie-258139-3107753", title: "Joly trace sa route pour 2012", outlet: "Le JDD", published: 2011-01-23}
+  lejdd_20110331_hollande: {url: "https://www.lejdd.fr/Politique/Presidentielle-Francois-Hollande-annonce-sa-candidature-aux-primaires-socialistes-292415-3109625", title: "Primaires PS: Hollande se lance", outlet: "Le JDD", published: 2011-03-31}
+  lejdd_20110413_hulot: {url: "https://www.lejdd.fr/Politique/2012-Hulot-a-annonce-sa-candidature-pour-2012-298725-3109967", title: "2012: Hulot, avec ou sans EELV?", outlet: "Le JDD", published: 2011-04-13}
+  lejdd_20110504_lozes: {url: "http://www.lejdd.fr/Election-presidentielle-2012/Actualite/Le-president-du-Cran-Patrick-Lozes-se-declare-candidat-a-l-election-francaise-de-2012-interview-308797/", title: "Lozès, « dans la lignée de De Gaulle »", outlet: "Le JDD", published: 2011-05-04, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  lejdd_20110505_besancenot: {url: "https://www.lejdd.fr/Politique/Presidentielle-2012-Krivine-commente-la-decision-de-Nicolas-Besancenot-de-ne-pas-etre-candidat-interview-309117-3110531", title: "Krivine : « On va trouver un autre candidat, une copine… »", outlet: "Le JDD", published: 2011-05-05}
+  lejdd_20110625_npa: {url: "https://www.lejdd.fr/Politique/Philippe-Poutou-remplace-Besancenot-pour-representer-le-NPA-en-2012-340709-3112406", title: "Le NPA tient son candidat pour 2012", outlet: "Le JDD", published: 2011-06-25}
+  lejdd_20110628_aubry: {url: "https://www.lejdd.fr/Politique/Martine-Aubry-s-est-declaree-candidate-a-l-election-presidentielle-de-2012-depuis-Lille-349351-3112487", title: "Martine Aubry s'engage à gagner en 2012", outlet: "Le JDD", published: 2011-06-28}
+  lejdd_20110706_baylet: {url: "https://www.lejdd.fr/Politique/Jean-Michel-Baylet-president-des-radicaux-de-gauche-va-a-la-primaire-socialiste-354341-3112817", title: "Baylet se lance dans la primaire PS", outlet: "Le JDD", published: 2011-07-06}
+  lejdd_20110712_joly: {url: "https://www.lejdd.fr/Politique/Primaire-ecologiste-Eva-Joly-designee-candidate-d-EELV-a-la-presidentielle-par-58-des-votants-357143-3113018", title: "Eva Joly, direction 2012", outlet: "Le JDD", published: 2011-07-12}
+  lejdd_20111006_lang: {url: "https://www.lejdd.fr/Politique/Jack-Lang-soutient-Hollande-401947-3115631", title: "Jack Lang se rallie à Hollande", outlet: "Le JDD", published: 2011-10-06}
+  lejdd_20111010_primaire: {url: "https://www.lejdd.fr/Politique/Primaire-PS-Montebourg-soutien-essentiel-pour-le-second-tour-403961-3115790", title: "Montebourg, arbitre du second tour", outlet: "Le JDD", published: 2011-10-10}
+  lejdd_20111016_primaire: {url: "https://www.lejdd.fr/Politique/Aubry-n-est-pas-allee-dans-son-QG-de-campagne-dimanche-soir-407691-3116108", title: "Primaire : la déception chez ceux d'Aubry", outlet: "Le JDD", published: 2011-10-16}
+  lejdd_20120316_depot: {url: "http://www.lejdd.fr/Election-presidentielle-2012/Actualite/Suivez-en-direct-le-depot-des-candidatures-des-candidats-a-la-presidentielle-au-Conseil-constitutionnel-494965/", title: "Villepin confirme son abandon (suivi du dépôt des candidatures)", outlet: "Le JDD", published: 2012-03-16, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  lemonde_20101102_boutin: {url: "http://www.lemonde.fr/politique/article/2010/11/02/christine-boutin-future-candidate-a-la-presidentielle-2012_1434099_823448.html", title: "Christine Boutin, future candidate à la présidentielle 2012", outlet: "Le Monde", published: 2010-11-02}
+  lemonde_20101130_gouillon: {url: "http://droites-extremes.blog.lemonde.fr/2010/11/30/et-le-candidat-identitaire-en-2012-sera/", title: "Et le candidat identitaire en 2012 sera…", outlet: "Le Monde (blog Droite(s) extrême(s))", published: 2010-11-30}
+  lemonde_20111003_schivardi: {url: "http://www.lemonde.fr/politique/article/2011/10/03/schivardi-la-presidentielle-est-une-mascarade-de-democratie_1581706_823448.html", title: "« La présidentielle est une mascarade de démocratie »", outlet: "Le Monde", published: 2011-10-03}
+  lemonde_20120316_parrainages: {url: "http://www.lemonde.fr/election-presidentielle-2012/article/2012/03/16/qui-cherche-encore-des-parrainages-le-point-candidat-par-candidat_1670550_1471069.html", title: "Qui cherche encore des parrainages ? Le point candidat par candidat", outlet: "Le Monde", published: 2012-03-16, note: "Dossier de presse (2012-03-23)."}
+  leparisien_20090614_valls: {url: "http://www.leparisien.fr/politique/ps-manuel-valls-candidat-aux-primaires-14-06-2009-547732.php", title: "PS : Manuel Valls candidat aux primaires", outlet: "Le Parisien", published: 2009-06-14}
+  leparisien_20100525_collomb: {url: "http://www.leparisien.fr/politique/primaires-du-ps-gerard-collomb-candidat-si-dsk-ne-l-est-pas-25-05-2010-936198.php", title: "Primaires du PS : Gérard Collomb candidat si DSK ne l'est pas", outlet: "Le Parisien", published: 2010-05-25}
+  leparisien_20100913_dupontaignan: {url: "http://www.leparisien.fr/election-presidentielle-2012/dupont-aignan-en-piste-pour-2012-13-09-2010-1065992.php", title: "Dupont-Aignan en piste pour 2012", outlet: "Le Parisien", published: 2010-09-13}
+  leparisien_20101016_bardot: {url: "http://www.leparisien.fr/election-presidentielle-2012/bardot-candidate-a-la-presidentielle-de-2012-16-10-2010-1112105.php", title: "Bardot candidate à la présidentielle de 2012 ?", outlet: "Le Parisien", published: 2010-10-16}
+  leparisien_20101129_royal: {url: "http://www.leparisien.fr/election-presidentielle-2012/ps-segolene-royal-annonce-sa-candidature-aux-primaires-29-11-2010-1170849.php", title: "PS : Ségolène Royal annonce sa candidature aux primaires", outlet: "Le Parisien", published: 2010-11-29}
+  leparisien_20120201_lee: {url: "http://www.leparisien.fr/espace-premium/actu/la-bimbo-01-02-2012-1839699.php", title: "La Bimbo", outlet: "Le Parisien", published: 2012-02-01}
+  leparisien_20120202_couasnon: {url: "http://www.leparisien.fr/bordeaux-33000/presidentielle-le-poete-escaladeur-veut-donner-ses-parrainages-a-le-pen-02-02-2012-1842430.php", title: "Présidentielle : le « poète escaladeur » veut donner ses parrainages à Le Pen", outlet: "Le Parisien", published: 2012-02-02}
+  leparisien_20120203_callet: {url: "http://www.leparisien.fr/rueil-malmaison-92500/un-restaurateur-annonce-150-parrainages-pour-la-presidentielle-03-02-2012-1843768.php", title: "Un restaurateur annonce 150 parrainages pour la présidentielle", outlet: "Le Parisien", published: 2012-02-03}
+  lepoint_20100110_hollande: {url: "http://www.lepoint.fr/actualites-politique/2010-01-10/ps-hollande-se-prepare-pour-l-elysee/917/0/412035", title: "PS : Hollande se prépare pour l'Élysée", outlet: "Le Point", published: 2010-01-10}
+  lepoint_20100619_cheminade: {url: "http://www.lepoint.fr/politique/jacques-cheminade-de-nouveau-candidat-l-election-presidentielle-19-06-2010-468335_20.php", title: "Jacques Cheminade de nouveau candidat à l'élection présidentielle", outlet: "Le Point (AFP)", published: 2010-06-19}
+  lepoint_20100825_aubry: {url: "http://www.lepoint.fr/societe/presidentielle-aubry-decidera-avant-debut-2011-royal-pose-ses-conditions-25-08-2010-1228673_23.php", title: "Présidentielle : Aubry décidera avant début 2011, Royal pose ses conditions", outlet: "Le Point", published: 2010-08-25}
+  lepoint_20101007_primaire: {url: "http://www.lepoint.fr/politique/presidentielle-2012-ces-candidats-farfelus-a-la-primaire-socialiste-07-10-2010-1246132_20.php", title: "Présidentielle 2012 : ces candidats farfelus à la primaire socialiste", outlet: "Le Point", published: 2010-10-07}
+  lepoint_20101119_montebourg: {url: "http://www.lepoint.fr/politique/montebourg-candidat-aux-primaires-socialistes-19-11-2010-1264803_20.php", title: "Montebourg candidat aux primaires socialistes", outlet: "Le Point", published: 2010-11-19}
+  lepoint_20101205_arthaud: {url: "http://www.lepoint.fr/politique/arthaud-candidate-lutte-ouvriere-en-2012-dans-une-continuite-avec-arlette-05-12-2010-1271305_20.php", title: "Arthaud candidate Lutte ouvrière en 2012 dans « une continuité avec Arlette »", outlet: "Le Point (AFP)", published: 2010-12-05}
+  lepoint_20110911_gouillon: {url: "http://www.lepoint.fr/politique/presidentielle-le-candidat-du-bloc-identitaires-se-retire-de-la-course-11-09-2011-1372154_20.php", title: "Présidentielle: le candidat du Bloc Identitaires se retire de la course", outlet: "Le Point (AFP)", published: 2011-09-11}
+  lepoint_20120216_morin: {url: "http://www.lepoint.fr/politique/herve-morin-retire-sa-candidature-16-02-2012-1431940_20.php", title: "Hervé Morin retire sa candidature", outlet: "Le Point", published: 2012-02-16}
+  lepoint_20120316_villepin: {url: "http://www.lepoint.fr/politique/election-presidentielle-2012/presidentielle-villepin-c-est-fini-16-03-2012-1442194_324.php", title: "Présidentielle : Villepin, c'est fini", outlet: "Le Point", published: 2012-03-16}
+  lepost_20120105_baud: {url: "http://archives-lepost.huffingtonpost.fr/article/2012/01/05/2673990_robert-baud-rejoint-la-candidature-a-la-presidentielle-de-jacques-borie.html", title: "Robert Baud rejoint la candidature à la présidentielle de Jacques Borie", outlet: "Le Post", published: 2012-01-05, note: "Communiqué publié sur la plateforme Le Post ; Wikipédia (mars 2012) date le retrait du 15 janvier."}
+  leprogres_20110518_rongier: {url: "http://www.leprogres.fr/politique/2011/05/18/un-ligerien-candidat-a-la-presidence-de-la-republique", title: "Un Stéphanois de 78 ans candidat à la présidence de la République", outlet: "Le Progrès", published: 2011-05-18}
+  leprogres_20120107_pradelle: {url: "http://www.leprogres.fr/ain/2012/01/07/hauteville-lompnes-frederic-pradelle-le-candidat-des-cons", title: "Hauteville-Lompnes : Ze Fred, le candidat des cons…", outlet: "Le Progrès", published: 2012-01-07}
+  letelegramme_20101130_bianco: {url: "http://www.letelegramme.com/ig/generales/france-monde/france/primaires-au-ps-jean-louis-bianco-decidera-s-il-est-candidat-debut-2011-30-11-2010-1132729.php", title: "Primaires au PS : Jean-Louis Bianco décidera s'il est candidat début 2011", outlet: "Le Télégramme", published: 2010-11-30}
+  letelegramme_20110423_gautier: {url: "http://www.letelegramme.com/ig/generales/france-monde/france/election-presidentielle-un-briochin-candidat-23-04-2011-1278746.php", title: "Élection présidentielle. Un Briochin candidat", outlet: "Le Télégramme", published: 2011-04-23}
+  letelegramme_20120125_derrien: {url: "http://www.letelegramme.com/local/finistere-sud/chateaulin-carhaix/crozon/argol/presidentielle-la-candidature-insolite-de-dede-l-abeillaud-25-01-2012-1577556.php", title: "Présidentielle. La candidature insolite de Dédé l'Abeillaud", outlet: "Le Télégramme", published: 2012-01-25}
+  lexpress_20120225_petits: {url: "http://www.lexpress.fr/actualite/politique/speed-dating-avec-les-petits-candidats_1086548.html", title: "Speed-dating avec les petits candidats", outlet: "L'Express", published: 2012-02-25, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  liberation_20111004_lepage: {url: "http://www.liberation.fr/depeches/01012363803-corinne-lepage-cap21-candidate-a-la-presidentielle", title: "Corinne Lepage (Cap21) candidate à la présidentielle", outlet: "Libération (AFP)", published: 2011-10-04, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  lyonmag_20110629_collomb: {url: "http://www.lyonmag.com/article/24722/collomb-je-me-rangerai-derriere-francois-hollande", title: "Collomb : « Je me rangerai derrière François Hollande »", outlet: "LyonMag", published: 2011-06-29}
+  lyonne_20110510_wittmann: {url: "http://www.lyonne.fr/editions_locales/tonnerrois/l_apitre_de_la_decroissance_a_aisy@CARGNjFdJSsBEBMGAxs-.html", title: "L'apôtre de la décroissance à Aisy", outlet: "L'Yonne républicaine", published: 2011-05-10, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  macommune_20110630_moscovici: {url: "https://www.macommune.info/primaire-ps-moscovici-choisit-hollande", title: "Primaire PS : Moscovici choisit Hollande", outlet: "MaCommune.info", published: 2011-06-30, note: "Date lue dans un résumé de recherche, page non rouverte."}
+  mcetv_20120315_goldberg: {url: "http://mcetv.fr/mon-mag/1503-presidentielle-2012-brigitte-goldberg-la-candidate-des-lesbiennes-gays-bisexuels-et-transsexuels", title: "Présidentielle 2012 : Brigitte Goldberg, la candidate des lesbiennes, gays, bisexuels et transsexuels", outlet: "MCE (Ma chaîne étudiante)", published: 2012-03-15}
+  mouvementdemocrate_20111202_arthuis: {url: "http://www.mouvementdemocrate.fr/actualites/jeanarthuis-varmatin-011211.html", title: "Mon soutien à François Bayrou est en totale conformité avec mes convictions", outlet: "mouvementdemocrate.fr (site du MoDem)", published: 2011-12-02, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  nicematin_20100113_lenne: {url: "http://www.nicematin.com/article/societe/presidentielle-2012-un-pasteur-varois-se-veut-le-candidat-des-pauvres", title: "Présidentielle 2012: un pasteur varois se veut le candidat des pauvres", outlet: "Nice-Matin", published: 2010-01-13, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  nordeclair_20110304_mezrag: {url: "http://www.nordeclair.fr/Locales/Tourcoing/2011/03/04/tourcoing-primaires.shtml", title: null, outlet: "Nord Éclair", published: 2011-03-04}
+  nouvelobs_20080418_juppe: {url: "http://tempsreel.nouvelobs.com/actualites/politique/20080418.OBS0292/presidentielle_2012__alain_juppe_nest_ferme_a_rien.html", title: "Présidentielle 2012 : Alain Juppé n'est « fermé à rien »", outlet: "Le Nouvel Observateur", published: 2008-04-18, note: "Date lue dans l'URL ; la référence Wikipédia indique le 22 juin 2008."}
+  nouvelobs_20090904_peillon: {url: "http://tempsreel.nouvelobs.com/speciales/les_universites_dete_2009/20090904.OBS9999/vincent_peillon_pas_candidat_a_la_primaire_ps_pour_2012.html", title: "Vincent Peillon pas candidat à la primaire PS pour 2012", outlet: "Le Nouvel Observateur", published: 2009-09-04}
+  nouvelobs_20100818_duflot: {url: "http://tempsreel.nouvelobs.com/actualite/politique/20100818.OBS8661/info-obs-cecile-duflot-la-presidentielle-me-fait-peur.html", title: "Cécile Duflot : « La présidentielle me fait peur »", outlet: "Le Nouvel Observateur", published: 2010-08-18}
+  nouvelobs_20100828_hamon: {url: "http://tempsreel.nouvelobs.com/actualite/politique/20100828.OBS9114/universite-du-ps-pour-hamon-la-ligne-du-ps-est-claire.html", title: "Université du PS : pour Hamon, « la ligne du PS est claire »", outlet: "Le Nouvel Observateur", published: 2010-08-28}
+  nouvelobs_20110409_lhomme: {url: "http://tempsreel.nouvelobs.com/actualite/politique/20110409.OBS1039/nicolas-hulot-n-est-ecologiste-qu-au-petit-ecran.html", title: "« Nicolas Hulot n'est écologiste qu'au petit écran »", outlet: "Le Nouvel Observateur", published: 2011-04-09}
+  nouvelobs_20110622_governatori: {url: "http://tempsreel.nouvelobs.com/politique/20110622.OBS5655/info-obs-governatori-je-suis-candidat-a-l-election-presidentielle.html", title: "Governatori : « Je suis candidat à l'élection présidentielle »", outlet: "Le Nouvel Observateur", published: 2011-06-22}
+  nouvelobs_20111207_bayrou: {url: "http://tempsreel.nouvelobs.com/election-presidentielle-2012/20111207.OBS6125/bayrou-je-me-presente-en-homme-libre.html", title: "Bayrou : « Je me présente en homme libre »", outlet: "Le Nouvel Observateur", published: 2011-12-07}
+  novopress_20100511_bourson: {url: "http://fr.novopress.info/58105/exclusif-%E2%80%93-l%E2%80%99ancien-associe-de-le-pen-patrick-bourson-est-candidat-a-l%E2%80%99elysee/", title: "L'ancien associé de Le Pen, Patrick Bourson, est candidat à l'Elysée !", outlet: "Novopress", published: 2010-05-11, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  ouestfrance_20111122_bourdouleix: {url: "http://www.ouest-france.fr/ofdernmin_-Cholet-Gilles-Bourdouleix-candidat-du-CNIP-a-la-presidentielle-de-2012-_40771-2014012-pere-pdl_filDMA.Htm", title: "Cholet : Gilles Bourdouleix, candidat à la présidentielle de 2012", outlet: "Ouest-France", published: 2011-11-22, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  ouestfrance_20120316_candidats: {url: "http://www.ouest-france.fr/actu/actuDet_-Presidentielle.-Au-moins-9-candidats-peut-etre-12_6346-2055994_actu.Htm", title: "Présidentielle. Au moins 9 candidats, peut-être 12", outlet: "Ouest-France", published: 2012-03-16, note: "date lue dans la référence citée par Wikipédia, article non rouvert"}
+  pierremoscovici_20100826_blog: {url: "http://www.pierremoscovici.fr/2010/08/26/plie/", title: null, outlet: "blog de Pierre Moscovici", published: 2010-08-26}
+  politis_20110523_primaire: {url: "https://www.politis.fr/articles/2011/05/primaire-europe-ecologie-les-verts-le-programme-14255/", title: "Primaire Europe écologie les Verts : le programme", outlet: "Politis", published: 2011-05-23, note: "Quatre candidats (Joly, Hulot, Lhomme, Stoll), liste à officialiser le 5 juin ; lu dans un résumé de recherche."}
+  politis_20110618_pcf: {url: "https://www.politis.fr/articles/2011/06/les-communistes-ont-designe-melenchon-resultats-complets-14585/", title: "Les communistes ont désigné Mélenchon [résultats complets]", outlet: "Politis", published: 2011-06-18}
+  politis_20110629_primaire: {url: "https://www.politis.fr/articles/2011/06/primaire-eelv-joly-devance-hulot-14729/", title: "Primaire EELV : Joly devance Hulot", outlet: "Politis", published: 2011-06-29}
+  rtbf_20120215_sarkozy: {url: "https://www.rtbf.be/article/presidentielle-en-france-nicolas-sarkozy-officiellement-candidat-7579893", title: "Présidentielle en France : Nicolas Sarkozy officiellement candidat", outlet: "RTBF", published: 2012-02-15}
+  rue89_20101012_camus: {url: "http://www.rue89.com/2010/10/12/renaud-camus-premier-candidat-a-la-presidentielle-de-2012-170674", title: "Renaud Camus, premier candidat à la présidentielle de 2012", outlet: "Rue89", published: 2010-10-12}
+  rue89_20111002_borloo: {url: "http://www.rue89.com/court-sans-sucre/2011/10/02/borloo-nest-pas-candidat-pour-ne-pas-ajouter-de-la-confusion-224587", title: "Borloo n'est pas candidat pour « ne pas ajouter de la confusion »", outlet: "Rue89", published: 2011-10-02}
+  sudouest_20110613_miguet: {url: "http://www.sudouest.fr/2011/06/13/nicolas-miguet-resolu-pour-2012-424782-635.php", title: "Nicolas Miguet résolu pour 2012", outlet: "Sud Ouest", published: 2011-06-13, note: "Date de l'URL ; la référence Wikipédia indique le 11 juin 2011."}
+  wp_fr_60690904: {url: "https://fr.wikipedia.org/w/index.php?oldid=60690904", title: "Élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2010-12-29}
+  wp_fr_61271804: {url: "https://fr.wikipedia.org/w/index.php?oldid=61271804", title: "Élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-01-14}
+  wp_fr_61686744: {url: "https://fr.wikipedia.org/w/index.php?oldid=61686744", title: "Élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-01-27}
+  wp_fr_61782463: {url: "https://fr.wikipedia.org/w/index.php?oldid=61782463", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-01-30}
+  wp_fr_62683093: {url: "https://fr.wikipedia.org/w/index.php?oldid=62683093", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-02-26}
+  wp_fr_64339185: {url: "https://fr.wikipedia.org/w/index.php?oldid=64339185", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-04-14}
+  wp_fr_65325977: {url: "https://fr.wikipedia.org/w/index.php?oldid=65325977", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-05-13}
+  wp_fr_66397292: {url: "https://fr.wikipedia.org/w/index.php?oldid=66397292", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-06-14}
+  wp_fr_66972745: {url: "https://fr.wikipedia.org/w/index.php?oldid=66972745", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-06-30}
+  wp_fr_67974769: {url: "https://fr.wikipedia.org/w/index.php?oldid=67974769", title: "Élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-07-31}
+  wp_fr_68826296: {url: "https://fr.wikipedia.org/w/index.php?oldid=68826296", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-08-25}
+  wp_fr_69633202: {url: "https://fr.wikipedia.org/w/index.php?oldid=69633202", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-09-14}
+  wp_fr_70444127: {url: "https://fr.wikipedia.org/w/index.php?oldid=70444127", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-09-28}
+  wp_fr_71047034: {url: "https://fr.wikipedia.org/w/index.php?oldid=71047034", title: "Élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-10-13}
+  wp_fr_71084703: {url: "https://fr.wikipedia.org/w/index.php?oldid=71084703", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-10-14}
+  wp_fr_71351201: {url: "https://fr.wikipedia.org/w/index.php?oldid=71351201", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-10-23}
+  wp_fr_71546965: {url: "https://fr.wikipedia.org/w/index.php?oldid=71546965", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-10-28}
+  wp_fr_72127489: {url: "https://fr.wikipedia.org/w/index.php?oldid=72127489", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2011-11-14}
+  wp_fr_76203248: {url: "https://fr.wikipedia.org/w/index.php?oldid=76203248", title: "Élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2012-02-29}
+  wp_fr_76203293: {url: "https://fr.wikipedia.org/w/index.php?oldid=76203293", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2012-02-29}
+  wp_fr_76796691: {url: "https://fr.wikipedia.org/w/index.php?oldid=76796691", title: "Candidatures à l'élection présidentielle française de 2012", outlet: "Wikipédia (fr)", published: 2012-03-18}
+
+persons:
+  - {id: arthaud_nathalie, party: lo, bloc: far_left, final_status: official}
+  - {id: bayrou_francois, party: modem, bloc: centre, final_status: official, notes: "Le Nouvel Observateur (2011-12-25) date du 24 novembre la confirmation de son intention d'être candidat ; Wikipédia retient l'annonce officielle du 7 décembre."}
+  - {id: cheminade_jacques, party: sp, bloc: other, final_status: official}
+  - {id: dupont_aignan_nicolas, party: dlr, bloc: far_right, final_status: official}
+  - {id: hollande_francois, party: ps, bloc: left, final_status: official}
+  - {id: joly_eva, party: eelv, bloc: left, final_status: official}
+  - {id: le_pen_marine, party: fn, bloc: far_right, final_status: official}
+  - {id: melenchon_jean_luc, party: fdg, bloc: far_left, final_status: official}
+  - {id: poutou_philippe, party: npa, bloc: far_left, final_status: official}
+  - {id: sarkozy_nicolas, party: ump, bloc: right, final_status: official}
+  - {id: amanrich_francois, name: "François Amanrich", first_name: "François", last_name: "Amanrich", party: null, party_label: "Cléocrates", bloc: other, final_status: declared_absent, notes: "Première trace dans le suivi du dépôt du 16 mars 2012, qui annonce aussi son échec."}
+  - {id: asselineau_francois, party: upr, bloc: other, final_status: declared_absent}
+  - {id: aubry_martine, party: ps, bloc: left, final_status: declared_absent}
+  - {id: baud_robert, name: "Robert Baud", first_name: "Robert", last_name: "Baud", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: baylet_jean_michel, name: "Jean-Michel Baylet", first_name: "Jean-Michel", last_name: "Baylet", party: prg, bloc: left, final_status: declared_absent}
+  - {id: benzaid_louisa, name: "Louisa Benzaïd", first_name: "Louisa", last_name: "Benzaïd", party: null, party_label: "sans étiquette (primaire EELV)", bloc: left, final_status: declared_absent}
+  - {id: beyala_calixthe, name: "Calixthe Beyala", first_name: "Calixthe", last_name: "Beyala", party: null, party_label: "candidature « de la diversité »", bloc: other, final_status: declared_absent}
+  - {id: bontaz_yves, name: "Yves Bontaz", first_name: "Yves", last_name: "Bontaz", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: borgia_gerard, name: "Gérard Borgia", first_name: "Gérard", last_name: "Borgia", party: null, party_label: "Ensemble pour la France", bloc: other, final_status: declared_absent}
+  - {id: borie_jacques, name: "Jacques Borie", first_name: "Jacques", last_name: "Borie", party: null, party_label: "Europe – Liberté", bloc: other, final_status: declared_absent}
+  - {id: bourdouleix_gilles, name: "Gilles Bourdouleix", first_name: "Gilles", last_name: "Bourdouleix", party: null, party_label: "Centre national des indépendants et paysans", bloc: right, final_status: declared_absent}
+  - {id: bourson_patrick, name: "Patrick Bourson", first_name: "Patrick", last_name: "Bourson", party: null, party_label: "Ensemble redressons la France (ex-FN)", bloc: far_right, final_status: declared_absent}
+  - {id: boutin_christine, party: pcd, bloc: right, final_status: declared_absent}
+  - {id: callet_alexandre, name: "Alexandre Callet", first_name: "Alexandre", last_name: "Callet", party: null, party_label: "France Unité", bloc: other, final_status: declared_absent}
+  - {id: camus_renaud, name: "Renaud Camus", first_name: "Renaud", last_name: "Camus", party: null, party_label: "Parti de l'In-nocence", bloc: far_right, final_status: declared_absent}
+  - {id: chassaigne_andre, name: "André Chassaigne", first_name: "André", last_name: "Chassaigne", party: pcf, bloc: far_left, final_status: declared_absent}
+  - {id: chevenement_jean_pierre, party: mrc, bloc: left, final_status: declared_absent}
+  - {id: chihabiddine_abou, name: "Abou Chihabiddine", first_name: "Abou", last_name: "Chihabiddine", party: null, party_label: "« Rasta Président »", bloc: other, final_status: declared_absent}
+  - {id: cochet_yves, name: "Yves Cochet", first_name: "Yves", last_name: "Cochet", party: eelv, bloc: left, final_status: declared_absent}
+  - {id: cosseron_de_villenoisy_patrick, name: "Patrick Cosseron de Villenoisy", first_name: "Patrick", last_name: "Cosseron de Villenoisy", party: null, party_label: "Alliance royale", bloc: other, final_status: declared_absent}
+  - {id: couasnon_herve, name: "Hervé Couasnon", first_name: "Hervé", last_name: "Couasnon", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: dang_tran_emmanuel, name: "Emmanuel Dang Tran", first_name: "Emmanuel", last_name: "Dang Tran", party: pcf, bloc: far_left, final_status: declared_absent}
+  - {id: de_villepin_dominique, party: dvd, bloc: right, final_status: declared_absent, notes: "La révision du 2010-12-29 le range sous « Candidat déclaré », les suivantes précisent qu'il ne s'est pas déclaré : retenu comme mention."}
+  - {id: delanoe_gaspard, name: "Gaspard Delanoë", first_name: "Gaspard", last_name: "Delanoë", party: null, party_label: "artiste, sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: dequeant_pascal, name: "Pascal Dequéant", first_name: "Pascal", last_name: "Dequéant", party: null, party_label: "Mouvement Royauté républicaine française", bloc: other, final_status: declared_absent}
+  - {id: derrien_david, name: "David Derrien", first_name: "David", last_name: "Derrien", party: null, party_label: "« Dédé l'Abeillaud », candidat de la biodiversité", bloc: other, final_status: declared_absent}
+  - {id: drider_kenza, name: "Kenza Drider", first_name: "Kenza", last_name: "Drider", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: duval_hubert, name: "Hubert Duval", first_name: "Hubert", last_name: "Duval", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: feo_helene, name: "Hélène Feo", first_name: "Hélène", last_name: "Feo", party: null, party_label: "Parti fédéraliste européen", bloc: other, final_status: declared_absent}
+  - {id: gautier_gerard, name: "Gérard Gautier", first_name: "Gérard", last_name: "Gautier", party: null, party_label: "Blanc c'est exprimé", bloc: other, final_status: declared_absent}
+  - {id: gerin_andre, name: "André Gerin", first_name: "André", last_name: "Gerin", party: pcf, bloc: far_left, final_status: declared_absent}
+  - {id: giovannoni_patrick, name: "Patrick Giovannoni", first_name: "Patrick", last_name: "Giovannoni", party: null, party_label: "Parti républicain chrétien", bloc: other, final_status: declared_absent}
+  - {id: goldberg_brigitte, name: "Brigitte Goldberg", first_name: "Brigitte", last_name: "Goldberg", party: null, party_label: "Avenir-2012", bloc: other, final_status: declared_absent}
+  - {id: gollnisch_bruno, name: "Bruno Gollnisch", first_name: "Bruno", last_name: "Gollnisch", party: fn, bloc: far_right, final_status: declared_absent}
+  - {id: gouillon_arnaud, name: "Arnaud Gouillon", first_name: "Arnaud", last_name: "Gouillon", party: null, party_label: "Bloc identitaire", bloc: far_right, final_status: declared_absent, notes: "Wikipédia (mars 2012) date sa présentation du 30 novembre 2011, après son retrait : coquille, la source est de 2010."}
+  - {id: governatori_jean_marc, name: "Jean-Marc Governatori", first_name: "Jean-Marc", last_name: "Governatori", party: null, party_label: "Alliance écologiste indépendante", bloc: other, final_status: declared_absent}
+  - {id: gremetz_maxime, name: "Maxime Gremetz", first_name: "Maxime", last_name: "Gremetz", party: null, party_label: "apparenté PCF", bloc: far_left, final_status: declared_absent}
+  - {id: guena_christopher, name: "Christopher Guéna", first_name: "Christopher", last_name: "Guéna", party: null, party_label: "Société nouvelle", bloc: other, final_status: declared_absent}
+  - {id: guyot_stephane, name: "Stéphane Guyot", first_name: "Stéphane", last_name: "Guyot", party: null, party_label: "Parti du vote blanc", bloc: other, final_status: declared_absent}
+  - {id: hulot_nicolas, party: eco, bloc: left, final_status: declared_absent}
+  - {id: izrael_victor, name: "Victor Izrael", first_name: "Victor", last_name: "Izrael", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: jutier_marc, name: "Marc Jutier", first_name: "Marc", last_name: "Jutier", party: null, party_label: "Fraternité citoyenne", bloc: other, final_status: declared_absent}
+  - {id: kdhir_moncef, name: "Moncef Kdhir", first_name: "Moncef", last_name: "Kdhir", party: null, party_label: "sans étiquette (primaire EELV)", bloc: left, final_status: declared_absent, notes: "Première trace tardive : seulement dans le récit rétrospectif de février 2012."}
+  - {id: lang_carl, name: "Carl Lang", first_name: "Carl", last_name: "Lang", party: null, party_label: "Parti de la France / Union de la droite nationale", bloc: far_right, final_status: declared_absent}
+  - {id: le_scornet_daniel, name: "Daniel Le Scornet", first_name: "Daniel", last_name: "Le Scornet", party: ps, bloc: left, final_status: declared_absent}
+  - {id: leclercq_philippe, name: "Philippe Leclercq", first_name: "Philippe", last_name: "Leclercq", party: null, party_label: "cosmAgora", bloc: other, final_status: declared_absent}
+  - {id: lee_cindy, name: "Cindy Lee", first_name: "Cindy", last_name: "Lee", party: null, party_label: "Parti du plaisir", bloc: other, final_status: declared_absent}
+  - {id: lenne_laurent, name: "Laurent Lenne", first_name: "Laurent", last_name: "Lenne", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: lepage_corinne, party: cap21, bloc: centre, final_status: declared_absent}
+  - {id: lhomme_stephane, name: "Stéphane Lhomme", first_name: "Stéphane", last_name: "Lhomme", party: null, party_label: "Observatoire du nucléaire (primaire EELV)", bloc: left, final_status: declared_absent}
+  - {id: louail_regis, name: "Régis Louail", first_name: "Régis", last_name: "Louail", party: npa, bloc: far_left, final_status: declared_absent, notes: "Absent du tri automatique (nom non lié) ; cité dans les révisions et la dépêche du 17 juin 2011."}
+  - {id: lozes_patrick, name: "Patrick Lozès", first_name: "Patrick", last_name: "Lozès", party: null, party_label: "sans étiquette (ex-président du CRAN)", bloc: other, final_status: declared_absent}
+  - {id: mallot_jean, name: "Jean Mallot", first_name: "Jean", last_name: "Mallot", party: ps, bloc: left, final_status: declared_absent}
+  - {id: mansouret_anne, name: "Anne Mansouret", first_name: "Anne", last_name: "Mansouret", party: ps, bloc: left, final_status: declared_absent}
+  - {id: martin_myriam, name: "Myriam Martin", first_name: "Myriam", last_name: "Martin", party: npa, bloc: far_left, final_status: declared_absent}
+  - {id: mezrag_hacene, name: "Hacène Mezrag", first_name: "Hacène", last_name: "Mezrag", party: ps, bloc: left, final_status: declared_absent}
+  - {id: miguet_nicolas, name: "Nicolas Miguet", first_name: "Nicolas", last_name: "Miguet", party: null, party_label: "Rassemblement des contribuables français", bloc: other, final_status: declared_absent}
+  - {id: montebourg_arnaud, party: ps, bloc: left, final_status: declared_absent}
+  - {id: morin_herve, party: nouveau_centre, bloc: right, final_status: declared_absent}
+  - {id: mourguy_alain, name: "Alain Mourguy", first_name: "Alain", last_name: "Mourguy", party: null, party_label: "Union des gens", bloc: other, final_status: declared_absent}
+  - {id: nekkaz_rachid, name: "Rachid Nekkaz", first_name: "Rachid", last_name: "Nekkaz", party: null, party_label: "Rassemblement social-démocrate", bloc: other, final_status: declared_absent, notes: "Première trace tardive : cité seulement en février 2012 comme candidat à la primaire socialiste faute de parrainages."}
+  - {id: nihous_frederic, party: cpnt, bloc: other, final_status: declared_absent}
+  - {id: nyamat_will_mael, name: "Will Mael Nyamat", first_name: "Will Mael", last_name: "Nyamat", party: ps, bloc: left, final_status: declared_absent}
+  - {id: ouadah_adam, name: "Adam Ouadah", first_name: "Adam", last_name: "Ouadah", party: null, party_label: "Nouvelle union française", bloc: other, final_status: declared_absent}
+  - {id: pierret_christian, name: "Christian Pierret", first_name: "Christian", last_name: "Pierret", party: ps, bloc: left, final_status: declared_absent}
+  - {id: pietrasanta_yves, name: "Yves Piétrasanta", first_name: "Yves", last_name: "Piétrasanta", party: null, party_label: "Génération écologie", bloc: left, final_status: declared_absent}
+  - {id: poupin_christine, name: "Christine Poupin", first_name: "Christine", last_name: "Poupin", party: npa, bloc: far_left, final_status: declared_absent}
+  - {id: pradalier_nicole, name: "Nicole Pradalier", first_name: "Nicole", last_name: "Pradalier", party: null, party_label: "sans étiquette", bloc: other, final_status: declared_absent}
+  - {id: pradelle_frederic, name: "Frédéric Pradelle", first_name: "Frédéric", last_name: "Pradelle", party: null, party_label: "« candidat des cons »", bloc: other, final_status: declared_absent}
+  - {id: privat_gerard, name: "Gérard Privat", first_name: "Gérard", last_name: "Privat", party: null, party_label: "Avenir solidaire", bloc: other, final_status: declared_absent}
+  - {id: rongier_francis, name: "Francis Rongier", first_name: "Francis", last_name: "Rongier", party: null, party_label: "candidat des retraités et des automobilistes", bloc: other, final_status: declared_absent}
+  - {id: royal_segolene, party: ps, bloc: left, final_status: declared_absent}
+  - {id: stoll_henri, name: "Henri Stoll", first_name: "Henri", last_name: "Stoll", party: eelv, bloc: left, final_status: declared_absent}
+  - {id: stoquer_nicolas, name: "Nicolas Stoquer", first_name: "Nicolas", last_name: "Stoquer", party: null, party_label: "Rassemblement pour la France", bloc: other, final_status: declared_absent}
+  - {id: tricot_aurelien, name: "Aurélien Tricot", first_name: "Aurélien", last_name: "Tricot", party: ps, bloc: left, final_status: declared_absent}
+  - {id: valls_manuel, party: ps, bloc: left, final_status: declared_absent}
+  - {id: verner_maxime, name: "Maxime Verner", first_name: "Maxime", last_name: "Verner", party: null, party_label: "Candidat à 18 ans", bloc: other, final_status: declared_absent}
+  - {id: weber_claude, name: "Claude Weber", first_name: "Claude", last_name: "Weber", party: null, party_label: "Union élargie des seniors", bloc: other, final_status: declared_absent}
+  - {id: wittmann_clement, name: "Clément Wittmann", first_name: "Clément", last_name: "Wittmann", party: null, party_label: "décroissance", bloc: other, final_status: declared_absent}
+  - {id: arthuis_jean, name: "Jean Arthuis", first_name: "Jean", last_name: "Arthuis", party: null, party_label: "Alliance centriste", bloc: centre, final_status: never_declared}
+  - {id: bardot_brigitte, name: "Brigitte Bardot", first_name: "Brigitte", last_name: "Bardot", party: null, party_label: "pressentie par l'Alliance écologiste indépendante", bloc: other, final_status: never_declared, notes: "Dit étudier la proposition de l'AEI (octobre 2010) ; aucune décision datée, l'AEI désigne Governatori en juin 2011."}
+  - {id: bertrand_xavier, party: ump, bloc: right, final_status: never_declared, notes: "Hypothèse conditionnelle, sans renoncement daté dans les sources."}
+  - {id: besancenot_olivier, party: npa, bloc: far_left, final_status: never_declared}
+  - {id: bianco_jean_louis, name: "Jean-Louis Bianco", first_name: "Jean-Louis", last_name: "Bianco", party: ps, bloc: left, final_status: never_declared}
+  - {id: bizet_jeremy, name: "Jérémy Bizet", first_name: "Jérémy", last_name: "Bizet", party: null, party_label: "Europe – Liberté", bloc: other, final_status: never_declared, notes: "Candidat pressenti de son mouvement, qui soutient ensuite Jacques Borie."}
+  - {id: bocquet_alain, name: "Alain Bocquet", first_name: "Alain", last_name: "Bocquet", party: pcf, bloc: far_left, final_status: never_declared}
+  - {id: borloo_jean_louis, party: parti_radical, bloc: right, final_status: never_declared}
+  - {id: buffet_marie_george, party: pcf, bloc: far_left, final_status: never_declared}
+  - {id: cohn_bendit_daniel, name: "Daniel Cohn-Bendit", first_name: "Daniel", last_name: "Cohn-Bendit", party: eelv, bloc: left, final_status: never_declared}
+  - {id: collomb_gerard, name: "Gérard Collomb", first_name: "Gérard", last_name: "Collomb", party: ps, bloc: left, final_status: never_declared}
+  - {id: cope_jean_francois, party: ump, bloc: right, final_status: never_declared, notes: "Hypothèse conditionnelle, sans renoncement daté dans les sources."}
+  - {id: de_villiers_philippe, party: mpf, bloc: far_right, final_status: never_declared, notes: "N'exclut pas une candidature (décision « à l'automne ») ; aucune décision datée dans les sources, retiré de la page en janvier 2012."}
+  - {id: delanoe_bertrand, party: ps, bloc: left, final_status: never_declared, notes: "De nouveau évoqué en janvier 2011 sans renoncement daté ensuite (soutien à Aubry non sourcé) : reste `undetermined` jusqu'à la liste officielle."}
+  - {id: duflot_cecile, party: eelv, bloc: left, final_status: never_declared}
+  - {id: fabius_laurent, party: ps, bloc: left, final_status: never_declared}
+  - {id: fillon_francois, party: ump, bloc: right, final_status: never_declared, notes: "Hypothèse conditionnelle (si Sarkozy ne se représente pas), sans renoncement daté dans les sources."}
+  - {id: hamon_benoit, party: ps, bloc: left, final_status: never_declared}
+  - {id: juppe_alain, party: ump, bloc: right, final_status: never_declared}
+  - {id: lang_jack, party: ps, bloc: left, final_status: never_declared}
+  - {id: laurent_pierre, name: "Pierre Laurent", first_name: "Pierre", last_name: "Laurent", party: pcf, bloc: far_left, final_status: never_declared}
+  - {id: le_hyaric_patrick, name: "Patrick Le Hyaric", first_name: "Patrick", last_name: "Le Hyaric", party: pcf, bloc: far_left, final_status: never_declared}
+  - {id: le_pen_jean_marie, party: fn, bloc: far_right, final_status: never_declared}
+  - {id: moscovici_pierre, name: "Pierre Moscovici", first_name: "Pierre", last_name: "Moscovici", party: ps, bloc: left, final_status: never_declared}
+  - {id: peillon_vincent, party: ps, bloc: left, final_status: never_declared}
+  - {id: pico_deprez_sandrine, name: "Sandrine Pico-Deprez", first_name: "Sandrine", last_name: "Pico-Deprez", party: null, party_label: "Alliance royale", bloc: other, final_status: never_declared, notes: "Candidate pressentie de l'Alliance royale ; le parti présente ensuite Patrick Cosseron de Villenoisy."}
+  - {id: schivardi_gerard, party: poi, bloc: far_left, final_status: never_declared}
+  - {id: strauss_kahn_dominique, party: ps, bloc: left, final_status: never_declared, notes: "Candidat présumé jamais déclaré ; empêché par l'affaire du Sofitel (14 mai 2011)."}
+  - {id: tapie_bernard, party: div, bloc: other, final_status: never_declared}
+
+processes:
+  - id: primaire_citoyenne_2011
+    name: "Primaire citoyenne PS-PRG de 2011"
+    kind: citizen_primary
+    organizers: [ps, prg]
+    participants: [hollande_francois, aubry_martine, montebourg_arnaud, royal_segolene, valls_manuel, baylet_jean_michel]
+    winner: hollande_francois
+    events_yaml: ps_primary_2011
+    sources: [europe1_20110713_primaire]
+    notes: "Dépôt des candidatures clos le 13 juillet 2011 ; six candidats. Résultats du premier tour connus le soir du 9 octobre, publication retenue au 10 (article cité) ; second tour le 16 octobre."
+    rounds:
+      - {date: 2011-10-09, published: 2011-10-10, qualified: [hollande_francois, aubry_martine], sources: [lejdd_20111010_primaire], note: "Hollande 39,17 %, Aubry 30,42 %, Montebourg 17,19 %, Valls 5,63 %, Royal 6,95 %, Baylet 0,64 %."}
+      - {date: 2011-10-16, published: 2011-10-16, qualified: [hollande_francois], sources: [lejdd_20111016_primaire], note: "Hollande 56,57 %, Aubry 43,43 %."}
+  - id: primaire_eelv_2011
+    name: "Primaire présidentielle de l'écologie (EELV) 2011"
+    kind: closed_primary
+    organizers: [eelv]
+    participants: [joly_eva, hulot_nicolas, lhomme_stephane, stoll_henri]
+    winner: joly_eva
+    sources: [politis_20110523_primaire]
+    notes: "Vote des adhérents et coopérateurs ; date du premier tour = proclamation des résultats (29 juin 2011), second tour proclamé le 12 juillet 2011."
+    rounds:
+      - {date: 2011-06-29, published: 2011-06-29, qualified: [joly_eva, hulot_nicolas], sources: [politis_20110629_primaire], note: "Joly 49,75 %, Hulot 40,22 %, Stoll 5,02 %, Lhomme 4,64 % (Politis)."}
+      - {date: 2011-07-12, published: 2011-07-12, qualified: [joly_eva], sources: [lejdd_20110712_joly], note: "Joly 58,16 %."}
+  - id: consultation_pcf_2011
+    name: "Consultation des militants communistes (juin 2011)"
+    kind: members_vote
+    organizers: [pcf]
+    participants: [melenchon_jean_luc, chassaigne_andre, dang_tran_emmanuel]
+    winner: melenchon_jean_luc
+    notes: "Le conseil national du 8 avril 2011 retient quatre candidatures (Mélenchon, Chassaigne, Gerin, Dang Tran) ; Gerin se désiste le 5 juin pour Chassaigne et ne concourt pas. Vote des militants du 16 au 18 juin 2011. Le communiqué de désignation du JDD (dépêche « Front de gauche : Mélenchon enfin désigné par le PCF ») n'est pas daté sur sa capture."
+    rounds:
+      - {date: 2011-06-18, published: 2011-06-18, qualified: [melenchon_jean_luc], sources: [politis_20110618_pcf], note: "Mélenchon 59,12 %."}
+  - id: congres_fn_2011
+    name: "Congrès du Front national à Tours (janvier 2011)"
+    kind: congress
+    organizers: [fn]
+    participants: [le_pen_marine, gollnisch_bruno]
+    winner: le_pen_marine
+    notes: "Élection du président du FN par les adhérents. Les commentateurs y voient la désignation du candidat et Marine Le Pen dit que le vainqueur représentera le parti ; Gollnisch distinguait les deux échéances. Modélisé comme processus (doute signalé) ; investiture formelle le 16 mai 2011."
+    rounds:
+      - {date: 2011-01-16, published: 2011-01-16, qualified: [le_pen_marine], sources: [europe1_20110116_fn], note: "Marine Le Pen 67,65 %, Gollnisch 32,35 %."}
+  - id: conference_npa_2011
+    name: "Conférence nationale du NPA (juin 2011)"
+    kind: council
+    organizers: [npa]
+    participants: [poutou_philippe, martin_myriam, poupin_christine, louail_regis]
+    winner: poutou_philippe
+    notes: "Le 17 juin 2011 le NPA « hésite entre quatre candidats » ; la commission des candidatures propose Poutou, ratifié par la conférence nationale le 25 juin (122 pour, 50 contre). Aucun scrutin concurrent n'est rapporté : participation des trois autres admise sur la foi de la dépêche du 17 juin (doute signalé)."
+    rounds:
+      - {date: 2011-06-25, published: 2011-06-25, qualified: [poutou_philippe], sources: [lejdd_20110625_npa, europe1_20110625_poutou]}
+
+events:
+  - {id: juppe_alain__mention, type: mention, person: juppe_alain, date: null, published: 2008-04-18, published_basis: source, sources: [nouvelobs_20080418_juppe], note: "« Fermé à rien » ; candidat à une primaire si Sarkozy ne se représente pas."}
+  - {id: valls_manuel__primary_entry, type: primary_entry, person: valls_manuel, process: primaire_citoyenne_2011, date: 2009-06-14, published: 2009-06-14, published_basis: source, sources: [leparisien_20090614_valls]}
+  - {id: sarkozy_nicolas__mention, type: mention, person: sarkozy_nicolas, date: 2009-07-08, published: 2009-07-08, published_basis: source, sources: [lefigaro_20090708_sarkozy], note: "« Vous en avez encore pour sept ans et demi avec moi » ; candidat supposé de l'UMP."}
+  - {id: bocquet_alain__mention, type: mention, person: bocquet_alain, date: null, published: 2009-08-29, published_basis: source, sources: [lavoixdunord_20090829_bocquet], note: "« Je serais prêt à y aller »."}
+  - {id: peillon_vincent__renouncement, type: renouncement, person: peillon_vincent, date: null, published: 2009-09-04, published_basis: source, sources: [nouvelobs_20090904_peillon]}
+  - {id: delanoe_bertrand__renouncement, type: renouncement, person: delanoe_bertrand, date: null, published: 2009-09-30, published_basis: source, sources: [lefigaro_20090930_delanoe]}
+  - {id: hollande_francois__mention, type: mention, person: hollande_francois, date: null, published: 2010-01-10, published_basis: source, sources: [lepoint_20100110_hollande], note: "Ambitions présidentielles annoncées début 2010."}
+  - {id: lenne_laurent__declaration, type: declaration, person: lenne_laurent, date: null, published: 2010-01-13, published_basis: source, sources: [nicematin_20100113_lenne]}
+  - {id: borloo_jean_louis__mention, type: mention, person: borloo_jean_louis, date: null, published: 2010-04-14, published_basis: source, sources: [lefigaro_20100414_borloo]}
+  - {id: buffet_marie_george__renouncement, type: renouncement, person: buffet_marie_george, date: null, published: 2010-05-04, published_basis: source, sources: [lefigaro_20100504_buffet]}
+  - {id: bourson_patrick__declaration, type: declaration, person: bourson_patrick, date: null, published: 2010-05-11, published_basis: source, sources: [novopress_20100511_bourson]}
+  - {id: collomb_gerard__mention, type: mention, person: collomb_gerard, date: null, published: 2010-05-25, published_basis: source, sources: [leparisien_20100525_collomb], note: "Candidat à la primaire si DSK ne l'est pas."}
+  - {id: cheminade_jacques__declaration, type: declaration, person: cheminade_jacques, date: 2010-06-18, published: 2010-06-19, published_basis: source, sources: [lepoint_20100619_cheminade]}
+  - {id: baud_robert__declaration, type: declaration, person: baud_robert, date: null, published: 2010-07-22, published_basis: source, sources: [ladepeche_20100722_baud]}
+  - {id: duflot_cecile__renouncement, type: renouncement, person: duflot_cecile, date: null, published: 2010-08-18, published_basis: source, sources: [nouvelobs_20100818_duflot], note: "Ne ressent pas l'envie d'être candidate."}
+  - {id: aubry_martine__mention, type: mention, person: aubry_martine, date: null, published: 2010-08-25, published_basis: source, sources: [lepoint_20100825_aubry], note: "Décidera « avant début 2011 » ; candidate supposée par les sondeurs."}
+  - {id: moscovici_pierre__mention, type: mention, person: moscovici_pierre, date: null, published: 2010-08-26, published_basis: source, sources: [pierremoscovici_20100826_blog], note: "Se prépare à la primaire si DSK n'y va pas."}
+  - {id: hamon_benoit__mention, type: mention, person: hamon_benoit, date: null, published: 2010-08-28, published_basis: source, sources: [nouvelobs_20100828_hamon], note: "Pourrait être candidat à la primaire sous conditions."}
+  - {id: chassaigne_andre__declaration, type: declaration, person: chassaigne_andre, date: 2010-09-10, published: 2010-09-10, published_basis: source, sources: [lefigaro_20100910_chassaigne]}
+  - {id: dupont_aignan_nicolas__declaration, type: declaration, person: dupont_aignan_nicolas, date: null, published: 2010-09-13, published_basis: source, sources: [leparisien_20100913_dupontaignan], note: "Wikipédia date la déclaration de « septembre 2009 » mais l'article cité est du 13 septembre 2010 ; date du jour laissée inconnue."}
+  - {id: le_scornet_daniel__declaration, type: declaration, person: le_scornet_daniel, date: null, published: 2010-10-07, published_basis: source, sources: [lepoint_20101007_primaire], note: "Candidat à la candidature pour la primaire socialiste."}
+  - {id: camus_renaud__declaration, type: declaration, person: camus_renaud, date: null, published: 2010-10-12, published_basis: source, sources: [rue89_20101012_camus]}
+  - {id: bardot_brigitte__mention, type: mention, person: bardot_brigitte, date: null, published: 2010-10-16, published_basis: source, sources: [leparisien_20101016_bardot]}
+  - {id: boutin_christine__mention, type: mention, person: boutin_christine, date: 2010-11-01, published: 2010-11-02, published_basis: source, sources: [lemonde_20101102_boutin], note: "« Nous aurons un candidat, vraisemblablement moi »."}
+  - {id: montebourg_arnaud__primary_entry, type: primary_entry, person: montebourg_arnaud, process: primaire_citoyenne_2011, date: 2010-11-19, published: 2010-11-19, published_basis: source, sources: [lepoint_20101119_montebourg]}
+  - {id: royal_segolene__primary_entry, type: primary_entry, person: royal_segolene, process: primaire_citoyenne_2011, date: 2010-11-29, published: 2010-11-29, published_basis: source, sources: [leparisien_20101129_royal]}
+  - {id: bianco_jean_louis__mention, type: mention, person: bianco_jean_louis, date: null, published: 2010-11-30, published_basis: source, sources: [letelegramme_20101130_bianco], note: "N'exclut pas de se présenter à la primaire, décision début 2011."}
+  - {id: gouillon_arnaud__investiture, type: investiture, person: gouillon_arnaud, date: 2010-11-30, published: 2010-11-30, published_basis: source, sources: [lemonde_20101130_gouillon], note: "Présenté comme candidat par le Bloc identitaire."}
+  - {id: arthaud_nathalie__investiture, type: investiture, person: arthaud_nathalie, date: 2010-12-05, published: 2010-12-05, published_basis: source, sources: [lepoint_20101205_arthaud], note: "Désignée par le congrès de Lutte ouvrière (huis clos)."}
+  - {id: baylet_jean_michel__mention, type: mention, person: baylet_jean_michel, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat possible du PRG si les conditions posées au PS ne sont pas réunies."}
+  - {id: bayrou_francois__mention, type: mention, person: bayrou_francois, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "« Ce qu'il fera en 2012 il n'en sait rien » (2009) : candidat potentiel du MoDem."}
+  - {id: bertrand_xavier__mention, type: mention, person: bertrand_xavier, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Partisan d'une primaire UMP, cité parmi les candidats possibles."}
+  - {id: besancenot_olivier__mention, type: mention, person: besancenot_olivier, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Partira « faire le job » si on le lui demande."}
+  - {id: beyala_calixthe__declaration, type: declaration, person: beyala_calixthe, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: bizet_jeremy__mention, type: mention, person: bizet_jeremy, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: bourdouleix_gilles__mention, type: mention, person: bourdouleix_gilles, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "« Le moment venu, et si le parti le décide, j'assumerai cette responsabilité »."}
+  - {id: chevenement_jean_pierre__mention, type: mention, person: chevenement_jean_pierre, date: 2010-07-02, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Envisage d'être candidat (AFP, non daté)."}
+  - {id: cochet_yves__mention, type: mention, person: cochet_yves, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat à la primaire si ni Cohn-Bendit ni Hulot ne le sont."}
+  - {id: cohn_bendit_daniel__renouncement, type: renouncement, person: cohn_bendit_daniel, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "« Ne sera pas candidat » (2009) ; non éligible (nationalité)."}
+  - {id: cope_jean_francois__mention, type: mention, person: cope_jean_francois, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat sérieux à l'investiture si Sarkozy ne se représente pas."}
+  - {id: de_villepin_dominique__mention, type: mention, person: de_villepin_dominique, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "« Je serai partie prenante à cette élection présidentielle »."}
+  - {id: fabius_laurent__renouncement, type: renouncement, person: fabius_laurent, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "« Pas du tout candidat » (JDD, non daté)."}
+  - {id: fillon_francois__mention, type: mention, person: fillon_francois, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat possible si le président ne se représente pas."}
+  - {id: gerin_andre__mention, type: mention, person: gerin_andre, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Souhaite représenter les communistes."}
+  - {id: giovannoni_patrick__declaration, type: declaration, person: giovannoni_patrick, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: gollnisch_bruno__primary_entry, type: primary_entry, person: gollnisch_bruno, process: congres_fn_2011, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat déclaré à la présidence du FN."}
+  - {id: guyot_stephane__declaration, type: declaration, person: guyot_stephane, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: hulot_nicolas__mention, type: mention, person: hulot_nicolas, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "« En phase de réflexion », décision « avant l'été » 2011."}
+  - {id: joly_eva__mention, type: mention, person: joly_eva, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "A « clairement annoncé en août 2010 ses ambitions » (LCI, non daté)."}
+  - {id: lang_jack__mention, type: mention, person: lang_jack, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "« On peut très bien avoir une primaire Lang-Hollande » (mai 2010, Challenges non daté)."}
+  - {id: laurent_pierre__renouncement, type: renouncement, person: laurent_pierre, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: le_hyaric_patrick__mention, type: mention, person: le_hyaric_patrick, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Cité par Pierre Laurent parmi les « personnalités fortes » du PCF."}
+  - {id: le_pen_jean_marie__renouncement, type: renouncement, person: le_pen_jean_marie, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Ne sera pas candidat si l'élection a lieu comme prévu en 2012."}
+  - {id: le_pen_marine__primary_entry, type: primary_entry, person: le_pen_marine, process: congres_fn_2011, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidate déclarée à la présidence du FN, dont le vainqueur doit selon elle porter le parti en 2012."}
+  - {id: mallot_jean__declaration, type: declaration, person: mallot_jean, date: 2009-06-18, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat à la primaire socialiste."}
+  - {id: melenchon_jean_luc__mention, type: mention, person: melenchon_jean_luc, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "S'est déclaré disponible pour représenter le Front de gauche."}
+  - {id: morin_herve__mention, type: mention, person: morin_herve, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Affiche ses ambitions pour 2012 (août 2010)."}
+  - {id: mourguy_alain__declaration, type: declaration, person: mourguy_alain, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: pico_deprez_sandrine__mention, type: mention, person: pico_deprez_sandrine, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: pierret_christian__declaration, type: declaration, person: pierret_christian, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat à la primaire en « social-démocrate modéré »."}
+  - {id: stoll_henri__primary_entry, type: primary_entry, person: stoll_henri, process: primaire_eelv_2011, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat déclaré à l'investiture d'EELV (comité de soutien en décembre 2010)."}
+  - {id: strauss_kahn_dominique__mention, type: mention, person: strauss_kahn_dominique, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Candidat supposé par les sondeurs ; réserve liée au FMI."}
+  - {id: tapie_bernard__renouncement, type: renouncement, person: tapie_bernard, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904], note: "Évoqué comme candidat possible du PRG, il a « repoussé une telle ambition » en juin 2010."}
+  - {id: verner_maxime__declaration, type: declaration, person: verner_maxime, date: null, published: 2010-12-29, published_basis: wikipedia_revision, sources: [wp_fr_60690904]}
+  - {id: delanoe_bertrand__mention, type: mention, person: delanoe_bertrand, date: null, published: 2011-01-07, published_basis: source, sources: [lejdd_20110107_delanoe], note: "« Si j'étais en situation, je n'hésiterais pas à prendre mes responsabilités. »"}
+  - {id: borie_jacques__declaration, type: declaration, person: borie_jacques, date: null, published: 2011-01-14, published_basis: wikipedia_revision, sources: [wp_fr_61271804]}
+  - {id: gerin_andre__declaration, type: declaration, person: gerin_andre, date: 2011-01-12, published: 2011-01-14, published_basis: wikipedia_revision, sources: [wp_fr_61271804], note: "Candidat à la candidature (L'Express, non daté)."}
+  - {id: melenchon_jean_luc__declaration, type: declaration, person: melenchon_jean_luc, date: 2011-01-21, published: 2011-01-21, published_basis: source, sources: [lefigaro_20110121_melenchon]}
+  - {id: joly_eva__primary_entry, type: primary_entry, person: joly_eva, process: primaire_eelv_2011, date: 2011-01-23, published: 2011-01-23, published_basis: source, sources: [lejdd_20110123_joly]}
+  - {id: gremetz_maxime__declaration, type: declaration, person: gremetz_maxime, date: 2011-01-21, published: 2011-01-27, published_basis: wikipedia_revision, sources: [wp_fr_61686744], note: "Candidat à l'investiture du Front de gauche (LCI, non daté)."}
+  - {id: arthuis_jean__mention, type: mention, person: arthuis_jean, date: 2011-01-26, published: 2011-01-30, published_basis: wikipedia_revision, sources: [wp_fr_61782463], note: "Songe à se présenter (JDD, non daté)."}
+  - {id: cochet_yves__declaration, type: declaration, person: cochet_yves, date: null, published: 2011-01-30, published_basis: wikipedia_revision, sources: [wp_fr_61782463], note: "« Pour le moment candidat » en attendant une décision de Hulot."}
+  - {id: fabius_laurent__mention, type: mention, person: fabius_laurent, date: null, published: 2011-01-30, published_basis: wikipedia_revision, sources: [wp_fr_61782463], note: "Pourrait changer d'avis si ni DSK ni Aubry ne sont candidats : retour évoqué."}
+  - {id: tricot_aurelien__declaration, type: declaration, person: tricot_aurelien, date: 2011-02-18, published: 2011-02-18, published_basis: source, sources: [charentelibre_20110218_tricot], note: "Candidat à la primaire socialiste."}
+  - {id: bianco_jean_louis__renouncement, type: renouncement, person: bianco_jean_louis, date: 2011-02-08, published: 2011-02-26, published_basis: wikipedia_revision, sources: [wp_fr_62683093], note: "Annonce le 8 février ne pas se présenter (sans référence dans la révision)."}
+  - {id: schivardi_gerard__mention, type: mention, person: schivardi_gerard, date: null, published: 2011-02-26, published_basis: wikipedia_revision, sources: [wp_fr_62683093], note: "N'écarte pas une candidature si on le lui demande."}
+  - {id: mezrag_hacene__declaration, type: declaration, person: mezrag_hacene, date: null, published: 2011-03-04, published_basis: source, sources: [nordeclair_20110304_mezrag], note: "Candidat à la primaire socialiste (intention annoncée en novembre 2010, confirmée en mars 2011)."}
+  - {id: nyamat_will_mael__declaration, type: declaration, person: nyamat_will_mael, date: null, published: 2011-03-05, published_basis: source, sources: [ladepeche_20110305_nyamat], note: "Candidat à la primaire socialiste (section PS de Londres)."}
+  - {id: hollande_francois__primary_entry, type: primary_entry, person: hollande_francois, process: primaire_citoyenne_2011, date: 2011-03-31, published: 2011-03-31, published_basis: source, sources: [lejdd_20110331_hollande]}
+  - {id: couasnon_herve__declaration, type: declaration, person: couasnon_herve, date: 2011-04-01, published: 2011-04-01, published_basis: source, sources: [lcp_20110401_couasnon]}
+  - {id: lhomme_stephane__primary_entry, type: primary_entry, person: lhomme_stephane, process: primaire_eelv_2011, date: 2011-04-08, published: 2011-04-09, published_basis: source, sources: [nouvelobs_20110409_lhomme]}
+  - {id: hulot_nicolas__primary_entry, type: primary_entry, person: hulot_nicolas, process: primaire_eelv_2011, date: 2011-04-13, published: 2011-04-13, published_basis: source, sources: [lejdd_20110413_hulot]}
+  - {id: benzaid_louisa__declaration, type: declaration, person: benzaid_louisa, date: 2011-04-14, published: 2011-04-14, published_basis: source, sources: [lefigaro_20110414_benzaid], note: "Candidate à la primaire écologiste."}
+  - {id: bocquet_alain__renouncement, type: renouncement, person: bocquet_alain, date: null, published: 2011-04-14, published_basis: wikipedia_revision, sources: [wp_fr_64339185], note: "Classé « Candidats ayant renoncé » : intention non confirmée."}
+  - {id: chassaigne_andre__primary_entry, type: primary_entry, person: chassaigne_andre, process: consultation_pcf_2011, date: 2011-04-08, published: 2011-04-14, published_basis: wikipedia_revision, sources: [wp_fr_64339185]}
+  - {id: dang_tran_emmanuel__primary_entry, type: primary_entry, person: dang_tran_emmanuel, process: consultation_pcf_2011, date: 2011-04-06, published: 2011-04-14, published_basis: wikipedia_revision, sources: [wp_fr_64339185]}
+  - {id: gremetz_maxime__withdrawal, type: withdrawal, person: gremetz_maxime, date: null, published: 2011-04-14, published_basis: wikipedia_revision, sources: [wp_fr_64339185], note: "Classé « Candidats ayant renoncé » : intention non confirmée."}
+  - {id: mansouret_anne__declaration, type: declaration, person: mansouret_anne, date: 2011-04-01, published: 2011-04-14, published_basis: wikipedia_revision, sources: [wp_fr_64339185], note: "Candidate à la primaire socialiste."}
+  - {id: melenchon_jean_luc__primary_entry, type: primary_entry, person: melenchon_jean_luc, process: consultation_pcf_2011, date: 2011-04-08, published: 2011-04-14, published_basis: wikipedia_revision, sources: [wp_fr_64339185], note: "Candidature retenue par le conseil national du PCF du 8 avril 2011."}
+  - {id: gautier_gerard__declaration, type: declaration, person: gautier_gerard, date: null, published: 2011-04-23, published_basis: source, sources: [letelegramme_20110423_gautier]}
+  - {id: chevenement_jean_pierre__declaration, type: declaration, person: chevenement_jean_pierre, date: 2011-05-04, published: 2011-05-04, published_basis: source, sources: [europe1_20110504_chevenement], note: "« Je serai candidat pour faire bouger les lignes »."}
+  - {id: lozes_patrick__declaration, type: declaration, person: lozes_patrick, date: 2011-05-04, published: 2011-05-04, published_basis: source, sources: [lejdd_20110504_lozes]}
+  - {id: besancenot_olivier__renouncement, type: renouncement, person: besancenot_olivier, date: 2011-05-04, published: 2011-05-05, published_basis: source, sources: [lejdd_20110505_besancenot]}
+  - {id: goldberg_brigitte__declaration, type: declaration, person: goldberg_brigitte, date: null, published: 2011-05-09, published_basis: source, sources: ["20minutes_20110509_goldberg"]}
+  - {id: wittmann_clement__declaration, type: declaration, person: wittmann_clement, date: null, published: 2011-05-10, published_basis: source, sources: [lyonne_20110510_wittmann]}
+  - {id: borgia_gerard__declaration, type: declaration, person: borgia_gerard, date: null, published: 2011-05-13, published_basis: wikipedia_revision, sources: [wp_fr_65325977]}
+  - {id: martin_myriam__mention, type: mention, person: martin_myriam, date: null, published: 2011-05-13, published_basis: wikipedia_revision, sources: [wp_fr_65325977], note: "Pourrait être désignée candidate du NPA."}
+  - {id: le_pen_marine__investiture, type: investiture, person: le_pen_marine, date: 2011-05-16, published: 2011-05-16, published_basis: source, sources: [lefigaro_20110516_lepen], note: "Candidature validée à l'unanimité par le bureau politique du FN."}
+  - {id: rongier_francis__declaration, type: declaration, person: rongier_francis, date: null, published: 2011-05-18, published_basis: source, sources: [leprogres_20110518_rongier]}
+  - {id: benzaid_louisa__withdrawal, type: withdrawal, person: benzaid_louisa, date: null, published: 2011-05-23, published_basis: source, sources: [politis_20110523_primaire], note: "Parrainages insuffisants ; absente des quatre candidatures."}
+  - {id: cochet_yves__withdrawal, type: withdrawal, person: cochet_yves, date: null, published: 2011-05-23, published_basis: source, sources: [politis_20110523_primaire], note: "Absent des quatre candidatures à la primaire (Hulot entré le 13 avril) ; règle du fichier, retrait effectif non daté."}
+  - {id: fabius_laurent__renouncement_2, type: renouncement, person: fabius_laurent, date: 2011-05-24, published: 2011-05-24, published_basis: source, sources: [europe1_20110524_fabius], note: "Soutient Martine Aubry."}
+  - {id: hamon_benoit__renouncement, type: renouncement, person: hamon_benoit, date: null, published: 2011-05-27, published_basis: source, sources: [europe1_20110527_primaire], note: "« Si Martine Aubry souhaite y aller […] je n'irai pas »."}
+  - {id: strauss_kahn_dominique__renouncement, type: renouncement, person: strauss_kahn_dominique, date: null, published: 2011-05-27, published_basis: source, sources: [europe1_20110527_primaire, "7sur7_20110918_dsk"], events_yaml: dsk_arrest_2011, note: "Candidature « avortée » selon Europe 1 (27 mai 2011) après son arrestation ; confirmé par DSK le 18 septembre 2011."}
+  - {id: pietrasanta_yves__investiture, type: investiture, person: pietrasanta_yves, date: 2011-05-28, published: 2011-05-29, published_basis: source, sources: [lefigaro_20110529_pietrasanta], note: "Désigné par le conseil national de Génération écologie."}
+  - {id: gerin_andre__withdrawal, type: withdrawal, person: gerin_andre, date: 2011-06-05, published: 2011-06-05, published_basis: source, sources: [humanite_20110605_gerin], note: "Se désiste pour Chassaigne avant le vote des militants."}
+  - {id: miguet_nicolas__declaration, type: declaration, person: miguet_nicolas, date: null, published: 2011-06-13, published_basis: source, sources: [sudouest_20110613_miguet]}
+  - {id: dequeant_pascal__declaration, type: declaration, person: dequeant_pascal, date: null, published: 2011-06-14, published_basis: wikipedia_revision, sources: [wp_fr_66397292]}
+  - {id: privat_gerard__declaration, type: declaration, person: privat_gerard, date: null, published: 2011-06-14, published_basis: wikipedia_revision, sources: [wp_fr_66397292]}
+  - {id: nihous_frederic__declaration, type: declaration, person: nihous_frederic, date: 2011-06-16, published: 2011-06-16, published_basis: source, sources: [lefigaro_20110616_nihous]}
+  - {id: louail_regis__primary_entry, type: primary_entry, person: louail_regis, process: conference_npa_2011, date: null, published: 2011-06-17, published_basis: source, sources: [lefigaro_20110617_npa]}
+  - {id: martin_myriam__primary_entry, type: primary_entry, person: martin_myriam, process: conference_npa_2011, date: null, published: 2011-06-17, published_basis: source, sources: [lefigaro_20110617_npa]}
+  - {id: poupin_christine__primary_entry, type: primary_entry, person: poupin_christine, process: conference_npa_2011, date: null, published: 2011-06-17, published_basis: source, sources: [lefigaro_20110617_npa]}
+  - {id: poutou_philippe__primary_entry, type: primary_entry, person: poutou_philippe, process: conference_npa_2011, date: null, published: 2011-06-17, published_basis: source, sources: [lefigaro_20110617_npa]}
+  - {id: boutin_christine__declaration, type: declaration, person: boutin_christine, date: 2011-06-22, published: 2011-06-22, published_basis: source, sources: [lci_20110622_boutin]}
+  - {id: governatori_jean_marc__declaration, type: declaration, person: governatori_jean_marc, date: 2011-06-22, published: 2011-06-22, published_basis: source, sources: [nouvelobs_20110622_governatori]}
+  - {id: aubry_martine__primary_entry, type: primary_entry, person: aubry_martine, process: primaire_citoyenne_2011, date: 2011-06-28, published: 2011-06-28, published_basis: source, sources: [lejdd_20110628_aubry]}
+  - {id: collomb_gerard__renouncement, type: renouncement, person: collomb_gerard, date: 2011-06-29, published: 2011-06-29, published_basis: source, sources: [lyonmag_20110629_collomb], note: "Se range derrière François Hollande."}
+  - {id: de_villiers_philippe__mention, type: mention, person: de_villiers_philippe, date: null, published: 2011-06-30, published_basis: wikipedia_revision, sources: [wp_fr_66972745]}
+  - {id: moscovici_pierre__renouncement, type: renouncement, person: moscovici_pierre, date: 2011-06-29, published: 2011-06-30, published_basis: source, sources: [macommune_20110630_moscovici], note: "Choisit de soutenir Hollande (annonce du mercredi 29 juin 2011)."}
+  - {id: baylet_jean_michel__primary_entry, type: primary_entry, person: baylet_jean_michel, process: primaire_citoyenne_2011, date: 2011-07-06, published: 2011-07-06, published_basis: source, sources: [lejdd_20110706_baylet]}
+  - {id: le_scornet_daniel__withdrawal, type: withdrawal, person: le_scornet_daniel, date: 2011-07-13, published: 2011-07-13, published_basis: source, sources: [europe1_20110713_primaire], note: "Absent des six candidatures déposées à la clôture du 13 juillet 2011 (règle du fichier)."}
+  - {id: mallot_jean__withdrawal, type: withdrawal, person: mallot_jean, date: 2011-07-13, published: 2011-07-13, published_basis: source, sources: [europe1_20110713_primaire], note: "Absent des six candidatures déposées à la clôture du 13 juillet 2011 (règle du fichier)."}
+  - {id: mansouret_anne__withdrawal, type: withdrawal, person: mansouret_anne, date: 2011-07-13, published: 2011-07-13, published_basis: source, sources: [europe1_20110713_primaire], note: "Absent des six candidatures déposées à la clôture du 13 juillet 2011 (règle du fichier)."}
+  - {id: mezrag_hacene__withdrawal, type: withdrawal, person: mezrag_hacene, date: 2011-07-13, published: 2011-07-13, published_basis: source, sources: [europe1_20110713_primaire], note: "Absent des six candidatures déposées à la clôture du 13 juillet 2011 (règle du fichier)."}
+  - {id: nyamat_will_mael__withdrawal, type: withdrawal, person: nyamat_will_mael, date: 2011-07-13, published: 2011-07-13, published_basis: source, sources: [europe1_20110713_primaire], note: "Absent des six candidatures déposées à la clôture du 13 juillet 2011 (règle du fichier)."}
+  - {id: pierret_christian__withdrawal, type: withdrawal, person: pierret_christian, date: 2011-07-13, published: 2011-07-13, published_basis: source, sources: [europe1_20110713_primaire], note: "Absent des six candidatures déposées à la clôture du 13 juillet 2011 (règle du fichier)."}
+  - {id: tricot_aurelien__withdrawal, type: withdrawal, person: tricot_aurelien, date: 2011-07-13, published: 2011-07-13, published_basis: source, sources: [europe1_20110713_primaire], note: "Absent des six candidatures déposées à la clôture du 13 juillet 2011 (règle du fichier)."}
+  - {id: asselineau_francois__declaration, type: declaration, person: asselineau_francois, date: null, published: 2011-07-31, published_basis: wikipedia_revision, sources: [wp_fr_67974769], note: "Annonce officielle le 3 décembre 2011 au congrès de l'UPR."}
+  - {id: jutier_marc__declaration, type: declaration, person: jutier_marc, date: null, published: 2011-07-31, published_basis: wikipedia_revision, sources: [wp_fr_67974769]}
+  - {id: lang_carl__investiture, type: investiture, person: lang_carl, date: null, published: 2011-08-25, published_basis: wikipedia_revision, sources: [wp_fr_68826296], note: "Désigné candidat du Comité de liaison de la résistance nationale (officialisé en septembre 2011)."}
+  - {id: gouillon_arnaud__withdrawal, type: withdrawal, person: gouillon_arnaud, date: 2011-09-11, published: 2011-09-11, published_basis: source, sources: [lepoint_20110911_gouillon], note: "Raisons financières."}
+  - {id: leclercq_philippe__declaration, type: declaration, person: leclercq_philippe, date: 2011-09-11, published: 2011-09-14, published_basis: wikipedia_revision, sources: [wp_fr_69633202]}
+  - {id: drider_kenza__declaration, type: declaration, person: drider_kenza, date: null, published: 2011-09-28, published_basis: wikipedia_revision, sources: [wp_fr_70444127]}
+  - {id: borloo_jean_louis__renouncement, type: renouncement, person: borloo_jean_louis, date: 2011-10-02, published: 2011-10-02, published_basis: source, sources: [rue89_20111002_borloo]}
+  - {id: schivardi_gerard__renouncement, type: renouncement, person: schivardi_gerard, date: 2011-09-02, published: 2011-10-03, published_basis: source, sources: [lemonde_20111003_schivardi]}
+  - {id: lepage_corinne__declaration, type: declaration, person: lepage_corinne, date: 2011-10-04, published: 2011-10-04, published_basis: source, sources: [liberation_20111004_lepage]}
+  - {id: lang_jack__renouncement, type: renouncement, person: lang_jack, date: 2011-10-06, published: 2011-10-06, published_basis: source, sources: [lejdd_20111006_lang], note: "Ralliement à Hollande avant le premier tour ; aucune annonce antérieure de non-candidature trouvée."}
+  - {id: izrael_victor__declaration, type: declaration, person: izrael_victor, date: 2011-10-05, published: 2011-10-13, published_basis: wikipedia_revision, sources: [wp_fr_71047034]}
+  - {id: weber_claude__declaration, type: declaration, person: weber_claude, date: null, published: 2011-10-13, published_basis: source, sources: [lefigaro_20111013_weber]}
+  - {id: cosseron_de_villenoisy_patrick__declaration, type: declaration, person: cosseron_de_villenoisy_patrick, date: null, published: 2011-10-14, published_basis: wikipedia_revision, sources: [wp_fr_71084703]}
+  - {id: chihabiddine_abou__declaration, type: declaration, person: chihabiddine_abou, date: null, published: 2011-10-23, published_basis: wikipedia_revision, sources: [wp_fr_71351201]}
+  - {id: duval_hubert__declaration, type: declaration, person: duval_hubert, date: null, published: 2011-10-23, published_basis: wikipedia_revision, sources: [wp_fr_71351201]}
+  - {id: ouadah_adam__declaration, type: declaration, person: ouadah_adam, date: 2011-09-24, published: 2011-10-23, published_basis: wikipedia_revision, sources: [wp_fr_71351201]}
+  - {id: delanoe_gaspard__declaration, type: declaration, person: delanoe_gaspard, date: null, published: 2011-10-28, published_basis: wikipedia_revision, sources: [wp_fr_71546965]}
+  - {id: chevenement_jean_pierre__declaration_2, type: declaration, person: chevenement_jean_pierre, date: 2011-11-05, published: 2011-11-05, published_basis: source, sources: [europe1_20111105_chevenement], note: "Officialisation au JT de France 2."}
+  - {id: morin_herve__declaration, type: declaration, person: morin_herve, date: 2011-11-09, published: 2011-11-09, published_basis: source, sources: [ladepeche_20111109_morin], note: "Annonce sur BFM TV ; officialisation le 27 novembre."}
+  - {id: stoquer_nicolas__declaration, type: declaration, person: stoquer_nicolas, date: 2011-11-09, published: 2011-11-14, published_basis: wikipedia_revision, sources: [wp_fr_72127489]}
+  - {id: bourdouleix_gilles__declaration, type: declaration, person: bourdouleix_gilles, date: 2011-11-22, published: 2011-11-22, published_basis: source, sources: [ouestfrance_20111122_bourdouleix]}
+  - {id: arthuis_jean__renouncement, type: renouncement, person: arthuis_jean, date: null, published: 2011-12-02, published_basis: source, sources: [mouvementdemocrate_20111202_arthuis], note: "Annonce son soutien à François Bayrou."}
+  - {id: bayrou_francois__declaration, type: declaration, person: bayrou_francois, date: 2011-12-07, published: 2011-12-07, published_basis: source, sources: [nouvelobs_20111207_bayrou]}
+  - {id: de_villepin_dominique__declaration, type: declaration, person: de_villepin_dominique, date: 2011-12-11, published: 2011-12-11, published_basis: source, sources: [europe1_20111211_villepin]}
+  - {id: guena_christopher__declaration, type: declaration, person: guena_christopher, date: 2011-12-11, published: 2011-12-11, published_basis: source, sources: [guena_20111211_blog], note: "Lettre aux élus le 10 décembre, annonce sur son blog le 11."}
+  - {id: bontaz_yves__declaration, type: declaration, person: bontaz_yves, date: null, published: 2011-12-14, published_basis: source, sources: [ledauphine_20111214_bontaz]}
+  - {id: baud_robert__withdrawal, type: withdrawal, person: baud_robert, date: 2012-01-05, published: 2012-01-05, published_basis: source, sources: [lepost_20120105_baud], note: "Se retire en faveur de Jacques Borie."}
+  - {id: pradelle_frederic__declaration, type: declaration, person: pradelle_frederic, date: null, published: 2012-01-07, published_basis: source, sources: [leprogres_20120107_pradelle]}
+  - {id: derrien_david__declaration, type: declaration, person: derrien_david, date: null, published: 2012-01-25, published_basis: source, sources: [letelegramme_20120125_derrien]}
+  - {id: chevenement_jean_pierre__withdrawal, type: withdrawal, person: chevenement_jean_pierre, date: 2012-02-01, published: 2012-02-01, published_basis: source, sources: [francesoir_20120201_chevenement]}
+  - {id: lee_cindy__declaration, type: declaration, person: lee_cindy, date: null, published: 2012-02-01, published_basis: source, sources: [leparisien_20120201_lee]}
+  - {id: couasnon_herve__withdrawal, type: withdrawal, person: couasnon_herve, date: 2012-02-01, published: 2012-02-02, published_basis: source, sources: [leparisien_20120202_couasnon]}
+  - {id: callet_alexandre__declaration, type: declaration, person: callet_alexandre, date: null, published: 2012-02-03, published_basis: source, sources: [leparisien_20120203_callet]}
+  - {id: pietrasanta_yves__withdrawal, type: withdrawal, person: pietrasanta_yves, date: 2012-02-07, published: 2012-02-07, published_basis: source, sources: [lefigaro_20120207_pietrasanta], note: "Rejoint la campagne de Hollande."}
+  - {id: boutin_christine__withdrawal, type: withdrawal, person: boutin_christine, date: 2012-02-13, published: 2012-02-13, published_basis: source, sources: [lefigaro_20120213_boutin], note: "Soutient Nicolas Sarkozy."}
+  - {id: sarkozy_nicolas__declaration, type: declaration, person: sarkozy_nicolas, date: 2012-02-15, published: 2012-02-15, published_basis: source, sources: [rtbf_20120215_sarkozy], events_yaml: sarkozy_declaration_2012}
+  - {id: morin_herve__withdrawal, type: withdrawal, person: morin_herve, date: 2012-02-16, published: 2012-02-16, published_basis: source, sources: [lepoint_20120216_morin], note: "Soutient Nicolas Sarkozy."}
+  - {id: nihous_frederic__withdrawal, type: withdrawal, person: nihous_frederic, date: 2012-02-22, published: 2012-02-22, published_basis: source, sources: [lefigaro_20120222_nihous], note: "Soutient Nicolas Sarkozy."}
+  - {id: pradalier_nicole__declaration, type: declaration, person: pradalier_nicole, date: null, published: 2012-02-22, published_basis: source, sources: [ladepeche_20120222_toulousains]}
+  - {id: feo_helene__declaration, type: declaration, person: feo_helene, date: null, published: 2012-02-25, published_basis: source, sources: [lexpress_20120225_petits]}
+  - {id: juppe_alain__renouncement, type: renouncement, person: juppe_alain, date: null, published: 2012-02-29, published_basis: wikipedia_revision, sources: [wp_fr_76203248], note: "Classé parmi les candidatures n'ayant pas abouti après la déclaration de Sarkozy (condition non remplie)."}
+  - {id: kdhir_moncef__declaration, type: declaration, person: kdhir_moncef, date: null, published: 2012-02-29, published_basis: wikipedia_revision, sources: [wp_fr_76203293], note: "Souhait d'être candidat à la primaire écologiste."}
+  - {id: kdhir_moncef__withdrawal, type: withdrawal, person: kdhir_moncef, date: null, published: 2012-02-29, published_basis: wikipedia_revision, sources: [wp_fr_76203293], note: "Parrainages insuffisants."}
+  - {id: nekkaz_rachid__declaration, type: declaration, person: nekkaz_rachid, date: null, published: 2012-02-29, published_basis: wikipedia_revision, sources: [wp_fr_76203293], note: "Candidat à la candidature pour la primaire socialiste (récit rétrospectif)."}
+  - {id: nekkaz_rachid__withdrawal, type: withdrawal, person: nekkaz_rachid, date: null, published: 2012-02-29, published_basis: wikipedia_revision, sources: [wp_fr_76203293], note: "Parrainages insuffisants pour la primaire."}
+  - {id: derrien_david__withdrawal, type: withdrawal, person: derrien_david, date: null, published: 2012-03-08, published_basis: source, sources: [france3_20120308_derrien], note: "Environ 350 signatures."}
+  - {id: borie_jacques__withdrawal, type: withdrawal, person: borie_jacques, date: 2012-03-14, published: 2012-03-14, published_basis: source, sources: [borie_20120314_blog], note: "Soutient Jean-Luc Mélenchon."}
+  - {id: bourson_patrick__withdrawal, type: withdrawal, person: bourson_patrick, date: 2012-03-13, published: 2012-03-14, published_basis: source, sources: [europe1_20120314_bourson], note: "Se désiste malgré 502 parrainages annoncés."}
+  - {id: goldberg_brigitte__withdrawal, type: withdrawal, person: goldberg_brigitte, date: null, published: 2012-03-15, published_basis: source, sources: [mcetv_20120315_goldberg], note: "N'a pas recueilli ses 500 signatures."}
+  - {id: amanrich_francois__declaration, type: declaration, person: amanrich_francois, date: null, published: 2012-03-16, published_basis: source, sources: [lejdd_20120316_depot], note: "Avait annoncé disposer de parrainages suffisants."}
+  - {id: amanrich_francois__withdrawal, type: withdrawal, person: amanrich_francois, date: 2012-03-16, published: 2012-03-16, published_basis: source, sources: [lejdd_20120316_depot], note: "489 parrainages."}
+  - {id: bourdouleix_gilles__withdrawal, type: withdrawal, person: bourdouleix_gilles, date: 2012-03-16, published: 2012-03-16, published_basis: source, sources: [courrierdelouest_20120316_bourdouleix], note: "Faute de 500 parrainages."}
+  - {id: de_villepin_dominique__withdrawal, type: withdrawal, person: de_villepin_dominique, date: 2012-03-16, published: 2012-03-16, published_basis: source, sources: [lepoint_20120316_villepin], note: "Faute de 500 parrainages."}
+  - {id: governatori_jean_marc__withdrawal, type: withdrawal, person: governatori_jean_marc, date: 2012-03-16, published: 2012-03-16, published_basis: source, sources: [lemonde_20120316_parrainages], note: "433 parrainages revendiqués, « loin du compte » à la clôture."}
+  - {id: lang_carl__withdrawal, type: withdrawal, person: lang_carl, date: 2012-03-16, published: 2012-03-16, published_basis: source, sources: [lefigaro_20120316_lang, lemonde_20120316_parrainages], note: "447 parrainages."}
+  - {id: lozes_patrick__withdrawal, type: withdrawal, person: lozes_patrick, date: 2012-03-16, published: 2012-03-16, published_basis: source, sources: [lejdd_20120316_depot], note: "Faute de parrainages suffisants."}
+  - {id: miguet_nicolas__withdrawal, type: withdrawal, person: miguet_nicolas, date: 2012-03-16, published: 2012-03-16, published_basis: source, sources: [ouestfrance_20120316_candidats], note: "491 parrainages annoncés."}
+  - {id: guena_christopher__withdrawal, type: withdrawal, person: guena_christopher, date: 2012-03-13, published: 2012-03-18, published_basis: wikipedia_revision, sources: [wp_fr_76796691], note: "Ouest-France, non daté."}
+  - {id: verner_maxime__withdrawal, type: withdrawal, person: verner_maxime, date: null, published: 2012-03-18, published_basis: wikipedia_revision, sources: [wp_fr_76796691], note: "358 parrainages (JDD, non daté)."}
+  - {id: official_list_2012, type: official_list, persons: [joly_eva, le_pen_marine, sarkozy_nicolas, melenchon_jean_luc, poutou_philippe, arthaud_nathalie, cheminade_jacques, bayrou_francois, dupont_aignan_nicolas, hollande_francois], date: 2012-03-19, published: 2012-03-19, published_basis: source, sources: [cc_2012145pdr], note: "Liste arrêtée par le Conseil constitutionnel le 19 mars 2012, publiée au JO le 20."}

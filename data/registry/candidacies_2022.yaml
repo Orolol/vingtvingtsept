@@ -1,0 +1,539 @@
+# Registre historique daté des candidatures — présidentielle 2022 (docs/12, lot 1).
+# Validé et interrogé par `vvs.registry.candidacies` (`load_candidacies(2022)`, `state_at`).
+#
+# Structure : voir l'en-tête de candidacies_2017.yaml (commune à tous les candidacies_<année>.yaml).
+# Style compact : une ligne de flux par référence, personne, tour et événement ; les références
+# sont factorisées dans `references` (alias `wp_<langue>_<revid>` pour une révision Wikipédia,
+# `<média>_<aaaammjj>_<mot>` pour la presse).
+#
+# Vérification des sources (2026-10-23) : les articles de presse cités pour les candidats
+# officiels et pour la plupart des personnes actives aux quatre dates du backtest ont été rouverts
+# sur web.archive.org (titre et date de publication relus) ; les autres portent la note « non
+# rouverte » et leur date vient de la référence Wikipédia ou de l'URL.
+#
+# Lecture : `state_at(date)` n'utilise que les événements publiés strictement avant la date.
+# Une date de première trace est celle des sources parcourues, pas la première trace réelle ;
+# les écarts connus sont signalés dans les notes, sans correction du registre.
+
+election: 2022
+
+collection:
+  collected_on: 2026-10-23
+  protocol: >-
+    Liste des personnes : tout nom qui apparaît, dans les sources ci-dessous et pendant la
+    période, comme candidat déclaré (à l'élection ou à une primaire), candidat à la
+    candidature, personnalité pressentie, ayant exprimé son intérêt, évoquée par les
+    commentateurs, ou ayant décliné. Instantanés Wikipédia : révision en vigueur à 00:00 UTC
+    le 1er et le 15 de chaque mois, aux quatre dates du backtest 2022 et le jour de la liste
+    officielle (back/studies/candidacies_wikipedia.py, manifeste et empreintes dans
+    runs/2026-10-23-candidacies/wikipedia/), complétés par les noms en gras sans lien des
+    tableaux de la page des candidatures, que l'extraction automatique ne relève pas. Dossier
+    de presse : un article de presse nationale « qui sont les candidats » publié dans les 30
+    jours avant chacune des quatre dates du backtest (60 jours si aucun). Les dates des
+    déclarations, retraits et désignations viennent des articles de presse cités par ces
+    révisions ; à défaut, de la révision elle-même (borne par excès).
+  sources:
+    - id: wp_fr_election
+      kind: wikipedia_revisions
+      title: Élection présidentielle française de 2022
+      url: https://fr.wikipedia.org/wiki/%C3%89lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2022
+      period: [2021-01-01, 2022-04-10]
+      cadence: 1er et 15 du mois, 2021-10-12, 2022-01-10, 2022-03-11, 2022-04-03, 2022-03-07
+      note: >-
+        Sections dont le titre contient « candidat » ou « primaire ». Ne liste pas les
+        personnalités non déclarées ; les listes passent sur la page des candidatures à l'été 2021.
+    - id: wp_fr_candidacies
+      kind: wikipedia_revisions
+      title: Candidatures à l'élection présidentielle française de 2022
+      url: https://fr.wikipedia.org/wiki/Candidatures_%C3%A0_l%27%C3%A9lection_pr%C3%A9sidentielle_fran%C3%A7aise_de_2022
+      period: [2021-01-01, 2022-04-10]
+      cadence: idem
+      note: Contenu propre à partir de juillet 2021 (première révision retenue 2021-07-28).
+    - id: wp_en_election
+      kind: wikipedia_revisions
+      title: 2022 French presidential election
+      url: https://en.wikipedia.org/wiki/2022_French_presidential_election
+      period: [2021-01-01, 2022-04-10]
+      cadence: idem
+      note: >-
+        Sections « candidates » et « primary » ; liste les candidats potentiels (« Potential »)
+        jusqu'en septembre 2021.
+    - id: press_dossiers
+      kind: press
+      title: Dossier de presse aux dates du backtest
+      period: [2021-09-12, 2022-04-03]
+      note: >-
+        Le Figaro (2021-10-04, capture du 2021-10-09) pour 2021-10-12 ; pour 2022-01-10, aucun
+        panorama dans la fenêtre : repli hors règle sur LCI « qui sont les candidats déclarés ? »
+        (publié 2021-10-13, mis à jour 2021-12-06, capture du 2021-12-29), sans statut nouveau
+        par rapport aux révisions ; franceinfo (2022-03-07, liste officielle) pour 2022-03-11 et
+        2022-04-03.
+    - id: wp_primaries
+      kind: wikipedia_page
+      title: Sections des primaires des révisions parcourues (PCF, écologie, PS, LR, Primaire populaire)
+      note: Participants, tours et résultats ; dates relues sur la presse citée (Public Sénat, Le Temps, Le Monde, France 24).
+    - id: cc_list
+      kind: official
+      title: Décision n° 2022-187 PDR du 7 mars 2022
+      url: https://www.conseil-constitutionnel.fr/decision/2022/2022187PDR.htm
+  exclusions: >-
+    Écartés de la liste : personnes citées seulement comme soutiens, porte-parole, directeurs de
+    campagne (Bertrand Soubelet), organisateurs (Olivier Faure, Corinne Lepage), dirigeants
+    commentant, parrains ou bénéficiaires de parrainages sans candidature (« personnes non
+    candidates ayant reçu des parrainages » : Borloo, Delga, Glucksmann, Meurice, Pesquet,
+    Herrou, Ménard, Saint-Paul, Blanchet, Lacroix, Cojan, Philippe Célestin Maréchal, Josef
+    Schovanec), personnalités nommées dans la biographie d'un autre (Bayrou, Rivasi, Baupin),
+    personnalités citées comme parrainées à la Primaire populaire sans être candidates
+    (Clémentine Autain). Une personne déjà retenue pour une autre raison (Barnier, Cazeneuve,
+    Hollande, Philippe, Ruffin) n'a pas d'événement pour ses seuls parrainages.
+
+references:
+  20minutes_20200111_hidalgo: {url: "https://www.20minutes.fr/politique/2692583-20200111-anne-hidalgo-candidate-presidentielle-2022", title: "Anne Hidalgo ne sera pas candidate à la présidentielle de 2022", outlet: "20 Minutes", published: 2020-01-11, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  20minutes_20210628_poutou: {url: "https://www.20minutes.fr/elections/3072799-20210628-presidentielle-2022-poutou-designe-candidat-npa-troisieme-fois", title: "Présidentielle 2022 : Poutou désigné candidat du NPA pour la troisième fois", outlet: "20 Minutes", published: 2021-06-28}
+  20minutes_20210727_juvin: {url: "https://www.20minutes.fr/politique/3091799-20210727-presidentielle-2022-lr-philippe-juvin-candidat-primaire-droite", title: "Présidentielle 2022 : Le LR Philippe Juvin candidat à la primaire de la droite", outlet: "20 Minutes", published: 2021-07-27}
+  20minutes_20210928_lisnard: {url: "https://www.20minutes.fr/politique/3135383-20210928-presidentielle-2022-lr-david-lisnard-renonce-presenter-alors-droite-renonce-primaire", title: "Le LR David Lisnard renonce à se présenter à la présidentielle", outlet: "20 Minutes", published: 2021-09-28, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  20minutes_20220218_philippot: {url: "https://www.20minutes.fr/politique/3238227-20220218-presidentielle-2022-florian-philippot-figure-antipass-jette-eponge", title: "Présidentielle 2022 : Florian Philippot, figure des antipass, jette l'éponge", outlet: "20 Minutes", published: 2022-02-18}
+  bfmtv_20210324_bertrand: {url: "https://www.bfmtv.com/grand-lille/presidentielle-2022-xavier-bertrand-annonce-etre-candidat_AN-202103240390.html", title: "Présidentielle 2022: Xavier Bertrand annonce être candidat", outlet: "BFMTV", published: 2021-03-24}
+  bfmtv_20210826_wauquiez: {url: "https://www.bfmtv.com/lyon/presidentielle-laurent-wauquiez-ne-sera-pas-candidat-a-la-primaire-de-la-droite_AN-202108260343.html", title: "Présidentielle: Laurent Wauquiez ne sera pas candidat à la primaire de la droite", outlet: "BFMTV", published: 2021-08-26, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  bfmtv_20220121_governatori: {url: "https://www.bfmtv.com/politique/elections/presidentielle/battu-a-la-primaire-ecologiste-jean-marc-governatori-annonce-tout-de-meme-sa-candidature-a-la-presidentielle_AD-202201210052.html", title: "Battu à la primaire écologiste, Jean-Marc Governatori annonce tout de même sa candidature à la présidentielle", outlet: "BFMTV", published: 2022-01-21, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  bfmtv_20220303_macron: {url: "https://www.bfmtv.com/politique/elections/presidentielle/emmanuel-macron-officialise-sa-candidature-a-la-presidentielle-dans-une-lettre-adressee-aux-francais_VN-202203030610.html", title: "Emmanuel Macron officialise sa candidature à la présidentielle dans une lettre adressée aux Français", outlet: "BFMTV", published: 2022-03-03}
+  cc_20220307_liste: {url: "https://www.conseil-constitutionnel.fr/decision/2022/2022187PDR.htm", title: "Décision n° 2022-187 PDR du 7 mars 2022 portant publication de la liste des candidats à l'élection présidentielle", outlet: "Conseil constitutionnel", published: 2022-03-07}
+  courrierinternational_20200117_lepen: {url: "https://www.courrierinternational.com/article/vu-de-letranger-avec-un-populisme-epure-marine-le-pen-vise-lelysee", title: "Avec « un populisme épuré », Marine Le Pen vise l'Élysée", outlet: "Courrier international", published: 2020-01-17}
+  europe1_20170318_cheminade: {url: "https://www.europe1.fr/politique/jacques-cheminade-le-dernier-tour-de-piste-dun-ovni-de-la-presidentielle-3006104", title: "Jacques Cheminade, le dernier tour de piste d'un ovni de la présidentielle", outlet: "Europe 1", published: 2017-03-18, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  europe1_20170702_ferrand: {url: "http://lelab.europe1.fr/richard-ferrand-aux-deputes-lrem-lobjectif-cest-la-reelection-demmanuel-macron-en-2022-3377609", title: "Richard Ferrand aux députés LREM : « l'objectif, c'est la réélection d'Emmanuel Macron en 2022 »", outlet: "Europe 1 (Le Lab)", published: 2017-07-02, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  europe1_20190719_baroin: {url: "https://www.europe1.fr/emissions/ledito-politique-de-michel-darmon/baroin-futur-candidat-a-la-presidentielle-2022-il-sait-attendre-le-bon-moment-3910436", title: "Baroin possible futur candidat à la présidentielle 2022 : il sait attendre le bon moment", outlet: "Europe 1", published: 2019-07-19, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  france24_20211014_hidalgo: {url: "https://www.france24.com/en/live-news/20211014-french-socialist-party-picks-anne-hidalgo-as-its-candidate-for-presidential-election", title: "Paris Mayor Anne Hidalgo wins French Socialists' presidential nomination", outlet: "France 24", published: 2021-10-14}
+  france3_20210314_roussel: {url: "https://france3-regions.francetvinfo.fr/hauts-de-france/nord-0/elections-presidentielles-de-2022-le-nordiste-fabien-roussel-propose-sa-candidature-aux-militants-du-parti-communiste-1997977.html", title: "Élections présidentielles de 2022 : le Nordiste Fabien Roussel propose sa candidature aux militants du parti communiste", outlet: "France 3 Hauts-de-France", published: 2021-03-14}
+  francebleu_20201103_montebourg: {url: "https://www.francebleu.fr/infos/politique/arnaud-montebourg-candidat-a-la-presidentielle-2022-1604420895", title: "Arnaud Montebourg, candidat à la présidentielle 2022 ?", outlet: "France Bleu", published: 2020-11-03}
+  francebleu_20210110_perdriau: {url: "https://www.francebleu.fr/infos/politique/saint-etienne-le-maire-gael-perdriau-reflechit-a-la-presidentielle-de-2022-1610282010", title: "Saint-Étienne : le maire Gaël Perdriau réfléchit à la présidentielle de 2022", outlet: "France Bleu", published: 2021-01-10, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  franceinfo_20190825_royal: {url: "https://www.francetvinfo.fr/politique/segolene-royal-n-exclut-pas-d-etre-candidate-a-la-presidentielle-en-2022-mais-pas-comme-socialiste_3589987.html", title: "Ségolène Royal n'exclut pas d'être candidate à la présidentielle en 2022, mais pas comme socialiste", outlet: "franceinfo", published: 2019-08-25, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  franceinfo_20201006_baroin: {url: "https://www.francetvinfo.fr/elections/presidentielle/politique-francois-baroin-confirme-qu-il-ne-sera-pas-candidat-a-la-presidentielle-en-2022_4131141.html", title: "Politique : François Baroin confirme qu'il ne sera pas candidat à la présidentielle en 2022", outlet: "franceinfo", published: 2020-10-06, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  franceinfo_20201122_eelv: {url: "https://www.francetvinfo.fr/politique/yannick-jadot/presidentielle-2022-le-candidat-d-eelv-sera-designe-avant-la-fin-septembre-2021_4191453.html", title: "Présidentielle 2022 : le candidat d'EELV sera désigné avant la fin septembre 2021", outlet: "franceinfo (AFP)", published: 2020-11-22, note: "« Deux personnalités […] se sont pour l'heure portées candidates : […] Sandrine Rousseau et […] Yannick Jadot »."}
+  franceinfo_20210505_royal: {url: "https://www.francetvinfo.fr/elections/presidentielle/segolene-royal-assure-qu-elle-ne-sera-pas-candidate-a-l-election-presidentielle-de-2022-mais-veut-aider_4612407.html", title: "Ségolène Royal assure qu'elle ne sera pas candidate à l'élection présidentielle de 2022, mais veut « aider »", outlet: "franceinfo", published: 2021-05-05}
+  franceinfo_20210705_batho: {url: "https://www.francetvinfo.fr/elections/presidentielle/presidentielle-2022-la-deputee-delphine-batho-annonce-sa-candidature-a-la-primaire-ecologiste_4690511.html", title: "Présidentielle 2022 : la députée Delphine Batho annonce sa candidature à la primaire écologiste", outlet: "franceinfo", published: 2021-07-05}
+  franceinfo_20220307_liste: {url: "https://www.franceinfo.fr/elections/presidentielle/presidentielle-2022-voici-la-liste-des-12-candidats-a-l-elysee_4977312.html", title: "Présidentielle 2022 : voici la liste officielle des 12 candidats à l'Elysée", outlet: "franceinfo", published: 2022-03-07, note: "Dossier de presse (dates d'audit 2022-03-11 et 2022-04-03)."}
+  franceinter_20190718_cazeneuve: {url: "https://www.franceinter.fr/politique/le-ps-met-bernard-cazeneuve-en-orbite-pour-la-presidentielle-de-2022", title: "Le PS met Bernard Cazeneuve en orbite pour la présidentielle de 2022", outlet: "France Inter", published: 2019-07-18, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  huffpost_20210106_juvin: {url: "https://www.huffingtonpost.fr/entry/presidentielle-2022-le-medecin-et-elu-lr-philippe-juvin-se-prepare_fr_5ff5e16ac5b6ea7351c73b03", title: "Présidentielle 2022: le médecin et élu LR Philippe Juvin se « prépare »", outlet: "HuffPost", published: 2021-01-06}
+  huffpost_20211203_poisson: {url: "https://www.huffingtonpost.fr/entry/jean-frederic-poisson-soutient-eric-zemmour-et-renonce-a-sa-candidature_fr_61aa635de4b0451e5515a881", title: "Jean-Frédéric Poisson soutient Eric Zemmour et renonce à sa candidature", outlet: "HuffPost", published: 2021-12-03}
+  ladepeche_20170811_sarkozy: {url: "https://www.ladepeche.fr/article/2017/08/11/2626557-nicolas-sarkozy-abandonne-politique-parce-gagne-assez-argent.html", title: "Nicolas Sarkozy : « J'abandonne la politique parce qu'on ne gagne pas assez d'argent »", outlet: "La Dépêche du Midi", published: 2017-08-11, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  ladepeche_20200926_dupontaignan: {url: "https://www.ladepeche.fr/2020/09/26/nicolas-dupont-aignan-se-declare-officiellement-candidat-aux-elections-presidentielles-de-2022-9098660.php", title: "Nicolas Dupont-Aignan se déclare officiellement candidat aux élections présidentielles de 2022", outlet: "La Dépêche du Midi", published: 2020-09-26}
+  laminute_20220122_perron: {url: "https://laminute.info/2022/01/22/anne-marie-perron-candidate-a-la-presidentielle-2022/", title: "Anne-Marie Perron candidate à la présidentielle 2022", outlet: "La Minute", published: 2022-01-22, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  laprovence_20191128_lassalle: {url: "https://www.laprovence.com/actu/en-direct/5781377/video-jean-lassalle-sera-candidat-a-la-presidentielle-2022.html", title: "Vidéo : Jean Lassalle sera candidat à la présidentielle 2022", outlet: "La Provence", published: 2019-11-28}
+  laprovence_20200916_onfray: {url: "https://www.laprovence.com/actu/en-direct/6111439/presidentielle-michel-onfray-ne-sera-pas-candidat-en-2022.html", title: "Présidentielle : Michel Onfray ne sera pas candidat en 2022", outlet: "La Provence", published: 2020-09-16, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lavoixdunord_20201206_villiers: {url: "https://www.lavoixdunord.fr/903827/article/2020-12-06/le-general-pierre-de-villiers-pas-candidat-en-2022-plus-je-le-dis-moins-me-croit", title: "Le général Pierre de Villiers pas candidat en 2022 ? « Plus je le dis, moins on me croit »", outlet: "La Voix du Nord", published: 2020-12-06, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lci_20210916_arthaud: {url: "https://www.lci.fr/politique/presidentielle-2022-nathalie-arthaud-se-lance-dans-sa-troisieme-campagne-pour-lutte-ouvriere-2196452.html", title: "Présidentielle 2022 : Nathalie Arthaud se lance dans sa troisième campagne pour Lutte ouvrière", outlet: "LCI", published: 2021-09-16}
+  lefigaro_20171119_lemaire: {url: "https://www.lefigaro.fr/politique/le-scan/2017/11/19/25001-20171119ARTFIG00087-bruno-le-maire-exhorte-emmanuel-macron-a-se-representer-en-2022.php", title: "Bruno Le Maire exhorte Emmanuel Macron à se représenter en 2022", outlet: "Le Figaro", published: 2017-11-19, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lefigaro_20190926_taubira: {url: "https://www.lefigaro.fr/politique/christiane-taubira-fait-un-pas-vers-2022-s-il-faut-le-faire-ensemble-oui-je-serai-la-20190926", title: "Christiane Taubira fait un pas vers 2022: « S'il faut le faire ensemble, oui je serai là »", outlet: "Le Figaro", published: 2019-09-26}
+  lefigaro_20191007_larcher: {url: "https://www.lefigaro.fr/politique/gerard-larcher-assure-qu-il-n-est-pas-candidat-pour-la-presidentielle-de-2022-20191007", title: "Gérard Larcher assure qu'il n'est « pas candidat » pour la présidentielle de 2022", outlet: "Le Figaro", published: 2019-10-07, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lefigaro_20200920_cazeneuve: {url: "https://www.lefigaro.fr/politique/bernard-cazeneuve-ecarte-une-candidature-en-2022-20200920", title: "Bernard Cazeneuve écarte une candidature en 2022", outlet: "Le Figaro", published: 2020-09-20, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lefigaro_20201126_roussel: {url: "https://www.lefigaro.fr/politique/presidentielle-2022-fabien-roussel-se-prepare-mais-fera-voter-les-militants-20201126", title: "Présidentielle 2022: Fabien Roussel se prépare, mais fera voter les militants", outlet: "Le Figaro", published: 2020-11-26}
+  lefigaro_20210714_philippot: {url: "https://www.lefigaro.fr/politique/florian-philippot-je-suis-candidata-l-election-presidentielle-de-2022-20210714", title: "Florian Philippot: « Je suis candidat à l'élection présidentielle de 2022 »", outlet: "Le Figaro", published: 2021-07-14}
+  lefigaro_20210722_pecresse: {url: "https://www.lefigaro.fr/politique/valerie-pecresse-je-suis-candidate-a-la-presidence-de-la-republique-pour-restaurer-la-fierte-francaise-20210722", title: "Valérie Pécresse: « Je suis candidate à la présidence de la République pour restaurer la fierté française »", outlet: "Le Figaro", published: 2021-07-22}
+  lefigaro_20210827_primairedroite: {url: "https://www.lefigaro.fr/politique/presidentielle-qui-sont-les-candidats-declares-a-la-primaire-de-la-droite-20210827", title: "Présidentielle : qui sont les candidats déclarés à la primaire de la droite ?", outlet: "Le Figaro", published: 2021-08-27}
+  lefigaro_20210903_montebourg: {url: "https://www.lefigaro.fr/politique/arnaud-montebourg-se-lance-lui-aussi-dans-la-course-a-la-presidentielle-les-coulisses-d-une-decision-20210903", title: "Arnaud Montebourg se lance lui aussi dans la course à la présidentielle : les coulisses d'une décision", outlet: "Le Figaro", published: 2021-09-03}
+  lefigaro_20210912_hidalgo: {url: "https://www.lefigaro.fr/politique/presidentielle-2022-anne-hidalgo-officialise-sa-candidature-20210912", title: "Anne Hidalgo, candidate à la présidentielle pour « bâtir une France plus juste »", outlet: "Le Figaro", published: 2021-09-12}
+  lefigaro_20210916_taubira: {url: "https://www.lefigaro.fr/elections/presidentielles/presidentielle-2022-la-gauche-est-trop-nombreuse-juge-christiane-taubira-qui-ne-sera-pas-candidate-20210916", title: "Présidentielle 2022 : « La gauche est trop nombreuse », juge Christiane Taubira, qui ne sera pas candidate", outlet: "Le Figaro", published: 2021-09-16}
+  lefigaro_20210925_congres: {url: "https://www.lefigaro.fr/elections/presidentielles/presidentielle-2022-les-militants-lr-preferent-un-congres-a-une-primaire-pour-designer-leur-candidat-20210925", title: "Présidentielle 2022 : les Républicains en route pour le congrès", outlet: "Le Figaro", published: 2021-09-25}
+  lefigaro_20211004_pretendants: {url: "https://web.archive.org/web/20211009190253id_/https://www.lefigaro.fr/elections/presidentielles/presidentielle-2022-la-liste-des-pretendants-pour-la-course-a-l-elysee-20211004", title: "Présidentielle 2022 : la liste des prétendants pour la course à l'Élysée", outlet: "Le Figaro", published: 2021-10-04, note: "Dossier de presse (date d'audit 2021-10-12), lu sur la capture du 2021-10-09 ; la page vivante a été réécrite ensuite."}
+  lefigaro_20211204_pecresse: {url: "https://www.lefigaro.fr/elections/presidentielles/presidentielle-2022-valerie-pecresse-remporte-le-congres-lr-et-devient-la-candidate-de-la-droite-20211204", title: "Présidentielle 2022 : Valérie Pécresse remporte le Congrès LR et devient la candidate de la droite", outlet: "Le Figaro", published: 2021-12-04}
+  lejdd_20171119_fillon: {url: "https://www.lejdd.fr/Politique/francois-fillon-sexprime-pour-la-premiere-fois-publiquement-depuis-la-presidentielle-3496937", title: "François Fillon : « La politique peut vous détruire »", outlet: "Le Journal du dimanche", published: 2017-11-19, note: "Date donnée par la référence de la Wikipédia anglaise ; non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lejdd_20210711_primairepop: {url: "https://www.lejdd.fr/Politique/presidentielle-de-2022-melenchon-jadot-ou-hidalgo-candidats-malgre-eux-a-une-primaire-4057409", title: "Présidentielle de 2022 : Mélenchon, Jadot ou Hidalgo candidats malgré eux à une primaire citoyenne", outlet: "Le Journal du dimanche", published: 2021-07-11, note: "« seuls trois candidats se sont officiellement engagés à concourir à ce scrutin » : Larrouturou, Filoche, Rousseau (sous condition)."}
+  lemonde_20201108_melenchon: {url: "https://www.lemonde.fr/politique/article/2020/11/08/jean-luc-melenchon-declare-sa-candidature-a-la-presidentielle-2022_6059013_823448.html", title: "Jean-Luc Mélenchon déclare sa candidature à la présidentielle 2022", outlet: "Le Monde", published: 2020-11-08}
+  lemonde_20201123_eelv: {url: "https://www.lemonde.fr/politique/article/2020/11/23/election-presidentielle-2022-eelv-lance-sa-primaire_6060772_823448.html", title: "Election présidentielle de 2022 : EELV lance sa primaire sur fond de polémique avec Anne Hidalgo", outlet: "Le Monde", published: 2020-11-23, note: "« Pour l'instant trois candidats sont en lice : Yannick Jadot, Sandrine Rousseau et Eric Piolle »."}
+  lemonde_20210509_roussel: {url: "https://www.lemonde.fr/politique/article/2021/05/09/presidentielle-2022-fabien-roussel-candidat-pour-le-parti-communiste_6079663_823448.html", title: "Présidentielle 2022 : Fabien Roussel, candidat pour le Parti communiste", outlet: "Le Monde", published: 2021-05-09}
+  lemonde_20210703_governatori: {url: "https://www.lemonde.fr/politique/article/2021/07/03/jean-marc-governatori-annonce-sa-candidature-a-la-primaire-des-ecologistes-pour-la-presidentielle_6086832_823448.html", title: "Jean-Marc Governatori annonce sa candidature à la primaire des écologistes pour la présidentielle", outlet: "Le Monde", published: 2021-07-03}
+  lemonde_20210718_lefoll: {url: "https://www.lemonde.fr/politique/article/2021/07/18/presidentielle-2022-candidat-stephane-le-foll-reclame-une-primaire-au-parti-socialiste_6087713_823448.html", title: "Présidentielle 2022 : candidat, Stéphane Le Foll réclame une primaire au Parti socialiste", outlet: "Le Monde", published: 2021-07-18, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lemonde_20210829_payre: {url: "https://www.lemonde.fr/politique/article/2021/08/29/presidentielle-2022-denis-payre-annonce-sa-candidature-a-une-primaire-lr_6092704_823448.html", title: "Présidentielle 2022 : Denis Payre annonce sa candidature à une primaire LR", outlet: "Le Monde", published: 2021-08-29}
+  lemonde_20210916_waechter: {url: "https://www.lemonde.fr/politique/article/2021/09/16/l-ecologiste-antoine-waechter-candidat-a-l-election-presidentielle-sans-passer-par-la-primaire_6094873_823448.html", title: "L'écologiste Antoine Waechter candidat à l'élection présidentielle, sans passer par la primaire", outlet: "Le Monde", published: 2021-09-16}
+  lemonde_20210928_primaireeco: {url: "https://www.lemonde.fr/election-presidentielle-2022/live/2021/09/28/primaire-ecologiste-suivez-en-direct-le-resultat-du-second-tour-entre-yannick-jadot-et-sandrine-rousseau_6096321_6059010.html", title: "Primaire écologiste : Yannick Jadot remporte de justesse le scrutin face à Sandrine Rousseau", outlet: "Le Monde", published: 2021-09-28}
+  lemonde_20211011_bertrand: {url: "https://www.lemonde.fr/election-presidentielle-2022/article/2021/10/11/election-presidentielle-2022-xavier-bertrand-annonce-qu-il-participera-au-congres-lr-du-4-decembre_6097954_6059010.html", title: "Election présidentielle 2022 : Xavier Bertrand annonce qu'il participera au congrès LR", outlet: "Le Monde", published: 2021-10-11}
+  lemonde_20211217_taubira: {url: "https://www.lemonde.fr/election-presidentielle-2022/article/2021/12/17/christiane-taubira-constate-l-impasse-a-gauche-et-envisage-une-candidature-a-la-presidentielle-2022_6106455_6059010.html", title: "Christiane Taubira « constate l'impasse » à gauche et « envisage » une candidature à la présidentielle 2022", outlet: "Le Monde", published: 2021-12-17}
+  lemonde_20220115_primairepop: {url: "https://www.lemonde.fr/election-presidentielle-2022/live/2022/01/15/la-primaire-populaire-a-devoile-ses-sept-candidats-avant-l-election-presidentielle-2022-dont-hidalgo-jadot-melenchon-et-taubira_6109601_6059010.html", title: "La Primaire populaire a dévoilé ses sept candidats avant l'élection présidentielle 2022 dont Hidalgo, Jadot, Mélenchon et Taubira", outlet: "Le Monde (direct)", published: 2022-01-15}
+  lemonde_20220119_montebourg: {url: "https://www.lemonde.fr/election-presidentielle-2022/article/2022/01/19/arnaud-montebourg-retire-sa-candidature-a-l-election-presidentielle_6110109_6059010.html", title: "Arnaud Montebourg retire sa candidature à l'élection présidentielle", outlet: "Le Monde", published: 2022-01-19}
+  lemonde_20220302_taubira: {url: "https://www.lemonde.fr/election-presidentielle-2022/article/2022/03/02/christiane-taubira-annonce-son-retrait-de-la-campagne-presidentielle_6115827_6059010.html", title: "Christiane Taubira annonce son retrait de la campagne présidentielle", outlet: "Le Monde", published: 2022-03-02}
+  leparisien_20190215_tenors: {url: "http://www.leparisien.fr/politique/nkm-cazeneuve-baroin-bertrand-royal-ces-tenors-en-reserve-de-la-republique-15-02-2019-8012298.php", title: "NKM, Cazeneuve, Baroin, Bertrand, Royal... Ces ténors en réserve de la République", outlet: "Le Parisien", published: 2019-02-15, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  leparisien_20211003_ollivier: {url: "https://www.leparisien.fr/essonne-91/essonne-desabuse-il-abandonne-son-reve-de-devenir-president-de-la-republique-03-10-2021-27X76F2Y65DFJFISBHVJBEGJOQ.php", title: "Essonne : désabusé, il abandonne son rêve de devenir président de la République", outlet: "Le Parisien", published: 2021-10-03}
+  leparisien_20211108_lagarde: {url: "https://www.leparisien.fr/elections/presidentielle/presidentielle-jean-christophe-lagarde-ne-se-presentera-pas-et-souhaite-le-rassemblement-avec-un-candidat-lr-08-11-2021-OF2GXPF6JFGK3BJJWNQIHG5QSQ.php", title: "Présidentielle : Jean-Christophe Lagarde ne se présentera pas et « souhaite le rassemblement avec un candidat LR »", outlet: "Le Parisien", published: 2021-11-08}
+  lepoint_20191001_marechal: {url: "https://www.lepoint.fr/politique/marion-marechal-annonce-qu-elle-ne-sera-pas-candidate-a-la-presidentielle-de-2022--01-10-2019-2338670_20.php", title: "Marion Maréchal annonce qu'elle ne sera pas candidate à la présidentielle de 2022", outlet: "Le Point", published: 2019-10-01, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lepoint_20210316_lassalle: {url: "https://www.lepoint.fr/politique/jean-lassalle-candidat-a-la-presidentielle-2022--16-03-2021-2417954_20.php", title: "Jean Lassalle candidat à la présidentielle 2022", outlet: "Le Point", published: 2021-03-16}
+  lepoint_20210609_montebourg: {url: "https://www.lepoint.fr/politique/presidentielle-2022-faute-de-ressources-montebourg-ne-sera-pas-candidat-09-06-2021-2430332_20.php", title: "Présidentielle 2022 : faute de ressources, Montebourg ne sera pas candidat", outlet: "Le Point", published: 2021-06-09}
+  lepoint_20211205_mouraud: {url: "https://www.lepoint.fr/politique/presidentielle-jacline-mouraud-figure-des-gilets-jaunes-rallie-zemmour-05-12-2021-2455365_20.php", title: "Présidentielle : Jacline Mouraud, figure des Gilets jaunes, rallie Zemmour", outlet: "Le Point", published: 2021-12-05, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  lepoint_20220109_taubira: {url: "https://www.lepoint.fr/politique/presidentielle-christiane-taubira-dit-oui-a-la-primaire-populaire-09-01-2022-2459739_20.php", title: "Présidentielle : Christiane Taubira dit oui à la primaire populaire", outlet: "Le Point", published: 2022-01-09}
+  leprogres_20210113_turner: {url: "https://www.leprogres.fr/societe/2021/01/13/degoutee-de-la-defaite-de-trump-afida-turner-renonce-a-la-presidentielle-2022-en-france", title: "Afida Turner renonce à la présidentielle 2022", outlet: "Le Progrès", published: 2021-01-13, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  letemps_20210919_primaireeco: {url: "https://www.letemps.ch/monde/yannick-jadot-sandrine-rousseau-lice-second-tour-primaire-ecologiste", title: "Yannick Jadot et Sandrine Rousseau en lice pour le second tour de la primaire écologiste", outlet: "Le Temps (AFP)", published: 2021-09-19}
+  lexpress_20210827_faure: {url: "https://www.lexpress.fr/actualites/1/societe/presidentielle-olivier-faure-confirme-la-tenue-d-une-primaire-interne-au-ps_2157290.html", title: "Présidentielle: Olivier Faure confirme la tenue d'une primaire interne au PS", outlet: "L'Express (AFP)", published: 2021-08-27}
+  liberation_20171011_wauquiez: {url: "http://www.liberation.fr/debats/2017/10/11/laurent-wauquiez-le-challenger-de-2022_1602443", title: "Laurent Wauquiez, le challenger de 2022", outlet: "Libération", published: 2017-10-11, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  liberation_20191017_besancenot: {url: "https://www.liberation.fr/debats/2019/10/17/2022-besancenot-un-messie-pour-la-gauche-de-la-gauche_1758127", title: "2022 : Besancenot, un messie pour la gauche de la gauche ?", outlet: "Libération", published: 2019-10-17, note: "Titre reconstitué depuis l'URL ; non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  liberation_20201119_rousseau: {url: "https://www.liberation.fr/france/2020/11/19/sandrine-rousseau-a-ee-lv-un-retour-en-douce-pour-un-match-retors_1806133", title: "Sandrine Rousseau à EE-LV : un retour en douce pour un match retors", outlet: "Libération", published: 2020-11-19, note: "Date de l'URL ; la capture lit une date de modification de 2021."}
+  liberation_20210114_ruffin: {url: "https://www.liberation.fr/politiques/2021/01/14/francois-ruffin-confirme-qu-il-ne-sera-pas-candidat-en-2022_1817266/", title: "François Ruffin confirme qu'il ne sera pas candidat en 2022", outlet: "Libération", published: 2021-01-14, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  liberation_20220115_taubira: {url: "https://www.liberation.fr/politique/christiane-taubira-je-suis-candidate-a-la-presidence-de-la-republique-20220115_CDGPMXMCVJC3NBBWQ3FMS5DNJU/", title: "Christiane Taubira depuis Lyon: « Je suis candidate à la présidence de la République »", outlet: "Libération", published: 2022-01-15}
+  lo_20210102_motion: {url: "https://mensuel.lutte-ouvriere.org//2021/01/02/motion_153824.html", title: "Motion (50e congrès de Lutte ouvrière)", outlet: "Lutte de classe (LO)", published: 2021-01-02, note: "Date lue dans l'URL (page sans date de publication lisible)."}
+  lopinion_20210203_cambadelis: {url: "https://www.lopinion.fr/edition/politique/jean-christophe-cambadelis-candidat-naturel-a-gauche-2022-il-faudra-235390", title: "Jean-Christophe Cambadélis : « Sans candidat naturel à gauche pour 2022, il faudra une primaire et j'en serai ! »", outlet: "L'Opinion", published: 2021-02-03, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  marianne_20190619_zemmour: {url: "https://www.marianne.net/politique/eric-zemmour-candidat-2022-dessous-operation", title: "Ils en rêvent : les dessous de l'opération Zemmour 2022", outlet: "Marianne", published: 2019-06-19}
+  midilibre_20201019_drouet: {url: "https://www.midilibre.fr/2020/10/19/gilets-jaunes-eric-drouet-se-declare-candidat-a-la-presidentielle-de-2022-9149918.php", title: "Gilets jaunes : Eric Drouet se déclare candidat à la présidentielle de 2022", outlet: "Midi Libre", published: 2020-10-19, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  msn_20210209_hamon: {url: "https://www.msn.com/fr-fr/divertissement/celebrites/je-ne-serai-pas-candidat-beno%C3%AEt-hamon-zappe-la-pr%C3%A9sidentielle-2022/ar-BB1dxGuz", title: "« Je ne serai pas candidat » : Benoît Hamon zappe la présidentielle 2022", outlet: "MSN", published: 2021-02-09, note: "Date donnée par la référence de la Wikipédia anglaise ; non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  orange_20190719_hollande: {url: "https://actu.orange.fr/politique/francois-hollande-laisse-a-d-autres-le-relais-assure-olivier-faure-magic-CNT000001hjkCR.html", title: "« François Hollande laisse à d'autres le relais » assure Olivier Faure", outlet: "Orange Actu", published: 2019-07-19, note: "Date donnée par la référence de la Wikipédia anglaise ; non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  orange_20191002_retailleau: {url: "https://actu.orange.fr/politique/videos/bruno-retailleau-n-exclut-pas-d-etre-candidat-a-la-presidentielle-de-2022-pourquoi-pas-CNT000001juNdT.html", title: "Bruno Retailleau n'exclut pas d'être candidat à la présidentielle de 2022 : « Pourquoi pas »", outlet: "Orange Actu", published: 2019-10-02, note: "Date donnée par la référence de la Wikipédia anglaise ; non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  ouestfrance_20200716_poisson: {url: "https://www.ouest-france.fr/politique/jean-frederic-poisson/jean-frederic-poisson-president-du-parti-chretien-democrate-est-candidat-a-la-presidentielle-6908761", title: "Jean-Frédéric Poisson, président du Parti chrétien-démocrate, est candidat à la présidentielle", outlet: "Ouest-France", published: 2020-07-16, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  ouestfrance_20200929_bigard: {url: "https://www.ouest-france.fr/elections/presidentielle/jean-marie-bigard-renonce-a-l-election-presidentielle-6992865", title: "Jean-Marie Bigard renonce à l'élection présidentielle", outlet: "Ouest-France", published: 2020-09-29, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  ouestfrance_20220217_langlois: {url: "https://www.ouest-france.fr/bretagne/morbihan/presidentielle-2022-le-morbihannais-alexandre-langlois-se-retire-faute-de-parrainages-951da8ae-8fd2-11ec-867e-e61dd7e562f1", title: "Présidentielle. Le Morbihannais Alexandre Langlois se retire faute de parrainages", outlet: "Ouest-France", published: 2022-02-17, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  parismatch_20190405_asselineau: {url: "https://www.parismatch.com/Actu/Politique/Debats-elections-europeennes-Asselineau-deja-candidat-pour-l-election-presidentielle-1617016", title: "Débat élections européennes : Asselineau déjà candidat pour l'élection... présidentielle", outlet: "Paris Match", published: 2019-04-05}
+  publicsenat_20211116_congres: {url: "https://www.publicsenat.fr/article/politique/congres-lr-les-chiffres-cles-191184", title: "Congrès LR : les chiffres clés", outlet: "Public Sénat", published: 2021-11-16, note: "Cinq candidats qualifiés ; Denis Payre n'a pas réuni les 250 parrainages d'élus (lecture par recherche web, passage non relu sur la capture)."}
+  publicsenat_20211130_zemmour: {url: "https://www.publicsenat.fr/actualites/politique/eric-zemmour-officialise-sa-candidature-a-l-election-presidentielle-191429", title: "Éric Zemmour officialise sa candidature à l'élection présidentielle", outlet: "Public Sénat", published: 2021-11-30}
+  publicsenat_20211202_congres: {url: "https://www.publicsenat.fr/article/politique/congres-lr-eric-ciotti-arrive-en-tete-du-premier-tour-avec-2559-des-voix-suivi-par", title: "Congrès LR : Eric Ciotti arrive en tête du premier tour avec 25,59 % des voix, suivi par Valérie Pécresse à 25 %", outlet: "Public Sénat", published: 2021-12-02}
+  publicsenat_20220130_primairepop: {url: "https://www.publicsenat.fr/actualites/politique/christiane-taubira-remporte-la-primaire-populaire-192093", title: "Christiane Taubira remporte la Primaire populaire", outlet: "Public Sénat", published: 2022-01-30}
+  rtl_20170420_poutou: {url: "https://www.rtl.fr/actu/politique/philippe-poutou-ne-sera-pas-candidat-a-la-presidentielle-de-2022-7788218259", title: "Philippe Poutou ne sera pas candidat à la présidentielle de 2022", outlet: "RTL", published: 2017-04-20, note: "Date donnée par la référence de la Wikipédia anglaise ; non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  sudouest_20210530_lagarde: {url: "https://www.sudouest.fr/politique/jean-christophe-lagarde-udi-je-souhaite-que-nous-ayons-un-candidat-en-2022-3438364.php", title: "Jean-Christophe Lagarde (UDI) : « Je souhaite que nous ayons un candidat en 2022 »", outlet: "Sud Ouest", published: 2021-05-30, note: "non rouverte (date lue dans la référence Wikipédia ou l'URL)"}
+  wp_en_1006746604: {url: "https://en.wikipedia.org/w/index.php?oldid=1006746604", title: "2022 French presidential election", outlet: "Wikipedia (en)", published: 2021-02-14, note: "Révision 2021-02-14T15:55:39Z"}
+  wp_en_1015047373: {url: "https://en.wikipedia.org/w/index.php?oldid=1015047373", title: "2022 French presidential election", outlet: "Wikipedia (en)", published: 2021-03-30, note: "Révision 2021-03-30T11:04:25Z"}
+  wp_en_997095981: {url: "https://en.wikipedia.org/w/index.php?oldid=997095981", title: "2022 French presidential election", outlet: "Wikipedia (en)", published: 2020-12-30, note: "Révision 2020-12-30T00:11:27Z"}
+  wp_fr_180420047: {url: "https://fr.wikipedia.org/w/index.php?oldid=180420047", title: "Élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-02-28, note: "Révision 2021-02-28T22:28:24Z"}
+  wp_fr_183808822: {url: "https://fr.wikipedia.org/w/index.php?oldid=183808822", title: "Élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-06-14, note: "Révision 2021-06-14T13:59:38Z"}
+  wp_fr_184261079: {url: "https://fr.wikipedia.org/w/index.php?oldid=184261079", title: "Élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-06-30, note: "Révision 2021-06-30T22:01:34Z"}
+  wp_fr_184654558: {url: "https://fr.wikipedia.org/w/index.php?oldid=184654558", title: "Élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-07-14, note: "Révision 2021-07-14T22:39:07Z"}
+  wp_fr_184954313: {url: "https://fr.wikipedia.org/w/index.php?oldid=184954313", title: "Élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-07-25, note: "Révision 2021-07-25T19:29:33Z"}
+  wp_fr_185017603: {url: "https://fr.wikipedia.org/w/index.php?oldid=185017603", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-07-28, note: "Révision 2021-07-28T04:22:51Z"}
+  wp_fr_185432630: {url: "https://fr.wikipedia.org/w/index.php?oldid=185432630", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-08-12, note: "Révision 2021-08-12T10:06:31Z"}
+  wp_fr_185925683: {url: "https://fr.wikipedia.org/w/index.php?oldid=185925683", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-08-30, note: "Révision 2021-08-30T16:13:58Z"}
+  wp_fr_186308296: {url: "https://fr.wikipedia.org/w/index.php?oldid=186308296", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-09-13, note: "Révision 2021-09-13T18:35:17Z"}
+  wp_fr_187075509: {url: "https://fr.wikipedia.org/w/index.php?oldid=187075509", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-10-11, note: "Révision 2021-10-11T20:32:30Z"}
+  wp_fr_187591612: {url: "https://fr.wikipedia.org/w/index.php?oldid=187591612", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-10-31, note: "Révision 2021-10-31T12:20:49Z"}
+  wp_fr_188447164: {url: "https://fr.wikipedia.org/w/index.php?oldid=188447164", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-11-30, note: "Révision 2021-11-30T22:03:32Z"}
+  wp_fr_188877344: {url: "https://fr.wikipedia.org/w/index.php?oldid=188877344", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-12-14, note: "Révision 2021-12-14T20:25:42Z"}
+  wp_fr_189405031: {url: "https://fr.wikipedia.org/w/index.php?oldid=189405031", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2021-12-31, note: "Révision 2021-12-31T15:01:13Z"}
+  wp_fr_189882897: {url: "https://fr.wikipedia.org/w/index.php?oldid=189882897", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2022-01-14, note: "Révision 2022-01-14T15:14:03Z"}
+  wp_fr_190420700: {url: "https://fr.wikipedia.org/w/index.php?oldid=190420700", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2022-01-31, note: "Révision 2022-01-31T23:05:04Z"}
+  wp_fr_190839700: {url: "https://fr.wikipedia.org/w/index.php?oldid=190839700", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2022-02-14, note: "Révision 2022-02-14T17:36:34Z"}
+  wp_fr_191475378: {url: "https://fr.wikipedia.org/w/index.php?oldid=191475378", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2022-02-27, note: "Révision 2022-02-27T23:19:55Z"}
+  wp_fr_191670745: {url: "https://fr.wikipedia.org/w/index.php?oldid=191670745", title: "Candidatures à l'élection présidentielle française de 2022", outlet: "Wikipédia (fr)", published: 2022-03-06, note: "Révision 2022-03-06T19:05:25Z"}
+
+persons:
+  - {id: "arthaud_nathalie", party: "lo", bloc: "far_left", final_status: "official"}
+  - {id: "roussel_fabien", party: "pcf", bloc: "far_left", final_status: "official"}
+  - {id: "macron_emmanuel", party: "lrem", bloc: "centre", final_status: "official"}
+  - {id: "lassalle_jean", party: "resistons", bloc: "other", final_status: "official"}
+  - {id: "le_pen_marine", party: "rn", bloc: "far_right", final_status: "official"}
+  - {id: "zemmour_eric", party: "reconquete", bloc: "far_right", final_status: "official"}
+  - {id: "melenchon_jean_luc", party: "lfi", bloc: "far_left", final_status: "official"}
+  - {id: "hidalgo_anne", party: "ps", bloc: "left", final_status: "official"}
+  - {id: "jadot_yannick", party: "eelv", bloc: "left", final_status: "official"}
+  - {id: "pecresse_valerie", party: "lr", bloc: "right", final_status: "official"}
+  - {id: "poutou_philippe", party: "npa", bloc: "far_left", final_status: "official"}
+  - {id: "dupont_aignan_nicolas", party: "dlf", bloc: "far_right", final_status: "official"}
+  - {id: "taubira_christiane", party: "prg", bloc: "left", final_status: "declared_absent", notes: "Candidate sous l'étiquette Walwari / divers gauche, soutenue par le PRG jusqu'au 14 février 2022 ; parti tiré de candidates.yaml."}
+  - {id: "bertrand_xavier", party: "lr", bloc: "right", final_status: "declared_absent", notes: "Déclaré hors LR en mars 2021 (divers droite), puis candidat au congrès LR."}
+  - {id: "barnier_michel", party: "lr", bloc: "right", final_status: "declared_absent"}
+  - {id: "ciotti_eric", party: "lr", bloc: "right", final_status: "declared_absent"}
+  - {id: "juvin_philippe", party: "lr", bloc: "right", final_status: "declared_absent"}
+  - {id: "payre_denis", party: "dvd", bloc: "right", final_status: "declared_absent", notes: "Nous Citoyens, candidat au congrès LR non qualifié faute de parrainages d'élus."}
+  - {id: "piolle_eric", party: "eelv", bloc: "left", final_status: "declared_absent"}
+  - {id: "rousseau_sandrine", party: "eelv", bloc: "left", final_status: "declared_absent"}
+  - {id: "batho_delphine", party: "eco", bloc: "left", final_status: "declared_absent", notes: "Présidente de Génération écologie (nuance eco de candidates.yaml)."}
+  - {id: "montebourg_arnaud", party: "dvg", bloc: "left", final_status: "declared_absent", notes: "Mouvement L'Engagement."}
+  - {id: "asselineau_francois", party: "upr", bloc: "other", final_status: "declared_absent"}
+  - {id: "poisson_jean_frederic", party: "pcd", bloc: "right", final_status: "declared_absent", notes: "VIA, la voie du peuple (ex-PCD) ; bloc du parti dans parties.yaml, rallié à Zemmour en décembre 2021."}
+  - {id: "philippot_florian", party: "exd", bloc: "far_right", final_status: "declared_absent", notes: "Les Patriotes."}
+  - {id: "kazib_anasse", party: "exg", bloc: "far_left", final_status: "declared_absent", notes: "NPA puis Révolution permanente."}
+  - {id: "thouy_helene", party: "parti_animaliste", bloc: "other", final_status: "declared_absent"}
+  - {id: "larrouturou_pierre", party: "nouvelle_donne", bloc: "left", final_status: "declared_absent", notes: "Participant de la Primaire populaire."}
+  - {id: "marchandise_charlotte", party: "div", bloc: "other", final_status: "declared_absent", notes: "Participante de la Primaire populaire."}
+  - {id: "le_foll_stephane", name: "Stéphane Le Foll", first_name: "Stéphane", last_name: "Le Foll", party: "ps", bloc: "left", final_status: "declared_absent"}
+  - {id: "son_forget_joachim", name: "Joachim Son-Forget", first_name: "Joachim", last_name: "Son-Forget", party_label: "Valeur absolue (sans étiquette)", bloc: "other", final_status: "declared_absent", notes: "Libellé « Eva Son-Forget » dans persons_2022.csv (libellé Wikidata postérieur) ; député ex-LREM, rallié à Zemmour en octobre 2021 ; petit candidat inclassé."}
+  - {id: "dang_tran_emmanuel", name: "Emmanuel Dang Tran", first_name: "Emmanuel", last_name: "Dang Tran", party: "pcf", bloc: "far_left", final_status: "declared_absent", notes: "Candidat à la consultation interne du PCF."}
+  - {id: "munck_gregoire", name: "Grégoire Munck", first_name: "Grégoire", last_name: "Munck", party: "pcf", bloc: "far_left", final_status: "declared_absent", notes: "Candidat à la consultation interne du PCF."}
+  - {id: "agueb_porterie_anna", name: "Anna Agueb-Porterie", first_name: "Anna", last_name: "Agueb-Porterie", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent", notes: "Participante de la Primaire populaire."}
+  - {id: "filoche_gerard", name: "Gérard Filoche", first_name: "Gérard", last_name: "Filoche", party_label: "Gauche démocratique et sociale", bloc: "far_left", final_status: "declared_absent", notes: "Candidat déclaré à la Primaire populaire, non retenu pour le vote final ; aucune sortie datée dans les sources : reste déclaré jusqu'à la liste officielle. Bloc : gauche radicale (ex-PS, GDS), choix discutable."}
+  - {id: "mazuel_philippe", name: "Philippe Mazuel", first_name: "Philippe", last_name: "Mazuel", party_label: "Parti des citoyens européens", bloc: "other", final_status: "declared_absent", notes: "Candidat déclaré à la Primaire populaire puis à la présidentielle."}
+  - {id: "giraud_gael", name: "Gaël Giraud", first_name: "Gaël", last_name: "Giraud", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent", notes: "Présélectionné de la Primaire populaire, retiré à la fin de la collecte des parrainages ; trace tardive (révision de janvier 2022)."}
+  - {id: "governatori_jean_marc", name: "Jean-Marc Governatori", first_name: "Jean-Marc", last_name: "Governatori", party_label: "Cap écologie", bloc: "other", final_status: "declared_absent", notes: "Candidat à la primaire de l'écologie puis candidat à la présidentielle malgré sa défaite."}
+  - {id: "traore_hadama", name: "Hadama Traoré", first_name: "Hadama", last_name: "Traoré", party_label: "La Révolution est en marche", bloc: "other", final_status: "declared_absent", notes: "Classé déclaré (février 2021) puis « pressenti ayant décliné » (juillet 2021) sans source datée du retrait."}
+  - {id: "drouet_eric", name: "Éric Drouet", first_name: "Éric", last_name: "Drouet", party_label: "Gilets jaunes, sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "langlois_alexandre", name: "Alexandre Langlois", first_name: "Alexandre", last_name: "Langlois", party_label: "sans étiquette (syndicat Vigi)", bloc: "other", final_status: "declared_absent"}
+  - {id: "mouraud_jacline", name: "Jacline Mouraud", first_name: "Jacline", last_name: "Mouraud", party_label: "Les Émergents", bloc: "other", final_status: "declared_absent"}
+  - {id: "martinez_antoine", name: "Antoine Martinez", first_name: "Antoine", last_name: "Martinez", party: "exd", bloc: "far_right", final_status: "declared_absent", notes: "Volontaires pour la France, parti qualifié d'extrême droite par la source."}
+  - {id: "egger_clara", name: "Clara Egger", first_name: "Clara", last_name: "Egger", party_label: "Espoir RIC 2022", bloc: "other", final_status: "declared_absent"}
+  - {id: "lazzarini_gilles", name: "Gilles Lazzarini", first_name: "Gilles", last_name: "Lazzarini", party_label: "Parti politique pour la paix et la protection de la planète", bloc: "other", final_status: "declared_absent"}
+  - {id: "cau_marie", name: "Marie Cau", first_name: "Marie", last_name: "Cau", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "kuzmanovic_georges", name: "Georges Kuzmanovic", first_name: "Georges", last_name: "Kuzmanovic", party_label: "République souveraine", bloc: "other", final_status: "declared_absent"}
+  - {id: "waechter_antoine", name: "Antoine Waechter", first_name: "Antoine", last_name: "Waechter", party_label: "Mouvement écologiste indépendant", bloc: "other", final_status: "declared_absent", notes: "Écologie « au-delà de la droite et de la gauche » : laissé en other."}
+  - {id: "ollivier_regis", name: "Régis Ollivier", first_name: "Régis", last_name: "Ollivier", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "grimal_fabrice", name: "Fabrice Grimal", first_name: "Fabrice", last_name: "Grimal", party_label: "La Concorde citoyenne", bloc: "other", final_status: "declared_absent"}
+  - {id: "vieira_gildas", name: "Gildas Vieira", first_name: "Gildas", last_name: "Vieira", party_label: "La France autrement", bloc: "other", final_status: "declared_absent"}
+  - {id: "laforets_luc", name: "Luc Laforets", first_name: "Luc", last_name: "Laforets", party_label: "Une perspective - la VIe République", bloc: "other", final_status: "declared_absent"}
+  - {id: "rocca_martin", name: "Martin Rocca", first_name: "Martin", last_name: "Rocca", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "furlan_philippe", name: "Philippe Furlan", first_name: "Philippe", last_name: "Furlan", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "boucher_benjamin_victor", name: "Benjamin Victor Boucher", first_name: "Benjamin Victor", last_name: "Boucher", party_label: "Union essentielle", bloc: "other", final_status: "declared_absent"}
+  - {id: "wittmann_clement", name: "Clément Wittmann", first_name: "Clément", last_name: "Wittmann", party_label: "écologiste décroissant, sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "pignol_gerard", name: "Gérard Pignol", first_name: "Gérard", last_name: "Pignol", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "azergui_nagib", name: "Nagib Azergui", first_name: "Nagib", last_name: "Azergui", party_label: "Union des démocrates musulmans français", bloc: "other", final_status: "declared_absent"}
+  - {id: "tauthui_stephane", name: "Stéphane Tauthui", first_name: "Stéphane", last_name: "Tauthui", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "wendlinger_stephane", name: "Stéphane Wendlinger", first_name: "Stéphane", last_name: "Wendlinger", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "rivoal_stephanie", name: "Stéphanie Rivoal", first_name: "Stéphanie", last_name: "Rivoal", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "kassem_fadi", name: "Fadi Kassem", first_name: "Fadi", last_name: "Kassem", party_label: "Pôle de renaissance communiste en France", bloc: "far_left", final_status: "declared_absent"}
+  - {id: "benedetti_yvan", name: "Yvan Benedetti", first_name: "Yvan", last_name: "Benedetti", party: "exd", bloc: "far_right", final_status: "declared_absent", notes: "Parti nationaliste français."}
+  - {id: "koenig_gaspard", name: "Gaspard Koenig", first_name: "Gaspard", last_name: "Koenig", party_label: "Simple", bloc: "other", final_status: "declared_absent"}
+  - {id: "dan_anne", name: "Anne Dan", first_name: "Anne", last_name: "Dan", party_label: "Réaliste", bloc: "other", final_status: "declared_absent"}
+  - {id: "bekaert_corinne", name: "Corinne Békaert", first_name: "Corinne", last_name: "Békaert", party_label: "Osons la différence", bloc: "other", final_status: "declared_absent"}
+  - {id: "tinland_serge", name: "Serge Tinland", first_name: "Serge", last_name: "Tinland", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent"}
+  - {id: "smati_rafik", name: "Rafik Smati", first_name: "Rafik", last_name: "Smati", party_label: "Objectif France", bloc: "other", final_status: "declared_absent"}
+  - {id: "miguet_nicolas", name: "Nicolas Miguet", first_name: "Nicolas", last_name: "Miguet", party_label: "Rassemblement des contribuables français", bloc: "other", final_status: "declared_absent"}
+  - {id: "perron_anne_marie", name: "Anne-Marie Perron", first_name: "Anne-Marie", last_name: "Perron", party_label: "Démocratie active et participative", bloc: "other", final_status: "declared_absent"}
+  - {id: "chiche_arnaud", name: "Arnaud Chiche", first_name: "Arnaud", last_name: "Chiche", party_label: "Santé en danger", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien dans un tableau), relevé dans les révisions."}
+  - {id: "fortane_jean_marc", name: "Jean-Marc Fortané", first_name: "Jean-Marc", last_name: "Fortané", party_label: "Fédération citoyenne", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "fessard_de_foucault_bertrand", name: "Bertrand Fessard de Foucault", first_name: "Bertrand", last_name: "Fessard de Foucault", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "cahez_thierry", name: "Thierry Cahez", first_name: "Thierry", last_name: "Cahez", party_label: "L'Avenir c'est la Terre", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "fiorile_eric_regis", name: "Éric-Régis Fiorile", first_name: "Éric-Régis", last_name: "Fiorile", party_label: "Conseil national de transition", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "lam_yaya", name: "Yaya Lam", first_name: "Yaya", last_name: "Lam", party_label: "Pour la France - À gauche", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "rocquemont_antoine", name: "Antoine Rocquemont", first_name: "Antoine", last_name: "Rocquemont", party_label: "La France au pouvoir", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "juving_brunet_alexandre", name: "Alexandre Juving-Brunet", first_name: "Alexandre", last_name: "Juving-Brunet", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "laurut_christian", name: "Christian Laurut", first_name: "Christian", last_name: "Laurut", party_label: "sans étiquette", bloc: "other", final_status: "declared_absent", notes: "Absent de persons_2022.csv (nom en gras sans lien), relevé dans les révisions."}
+  - {id: "royal_segolene", party: "ps", bloc: "left", final_status: "never_declared", notes: "Quitte le PS en 2017 selon la Wikipédia anglaise ; parti tiré de candidates.yaml."}
+  - {id: "hollande_francois", party: "ps", bloc: "left", final_status: "never_declared"}
+  - {id: "cazeneuve_bernard", party: "ps", bloc: "left", final_status: "never_declared"}
+  - {id: "hamon_benoit", party: "generation_s", bloc: "left", final_status: "never_declared"}
+  - {id: "ruffin_francois", party: "lfi", bloc: "far_left", final_status: "never_declared"}
+  - {id: "hulot_nicolas", party: "eco", bloc: "left", final_status: "never_declared"}
+  - {id: "philippe_edouard", party: "horizons", bloc: "centre", final_status: "never_declared"}
+  - {id: "le_maire_bruno", party: "lrem", bloc: "centre", final_status: "never_declared"}
+  - {id: "lagarde_jean_christophe", party: "udi", bloc: "right", final_status: "never_declared"}
+  - {id: "sarkozy_nicolas", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "fillon_francois", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "baroin_francois", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "wauquiez_laurent", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "retailleau_bruno", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "lisnard_david", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "dati_rachida", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "marechal_marion", party: "reconquete", bloc: "far_right", final_status: "never_declared", notes: "Sans parti pendant la période ; candidates.yaml la rattache à Reconquête en 2022 (ralliement de mars 2022)."}
+  - {id: "cheminade_jacques", party: "sp", bloc: "other", final_status: "never_declared"}
+  - {id: "larcher_gerard", name: "Gérard Larcher", first_name: "Gérard", last_name: "Larcher", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "bayou_julien", name: "Julien Bayou", first_name: "Julien", last_name: "Bayou", party: "eelv", bloc: "left", final_status: "never_declared"}
+  - {id: "vallaud_belkacem_najat", name: "Najat Vallaud-Belkacem", first_name: "Najat", last_name: "Vallaud-Belkacem", party: "ps", bloc: "left", final_status: "never_declared"}
+  - {id: "cambadelis_jean_christophe", name: "Jean-Christophe Cambadélis", first_name: "Jean-Christophe", last_name: "Cambadélis", party: "ps", bloc: "left", final_status: "never_declared"}
+  - {id: "kosciusko_morizet_nathalie", name: "Nathalie Kosciusko-Morizet", first_name: "Nathalie", last_name: "Kosciusko-Morizet", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "perdriau_gael", name: "Gaël Perdriau", first_name: "Gaël", last_name: "Perdriau", party: "lr", bloc: "right", final_status: "never_declared"}
+  - {id: "besancenot_olivier", name: "Olivier Besancenot", first_name: "Olivier", last_name: "Besancenot", party: "npa", bloc: "far_left", final_status: "never_declared"}
+  - {id: "bigard_jean_marie", name: "Jean-Marie Bigard", first_name: "Jean-Marie", last_name: "Bigard", party_label: "sans étiquette (humoriste)", bloc: "other", final_status: "never_declared"}
+  - {id: "turner_afida", name: "Afida Turner", first_name: "Afida", last_name: "Turner", party_label: "sans étiquette (chanteuse)", bloc: "other", final_status: "never_declared"}
+  - {id: "onfray_michel", name: "Michel Onfray", first_name: "Michel", last_name: "Onfray", party_label: "sans étiquette (philosophe)", bloc: "other", final_status: "never_declared"}
+  - {id: "de_villiers_pierre", name: "Pierre de Villiers", first_name: "Pierre", last_name: "de Villiers", party_label: "sans étiquette (général)", bloc: "other", final_status: "never_declared"}
+  - {id: "belattar_yassine", name: "Yassine Belattar", first_name: "Yassine", last_name: "Belattar", party_label: "sans étiquette (humoriste)", bloc: "other", final_status: "never_declared", notes: "Seulement dans le dossier de presse (Le Figaro, candidature conditionnelle) ; absent des pages Wikipédia."}
+
+processes:
+  - id: pcf_consultation_2021
+    name: "Consultation interne du PCF (7-9 mai 2021)"
+    kind: members_vote
+    organizers: ["pcf"]
+    participants: [roussel_fabien, dang_tran_emmanuel, munck_gregoire]
+    winner: roussel_fabien
+    rounds:
+      - {date: 2021-05-09, published: 2021-05-09, qualified: ["roussel_fabien"], sources: ["lemonde_20210509_roussel"], note: "Roussel 82,32 % (tableau de la Wikipédia française ; « plus de 98 % des suffrages exprimés » dans le texte), Dang Tran 1,82 %, Munck 0,16 %."}
+    notes: "Vote des adhérents sur la stratégie (candidature communiste autonome incarnée par Roussel ou soutien extérieur) ; Dang Tran et Munck figuraient au bulletin. Mélenchon n'y participait pas : la consultation ne l'exclut pas."
+  - id: eco_primary_2021
+    name: "Primaire présidentielle de l'écologie (septembre 2021)"
+    kind: open_primary
+    organizers: ["eelv", "generation_s", "Génération écologie", "Cap écologie", "Mouvement des progressistes"]
+    participants: [jadot_yannick, rousseau_sandrine, piolle_eric, batho_delphine, governatori_jean_marc]
+    winner: jadot_yannick
+    events_yaml: eelv_primary_2021
+    rounds:
+      - {date: 2021-09-19, published: 2021-09-19, qualified: ["jadot_yannick", "rousseau_sandrine"], sources: ["letemps_20210919_primaireeco"], note: "Jadot 27,70 %, Rousseau 25,14 %, Batho 22,32 %, Piolle 22,29 %, Governatori 2,35 %."}
+      - {date: 2021-09-28, published: 2021-09-28, qualified: ["jadot_yannick"], sources: ["lemonde_20210928_primaireeco"], note: "Jadot 51,03 %."}
+  - id: ps_vote_2021
+    name: "Vote des adhérents du Parti socialiste (14 octobre 2021)"
+    kind: members_vote
+    organizers: ["ps"]
+    participants: [hidalgo_anne, le_foll_stephane]
+    winner: hidalgo_anne
+    sources: [lexpress_20210827_faure]
+    rounds:
+      - {date: 2021-10-14, published: 2021-10-14, qualified: ["hidalgo_anne"], sources: ["france24_20211014_hidalgo"], note: "Hidalgo 72 %."}
+    notes: "Annoncé par Olivier Faure le 27 août 2021 ; aucun événement d'events.yaml ne le décrit."
+  - id: lr_congress_2021
+    name: "Congrès des Républicains (1er-4 décembre 2021)"
+    kind: congress
+    organizers: ["lr"]
+    participants: [pecresse_valerie, ciotti_eric, barnier_michel, bertrand_xavier, juvin_philippe]
+    winner: pecresse_valerie
+    events_yaml: lr_congress_2021
+    sources: [lefigaro_20210925_congres]
+    rounds:
+      - {date: 2021-12-02, published: 2021-12-02, qualified: ["ciotti_eric", "pecresse_valerie"], sources: ["publicsenat_20211202_congres"], note: "Ciotti 25,59 %, Pécresse 25,00 %, Barnier 23,93 %, Bertrand 22,36 %, Juvin 3,13 %."}
+      - {date: 2021-12-04, published: 2021-12-04, qualified: ["pecresse_valerie"], sources: ["lefigaro_20211204_pecresse"], note: "Pécresse 60,95 %."}
+    notes: "Denis Payre, candidat déclaré, n'a pas réuni les parrainages d'élus : non participant (retrait daté à part)."
+  - id: popular_primary_2022
+    name: "Primaire populaire (vote du 27 au 30 janvier 2022)"
+    kind: citizen_primary
+    organizers: ["Primaire populaire (collectif citoyen)"]
+    participants: [taubira_christiane, larrouturou_pierre, marchandise_charlotte, agueb_porterie_anna]
+    winner: taubira_christiane
+    events_yaml: popular_primary_2022
+    sources: [lemonde_20220115_primairepop]
+    rounds:
+      - {date: 2022-01-30, published: 2022-01-30, qualified: ["taubira_christiane"], sources: ["publicsenat_20220130_primairepop"], note: "Jugement majoritaire : Taubira « bien + » ; Larrouturou 4e, Marchandise 6e, Agueb-Porterie 7e."}
+    notes: "Participants : les quatre personnes ayant accepté de figurer au vote final (liste du 15 janvier 2022). Jadot, Hidalgo et Mélenchon, inscrits sans leur accord, ne sont pas participants et la primaire ne les exclut pas. Filoche et Mazuel, candidats déclarés à la primaire mais non qualifiés lors de la collecte des parrainages (11 juillet-11 octobre 2021), ne sont pas modélisés comme participants (la présélection ne se prête pas au schéma de tours)."
+
+events:
+  - {id: "cheminade_jacques__renouncement", type: "renouncement", person: "cheminade_jacques", date: null, published: 2017-03-18, published_basis: "source", sources: ["europe1_20170318_cheminade"], note: "Soutient Georges Kuzmanovic en 2022."}
+  - {id: "poutou_philippe__renouncement", type: "renouncement", person: "poutou_philippe", date: null, published: 2017-04-20, published_basis: "source", sources: ["rtl_20170420_poutou"], note: "« Declined » dans les deux éditions en janvier 2021."}
+  - {id: "macron_emmanuel__mention", type: "mention", person: "macron_emmanuel", date: 2017-07-02, published: 2017-07-02, published_basis: "source", sources: ["europe1_20170702_ferrand"], note: "Président sortant rééligible, listé comme candidat potentiel par la Wikipédia anglaise."}
+  - {id: "sarkozy_nicolas__renouncement", type: "renouncement", person: "sarkozy_nicolas", date: null, published: 2017-08-11, published_basis: "source", sources: ["ladepeche_20170811_sarkozy"], note: "« Ayant décliné » côté français, « Potential » côté anglais en janvier 2021 (même référence) ; renoncement redit le 2 mars 2021."}
+  - {id: "wauquiez_laurent__mention", type: "mention", person: "wauquiez_laurent", date: null, published: 2017-10-11, published_basis: "source", sources: ["liberation_20171011_wauquiez"]}
+  - {id: "fillon_francois__renouncement", type: "renouncement", person: "fillon_francois", date: null, published: 2017-11-19, published_basis: "source", sources: ["lejdd_20171119_fillon"]}
+  - {id: "le_maire_bruno__renouncement", type: "renouncement", person: "le_maire_bruno", date: null, published: 2017-11-19, published_basis: "source", sources: ["lefigaro_20171119_lemaire"], note: "« Ayant décliné » : soutient la réélection d'Emmanuel Macron."}
+  - {id: "kosciusko_morizet_nathalie__mention", type: "mention", person: "kosciusko_morizet_nathalie", date: null, published: 2019-02-15, published_basis: "source", sources: ["leparisien_20190215_tenors"]}
+  - {id: "asselineau_francois__declaration", type: "declaration", person: "asselineau_francois", date: 2019-04-04, published: 2019-04-05, published_basis: "source", sources: ["parismatch_20190405_asselineau"]}
+  - {id: "zemmour_eric__mention", type: "mention", person: "zemmour_eric", date: 2019-06-19, published: 2019-06-19, published_basis: "source", sources: ["marianne_20190619_zemmour"]}
+  - {id: "cazeneuve_bernard__mention", type: "mention", person: "cazeneuve_bernard", date: null, published: 2019-07-18, published_basis: "source", sources: ["franceinter_20190718_cazeneuve"]}
+  - {id: "baroin_francois__mention", type: "mention", person: "baroin_francois", date: null, published: 2019-07-19, published_basis: "source", sources: ["europe1_20190719_baroin"]}
+  - {id: "hollande_francois__renouncement", type: "renouncement", person: "hollande_francois", date: null, published: 2019-07-19, published_basis: "source", sources: ["orange_20190719_hollande"], note: "« Declined » dans la Wikipédia anglaise de janvier 2021."}
+  - {id: "royal_segolene__mention", type: "mention", person: "royal_segolene", date: 2019-08-25, published: 2019-08-25, published_basis: "source", sources: ["franceinfo_20190825_royal"]}
+  - {id: "taubira_christiane__mention", type: "mention", person: "taubira_christiane", date: 2019-09-26, published: 2019-09-26, published_basis: "source", sources: ["lefigaro_20190926_taubira"]}
+  - {id: "marechal_marion__renouncement", type: "renouncement", person: "marechal_marion", date: 2019-10-01, published: 2019-10-01, published_basis: "source", sources: ["lepoint_20191001_marechal"]}
+  - {id: "retailleau_bruno__mention", type: "mention", person: "retailleau_bruno", date: null, published: 2019-10-02, published_basis: "source", sources: ["orange_20191002_retailleau"]}
+  - {id: "larcher_gerard__renouncement", type: "renouncement", person: "larcher_gerard", date: null, published: 2019-10-07, published_basis: "source", sources: ["lefigaro_20191007_larcher"]}
+  - {id: "besancenot_olivier__mention", type: "mention", person: "besancenot_olivier", date: null, published: 2019-10-17, published_basis: "source", sources: ["liberation_20191017_besancenot"]}
+  - {id: "lassalle_jean__declaration", type: "declaration", person: "lassalle_jean", date: null, published: 2019-11-28, published_basis: "source", sources: ["laprovence_20191128_lassalle"], note: "La version de janvier 2021 date l'officialisation du 21 septembre 2018 avec une source du 28 novembre 2019 ; les versions de 2022 la datent du 16 mars 2021."}
+  - {id: "hidalgo_anne__renouncement", type: "renouncement", person: "hidalgo_anne", date: 2020-01-11, published: 2020-01-11, published_basis: "source", sources: ["20minutes_20200111_hidalgo"], note: "Wikipédia anglaise de janvier 2021 : « Declined »."}
+  - {id: "le_pen_marine__declaration", type: "declaration", person: "le_pen_marine", date: 2020-01-16, published: 2020-01-17, published_basis: "source", sources: ["courrierinternational_20200117_lepen"], note: "Conférence de presse du 16 janvier 2020 ; source datée du lendemain."}
+  - {id: "poisson_jean_frederic__declaration", type: "declaration", person: "poisson_jean_frederic", date: 2020-07-16, published: 2020-07-16, published_basis: "source", sources: ["ouestfrance_20200716_poisson"]}
+  - {id: "onfray_michel__renouncement", type: "renouncement", person: "onfray_michel", date: null, published: 2020-09-16, published_basis: "source", sources: ["laprovence_20200916_onfray"]}
+  - {id: "cazeneuve_bernard__renouncement", type: "renouncement", person: "cazeneuve_bernard", date: null, published: 2020-09-20, published_basis: "source", sources: ["lefigaro_20200920_cazeneuve"]}
+  - {id: "dupont_aignan_nicolas__declaration", type: "declaration", person: "dupont_aignan_nicolas", date: 2020-09-26, published: 2020-09-26, published_basis: "source", sources: ["ladepeche_20200926_dupontaignan"]}
+  - {id: "bigard_jean_marie__renouncement", type: "renouncement", person: "bigard_jean_marie", date: null, published: 2020-09-29, published_basis: "source", sources: ["ouestfrance_20200929_bigard"]}
+  - {id: "baroin_francois__renouncement", type: "renouncement", person: "baroin_francois", date: 2020-10-06, published: 2020-10-06, published_basis: "source", sources: ["franceinfo_20201006_baroin"], note: "Renoncement redit le 8 juillet 2021 (Public Sénat)."}
+  - {id: "drouet_eric__declaration", type: "declaration", person: "drouet_eric", date: 2020-10-19, published: 2020-10-19, published_basis: "source", sources: ["midilibre_20201019_drouet"]}
+  - {id: "montebourg_arnaud__mention", type: "mention", person: "montebourg_arnaud", date: null, published: 2020-11-03, published_basis: "source", sources: ["francebleu_20201103_montebourg"]}
+  - {id: "melenchon_jean_luc__declaration", type: "declaration", person: "melenchon_jean_luc", date: 2020-11-08, published: 2020-11-08, published_basis: "source", sources: ["lemonde_20201108_melenchon"]}
+  - {id: "rousseau_sandrine__primary_entry", type: "primary_entry", person: "rousseau_sandrine", process: "eco_primary_2021", date: null, published: 2020-11-19, published_basis: "source", sources: ["liberation_20201119_rousseau"]}
+  - {id: "jadot_yannick__primary_entry", type: "primary_entry", person: "jadot_yannick", process: "eco_primary_2021", date: null, published: 2020-11-22, published_basis: "source", sources: ["franceinfo_20201122_eelv"], note: "Candidat déclaré à la primaire selon franceinfo ; officialisation formelle le 30 juin 2021 (franceinfo), date retenue par les versions de 2022."}
+  - {id: "piolle_eric__primary_entry", type: "primary_entry", person: "piolle_eric", process: "eco_primary_2021", date: null, published: 2020-11-23, published_basis: "source", sources: ["lemonde_20201123_eelv"], note: "« trois candidats sont en lice » ; candidature officialisée le 29 juin 2021 (France Bleu)."}
+  - {id: "roussel_fabien__declaration", type: "declaration", person: "roussel_fabien", date: 2020-11-26, published: 2020-11-26, published_basis: "source", sources: ["lefigaro_20201126_roussel"], note: "La Wikipédia française parle d'annonce de candidature ; le titre du Figaro dit « se prépare, mais fera voter les militants »."}
+  - {id: "de_villiers_pierre__renouncement", type: "renouncement", person: "de_villiers_pierre", date: null, published: 2020-12-06, published_basis: "source", sources: ["lavoixdunord_20201206_villiers"]}
+  - {id: "bayou_julien__mention", type: "mention", person: "bayou_julien", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"]}
+  - {id: "bertrand_xavier__mention", type: "mention", person: "bertrand_xavier", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"], note: "« Potential » dans la Wikipédia anglaise (références de 2017 et 2018)."}
+  - {id: "hamon_benoit__mention", type: "mention", person: "hamon_benoit", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"], note: "« Potential » (référence de 2017 sur la création de Génération.s)."}
+  - {id: "hulot_nicolas__mention", type: "mention", person: "hulot_nicolas", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"]}
+  - {id: "jadot_yannick__mention", type: "mention", person: "jadot_yannick", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"], note: "« Potential » dans la Wikipédia anglaise (référence : article du Figaro du 27 mai 2019 sur les européennes)."}
+  - {id: "lagarde_jean_christophe__mention", type: "mention", person: "lagarde_jean_christophe", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"], note: "« Potential » (référence de 2018 sur les européennes)."}
+  - {id: "le_foll_stephane__mention", type: "mention", person: "le_foll_stephane", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"], note: "« Potential » dans la Wikipédia anglaise (référence Europe 1 du 20 mai 2019)."}
+  - {id: "pecresse_valerie__mention", type: "mention", person: "pecresse_valerie", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"], note: "« Potential » dans la Wikipédia anglaise (référence de 2017 sur son mouvement Libres!)."}
+  - {id: "son_forget_joachim__declaration", type: "declaration", person: "son_forget_joachim", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"], note: "« Declared » dans la Wikipédia anglaise de janvier 2021 (sans référence datée)."}
+  - {id: "vallaud_belkacem_najat__mention", type: "mention", person: "vallaud_belkacem_najat", date: null, published: 2020-12-30, published_basis: "wikipedia_revision", sources: ["wp_en_997095981"]}
+  - {id: "arthaud_nathalie__investiture", type: "investiture", person: "arthaud_nathalie", date: 2020-12-20, published: 2021-01-02, published_basis: "source", sources: ["lo_20210102_motion"], note: "Candidature décidée par le 50e congrès de LO (19-20 décembre 2020) ; la Wikipédia anglaise la listait d'abord comme possible (sondage Sud Ouest du 3 novembre 2019, page non rouverte)."}
+  - {id: "juvin_philippe__mention", type: "mention", person: "juvin_philippe", date: null, published: 2021-01-06, published_basis: "source", sources: ["huffpost_20210106_juvin"], note: "Se « prépare »."}
+  - {id: "perdriau_gael__mention", type: "mention", person: "perdriau_gael", date: null, published: 2021-01-10, published_basis: "source", sources: ["francebleu_20210110_perdriau"]}
+  - {id: "turner_afida__renouncement", type: "renouncement", person: "turner_afida", date: null, published: 2021-01-13, published_basis: "source", sources: ["leprogres_20210113_turner"]}
+  - {id: "ruffin_francois__renouncement", type: "renouncement", person: "ruffin_francois", date: 2021-01-14, published: 2021-01-14, published_basis: "source", sources: ["liberation_20210114_ruffin"], note: "Première trace en juillet 2021 (création de la page des candidatures), sous « pressentis ayant décliné » ; cité ensuite parmi les dix premiers parrainés de la Primaire populaire, sans candidature."}
+  - {id: "cambadelis_jean_christophe__mention", type: "mention", person: "cambadelis_jean_christophe", date: null, published: 2021-02-03, published_basis: "source", sources: ["lopinion_20210203_cambadelis"], note: "« Il faudra une primaire et j'en serai »."}
+  - {id: "hamon_benoit__renouncement", type: "renouncement", person: "hamon_benoit", date: null, published: 2021-02-09, published_basis: "source", sources: ["msn_20210209_hamon"]}
+  - {id: "barnier_michel__mention", type: "mention", person: "barnier_michel", date: null, published: 2021-02-14, published_basis: "wikipedia_revision", sources: ["wp_en_1006746604"], note: "« Potential » (The Times, sans date)."}
+  - {id: "dati_rachida__mention", type: "mention", person: "dati_rachida", date: null, published: 2021-02-14, published_basis: "wikipedia_revision", sources: ["wp_en_1006746604"]}
+  - {id: "hidalgo_anne__mention", type: "mention", person: "hidalgo_anne", date: null, published: 2021-02-14, published_basis: "wikipedia_revision", sources: ["wp_en_1006746604"], note: "Repassée en « Potential » dans la Wikipédia anglaise."}
+  - {id: "hollande_francois__mention", type: "mention", person: "hollande_francois", date: null, published: 2021-02-14, published_basis: "wikipedia_revision", sources: ["wp_en_1006746604"], note: "Repassé en « Potential » dans la Wikipédia anglaise (retour)."}
+  - {id: "lisnard_david__mention", type: "mention", person: "lisnard_david", date: null, published: 2021-02-14, published_basis: "wikipedia_revision", sources: ["wp_en_1006746604"]}
+  - {id: "traore_hadama__declaration", type: "declaration", person: "traore_hadama", date: null, published: 2021-02-28, published_basis: "wikipedia_revision", sources: ["wp_fr_180420047"], note: "Référence citée : Le Parisien du 7 juin 2020 (« prépare l'élection présidentielle »)."}
+  - {id: "roussel_fabien__primary_entry", type: "primary_entry", person: "roussel_fabien", process: "pcf_consultation_2021", date: 2021-03-13, published: 2021-03-14, published_basis: "source", sources: ["france3_20210314_roussel"], note: "Candidature approuvée par le conseil national du PCF le 13 mars 2021."}
+  - {id: "lassalle_jean__declaration_2", type: "declaration", person: "lassalle_jean", date: 2021-03-16, published: 2021-03-16, published_basis: "source", sources: ["lepoint_20210316_lassalle"]}
+  - {id: "bertrand_xavier__declaration", type: "declaration", person: "bertrand_xavier", date: 2021-03-24, published: 2021-03-24, published_basis: "source", sources: ["bfmtv_20210324_bertrand"], note: "Candidat hors primaire."}
+  - {id: "dang_tran_emmanuel__primary_entry", type: "primary_entry", person: "dang_tran_emmanuel", process: "pcf_consultation_2021", date: null, published: 2021-03-30, published_basis: "wikipedia_revision", sources: ["wp_en_1015047373"]}
+  - {id: "munck_gregoire__primary_entry", type: "primary_entry", person: "munck_gregoire", process: "pcf_consultation_2021", date: null, published: 2021-03-30, published_basis: "wikipedia_revision", sources: ["wp_en_1015047373"]}
+  - {id: "royal_segolene__renouncement", type: "renouncement", person: "royal_segolene", date: 2021-05-05, published: 2021-05-05, published_basis: "source", sources: ["franceinfo_20210505_royal"]}
+  - {id: "lagarde_jean_christophe__mention_2", type: "mention", person: "lagarde_jean_christophe", date: null, published: 2021-05-30, published_basis: "source", sources: ["sudouest_20210530_lagarde"], note: "Envisage sa candidature ; « possible » dans le dossier du Figaro du 4 octobre 2021."}
+  - {id: "montebourg_arnaud__renouncement", type: "renouncement", person: "montebourg_arnaud", date: 2021-06-09, published: 2021-06-09, published_basis: "source", sources: ["lepoint_20210609_montebourg"]}
+  - {id: "kazib_anasse__declaration", type: "declaration", person: "kazib_anasse", date: null, published: 2021-06-14, published_basis: "wikipedia_revision", sources: ["wp_fr_183808822"]}
+  - {id: "langlois_alexandre__declaration", type: "declaration", person: "langlois_alexandre", date: null, published: 2021-06-14, published_basis: "wikipedia_revision", sources: ["wp_fr_183808822"]}
+  - {id: "mouraud_jacline__declaration", type: "declaration", person: "mouraud_jacline", date: null, published: 2021-06-14, published_basis: "wikipedia_revision", sources: ["wp_fr_183808822"]}
+  - {id: "poutou_philippe__investiture", type: "investiture", person: "poutou_philippe", date: null, published: 2021-06-28, published_basis: "source", sources: ["20minutes_20210628_poutou"], note: "Désigné candidat par la conférence nationale du NPA."}
+  - {id: "martinez_antoine__declaration", type: "declaration", person: "martinez_antoine", date: null, published: 2021-06-30, published_basis: "wikipedia_revision", sources: ["wp_fr_184261079"]}
+  - {id: "governatori_jean_marc__primary_entry", type: "primary_entry", person: "governatori_jean_marc", process: "eco_primary_2021", date: 2021-07-03, published: 2021-07-03, published_basis: "source", sources: ["lemonde_20210703_governatori"]}
+  - {id: "batho_delphine__primary_entry", type: "primary_entry", person: "batho_delphine", process: "eco_primary_2021", date: 2021-07-05, published: 2021-07-05, published_basis: "source", sources: ["franceinfo_20210705_batho"]}
+  - {id: "filoche_gerard__declaration", type: "declaration", person: "filoche_gerard", date: null, published: 2021-07-11, published_basis: "source", sources: ["lejdd_20210711_primairepop"], note: "Candidat à la Primaire populaire, non qualifié pour le vote final (parrainages insuffisants) : phase de présélection non modélisée comme processus."}
+  - {id: "larrouturou_pierre__primary_entry", type: "primary_entry", person: "larrouturou_pierre", process: "popular_primary_2022", date: null, published: 2021-07-11, published_basis: "source", sources: ["lejdd_20210711_primairepop"]}
+  - {id: "egger_clara__declaration", type: "declaration", person: "egger_clara", date: null, published: 2021-07-14, published_basis: "wikipedia_revision", sources: ["wp_fr_184654558"]}
+  - {id: "lazzarini_gilles__declaration", type: "declaration", person: "lazzarini_gilles", date: null, published: 2021-07-14, published_basis: "wikipedia_revision", sources: ["wp_fr_184654558"]}
+  - {id: "philippot_florian__declaration", type: "declaration", person: "philippot_florian", date: 2021-07-14, published: 2021-07-14, published_basis: "source", sources: ["lefigaro_20210714_philippot"]}
+  - {id: "thouy_helene__declaration", type: "declaration", person: "thouy_helene", date: null, published: 2021-07-14, published_basis: "wikipedia_revision", sources: ["wp_fr_184654558"]}
+  - {id: "le_foll_stephane__declaration", type: "declaration", person: "le_foll_stephane", date: null, published: 2021-07-18, published_basis: "source", sources: ["lemonde_20210718_lefoll"], note: "Candidat, réclame une primaire au PS (titre du Monde)."}
+  - {id: "pecresse_valerie__declaration", type: "declaration", person: "pecresse_valerie", date: 2021-07-22, published: 2021-07-22, published_basis: "source", sources: ["lefigaro_20210722_pecresse"], note: "Candidate à la présidence et à une primaire de la droite alors non actée."}
+  - {id: "cau_marie__declaration", type: "declaration", person: "cau_marie", date: null, published: 2021-07-25, published_basis: "wikipedia_revision", sources: ["wp_fr_184954313"]}
+  - {id: "juvin_philippe__declaration", type: "declaration", person: "juvin_philippe", date: null, published: 2021-07-27, published_basis: "source", sources: ["20minutes_20210727_juvin"], note: "Candidat à la primaire de la droite."}
+  - {id: "traore_hadama__withdrawal", type: "withdrawal", person: "traore_hadama", date: null, published: 2021-07-28, published_basis: "wikipedia_revision", sources: ["wp_fr_185017603"], note: "Passe sous « candidats pressentis ayant décliné » sans source datée."}
+  - {id: "philippe_edouard__renouncement", type: "renouncement", person: "philippe_edouard", date: null, published: 2021-08-12, published_basis: "wikipedia_revision", sources: ["wp_fr_185432630"], note: "Classé « pressenti ayant décliné » ; la référence (Le Point, 31 mars 2021, « J'aime être aux manettes ») ne dit pas de renoncement dans son titre."}
+  - {id: "wauquiez_laurent__renouncement", type: "renouncement", person: "wauquiez_laurent", date: null, published: 2021-08-26, published_basis: "source", sources: ["bfmtv_20210826_wauquiez"], note: "Ne sera pas candidat à la primaire de la droite."}
+  - {id: "barnier_michel__declaration", type: "declaration", person: "barnier_michel", date: null, published: 2021-08-27, published_basis: "source", sources: ["lefigaro_20210827_primairedroite"], note: "Candidat à une primaire de la droite alors non actée."}
+  - {id: "ciotti_eric__declaration", type: "declaration", person: "ciotti_eric", date: null, published: 2021-08-27, published_basis: "source", sources: ["lefigaro_20210827_primairedroite"], note: "Candidat à une primaire de la droite alors non actée."}
+  - {id: "payre_denis__declaration", type: "declaration", person: "payre_denis", date: 2021-08-29, published: 2021-08-29, published_basis: "source", sources: ["lemonde_20210829_payre"], note: "Candidat à une primaire LR."}
+  - {id: "retailleau_bruno__renouncement", type: "renouncement", person: "retailleau_bruno", date: null, published: 2021-08-30, published_basis: "wikipedia_revision", sources: ["wp_fr_185925683"], note: "Référence RMC non datée."}
+  - {id: "montebourg_arnaud__declaration", type: "declaration", person: "montebourg_arnaud", date: null, published: 2021-09-03, published_basis: "source", sources: ["lefigaro_20210903_montebourg"], note: "Annonce publique le 4 septembre 2021 (Wikipédia) ; décision rapportée la veille par Le Figaro."}
+  - {id: "hidalgo_anne__declaration", type: "declaration", person: "hidalgo_anne", date: 2021-09-12, published: 2021-09-12, published_basis: "source", sources: ["lefigaro_20210912_hidalgo"], events_yaml: "hidalgo_declaration_2021"}
+  - {id: "hidalgo_anne__primary_entry", type: "primary_entry", person: "hidalgo_anne", process: "ps_vote_2021", date: null, published: 2021-09-13, published_basis: "wikipedia_revision", sources: ["wp_fr_186308296"], note: "Figure au tableau du vote interne du PS."}
+  - {id: "kuzmanovic_georges__declaration", type: "declaration", person: "kuzmanovic_georges", date: null, published: 2021-09-13, published_basis: "wikipedia_revision", sources: ["wp_fr_186308296"]}
+  - {id: "le_foll_stephane__primary_entry", type: "primary_entry", person: "le_foll_stephane", process: "ps_vote_2021", date: null, published: 2021-09-13, published_basis: "wikipedia_revision", sources: ["wp_fr_186308296"]}
+  - {id: "arthaud_nathalie__declaration", type: "declaration", person: "arthaud_nathalie", date: 2021-09-16, published: 2021-09-16, published_basis: "source", sources: ["lci_20210916_arthaud"], note: "Lancement public de la campagne."}
+  - {id: "taubira_christiane__renouncement", type: "renouncement", person: "taubira_christiane", date: 2021-09-16, published: 2021-09-16, published_basis: "source", sources: ["lefigaro_20210916_taubira"]}
+  - {id: "waechter_antoine__declaration", type: "declaration", person: "waechter_antoine", date: 2021-09-16, published: 2021-09-16, published_basis: "source", sources: ["lemonde_20210916_waechter"]}
+  - {id: "barnier_michel__primary_entry", type: "primary_entry", person: "barnier_michel", process: "lr_congress_2021", date: null, published: 2021-09-25, published_basis: "source", sources: ["lefigaro_20210925_congres"]}
+  - {id: "ciotti_eric__primary_entry", type: "primary_entry", person: "ciotti_eric", process: "lr_congress_2021", date: null, published: 2021-09-25, published_basis: "source", sources: ["lefigaro_20210925_congres"]}
+  - {id: "juvin_philippe__primary_entry", type: "primary_entry", person: "juvin_philippe", process: "lr_congress_2021", date: null, published: 2021-09-25, published_basis: "source", sources: ["lefigaro_20210925_congres"]}
+  - {id: "pecresse_valerie__primary_entry", type: "primary_entry", person: "pecresse_valerie", process: "lr_congress_2021", date: null, published: 2021-09-25, published_basis: "source", sources: ["lefigaro_20210925_congres"], note: "Les adhérents LR choisissent le congrès (25 septembre 2021) ; candidate déjà déclarée."}
+  - {id: "lisnard_david__renouncement", type: "renouncement", person: "lisnard_david", date: null, published: 2021-09-28, published_basis: "source", sources: ["20minutes_20210928_lisnard"]}
+  - {id: "ollivier_regis__declaration", type: "declaration", person: "ollivier_regis", date: null, published: 2021-10-03, published_basis: "source", sources: ["leparisien_20211003_ollivier"], note: "Candidature annoncée en avril 2021 (jour inconnu), connue des sources parcourues seulement par l'article qui rapporte son abandon. Désaccord : le dossier du Figaro du 4 octobre 2021 le liste encore comme déclaré."}
+  - {id: "ollivier_regis__withdrawal", type: "withdrawal", person: "ollivier_regis", date: null, published: 2021-10-03, published_basis: "source", sources: ["leparisien_20211003_ollivier"]}
+  - {id: "belattar_yassine__mention", type: "mention", person: "belattar_yassine", date: null, published: 2021-10-04, published_basis: "source", sources: ["lefigaro_20211004_pretendants"], note: "Dossier de presse : candidature conditionnelle."}
+  - {id: "macron_emmanuel__mention_2", type: "mention", person: "macron_emmanuel", date: 2021-10-04, published: 2021-10-04, published_basis: "source", sources: ["lefigaro_20211004_pretendants"], note: "Dossier de presse : « possible »."}
+  - {id: "royal_segolene__mention_2", type: "mention", person: "royal_segolene", date: null, published: 2021-10-04, published_basis: "source", sources: ["lefigaro_20211004_pretendants"], note: "Dossier de presse : « possible », après son renoncement de mai 2021 (désaccord avec la Wikipédia, qui la classe parmi les pressentis ayant décliné)."}
+  - {id: "zemmour_eric__mention_2", type: "mention", person: "zemmour_eric", date: 2021-10-04, published: 2021-10-04, published_basis: "source", sources: ["lefigaro_20211004_pretendants"], note: "Dossier de presse : « pas officiellement lancé ». Absent de la Wikipédia anglaise de septembre à fin novembre 2021, la française ne liste pas les non-déclarés."}
+  - {id: "agueb_porterie_anna__primary_entry", type: "primary_entry", person: "agueb_porterie_anna", process: "popular_primary_2022", date: null, published: 2021-10-11, published_basis: "wikipedia_revision", sources: ["wp_fr_187075509"], note: "Déclarée candidate à la Primaire populaire ; présélectionnée, puis liste finale du 15 janvier 2022 (Le Monde)."}
+  - {id: "bertrand_xavier__primary_entry", type: "primary_entry", person: "bertrand_xavier", process: "lr_congress_2021", date: 2021-10-11, published: 2021-10-11, published_basis: "source", sources: ["lemonde_20211011_bertrand"]}
+  - {id: "marchandise_charlotte__primary_entry", type: "primary_entry", person: "marchandise_charlotte", process: "popular_primary_2022", date: null, published: 2021-10-11, published_basis: "wikipedia_revision", sources: ["wp_fr_187075509"], note: "Déclarée candidate à la Primaire populaire ; présélectionnée, puis liste finale du 15 janvier 2022 (Le Monde)."}
+  - {id: "mazuel_philippe__declaration", type: "declaration", person: "mazuel_philippe", date: null, published: 2021-10-11, published_basis: "wikipedia_revision", sources: ["wp_fr_187075509"], note: "Candidat à la Primaire populaire non qualifié pour le vote final, puis listé parmi les candidats déclarés à la présidentielle."}
+  - {id: "furlan_philippe__declaration", type: "declaration", person: "furlan_philippe", date: null, published: 2021-10-31, published_basis: "wikipedia_revision", sources: ["wp_fr_187591612"]}
+  - {id: "grimal_fabrice__declaration", type: "declaration", person: "grimal_fabrice", date: null, published: 2021-10-31, published_basis: "wikipedia_revision", sources: ["wp_fr_187591612"]}
+  - {id: "laforets_luc__declaration", type: "declaration", person: "laforets_luc", date: null, published: 2021-10-31, published_basis: "wikipedia_revision", sources: ["wp_fr_187591612"]}
+  - {id: "rocca_martin__declaration", type: "declaration", person: "rocca_martin", date: null, published: 2021-10-31, published_basis: "wikipedia_revision", sources: ["wp_fr_187591612"]}
+  - {id: "vieira_gildas__declaration", type: "declaration", person: "vieira_gildas", date: null, published: 2021-10-31, published_basis: "wikipedia_revision", sources: ["wp_fr_187591612"]}
+  - {id: "lagarde_jean_christophe__renouncement", type: "renouncement", person: "lagarde_jean_christophe", date: 2021-11-08, published: 2021-11-08, published_basis: "source", sources: ["leparisien_20211108_lagarde"]}
+  - {id: "payre_denis__withdrawal", type: "withdrawal", person: "payre_denis", date: null, published: 2021-11-16, published_basis: "source", sources: ["publicsenat_20211116_congres"], note: "Non qualifié pour le congrès faute des 250 parrainages d'élus (date limite 2 novembre 2021) ; la Wikipédia française le retire du tableau dans la révision du 2021-11-14. Traité comme retrait, pas comme participant au congrès."}
+  - {id: "son_forget_joachim__withdrawal", type: "withdrawal", person: "son_forget_joachim", date: null, published: 2021-11-30, published_basis: "wikipedia_revision", sources: ["wp_fr_188447164"], note: "Rejoint la campagne d'Éric Zemmour en octobre 2021 (mi-octobre selon Le Temps) ; aucune source datée dans les révisions, première révision qui l'enregistre."}
+  - {id: "zemmour_eric__declaration", type: "declaration", person: "zemmour_eric", date: 2021-11-30, published: 2021-11-30, published_basis: "source", sources: ["publicsenat_20211130_zemmour"], events_yaml: "zemmour_declaration_2021"}
+  - {id: "poisson_jean_frederic__withdrawal", type: "withdrawal", person: "poisson_jean_frederic", date: 2021-12-03, published: 2021-12-03, published_basis: "source", sources: ["huffpost_20211203_poisson"], note: "Retrait au profit d'Éric Zemmour. Le dossier du Figaro (4 octobre 2021) le disait déjà prêt à soutenir Zemmour s'il se présentait."}
+  - {id: "mouraud_jacline__withdrawal", type: "withdrawal", person: "mouraud_jacline", date: null, published: 2021-12-05, published_basis: "source", sources: ["lepoint_20211205_mouraud"], note: "Rallie Éric Zemmour."}
+  - {id: "azergui_nagib__declaration", type: "declaration", person: "azergui_nagib", date: null, published: 2021-12-14, published_basis: "wikipedia_revision", sources: ["wp_fr_188877344"]}
+  - {id: "boucher_benjamin_victor__declaration", type: "declaration", person: "boucher_benjamin_victor", date: null, published: 2021-12-14, published_basis: "wikipedia_revision", sources: ["wp_fr_188877344"]}
+  - {id: "pignol_gerard__declaration", type: "declaration", person: "pignol_gerard", date: null, published: 2021-12-14, published_basis: "wikipedia_revision", sources: ["wp_fr_188877344"]}
+  - {id: "rivoal_stephanie__declaration", type: "declaration", person: "rivoal_stephanie", date: null, published: 2021-12-14, published_basis: "wikipedia_revision", sources: ["wp_fr_188877344"]}
+  - {id: "tauthui_stephane__declaration", type: "declaration", person: "tauthui_stephane", date: null, published: 2021-12-14, published_basis: "wikipedia_revision", sources: ["wp_fr_188877344"]}
+  - {id: "wendlinger_stephane__declaration", type: "declaration", person: "wendlinger_stephane", date: null, published: 2021-12-14, published_basis: "wikipedia_revision", sources: ["wp_fr_188877344"]}
+  - {id: "wittmann_clement__declaration", type: "declaration", person: "wittmann_clement", date: null, published: 2021-12-14, published_basis: "wikipedia_revision", sources: ["wp_fr_188877344"]}
+  - {id: "taubira_christiane__mention_2", type: "mention", person: "taubira_christiane", date: 2021-12-17, published: 2021-12-17, published_basis: "source", sources: ["lemonde_20211217_taubira"], note: "« Envisage » une candidature (retour)."}
+  - {id: "benedetti_yvan__declaration", type: "declaration", person: "benedetti_yvan", date: null, published: 2021-12-31, published_basis: "wikipedia_revision", sources: ["wp_fr_189405031"]}
+  - {id: "kassem_fadi__declaration", type: "declaration", person: "kassem_fadi", date: null, published: 2021-12-31, published_basis: "wikipedia_revision", sources: ["wp_fr_189405031"]}
+  - {id: "taubira_christiane__primary_entry", type: "primary_entry", person: "taubira_christiane", process: "popular_primary_2022", date: 2022-01-09, published: 2022-01-09, published_basis: "source", sources: ["lepoint_20220109_taubira"]}
+  - {id: "koenig_gaspard__declaration", type: "declaration", person: "koenig_gaspard", date: null, published: 2022-01-14, published_basis: "wikipedia_revision", sources: ["wp_fr_189882897"]}
+  - {id: "taubira_christiane__declaration", type: "declaration", person: "taubira_christiane", date: 2022-01-15, published: 2022-01-15, published_basis: "source", sources: ["liberation_20220115_taubira"]}
+  - {id: "montebourg_arnaud__withdrawal", type: "withdrawal", person: "montebourg_arnaud", date: 2022-01-19, published: 2022-01-19, published_basis: "source", sources: ["lemonde_20220119_montebourg"]}
+  - {id: "governatori_jean_marc__declaration", type: "declaration", person: "governatori_jean_marc", date: null, published: 2022-01-21, published_basis: "source", sources: ["bfmtv_20220121_governatori"], note: "Candidat à la présidentielle après sa défaite à la primaire (retour)."}
+  - {id: "perron_anne_marie__declaration", type: "declaration", person: "perron_anne_marie", date: null, published: 2022-01-22, published_basis: "source", sources: ["laminute_20220122_perron"]}
+  - {id: "bekaert_corinne__declaration", type: "declaration", person: "bekaert_corinne", date: null, published: 2022-01-31, published_basis: "wikipedia_revision", sources: ["wp_fr_190420700"]}
+  - {id: "dan_anne__declaration", type: "declaration", person: "dan_anne", date: null, published: 2022-01-31, published_basis: "wikipedia_revision", sources: ["wp_fr_190420700"]}
+  - {id: "giraud_gael__declaration", type: "declaration", person: "giraud_gael", date: null, published: 2022-01-31, published_basis: "wikipedia_revision", sources: ["wp_fr_190420700"], note: "Présélectionné de la Primaire populaire (collecte close le 11 octobre 2021)."}
+  - {id: "giraud_gael__withdrawal", type: "withdrawal", person: "giraud_gael", date: null, published: 2022-01-31, published_basis: "wikipedia_revision", sources: ["wp_fr_190420700"], note: "Retire sa candidature à la fin de la collecte des parrainages (octobre 2021), selon une révision de janvier 2022."}
+  - {id: "smati_rafik__declaration", type: "declaration", person: "smati_rafik", date: null, published: 2022-01-31, published_basis: "wikipedia_revision", sources: ["wp_fr_190420700"]}
+  - {id: "tinland_serge__declaration", type: "declaration", person: "tinland_serge", date: null, published: 2022-01-31, published_basis: "wikipedia_revision", sources: ["wp_fr_190420700"]}
+  - {id: "chiche_arnaud__declaration", type: "declaration", person: "chiche_arnaud", date: null, published: 2022-02-14, published_basis: "wikipedia_revision", sources: ["wp_fr_190839700"]}
+  - {id: "fessard_de_foucault_bertrand__declaration", type: "declaration", person: "fessard_de_foucault_bertrand", date: null, published: 2022-02-14, published_basis: "wikipedia_revision", sources: ["wp_fr_190839700"]}
+  - {id: "fortane_jean_marc__declaration", type: "declaration", person: "fortane_jean_marc", date: null, published: 2022-02-14, published_basis: "wikipedia_revision", sources: ["wp_fr_190839700"]}
+  - {id: "miguet_nicolas__declaration", type: "declaration", person: "miguet_nicolas", date: null, published: 2022-02-14, published_basis: "wikipedia_revision", sources: ["wp_fr_190839700"]}
+  - {id: "langlois_alexandre__withdrawal", type: "withdrawal", person: "langlois_alexandre", date: 2022-02-17, published: 2022-02-17, published_basis: "source", sources: ["ouestfrance_20220217_langlois"]}
+  - {id: "philippot_florian__withdrawal", type: "withdrawal", person: "philippot_florian", date: 2022-02-18, published: 2022-02-18, published_basis: "source", sources: ["20minutes_20220218_philippot"]}
+  - {id: "cahez_thierry__declaration", type: "declaration", person: "cahez_thierry", date: null, published: 2022-02-27, published_basis: "wikipedia_revision", sources: ["wp_fr_191475378"]}
+  - {id: "fiorile_eric_regis__declaration", type: "declaration", person: "fiorile_eric_regis", date: null, published: 2022-02-27, published_basis: "wikipedia_revision", sources: ["wp_fr_191475378"]}
+  - {id: "lam_yaya__declaration", type: "declaration", person: "lam_yaya", date: null, published: 2022-02-27, published_basis: "wikipedia_revision", sources: ["wp_fr_191475378"]}
+  - {id: "rocquemont_antoine__declaration", type: "declaration", person: "rocquemont_antoine", date: null, published: 2022-02-27, published_basis: "wikipedia_revision", sources: ["wp_fr_191475378"]}
+  - {id: "taubira_christiane__withdrawal", type: "withdrawal", person: "taubira_christiane", date: 2022-03-02, published: 2022-03-02, published_basis: "source", sources: ["lemonde_20220302_taubira"], events_yaml: "taubira_withdrawal_2022"}
+  - {id: "macron_emmanuel__declaration", type: "declaration", person: "macron_emmanuel", date: 2022-03-03, published: 2022-03-03, published_basis: "source", sources: ["bfmtv_20220303_macron"], events_yaml: "macron_declaration_2022", note: "Lettre aux Français."}
+  - {id: "juving_brunet_alexandre__declaration", type: "declaration", person: "juving_brunet_alexandre", date: null, published: 2022-03-06, published_basis: "wikipedia_revision", sources: ["wp_fr_191670745"]}
+  - {id: "laurut_christian__declaration", type: "declaration", person: "laurut_christian", date: null, published: 2022-03-06, published_basis: "wikipedia_revision", sources: ["wp_fr_191670745"]}
+  - {id: "perron_anne_marie__withdrawal", type: "withdrawal", person: "perron_anne_marie", date: 2022-03-01, published: 2022-03-06, published_basis: "wikipedia_revision", sources: ["wp_fr_191670745"], note: "Date du retrait dans le texte (référence Facebook non datée)."}
+  - {id: "waechter_antoine__withdrawal", type: "withdrawal", person: "waechter_antoine", date: 2022-03-01, published: 2022-03-06, published_basis: "wikipedia_revision", sources: ["wp_fr_191670745"], note: "Date du retrait dans le texte, sans référence."}
+  - {id: "official_list_2022", type: "official_list", persons: ["arthaud_nathalie", "roussel_fabien", "macron_emmanuel", "lassalle_jean", "le_pen_marine", "zemmour_eric", "melenchon_jean_luc", "hidalgo_anne", "jadot_yannick", "pecresse_valerie", "poutou_philippe", "dupont_aignan_nicolas"], date: 2022-03-07, published: 2022-03-07, published_basis: "source", sources: ["cc_20220307_liste", "franceinfo_20220307_liste"]}
