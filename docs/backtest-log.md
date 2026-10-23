@@ -340,7 +340,7 @@ présence, Brier de qualification, CRPS et couverture conditionnels), P(W | pair
 ## 2026-10-23 — Cinq expériences de structure : aucune admission
 
 Protocole déclaré avant calcul (commits `51ddcde`, précision numérique `ead9e0d`),
-référence immuable, bilan dans [docs/13](14-experiences-structure.md).
+référence immuable, bilan dans [docs/14](14-experiences-structure.md).
 
 | Piste | Comparaison | Résultat |
 |---|---|---|
