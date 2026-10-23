@@ -1,0 +1,104 @@
+{
+  "format": "vvs-prospective-1",
+  "name": "stable",
+  "track": "comparison",
+  "slot": {
+    "date": "2026-10-22",
+    "kinds": [
+      "initial"
+    ],
+    "label": "projection gelée (reference-2026-10-22)",
+    "deadline": "2027-04-18",
+    "grace_days": 2,
+    "asof_days": 0
+  },
+  "asof": "2026-10-22",
+  "created_at": "2026-10-23T08:32:57+00:00",
+  "created_on": "2026-10-23",
+  "election": {
+    "year": 2027,
+    "first_round": "2027-04-18",
+    "second_round": "2027-05-02"
+  },
+  "model_version": "0.4.1",
+  "settings": {
+    "share_rule": "nested_shares",
+    "bias_mode": "curve",
+    "seed": 0,
+    "n_draws": 40000
+  },
+  "code": {
+    "export_commit": null,
+    "simulate_commit": "137abfa",
+    "fit_commit": "137abfa",
+    "git_head": "910e188cf1ef4035e2a7e40fac0b3593e77f32eb",
+    "uncommitted": [
+      "back/src/vvs/registry/candidacies.py"
+    ],
+    "code_sha256": "d0325272938a054e8663fe93c29328b1b38665cf58589b5eebad649e4bac0c75",
+    "versions": {
+      "vvs": "0.0.1",
+      "numpy": "2.5.4",
+      "polars": "2.0.0",
+      "jax": "0.12.0",
+      "numpyro": "0.22.0",
+      "scipy": "1.18.1"
+    }
+  },
+  "data": {
+    "polls_hash": "83e3f5616881b5f5",
+    "n_polls": 47,
+    "last_poll_date": "2026-10-19",
+    "curated": {
+      "polls.parquet": "001faa684e9af077e6138714c700bfa861c011f2f85ef43952e6007324da6309",
+      "poll_results.parquet": "9caa15270110bb53811e3a5c353b66293897b4dd44fcb95cc0f24f5c6f685917",
+      "poll_errors.parquet": "22a93073ae860d7340813496c9f6858842c3e64f9f8deb402b179c27780aa038",
+      "jw_polls.parquet": "e05be226219f5190cd6dcbcea9c82b815aa37291a72c6389a40c0ea4423c8e39",
+      "poll_errors_lists.parquet": "f155bc2cd108071aedc311623563cdb1add1f0cd18116e18b68b6ae17ce803dc",
+      "polls_lists.parquet": "ddb7545451981ebbcebe5a2506dddc6177ab6062761250c7f20f8e02db8e341a",
+      "poll_results_lists.parquet": "99bebcf085e2445f92f0210b203196c84af1ba2921f895b3e9a32c9666f56a4a",
+      "results_lists_by_bloc.parquet": "b92a41a0bc11e870b00de32c36c136f2d9e733d42bd6bfd783d69c5abb4c32a1"
+    }
+  },
+  "hypotheses": {
+    "file": "data/registry/scenarios_2027.yaml",
+    "sha256": "6d7592e317b93d56a2659061b9484b8c3e6293bdbc1f57d208c25804dfdb0cf7",
+    "as_of": "2026-10-20"
+  },
+  "run": {
+    "dir": "runs/prospective/2026-10-22/stable",
+    "source_dir": "runs/2026-10-22-simulate-subst",
+    "files": {
+      "conditions.json": "99b7fa46162d2c7aaa64836067e6205266c84e596e9c6ee793adf5ee59c85567",
+      "draws.parquet": "dd31ae7700f7b9c19e8cd7df10e14859c4fca28a2d788b31a11a3225f5da65dc",
+      "house_effects.parquet": "a83cbf8b0496b6d4daf67cddd91306019aa45b1f4393b0deb8e9ac34c28cab4f",
+      "manifest.json": "35b7acd34be4a9d6a3737b5b59c52f64a9ef3173154fc62dbd22e09fa535bbbf",
+      "pairs.parquet": "d7a37f32067e484a2d1217066e933c69789eb7f594ac2c2ae9443b7773e76b30",
+      "summary.parquet": "1bd0932f944bf6c3951bbede20ff60d12a843787e9d864d3328defab70683485",
+      "trajectories.parquet": "9364c78e6a05fe16be8a0fc7666bbf3ba58d0ef9aa5708db08af7fc666e05c3e",
+      "transfers.parquet": "f76d623dbbdbad5dc73cc00c2b24beec57b282d6f4210c2d31458b8179916fcb"
+    }
+  },
+  "fit": {
+    "dir": "runs/2026-10-22-fit-2027-subst",
+    "files": {
+      "draws.npz": "35087ef7c14ceae1e2c1569fcb1500f1942ac02737e1915c9dec8620349682a4",
+      "final.parquet": "e1355822f0a86bcf28951f0b9a667f010e556604838d0778eeec15ff9ffaabf9",
+      "final.png": "d30e577d9d0ecc3954cab68203c8127ed791d473279adaecf667350635ce2f27",
+      "house_effects.parquet": "f67b4d6b307027fabfe3b70793b9ac8b1895024098233affaff2cf3c77f10b6b",
+      "house_effects.png": "a0b8952cd07b9cca57e535b77b931ab216b07190659ae8a606e1783353244aff",
+      "manifest.json": "c238583567544674cd3cfc6d82563ddd44b0402fc620c836aec784315bbf656b",
+      "observed.parquet": "961303e2d9f6c208a1c185d808f65adf77b5ef8f2d41f902a17e5f8e969a02a3",
+      "trajectories.parquet": "a43d66b8eb667888d9f5a95961a5a02e5ad2fea03843c9af0c5ef44671f19c18",
+      "trajectories.png": "7bba1df299f6d09b76623840b38eb9a6e61448aa483f3ac8aacfd0148468a1dd"
+    }
+  },
+  "files": {
+    "manifest.json": "dfce76a60d9531aec98f81b8f62a0584e3ee9da63e84648ff056c601c5802135",
+    "run_manifest.json": "35b7acd34be4a9d6a3737b5b59c52f64a9ef3173154fc62dbd22e09fa535bbbf",
+    "scenarios.json": "e345de87b9d3ced2c18fe230c969c2f8531887e6c8888bb135623f77b42fe62c",
+    "scenarios_2027.yaml": "6d7592e317b93d56a2659061b9484b8c3e6293bdbc1f57d208c25804dfdb0cf7",
+    "second_round.json": "84884345ad9d4fb93d969aecf28441472c0872edb68fdbd2dcb7e4b81b3a80be",
+    "summary.json": "cef6ca55ee38d302b8f7fffb230ad62b07eb6d6fb8b8b795723c462969ed037c"
+  }
+}
