@@ -286,6 +286,34 @@ def _toy_backtest(root):
     return first, second
 
 
+def _toy_chronological(root):
+    """Bilan jouet de la consolidation : deux élections, deux horizons, deux modèles ; en 2017
+    à 180 jours, Fillon manque aux scénarios (12 % des voix finales)."""
+    d = root / "chrono"
+    d.mkdir()
+    rows = []
+    for e in (2017, 2022):
+        for h in (180, 7):
+            for meth, lw in (("reference", -1.0), ("mean14d", -1.5)):
+                rows.append({"election": e, "horizon": h, "method": meth, "p_winner": 0.4,
+                             "p_pair": 0.2, "log_score_winner": lw + (e == 2022),
+                             "log_score_pair": -2.0, "brier_win": 0.3, "crps": 2.0 + h / 180,
+                             "coverage90": 0.5 if e == 2017 else 1.0,
+                             "unforecast_share": 12.0 if (e, h) == (2017, 180) else 0.0,
+                             "n_draws": 1000})
+    pl.DataFrame(rows).write_csv(d / "metrics.csv")
+    pl.DataFrame(
+        {"election": [2017, 2017, 2017, 2017], "horizon": [180, 180, 180, 7],
+         "method": ["reference", "mean14d", "reference", "reference"],
+         "candidate_id": ["fillon_francois", "fillon_francois", "le_pen_marine",
+                          "fillon_francois"],
+         "in_support": [False, False, True, True]}
+    ).write_csv(d / "outcomes.csv")
+    (d / "audit.json").write_text(json.dumps({"reference": {
+        "id": "reference-toy", "commit": "abcdef0123456789", "spec": {"asof": "2026-10-22"}}}))
+    return d
+
+
 @pytest.fixture(scope="module")
 def exported(tmp_path_factory):
     root = tmp_path_factory.mktemp("export")
@@ -300,7 +328,7 @@ def exported(tmp_path_factory):
     (out / "history" / "2026-06-01.json").write_text("{}")
     (out / "manifest.json").write_text(json.dumps({"mock": True}))
     first, second = _toy_backtest(root)
-    extra = _toy_explanatory(root)
+    extra = _toy_explanatory(root) | {"chronological": _toy_chronological(root)}
     rep = export_run(run, out, scenarios=toy_scenarios(), backtest_first=first,
                      backtest_second=second, polls_data=_toy_polls(), **extra)
     return run, out, rep, (first, second, extra)
@@ -402,6 +430,48 @@ def test_explanatory_sections(exported):
     assert tested["herding"]["wave"] == "2026-10-22" and tested["bounce"]["wave"] == "2026-10-20"
     assert [k for k, v in tested.items() if v["published"]] == ["substitution"]
     assert tested["press_nlp"]["verdict"] == "non retenue"
+
+
+def test_chronological_backtest(exported):
+    """Bloc chronologique : moyennes à poids égal par élection, détail par élection, voix hors
+    support nommées, limites et lecture présentes ; l'ancien tableau reste à côté."""
+    _, out, _, _ = exported
+    bt = json.loads((out / "backtest.json").read_text())
+    assert bt["rows"] and bt["variables_tested"]
+    ch = bt["chronological"]
+    assert ch["reference_id"] == "reference-toy" and ch["source_commit"] == "abcdef0"
+    assert ch["elections"] == [2017, 2022] and ch["horizons_days"] == [180, 7]
+    assert [m["id"] for m in ch["methods"]] == ["reference", "mean14d"]
+    assert ch["n_draws"] == 1000 and ch["protocol"] == "docs/10-consolidation.md"
+    h180 = ch["by_horizon"][0]
+    assert h180["horizon_days"] == 180
+    assert h180["reference"] == {"log_score_winner": -0.5, "log_score_pair": -2.0,
+                                 "crps_first_round": 3.0, "coverage_90": 0.75}
+    assert h180["mean14d"]["log_score_winner"] == -1.0
+    assert len(ch["by_election"]) == 8
+    first = ch["by_election"][0]
+    assert (first["election"], first["horizon_days"], first["method"]) == (2017, 180, "reference")
+    assert first["unforecast_share"] == 12.0 and first["missing_candidates"] == ["Fillon"]
+    assert ch["by_election"][1]["missing_candidates"] == ["Fillon"]  # témoin, mêmes scénarios
+    assert all(not r["missing_candidates"] for r in ch["by_election"][2:])
+    lim = {x["id"]: x["text"] for x in ch["limitations"]}
+    assert set(lim) == {"publication_dates", "scenarios", "out_of_support", "three_elections"}
+    assert lim["out_of_support"].startswith("En 2017 à 180 jours, 12,0 % des voix finales")
+    assert "(Fillon)" in lim["out_of_support"]
+    assert "ne domine pas" in ch["reading"]
+
+
+def test_chronological_rejects_incomplete_grid(exported, tmp_path):
+    from vvs.export.export import build_chronological
+    from vvs.registry import default_registry
+
+    src = exported[3][2]["chronological"]
+    d = tmp_path / "chrono"
+    shutil.copytree(src, d)
+    m = pl.read_csv(d / "metrics.csv")
+    m.slice(1).write_csv(d / "metrics.csv")
+    with pytest.raises(ValueError, match="attendues"):
+        build_chronological(d, default_registry())
 
 
 def test_opinion_indicators(exported):

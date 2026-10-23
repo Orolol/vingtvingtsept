@@ -88,6 +88,15 @@ phrase de statut, affichée sur la page :
   anticipations, abstention différentielle, Cevipof « en attente d'accès ») ; une ligne chacune,
   `published` vrai pour la substitution, utilisée par la projection publiée, et `wave` (date de
   la vague) qui les groupe sur `/methode`.
+- `backtest.chronological` (ajouté le 2026-10-23) : bilan de la consolidation chronologique
+  relu dans `docs/results/consolidation-2026-10-22/` (`metrics.csv`, `outcomes.csv`,
+  `audit.json`), référence contre témoin `mean14d`. `by_horizon` : log-score du vainqueur et
+  de la paire, CRPS et couverture à 90 %, moyennes à poids égal par élection ; `by_election` :
+  les mêmes scores par élection, probabilités brutes du vainqueur et de la paire réels, voix
+  finales hors scénarios et noms des candidats manquants ; `reading` (lecture sans
+  enjoliver) et `limitations` (une phrase chacune, celle des voix hors support construite
+  depuis les données). `/methode` l'affiche avant l'ancien tableau, renommé « Backtest
+  rétrospectif ». `validate-data` vérifie la grille complète et les moyennes par horizon.
 - Indicateurs d'opinion de la troisième vague (ajoutés le 2026-10-22), tous `in_forecast: false`
   avec leur phrase de statut :
   - `summary.expectations` (accueil) : « Selon vous, qui sera élu ? »

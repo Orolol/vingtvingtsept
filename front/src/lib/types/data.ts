@@ -1046,7 +1046,7 @@ export interface PressGdelt {
 	tracks: PressCandidateTrack[];
 }
 /**
- * Résultats du backtest (docs/07-evaluation.md) : métriques par modèle, élection et horizon, tableau complet.
+ * Résultats du backtest (docs/07-evaluation.md) : backtest rétrospectif (métriques par modèle, élection et horizon, tableau complet) et backtest chronologique de la consolidation (docs/10-consolidation.md).
  */
 export interface Backtest {
 	generated_at: IsoDateTime;
@@ -1060,6 +1060,7 @@ export interface Backtest {
 	 * Journal qui détaille les tests.
 	 */
 	variables_tested_reference: string;
+	chronological: ChronologicalBacktest;
 }
 export interface BacktestModel {
 	id: string;
@@ -1123,6 +1124,96 @@ export interface TestedVariable {
 	 */
 	summary: string;
 	wave: IsoDate;
+}
+/**
+ * Backtest chronologique de la référence figée (docs/10-consolidation.md) : calibrations sans élection future, délai de publication, scénarios sans correspondance après coup, score jusqu'au vainqueur. Référence contre témoin mean14d.
+ */
+export interface ChronologicalBacktest {
+	/**
+	 * Identifiant (et tag Git) de la référence.
+	 */
+	reference_id: string;
+	reference_asof: IsoDate;
+	/**
+	 * Commit du code statistique figé.
+	 */
+	source_commit: string;
+	/**
+	 * Document du protocole, relatif à la racine du dépôt.
+	 */
+	protocol: string;
+	/**
+	 * Bilan versionné, relatif à la racine du dépôt.
+	 */
+	results: string;
+	/**
+	 * Tirages par modèle et par cas.
+	 */
+	n_draws: number;
+	elections: number[];
+	horizons_days: number[];
+	methods: {
+		id: 'reference' | 'mean14d';
+		label: string;
+		description: string;
+	}[];
+	by_horizon: {
+		horizon_days: number;
+		reference: ChronologicalScores;
+		mean14d: ChronologicalScores;
+	}[];
+	by_election: ChronologicalRow[];
+	/**
+	 * Lecture du bilan, sans enjoliver.
+	 */
+	reading: string;
+	limitations: {
+		id: string;
+		/**
+		 * Une phrase.
+		 */
+		text: string;
+	}[];
+}
+/**
+ * Moyennes d'un modèle à un horizon, même poids pour chaque élection.
+ */
+export interface ChronologicalScores {
+	/**
+	 * Log-score du vainqueur (lissage de Jeffreys, plus haut = mieux).
+	 */
+	log_score_winner: number;
+	/**
+	 * Log-score de la paire de qualifiés.
+	 */
+	log_score_pair: number;
+	/**
+	 * CRPS des parts de premier tour, en points (plus bas = mieux).
+	 */
+	crps_first_round: number;
+	coverage_90: Probability;
+}
+/**
+ * Un modèle, une élection, un horizon (metrics.csv de la consolidation).
+ */
+export interface ChronologicalRow {
+	election: number;
+	horizon_days: number;
+	method: 'reference' | 'mean14d';
+	p_winner: Probability;
+	p_pair: Probability;
+	log_score_winner: number;
+	log_score_pair: number;
+	crps_first_round: number;
+	coverage_90: Probability;
+	/**
+	 * Voix finales (en points) des candidats absents des scénarios.
+	 */
+	unforecast_share: number;
+	/**
+	 * Noms des candidats officiels absents des scénarios.
+	 */
+	missing_candidates: string[];
 }
 /**
  * history/index.json : concaténation des history/<date>.json par run_date croissante, pour que le site trace l'évolution sans lister le dossier (impossible sur un hébergement statique).

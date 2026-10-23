@@ -1329,6 +1329,66 @@ const backtestModels = [
 		description: 'Modèle sans effets maison ni prior structurel.'
 	}
 ];
+function mockChronological() {
+	const elections = [2012, 2017, 2022];
+	const horizons = [180, 90, 30, 7];
+	const methods = ['reference', 'mean14d'];
+	const byElection = elections.flatMap((e) =>
+		horizons.flatMap((h) =>
+			methods.map((m) => {
+				const k = Math.sqrt(h / 180);
+				const pw = Math.min(0.99, Math.max(0.05, 0.9 - 0.4 * k + 0.05 * normal()));
+				const pp = Math.min(0.99, Math.max(0.03, pw - 0.15 * k));
+				const missing = e === 2017 && h === 180 ? ['Factice'] : [];
+				return {
+					election: e,
+					horizon_days: h,
+					method: m,
+					p_winner: round(pw, 4),
+					p_pair: round(pp, 4),
+					log_score_winner: round(Math.log(pw), 4),
+					log_score_pair: round(Math.log(pp), 4),
+					crps_first_round: round(0.8 + 1.8 * k + 0.1 * normal(), 4),
+					coverage_90: round(Math.min(1, Math.max(0, 0.85 + 0.08 * normal())), 4),
+					unforecast_share: missing.length ? 10 : 0,
+					missing_candidates: missing
+				};
+			})
+		)
+	);
+	const mean = (rows, key) => round(rows.reduce((a, r) => a + r[key], 0) / rows.length, 4);
+	const scores = (h, m) => {
+		const rows = byElection.filter((r) => r.horizon_days === h && r.method === m);
+		return Object.fromEntries(
+			['log_score_winner', 'log_score_pair', 'crps_first_round', 'coverage_90'].map((k) => [
+				k,
+				mean(rows, k)
+			])
+		);
+	};
+	return {
+		reference_id: 'reference-mock',
+		reference_asof: ASOF,
+		source_commit: '0000000',
+		protocol: 'docs/10-consolidation.md',
+		results: 'docs/results/consolidation-2026-10-22',
+		n_draws: 1000,
+		elections,
+		horizons_days: horizons,
+		methods: [
+			{ id: 'reference', label: 'Référence', description: 'Données factices.' },
+			{ id: 'mean14d', label: 'Moyenne 14 jours', description: 'Données factices.' }
+		],
+		by_horizon: horizons.map((h) => ({
+			horizon_days: h,
+			reference: scores(h, 'reference'),
+			mean14d: scores(h, 'mean14d')
+		})),
+		by_election: byElection,
+		reading: 'Données factices.',
+		limitations: [{ id: 'mock', text: 'Données factices.' }]
+	};
+}
 const backtest = {
 	generated_at: `${RUN_DATE}T06:00:00Z`,
 	model_version: '0.0.0-mock',
@@ -1347,6 +1407,7 @@ const backtest = {
 		}
 	],
 	variables_tested_reference: 'docs/backtest-log.md',
+	chronological: mockChronological(),
 	rows: backtestModels.flatMap((m, mi) =>
 		[2012, 2017, 2022].flatMap((e) =>
 			[180, 90, 30, 7].map((h) => {

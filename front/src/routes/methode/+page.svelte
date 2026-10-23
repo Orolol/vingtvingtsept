@@ -19,6 +19,24 @@
 	);
 	const num = (x: number | null, d = 2) => (x === null ? '—' : fmt.decimal(x, d));
 	const cov = (x: number | null) => (x === null ? '—' : fmt.prob(x));
+	const ch = $derived(bt.chronological);
+	const repo = 'https://github.com/Orolol/vingtvingtsept/blob/main/';
+	const chronoMetrics = [
+		{ key: 'log_score_winner', label: 'Log-score vainqueur', digits: 3 },
+		{ key: 'log_score_pair', label: 'Log-score paire', digits: 3 },
+		{ key: 'crps_first_round', label: 'CRPS (pts)', digits: 3 }
+	] as const;
+	const signed = (x: number, d = 3) => (x > 0 ? '+' : '') + fmt.decimal(x, d);
+	const chronoLabel = $derived(new Map(ch.methods.map((m) => [m.id, m.label])));
+	const chronoRows = $derived(
+		ch.by_election.toSorted(
+			(a, b) =>
+				a.election - b.election ||
+				b.horizon_days - a.horizon_days ||
+				ch.methods.findIndex((m) => m.id === a.method) -
+					ch.methods.findIndex((m) => m.id === b.method)
+		)
+	);
 	const waves = $derived(
 		[...new Set(bt.variables_tested.map((v) => v.wave))]
 			.sort()
@@ -85,20 +103,143 @@
 		<h2 class="mb-2 text-lg font-semibold">Économie et presse</h2>
 		<p>
 			Une variable non sondagière n'entre dans la prévision que si elle améliore le score du
-			backtest à 180 et 90 jours, sur au moins deux des trois élections de référence, sans dégrader
-			la couverture des intervalles. Sinon elle reste dans le volet explicatif, et l'échec est
-			documenté.
+			backtest aux horizons où elle agit, sur au moins deux des trois élections de référence, sans
+			dégrader la couverture des intervalles. Le backtest rétrospectif sert de premier filtre ;
+			toute admission doit ensuite être confirmée par le backtest chronologique ci-dessous. Sinon
+			elle reste dans le volet explicatif, et l'échec est documenté.
 		</p>
 	</section>
 </div>
 
+<section aria-labelledby="titre-chrono" class="mt-10">
+	<h2 id="titre-chrono" class="mb-1 text-lg font-semibold">
+		Backtest chronologique (référence du {fmt.date(ch.reference_asof)})
+	</h2>
+	<div class="mb-3 max-w-3xl space-y-2 text-sm leading-relaxed text-ink-2">
+		<p>
+			Toute la chaîne est rejouée pour {ch.elections.join(', ')} avec ce qui était connu à chaque date
+			: calibrations sans élection future, sondages retenus après leur publication, scénarios de candidats
+			tirés des seuls sondages de l'époque, score jusqu'au vainqueur. La référence (code figé {ch.source_commit},
+			{fmt.integer(ch.n_draws)} tirages par cas) est comparée à un témoin qui remplace l'agrégateur par
+			la moyenne des sondages des 14 derniers jours et garde tout le reste. Moyennes à poids égal par
+			élection ; log-score : plus haut est meilleur ; CRPS : plus bas est meilleur ; couverture : doit
+			approcher 90 %.
+		</p>
+		<p class="text-ink">{ch.reading}</p>
+	</div>
+	<div class="overflow-x-auto rounded-md border border-line bg-surface">
+		<table class="w-full text-sm">
+			<caption class="sr-only"
+				>Backtest chronologique : référence contre moyenne sur 14 jours</caption
+			>
+			<thead class="border-b border-line text-left text-xs text-muted">
+				<tr>
+					<th scope="col" class="px-3 py-2 font-medium">Horizon</th>
+					<th scope="col" class="px-3 py-2 font-medium">Modèle</th>
+					{#each chronoMetrics as c (c.key)}
+						<th scope="col" class="px-3 py-2 text-right font-medium">{c.label}</th>
+					{/each}
+					<th scope="col" class="px-3 py-2 text-right font-medium">Couv. 90 %</th>
+				</tr>
+			</thead>
+			<tbody>
+				{#each ch.by_horizon as h (h.horizon_days)}
+					{#each ch.methods as m, i (m.id)}
+						<tr class={i === 0 ? 'border-t border-line' : ''}>
+							{#if i === 0}
+								<th
+									scope="row"
+									rowspan={ch.methods.length + 1}
+									class="tabular px-3 py-1.5 text-left align-top font-normal">{h.horizon_days} j</th
+								>
+							{/if}
+							<td class="px-3 py-1.5 whitespace-nowrap">{m.label}</td>
+							{#each chronoMetrics as c (c.key)}
+								<td class="tabular px-3 py-1.5 text-right">{num(h[m.id][c.key], c.digits)}</td>
+							{/each}
+							<td class="tabular px-3 py-1.5 text-right">{fmt.share(100 * h[m.id].coverage_90)}</td>
+						</tr>
+					{/each}
+					<tr class="text-xs text-muted">
+						<td class="px-3 pb-2 whitespace-nowrap">Écart réf. − témoin</td>
+						{#each chronoMetrics as c (c.key)}
+							<td class="tabular px-3 pb-2 text-right"
+								>{signed(h.reference[c.key] - h.mean14d[c.key])}</td
+							>
+						{/each}
+						<td class="tabular px-3 pb-2 text-right"
+							>{signed(100 * (h.reference.coverage_90 - h.mean14d.coverage_90), 1)} pts</td
+						>
+					</tr>
+				{/each}
+			</tbody>
+		</table>
+	</div>
+	<details class="mt-3 max-w-full text-sm">
+		<summary class="cursor-pointer text-ink-2">Détail par élection</summary>
+		<div class="mt-2 overflow-x-auto rounded-md border border-line bg-surface">
+			<table class="w-full text-sm">
+				<caption class="sr-only">Backtest chronologique par élection et horizon</caption>
+				<thead class="border-b border-line text-left text-xs text-muted">
+					<tr>
+						<th scope="col" class="px-3 py-2 font-medium">Élection</th>
+						<th scope="col" class="px-3 py-2 font-medium">Horizon</th>
+						<th scope="col" class="px-3 py-2 font-medium">Modèle</th>
+						<th scope="col" class="px-3 py-2 text-right font-medium">P(vainqueur réel)</th>
+						<th scope="col" class="px-3 py-2 text-right font-medium">P(paire réelle)</th>
+						<th scope="col" class="px-3 py-2 text-right font-medium">CRPS (pts)</th>
+						<th scope="col" class="px-3 py-2 text-right font-medium">Couv. 90 %</th>
+						<th scope="col" class="px-3 py-2 font-medium">Voix hors scénarios</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each chronoRows as r (`${r.election}-${r.horizon_days}-${r.method}`)}
+						<tr class="border-b border-line last:border-0">
+							<td class="tabular px-3 py-1.5">{r.election}</td>
+							<td class="tabular px-3 py-1.5">{r.horizon_days} j</td>
+							<td class="px-3 py-1.5 whitespace-nowrap">{chronoLabel.get(r.method) ?? r.method}</td>
+							<td class="tabular px-3 py-1.5 text-right">{fmt.share(100 * r.p_winner)}</td>
+							<td class="tabular px-3 py-1.5 text-right">{fmt.share(100 * r.p_pair)}</td>
+							<td class="tabular px-3 py-1.5 text-right">{num(r.crps_first_round, 3)}</td>
+							<td class="tabular px-3 py-1.5 text-right">{fmt.share(100 * r.coverage_90)}</td>
+							<td class="px-3 py-1.5">
+								{#if r.unforecast_share > 0}
+									<span class="tabular">{fmt.share(r.unforecast_share)}</span>
+									<span class="text-muted">({r.missing_candidates.join(', ')})</span>
+								{:else}
+									—
+								{/if}
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</details>
+	<h3 class="mt-4 mb-1 text-sm font-medium text-ink-2">Limites de ce backtest</h3>
+	<ul class="max-w-3xl list-disc space-y-1 pl-5 text-sm text-ink-2">
+		{#each ch.limitations as l (l.id)}
+			<li>{l.text}</li>
+		{/each}
+	</ul>
+	<p class="mt-3 max-w-3xl text-sm text-ink-2">
+		Protocole, résultats et empreintes :
+		<a href={repo + ch.protocol} class="text-accent" rel="external noopener">{ch.protocol}</a>
+		(référence
+		{ch.reference_id}).
+	</p>
+</section>
+
 <section aria-labelledby="titre-backtest" class="mt-10">
-	<h2 id="titre-backtest" class="mb-1 text-lg font-semibold">Backtest</h2>
+	<h2 id="titre-backtest" class="mb-1 text-lg font-semibold">Backtest rétrospectif</h2>
 	<p class="mb-3 max-w-3xl text-sm text-ink-2">
-		Prévisions refaites « comme à l'époque » pour {bt.elections.join(', ')}, à plusieurs horizons,
-		avec un modèle d'erreur calibré sans l'élection évaluée. Log-score : plus haut est meilleur ;
-		Brier, CRPS et erreur absolue : plus bas est meilleur ; couverture : doit approcher 50 % et 90
-		%. Version {bt.model_version}, calculé le
+		Premier backtest, antérieur au protocole chronologique : prévisions refaites pour
+		{bt.elections.join(', ')}, à plusieurs horizons, avec un modèle d'erreur calibré sans l'élection
+		évaluée, mais qui peut s'appuyer sur les élections postérieures, retient les sondages à la fin
+		de leur terrain et emploie parfois des correspondances de candidats connues après coup. C'est
+		une comparaison rétrospective, pas une reproduction de l'information disponible à l'époque.
+		Log-score : plus haut est meilleur ; Brier, CRPS et erreur absolue : plus bas est meilleur ;
+		couverture : doit approcher 50 % et 90 %. Version {bt.model_version}, calculé le
 		{fmt.date(bt.generated_at)}.
 	</p>
 	<div

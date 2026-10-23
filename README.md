@@ -27,6 +27,14 @@ nouveau sondage.
 5. **Simulation** : 40 000 tirages, probabilités de qualification et de victoire, scores
    avec intervalles, par scénario et au mélange.
 
+Sous le protocole chronologique strict de la [consolidation](docs/10-consolidation.md),
+l'agrégateur bayésien ne domine pas la moyenne simple des sondages des 14 derniers jours :
+son gain net de log-score de victoire à 180 jours (+0,175) est porté par 2017, et il perd
+légèrement à 90 jours (−0,008) et à 7 jours (−0,032). À 180 jours, la couverture de
+l'intervalle à 90 % n'est que de 66 %. La valeur du modèle tient à la calibration de
+l'erreur, aux scénarios et au second tour, que ce témoin partage, pas à l'agrégation seule ;
+ces composants n'ont pas encore été évalués séparément dans la chaîne chronologique.
+
 Les études utilisent un backtest rétrospectif laissant l'élection évaluée de côté
 (2002-2022, horizons 180, 90, 30 et 7 jours) et une règle d'admission écrite : voir
 [le protocole](docs/07-evaluation.md) et [le journal](docs/backtest-log.md).
@@ -63,7 +71,15 @@ explicatifs du site marqués « n'entre pas dans la prévision ».
 | 13 | Anticipations « qui va gagner ? » (110 mesures) | le plus cité gagne toujours, mais trop sous-confiant pour servir de probabilité |
 | 14 | Abstention différentielle (certains − inscrits) | stable, mais lien avec l'erreur limité à 2022 et de signe inverse |
 | 15 | Reports de voix par inférence écologique sur les communes (données Cagé-Piketty) | biais d'agrégation ; la sociologie des communes ne prédit pas l'érosion du front républicain |
-| ✓ | **Calibration de l'erreur finale sur dix scrutins** (présidentielles + européennes + législatives) | **admise** : log-score et CRPS meilleurs à 90, 30 et 7 jours |
+| ✓ | **Calibration de l'erreur finale sur dix scrutins** (présidentielles + européennes + législatives) | **admise** au protocole rétrospectif : log-score et CRPS meilleurs à 90, 30 et 7 jours ; confirmation chronologique à faire |
+
+Ces verdicts relèvent du protocole rétrospectif. Depuis la consolidation, toute admission
+doit en plus être confirmée sous le protocole chronologique ([règle à deux
+niveaux](docs/07-evaluation.md)) : la calibration admise, la substitution et la courbe de
+biais publiées n'ont pas encore passé cette confirmation. Sous ce même protocole,
+l'agrégateur lui-même ne bat pas la moyenne des sondages sur 14 jours (gain à 180 jours porté
+par 2017, légères pertes à 90 et 7 jours ; couverture de 66 % à 180 jours pour un intervalle
+à 90 %) : voir [docs/10](docs/10-consolidation.md).
 
 Corrections de structure évaluées au même protocole : substitution intra-bloc et biais RN
 par horizon (publiées sans admission stricte, choix documenté), couplage des erreurs premier

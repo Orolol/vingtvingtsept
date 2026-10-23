@@ -2,10 +2,10 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://schemas.vingtvingtsept.invalid/v1/backtest.json",
 	"title": "Backtest",
-	"description": "Résultats du backtest (docs/07-evaluation.md) : métriques par modèle, élection et horizon, tableau complet.",
+	"description": "Résultats du backtest (docs/07-evaluation.md) : backtest rétrospectif (métriques par modèle, élection et horizon, tableau complet) et backtest chronologique de la consolidation (docs/10-consolidation.md).",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["generated_at", "model_version", "elections", "horizons_days", "models", "rows", "variables_tested", "variables_tested_reference"],
+	"required": ["generated_at", "model_version", "elections", "horizons_days", "models", "rows", "variables_tested", "variables_tested_reference", "chronological"],
 	"$defs": {
 		"model": {
 			"title": "BacktestModel",
@@ -49,6 +49,122 @@
 				"coverage_90": { "anyOf": [{ "$ref": "common.json#/$defs/probability" }, { "type": "null" }], "description": "Part des résultats dans l'intervalle à 90 %." }
 			}
 		},
+		"chrono_scores": {
+			"title": "ChronologicalScores",
+			"description": "Moyennes d'un modèle à un horizon, même poids pour chaque élection.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["log_score_winner", "log_score_pair", "crps_first_round", "coverage_90"],
+			"properties": {
+				"log_score_winner": { "type": "number", "description": "Log-score du vainqueur (lissage de Jeffreys, plus haut = mieux)." },
+				"log_score_pair": { "type": "number", "description": "Log-score de la paire de qualifiés." },
+				"crps_first_round": { "type": "number", "minimum": 0, "description": "CRPS des parts de premier tour, en points (plus bas = mieux)." },
+				"coverage_90": { "$ref": "common.json#/$defs/probability", "description": "Part des résultats de premier tour dans l'intervalle à 90 %." }
+			}
+		},
+		"chrono_row": {
+			"title": "ChronologicalRow",
+			"description": "Un modèle, une élection, un horizon (metrics.csv de la consolidation).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"election",
+				"horizon_days",
+				"method",
+				"p_winner",
+				"p_pair",
+				"log_score_winner",
+				"log_score_pair",
+				"crps_first_round",
+				"coverage_90",
+				"unforecast_share",
+				"missing_candidates"
+			],
+			"properties": {
+				"election": { "type": "integer" },
+				"horizon_days": { "type": "integer", "minimum": 0 },
+				"method": { "type": "string", "enum": ["reference", "mean14d"] },
+				"p_winner": { "$ref": "common.json#/$defs/probability", "description": "Probabilité brute du vainqueur réel." },
+				"p_pair": { "$ref": "common.json#/$defs/probability", "description": "Probabilité brute de la paire réelle." },
+				"log_score_winner": { "type": "number" },
+				"log_score_pair": { "type": "number" },
+				"crps_first_round": { "type": "number", "minimum": 0 },
+				"coverage_90": { "$ref": "common.json#/$defs/probability" },
+				"unforecast_share": { "type": "number", "minimum": 0, "maximum": 100, "description": "Voix finales (en points) des candidats absents des scénarios." },
+				"missing_candidates": { "type": "array", "items": { "type": "string" }, "description": "Noms des candidats officiels absents des scénarios." }
+			}
+		},
+		"chronological": {
+			"title": "ChronologicalBacktest",
+			"description": "Backtest chronologique de la référence figée (docs/10-consolidation.md) : calibrations sans élection future, délai de publication, scénarios sans correspondance après coup, score jusqu'au vainqueur. Référence contre témoin mean14d.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": [
+				"reference_id",
+				"reference_asof",
+				"source_commit",
+				"protocol",
+				"results",
+				"n_draws",
+				"elections",
+				"horizons_days",
+				"methods",
+				"by_horizon",
+				"by_election",
+				"reading",
+				"limitations"
+			],
+			"properties": {
+				"reference_id": { "type": "string", "description": "Identifiant (et tag Git) de la référence." },
+				"reference_asof": { "$ref": "common.json#/$defs/date" },
+				"source_commit": { "type": "string", "description": "Commit du code statistique figé." },
+				"protocol": { "type": "string", "description": "Document du protocole, relatif à la racine du dépôt." },
+				"results": { "type": "string", "description": "Bilan versionné, relatif à la racine du dépôt." },
+				"n_draws": { "type": "integer", "minimum": 1, "description": "Tirages par modèle et par cas." },
+				"elections": { "type": "array", "items": { "type": "integer" } },
+				"horizons_days": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+				"methods": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id", "label", "description"],
+						"properties": {
+							"id": { "type": "string", "enum": ["reference", "mean14d"] },
+							"label": { "type": "string" },
+							"description": { "type": "string" }
+						}
+					}
+				},
+				"by_horizon": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["horizon_days", "reference", "mean14d"],
+						"properties": {
+							"horizon_days": { "type": "integer", "minimum": 0 },
+							"reference": { "$ref": "#/$defs/chrono_scores" },
+							"mean14d": { "$ref": "#/$defs/chrono_scores" }
+						}
+					}
+				},
+				"by_election": { "type": "array", "items": { "$ref": "#/$defs/chrono_row" } },
+				"reading": { "type": "string", "description": "Lecture du bilan, sans enjoliver." },
+				"limitations": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id", "text"],
+						"properties": {
+							"id": { "type": "string" },
+							"text": { "type": "string", "description": "Une phrase." }
+						}
+					}
+				}
+			}
+		},
 		"variable": {
 			"title": "TestedVariable",
 			"description": "Variable candidate testée contre la référence du backtest (docs/backtest-log.md).",
@@ -77,6 +193,7 @@
 		"models": { "type": "array", "items": { "$ref": "#/$defs/model" } },
 		"rows": { "type": "array", "items": { "$ref": "#/$defs/row" } },
 		"variables_tested": { "type": "array", "items": { "$ref": "#/$defs/variable" } },
-		"variables_tested_reference": { "type": "string", "description": "Journal qui détaille les tests." }
+		"variables_tested_reference": { "type": "string", "description": "Journal qui détaille les tests." },
+		"chronological": { "$ref": "#/$defs/chronological" }
 	}
 }

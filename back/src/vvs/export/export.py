@@ -13,7 +13,9 @@
 Sources en plus du run : registres (candidats, instituts, scénarios), sondages curated 2027,
 macro.parquet, attention.parquet, press_ina.parquet, press_timelines.parquet, les titres
 classés (press_titles, press_labels, press_features), les runs de backtest (premier et second
-tour) et trois études : économie (`runs/<date>-economy/`, corrélations), palmarès des instituts
+tour, dits rétrospectifs), le bilan versionné de la consolidation chronologique
+(`docs/results/consolidation-2026-10-22/`, bloc `backtest.chronological`) et trois études :
+économie (`runs/<date>-economy/`, corrélations), palmarès des instituts
 (`runs/<date>-pollster-ratings/`) et presse classée (`runs/<date>-press-nlp/` : accords et dates
 de rupture). Indicateurs d'opinion de la troisième vague (2026-10-22) : anticipations « qui
 sera élu ? » (`poll_expectations.parquet`, dans summary.json), dispersion des instituts
@@ -338,6 +340,36 @@ SECOND_ROUND_MODELS = {
     "transfers_only": ("2d tour : reports seuls", "baseline",
                        "Reports de voix historiques, sans sondages de duel."),
 }
+# Backtest chronologique de la consolidation (docs/10-consolidation.md) : bilan versionné,
+# relu tel quel. Les moyennes par horizon donnent le même poids à chaque élection.
+CHRONOLOGICAL_RESULTS = "docs/results/consolidation-2026-10-22"
+CHRONOLOGICAL_PROTOCOL = "docs/10-consolidation.md"
+CHRONOLOGICAL_METHODS = {
+    "reference": ("Référence", "Agrégateur bayésien de la projection publiée du 22 octobre."),
+    "mean14d": ("Moyenne 14 jours", ("Témoin : moyenne simple des sondages disponibles des 14 "
+                                     "derniers jours, avec les mêmes scénarios, la même loi "
+                                     "d'erreur et le même second tour.")),
+}
+CHRONOLOGICAL_READING = (
+    "Sous ce protocole strict, l'agrégateur bayésien ne domine pas la moyenne simple des "
+    "sondages des 14 derniers jours : son gain net de log-score de victoire à 180 jours est "
+    "porté par 2017, et il perd légèrement à 90 et à 7 jours. À 180 jours, la couverture de "
+    "l'intervalle à 90 % n'est que de 66 %. La valeur du modèle tient à la calibration de "
+    "l'erreur, aux scénarios et au second tour, que le témoin partage, pas à l'agrégation "
+    "seule ; ces composants n'ont pas encore été évalués séparément dans cette chaîne."
+)
+CHRONOLOGICAL_LIMITATIONS = (
+    ("publication_dates",
+     ("Dates de publication imputées : aucune n'est connue pour les cas retenus, chaque "
+      "sondage entre deux jours après la fin de son terrain.")),
+    ("scenarios",
+     ("Scénarios reconstruits à partir des configurations testées par les sondages récents, "
+      "pas des probabilités jugées à l'époque.")),
+    # out_of_support : phrase construite depuis les données (build_chronological)
+    ("three_elections",
+     ("Trois élections seulement : trois issues indépendantes par horizon, trop peu pour "
+      "valider finement les probabilités de victoire.")),
+)
 
 
 # --- utilitaires
@@ -1570,7 +1602,11 @@ def build_turnout_gap(asof: str, curated: Path, reg: Registry) -> dict:
             pl.len().alias("n_polls"),
             pl.col("fieldwork_end").max().alias("last"),
         )
-        .sort("gap", "candidate_id")
+        # tri sur la valeur arrondie : la moyenne flottante varie à 1e-16 près selon l'ordre de
+        # sommation du group_by, ce qui inversait des candidats à égalité d'un export à l'autre
+        .with_columns(pl.col("gap").round(6).alias("gap_key"))
+        .sort("gap_key", "candidate_id")
+        .drop("gap_key")
     )
     rows = [
         {
@@ -1662,6 +1698,86 @@ def build_backtest(generated_at: str, first: Path, second: Path) -> dict:
     }
 
 
+def _french(x: float, nd: int) -> str:
+    return f"{x:.{nd}f}".replace(".", ",")
+
+
+def build_chronological(results: Path, reg: Registry) -> dict:
+    """Bloc `backtest.chronological` : bilan de la consolidation (metrics.csv, outcomes.csv,
+    audit.json de `results`), référence contre témoin mean14d, par horizon et par élection."""
+    m = pl.read_csv(results / "metrics.csv").filter(
+        pl.col("method").is_in(list(CHRONOLOGICAL_METHODS)))
+    outcomes = pl.read_csv(results / "outcomes.csv")
+    audit = json.loads((results / "audit.json").read_text())["reference"]
+    elections = sorted(m["election"].unique().to_list())
+    horizons = sorted(m["horizon"].unique().to_list(), reverse=True)
+    expected = len(elections) * len(horizons) * len(CHRONOLOGICAL_METHODS)
+    if m.height != expected or m.select("election", "horizon", "method").is_duplicated().any():
+        raise ValueError(f"{results}/metrics.csv : {m.height} lignes, {expected} attendues")
+    cols = {"log_score_winner": "log_score_winner", "log_score_pair": "log_score_pair",
+            "crps_first_round": "crps", "coverage_90": "coverage90"}
+
+    def scores(g: pl.DataFrame) -> dict:
+        # couverture à 6 décimales : un arrondi à 4 puis au dixième de point la décale
+        # (0,698485 → 0,6985 → 69,9 % au lieu de 69,8 % dans docs/10)
+        return {k: round(float(g[c].mean()), 6 if k == "coverage_90" else 4)
+                for k, c in cols.items()}
+
+    by_horizon = [
+        {"horizon_days": h}
+        | {meth: scores(m.filter((pl.col("horizon") == h) & (pl.col("method") == meth)))
+           for meth in CHRONOLOGICAL_METHODS}
+        for h in horizons
+    ]
+    missing = (
+        outcomes.filter(~pl.col("in_support"))
+        .group_by("election", "horizon", "method")
+        .agg(pl.col("candidate_id").sort())
+    )
+    missing = {(r["election"], r["horizon"], r["method"]): r["candidate_id"]
+               for r in missing.iter_rows(named=True)}
+    by_election = []
+    for r in m.sort("election", pl.col("horizon"), "method",
+                    descending=[False, True, True]).iter_rows(named=True):
+        ids = missing.get((r["election"], r["horizon"], r["method"]), [])
+        by_election.append({
+            "election": r["election"], "horizon_days": r["horizon"], "method": r["method"],
+            "p_winner": round(r["p_winner"], 4), "p_pair": round(r["p_pair"], 4),
+            "log_score_winner": round(r["log_score_winner"], 4),
+            "log_score_pair": round(r["log_score_pair"], 4),
+            "crps_first_round": round(r["crps"], 4), "coverage_90": round(r["coverage90"], 6),
+            "unforecast_share": round(r["unforecast_share"], 2),
+            "missing_candidates": [reg.candidates[c].last_name if c in reg.candidates else c
+                                   for c in ids],
+        })
+    limitations = [{"id": i, "text": t} for i, t in CHRONOLOGICAL_LIMITATIONS]
+    worst = max((r for r in by_election if r["method"] == "reference"),
+                key=lambda r: r["unforecast_share"])
+    if worst["unforecast_share"] > 0:
+        names = ", ".join(worst["missing_candidates"])
+        limitations.insert(2, {"id": "out_of_support", "text": (
+            f"En {worst['election']} à {worst['horizon_days']} jours, "
+            f"{_french(worst['unforecast_share'], 1)} % des voix finales vont à des candidats "
+            f"absents des scénarios ({names}) : le score pénalise cette omission au lieu de "
+            "reporter leurs voix.")})
+    return {
+        "reference_id": audit["id"],
+        "reference_asof": audit["spec"]["asof"],
+        "source_commit": audit["commit"][:7],
+        "protocol": CHRONOLOGICAL_PROTOCOL,
+        "results": CHRONOLOGICAL_RESULTS,
+        "n_draws": int(m["n_draws"].min()),
+        "elections": elections,
+        "horizons_days": horizons,
+        "methods": [{"id": k, "label": lab, "description": desc}
+                    for k, (lab, desc) in CHRONOLOGICAL_METHODS.items()],
+        "by_horizon": by_horizon,
+        "by_election": by_election,
+        "reading": CHRONOLOGICAL_READING,
+        "limitations": limitations,
+    }
+
+
 # --- sondages intégrés
 
 
@@ -1707,6 +1823,7 @@ def export_run(
     curated: Path | None = None,
     press_nlp_study: Path | None = None,
     dispersion: dict | None = None,
+    chronological: Path | None = None,
 ) -> dict:
     """Écrit les fichiers du contrat JSON dans `out` ; rend un petit compte rendu.
 
@@ -1714,7 +1831,8 @@ def export_run(
     runs/<ECONOMY_STUDY>, runs/<POLLSTER_RATINGS>, runs/<PRESS_NLP_STUDY>) ; `curated` : dossier
     des parquet explicatifs (macro, attention, presse, titres classés ; défaut data/curated).
     Injectables pour les tests, comme `dispersion` (bloc `polls.dispersion` déjà calculé :
-    le calcul relit les sondages curated de toutes les présidentielles)."""
+    le calcul relit les sondages curated de toutes les présidentielles) et `chronological`
+    (bilan de la consolidation, défaut <ROOT>/CHRONOLOGICAL_RESULTS)."""
     run, out = Path(run), Path(out)
     reg = registry or default_registry()
     f = scenarios or load_scenarios(registry=reg)
@@ -1759,6 +1877,8 @@ def export_run(
         backtest_first or paths.RUNS / BACKTEST_FIRST_ROUND,
         backtest_second or paths.RUNS / BACKTEST_SECOND_ROUND,
     )
+    backtest["chronological"] = build_chronological(
+        chronological or paths.ROOT / CHRONOLOGICAL_RESULTS, reg)
 
     cited = set(bloc_hint)
     cited |= set(results["candidate_id"].unique().to_list())

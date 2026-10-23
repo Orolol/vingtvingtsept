@@ -368,6 +368,45 @@ unique(
 	'backtest/variables_tested',
 	backtest.variables_tested.map((v) => v.id)
 );
+
+// backtest chronologique : grille complète élection × horizon × modèle, moyennes par horizon
+// égales à la moyenne des élections (même poids), arrondis compris
+{
+	const ch = backtest.chronological;
+	const methods = ch.methods.map((m) => m.id);
+	unique('backtest/chronological/methods', methods);
+	const keys = ch.by_election.map((r) => `${r.election}|${r.horizon_days}|${r.method}`);
+	unique('backtest/chronological/by_election', keys);
+	const expected = ch.elections.length * ch.horizons_days.length * methods.length;
+	if (keys.length !== expected)
+		fail('backtest/chronological', `${keys.length} lignes par élection, ${expected} attendues`);
+	if (ch.by_horizon.map((h) => h.horizon_days).join() !== ch.horizons_days.join())
+		fail('backtest/chronological', 'by_horizon ≠ horizons_days');
+	const metrics = ['log_score_winner', 'log_score_pair', 'crps_first_round', 'coverage_90'];
+	for (const h of ch.by_horizon)
+		for (const m of methods) {
+			const rows = ch.by_election.filter(
+				(r) => r.horizon_days === h.horizon_days && r.method === m
+			);
+			if (rows.length !== ch.elections.length) continue;
+			for (const k of metrics) {
+				const mean = rows.reduce((a, r) => a + r[k], 0) / rows.length;
+				if (!near(mean, h[m][k], 1e-3))
+					fail(
+						`backtest/chronological/${h.horizon_days}/${m}`,
+						`${k} ${h[m][k]} ≠ moyenne des élections ${mean.toFixed(4)}`
+					);
+			}
+		}
+	for (const r of ch.by_election) {
+		const where = `backtest/chronological/${r.election}/${r.horizon_days}/${r.method}`;
+		if (!ch.elections.includes(r.election) || !ch.horizons_days.includes(r.horizon_days))
+			fail(where, 'élection ou horizon non déclaré');
+		if (r.unforecast_share > 0 && r.missing_candidates.length === 0)
+			fail(where, 'voix hors support sans candidat manquant');
+	}
+}
+
 if (
 	backtest.variables_tested.some((v) => v.admitted) ||
 	[

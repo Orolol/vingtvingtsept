@@ -24,8 +24,11 @@ d'évaluation, le front et la feuille de route.
 
 - **Aucune source n'entre dans la prévision sans gain au backtest.** Une variable
   (économique, presse, autre) vit d'abord dans une étude et dans le tableau de bord explicatif.
-  Elle n'entre dans le modèle de prévision que si elle améliore le score de log-vraisemblance
-  à horizon fixe en validation croisée par élection (voir `docs/07-evaluation.md`).
+  Elle n'entre dans le modèle de prévision qu'après deux niveaux (`docs/07-evaluation.md`) :
+  le filtre rapide en validation croisée par élection sur ajustements figés, puis la
+  confirmation obligatoire dans la chaîne chronologique de `docs/10-consolidation.md`
+  (calibrations sans élection future, scénarios sans correspondance après coup, score jusqu'au
+  vainqueur). Un changement de défaut publié exige les deux.
 - **Jamais de calibration sur l'élection évaluée.** Le modèle d'erreur est estimé en
   laissant de côté l'élection backtestée.
 - **Résultat négatif = résultat.** On ne retouche ni métrique ni protocole pour faire passer
