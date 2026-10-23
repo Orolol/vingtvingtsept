@@ -214,6 +214,69 @@ function checkTracks(where, dates, tracks) {
 		if (t.values.length !== dates.length) fail(`${where}/${t.candidate_id}`, 'longueur ≠ dates');
 	}
 }
+// volets d'opinion : dates croissantes et datées au plus `asof`, ruptures dans la série, bloc
+// lié présent, intervalles ordonnés, nuage cohérent avec u par élection
+function checkDated(where, points) {
+	points.forEach((p, i) => {
+		if (i > 0 && p.date <= points[i - 1].date) fail(where, 'dates non strictement croissantes');
+	});
+	if (points.length && points.at(-1).date > manifest.asof) fail(where, 'dernière date > asof');
+}
+const ordered = (where, lo, mid, hi) => {
+	if (!(lo <= mid + EPS && mid <= hi + EPS))
+		fail(where, `intervalle non ordonné ${lo} ${mid} ${hi}`);
+};
+const op = economy.opinion;
+const opBlocs = new Set(op.bloc_shares.map((b) => b.bloc));
+const opIds = new Set();
+for (const t of op.themes)
+	for (const s of t.series) {
+		const where = `economy/opinion/${s.id}`;
+		if (opIds.has(s.id)) fail(where, 'série en double');
+		opIds.add(s.id);
+		checkDated(where, s.points);
+		if (!opBlocs.has(s.bloc)) fail(where, `bloc ${s.bloc} absent de bloc_shares`);
+		if (s.unit === '%' && s.points.some((p) => p.value < 0 || p.value > 100))
+			fail(where, 'pourcentage hors de [0, 100]');
+		for (const b of s.breaks)
+			if (b.date < s.points[0].date || b.date > s.points.at(-1).date)
+				fail(where, `rupture hors de la série (${b.date})`);
+	}
+for (const x of op.excluded)
+	if (opIds.has(x.series_id))
+		fail('economy/opinion/excluded', `série exclue affichée : ${x.series_id}`);
+for (const b of op.bloc_shares) checkDated(`economy/opinion/bloc_shares/${b.bloc}`, b.points);
+op.first_rounds.forEach((d, i) => {
+	if ((i > 0 && d <= op.first_rounds[i - 1]) || d > manifest.asof)
+		fail('economy/opinion/first_rounds', 'dates non croissantes ou après asof');
+});
+for (const r of [...op.study.level, ...op.study.dynamic])
+	if (r.holds && !r.testable)
+		fail(`economy/opinion/study/${r.series_id}`, 'tient sans être testable');
+const rn = sr.rn_image;
+for (const it of rn.barometer.items) checkDated(`second_round/rn_image/${it.id}`, it.points);
+const uBy = new Map(rn.u_observed.map((u) => [u.election, u]));
+for (const u of rn.u_observed)
+	ordered(`second_round/rn_image/u/${u.election}`, u.lo90, u.u, u.hi90);
+if (rn.scatter.n !== rn.scatter.points.length) fail('second_round/rn_image/scatter', 'n ≠ points');
+for (const p of rn.scatter.points) {
+	const u = uBy.get(p.election);
+	if (!u || u.u !== p.u) fail(`second_round/rn_image/scatter/${p.election}`, 'u ≠ u_observed');
+}
+rn.scatter.line.forEach((l, i, all) => {
+	ordered('second_round/rn_image/scatter/line', l.lo90, l.u, l.hi90);
+	if (i > 0 && l.x <= all[i - 1].x) fail('second_round/rn_image/scatter/line', 'x non croissants');
+});
+for (const d of rn.duels) {
+	const where = `second_round/rn_image/${d.rn_candidate}-${d.other_candidate}`;
+	knownCandidate(where, d.rn_candidate);
+	knownCandidate(where, d.other_candidate);
+	for (const mode of new Set(d.rows.map((r) => r.polls)))
+		if (!d.rows.some((r) => r.polls === mode && r.variant === 'default'))
+			fail(where, `pas de ligne « défaut » pour ${mode}`);
+	for (const r of d.rows) ordered(`${where}/${r.polls}/${r.variant}`, r.q05, r.median, r.q95);
+}
+
 checkTracks('press/attention', press.attention.weeks, press.attention.tracks);
 checkTracks('press/gdelt', press.gdelt.months, press.gdelt.tracks);
 // presse classée : ton dans [−1, 1], parts qui somment à 1 (à 0,01 près), masquage sous
@@ -411,6 +474,8 @@ if (
 	backtest.variables_tested.some((v) => v.admitted) ||
 	[
 		economy,
+		economy.opinion,
+		sr.rn_image,
 		press,
 		polls.pollster_ratings,
 		press.nlp,

@@ -349,6 +349,7 @@ export interface SecondRound {
 	 */
 	transfers: Transfer[];
 	polls: SecondRoundPoll[];
+	rn_image: RnImage;
 }
 /**
  * Un duel possible. Le score du second nommé (b) est 100 − score de a : ses quantiles se déduisent par symétrie (q05_b = 100 − q95_a).
@@ -378,6 +379,169 @@ export interface SecondRoundPoll {
 	candidate_a: CandidateId;
 	candidate_b: CandidateId;
 	share_a: Share;
+}
+/**
+ * Normalisation du RN et front républicain (runs/<date>-rn-image/). N'entre pas dans la prévision : le centre des reports du modèle reste son défaut.
+ */
+export interface RnImage {
+	in_forecast: boolean;
+	/**
+	 * Phrase de statut affichée (n = 3, 2002 porte la relation, 2022 mal prédite).
+	 */
+	note: string;
+	study_date: IsoDate;
+	reference: string;
+	barometer: {
+		items: RnBarometerItem[];
+		source: SourceRef;
+		population: string | null;
+		/**
+		 * Changements de nom, d'institut et de mode (registre).
+		 */
+		changes: string | null;
+		first_rounds: IsoDate[];
+	};
+	u_definition: string;
+	u_observed: RnUObserved[];
+	/**
+	 * u contre « danger pour la démocratie » : trois élections, droite pondérée et sa bande à 90 %.
+	 */
+	scatter: {
+		/**
+		 * Nombre d'élections du nuage.
+		 */
+		n: number;
+		x_label: string;
+		points: {
+			election: number;
+			/**
+			 * % « danger », dernière vague avant le vote.
+			 */
+			x: number;
+			wave: IsoDate | null;
+			u: number;
+			lo90: number;
+			hi90: number;
+			u_result: number;
+			/**
+			 * u prédit par la droite des deux autres élections.
+			 */
+			predicted_without: number | null;
+		}[];
+		line: {
+			x: number;
+			u: number;
+			lo90: number;
+			hi90: number;
+		}[];
+		/**
+		 * Pente MCO, logit par point de « danger ».
+		 */
+		slope_ols: number;
+		slope_ols_lo90: number;
+		slope_ols_hi90: number;
+		r2: number;
+		/**
+		 * Dernière vague avant 2027.
+		 */
+		x_2027: number | null;
+		/**
+		 * Point 2012 tiré des sondages de duel hypothétiques de 2011 (hors relation).
+		 */
+		hypothetical_2012: null | {
+			x: number;
+			u: number;
+			lo90: number;
+			hi90: number;
+			n_duels: number;
+		};
+	};
+	duels_note: string;
+	duels: {
+		rn_candidate: CandidateId;
+		other_candidate: CandidateId;
+		/**
+		 * Sondages de ce duel utilisés.
+		 */
+		n_polls: number;
+		rows: RnDuelRow[];
+	}[];
+}
+/**
+ * Un item du baromètre d'image du FN/RN (Verian, ex-Sofres, Kantar), par vague.
+ */
+export interface RnBarometerItem {
+	id: 'danger' | 'capable' | 'adhesion';
+	series_id: string;
+	label: string;
+	/**
+	 * Formulation exacte.
+	 */
+	question: string;
+	answer: string | null;
+	/**
+	 * Ruptures datées (vague annotée du registre).
+	 */
+	breaks: {
+		date: IsoDate;
+		label: string;
+	}[];
+	points: {
+		date: IsoDate;
+		value: number;
+	}[];
+}
+/**
+ * Source citée : libellé court et lien (URL, ou chemin dans le dépôt pour une note interne).
+ */
+export interface SourceRef {
+	label: string;
+	href: string;
+}
+/**
+ * Décalage commun u des reports vers le finaliste FN/RN à une élection (logit, référence : matrice du modèle).
+ */
+export interface RnUObserved {
+	election: number;
+	/**
+	 * Libellé du duel réel.
+	 */
+	duel: string;
+	/**
+	 * Instituts des enquêtes post-électorales.
+	 */
+	pollsters: number;
+	/**
+	 * u des enquêtes post-électorales.
+	 */
+	u: number;
+	lo90: number;
+	hi90: number;
+	/**
+	 * u qui reproduit le résultat officiel agrégé.
+	 */
+	u_result: number;
+	rn_result: Share;
+}
+/**
+ * Part du candidat RN et P(RN gagne), conditionnelles au duel, pour un centrage des reports.
+ */
+export interface RnDuelRow {
+	/**
+	 * Avec les sondages de duel, ou prior des reports seul.
+	 */
+	polls: 'with_polls' | 'prior_only';
+	variant: 'default' | 'persistence_2022' | 'local_slope' | 'relation';
+	label: string;
+	/**
+	 * Décalage injecté sur le centre actuel (logit).
+	 */
+	delta: number;
+	sigma_u: number;
+	median: Share;
+	q05: Share;
+	q95: Share;
+	p_rn: Probability;
 }
 /**
  * Contenu de data/registry/scenarios_2027.yaml (sources résolues), configurations les plus probables et historique des probabilités. La prévision conditionnelle à chaque condition est dans summary.json (`by_condition`).
@@ -431,13 +595,6 @@ export interface ScenarioState {
 	description: string;
 	sources: SourceRef[];
 	condition_id: ConditionId;
-}
-/**
- * Source citée : libellé court et lien (URL, ou chemin dans le dépôt pour une note interne).
- */
-export interface SourceRef {
-	label: string;
-	href: string;
 }
 export interface SmallCandidate {
 	candidate_id: CandidateId;
@@ -702,7 +859,7 @@ export interface TurnoutGap {
 	}[];
 }
 /**
- * Volet explicatif économie et popularité (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.
+ * Volet explicatif économie, popularité et opinion (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.
  */
 export interface Economy {
 	asof: IsoDate;
@@ -721,6 +878,7 @@ export interface Economy {
 	 */
 	correlations_note: string;
 	study: EconomyStudy;
+	opinion: Opinion;
 }
 export interface EconomySeries {
 	/**
@@ -787,6 +945,203 @@ export interface EconomyStudy {
 	 * Document du dépôt qui détaille l'étude.
 	 */
 	reference: string;
+}
+/**
+ * Volet « opinion » : séries longues d'attitudes et de préoccupations face à la part du bloc lié dans les sondages. N'entre pas dans la prévision.
+ */
+export interface Opinion {
+	in_forecast: boolean;
+	/**
+	 * Phrase de statut affichée.
+	 */
+	note: string;
+	/**
+	 * Premiers tours présidentiels couverts par les séries (repères).
+	 */
+	first_rounds: IsoDate[];
+	themes: {
+		id: string;
+		label: string;
+		/**
+		 * @minItems 1
+		 */
+		series: [OpinionSeries, ...OpinionSeries[]];
+	}[];
+	bloc_shares: OpinionBlocShare[];
+	/**
+	 * Séries d'un thème sans valeur publiable.
+	 */
+	excluded: {
+		series_id: string;
+		label: string;
+		theme: string;
+		n_values: number;
+		reason: string;
+	}[];
+	study: OpinionStudy;
+}
+/**
+ * Série longue d'attitude ou de préoccupation (data/curated/attitudes.parquet, registre data/registry/attitude_series.yaml).
+ */
+export interface OpinionSeries {
+	/**
+	 * series_id du registre.
+	 */
+	id: string;
+	label: string;
+	/**
+	 * Formulation exacte de la question (amorce développée quand le registre renvoie à une autre série).
+	 */
+	question: string;
+	/**
+	 * Modalité comptée.
+	 */
+	answer: string | null;
+	/**
+	 * Population interrogée, en clair.
+	 */
+	population: string;
+	source: SourceRef;
+	/**
+	 * `waves` : vagues datées, irrégulières ou semestrielles.
+	 */
+	frequency: 'annual' | 'waves';
+	/**
+	 * « % » ou « indice de 0 à 100 ».
+	 */
+	unit: string;
+	/**
+	 * Bloc lié, dont la part mensuelle est dans `opinion.bloc_shares`.
+	 */
+	bloc: 'far_right' | 'right' | 'centre' | 'left' | 'far_left' | 'incumbent';
+	/**
+	 * Changements de formulation, de méthode ou de mode signalés dans le registre.
+	 */
+	changes: string | null;
+	/**
+	 * Ce que le registre n'a pas pu obtenir.
+	 */
+	missing: string | null;
+	/**
+	 * Note commune à toutes les valeurs (méthode de lecture).
+	 */
+	note: string | null;
+	breaks: OpinionBreak[];
+	/**
+	 * Valeurs retirées de la série (document non publiable) et raison.
+	 */
+	excluded_values: {
+		document: string;
+		n_values: number;
+		reason: string;
+	}[];
+	/**
+	 * @minItems 1
+	 */
+	points: [
+		{
+			date: IsoDate;
+			value: number;
+			/**
+			 * Note propre à la valeur (demi-échantillons, vague particulière).
+			 */
+			note: string | null;
+		},
+		...{
+			date: IsoDate;
+			value: number;
+			/**
+			 * Note propre à la valeur (demi-échantillons, vague particulière).
+			 */
+			note: string | null;
+		}[]
+	];
+}
+/**
+ * Rupture datée signalée dans le registre (vague annotée, changement de libellé de l'item).
+ */
+export interface OpinionBreak {
+	date: IsoDate;
+	label: string;
+}
+/**
+ * Part mensuelle du bloc dans les sondages de premier tour (poll_results_by_bloc ; un mois = moyenne des instituts présents, vide sans sondage).
+ */
+export interface OpinionBlocShare {
+	bloc: 'far_right' | 'right' | 'centre' | 'left' | 'far_left' | 'incumbent';
+	label: string;
+	note: string | null;
+	points: {
+		date: IsoDate;
+		value: Share;
+		n_pollsters: number;
+	}[];
+}
+/**
+ * Étude du 2026-10-23 (runs/<date>-attitudes-prior/) : les attitudes améliorent-elles le prior structurel de bloc ?
+ */
+export interface OpinionStudy {
+	date: IsoDate;
+	verdict: 'negative' | 'positive' | 'inconclusive';
+	summary: string;
+	findings: string[];
+	reference: string;
+	/**
+	 * Niveau : écart du bloc à son prior expliqué par l'attitude à J−180, validation croisée par élection.
+	 */
+	level: {
+		bloc: 'far_right' | 'right' | 'centre' | 'left' | 'far_left' | 'incumbent';
+		bloc_label: string;
+		series_id: string;
+		/**
+		 * Libellé du registre.
+		 */
+		series_label: string;
+		/**
+		 * Attitude en niveau ou en variation depuis l'élection précédente.
+		 */
+		spec: 'level' | 'change';
+		n: number;
+		elections: number[];
+		expected_sign: -1 | 1;
+		/**
+		 * Points de part par écart type de l'attitude.
+		 */
+		slope_per_sd: number | null;
+		/**
+		 * Gain hors échantillon : RMSE sans l'attitude − RMSE avec (points ; positif = l'attitude aide).
+		 */
+		gain: number | null;
+		/**
+		 * p du placebo par permutation des valeurs entre élections.
+		 */
+		p_placebo: number | null;
+		testable: boolean;
+		holds: boolean;
+	}[];
+	/**
+	 * Dynamique : variation de la part du bloc entre deux vagues Eurobaromètre ~ variation de l'attitude (retard 0 contemporain, retard 1 prédictif).
+	 */
+	dynamic: {
+		bloc: 'far_right' | 'right' | 'centre' | 'left' | 'far_left' | 'incumbent';
+		bloc_label: string;
+		series_id: string;
+		/**
+		 * Libellé du registre.
+		 */
+		series_label: string;
+		lag: number;
+		n: number;
+		n_cycles: number;
+		effect_per_sd: number | null;
+		p_placebo: number | null;
+		testable: boolean;
+		holds: boolean;
+	}[];
+	/**
+	 * Nombre de tests, faux positifs attendus par hasard, tests qui passent.
+	 */
+	false_positives_note: string;
 }
 /**
  * Volet explicatif presse (docs/06-presse.md) : titres classés par un modèle local (ton, posture, titres extrêmes, part de voix, agenda, repères 2017 et 2022, qualité), attention Wikipédia, rubriques des JT (INA), volume GDELT. N'entre dans la prévision que si `in_forecast` est vrai. Parts des titres classés entre 0 et 1.

@@ -5,7 +5,7 @@
 	"description": "Matrice des duels de second tour (mélange de scénarios), reports de voix estimés et sondages de second tour hypothétiques.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "election_date", "pairs", "transfers", "polls"],
+	"required": ["asof", "election_date", "pairs", "transfers", "polls", "rn_image"],
 	"$defs": {
 		"pair": {
 			"title": "Duel",
@@ -58,6 +58,175 @@
 				"candidate_b": { "$ref": "common.json#/$defs/candidate_id" },
 				"share_a": { "$ref": "common.json#/$defs/share", "description": "Score publié de a ; celui de b vaut 100 − share_a." }
 			}
+		},
+		"rn_barometer_item": {
+			"title": "RnBarometerItem",
+			"description": "Un item du baromètre d'image du FN/RN (Verian, ex-Sofres, Kantar), par vague.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "series_id", "label", "question", "answer", "breaks", "points"],
+			"properties": {
+				"id": { "type": "string", "enum": ["danger", "capable", "adhesion"] },
+				"series_id": { "type": "string" },
+				"label": { "type": "string" },
+				"question": { "type": "string", "description": "Formulation exacte." },
+				"answer": { "type": ["string", "null"] },
+				"breaks": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["date", "label"],
+						"properties": { "date": { "$ref": "common.json#/$defs/date" }, "label": { "type": "string" } }
+					},
+					"description": "Ruptures datées (vague annotée du registre)."
+				},
+				"points": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["date", "value"],
+						"properties": { "date": { "$ref": "common.json#/$defs/date" }, "value": { "type": "number", "minimum": 0, "maximum": 100 } }
+					}
+				}
+			}
+		},
+		"rn_u_observed": {
+			"title": "RnUObserved",
+			"description": "Décalage commun u des reports vers le finaliste FN/RN à une élection (logit, référence : matrice du modèle).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["election", "duel", "pollsters", "u", "lo90", "hi90", "u_result", "rn_result"],
+			"properties": {
+				"election": { "type": "integer" },
+				"duel": { "type": "string", "description": "Libellé du duel réel." },
+				"pollsters": { "type": "integer", "minimum": 1, "description": "Instituts des enquêtes post-électorales." },
+				"u": { "type": "number", "description": "u des enquêtes post-électorales." },
+				"lo90": { "type": "number" },
+				"hi90": { "type": "number" },
+				"u_result": { "type": "number", "description": "u qui reproduit le résultat officiel agrégé." },
+				"rn_result": { "$ref": "common.json#/$defs/share", "description": "Score officiel du finaliste FN/RN." }
+			}
+		},
+		"rn_duel_row": {
+			"title": "RnDuelRow",
+			"description": "Part du candidat RN et P(RN gagne), conditionnelles au duel, pour un centrage des reports.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["polls", "variant", "label", "delta", "sigma_u", "median", "q05", "q95", "p_rn"],
+			"properties": {
+				"polls": { "type": "string", "enum": ["with_polls", "prior_only"], "description": "Avec les sondages de duel, ou prior des reports seul." },
+				"variant": { "type": "string", "enum": ["default", "persistence_2022", "local_slope", "relation"] },
+				"label": { "type": "string" },
+				"delta": { "type": "number", "description": "Décalage injecté sur le centre actuel (logit)." },
+				"sigma_u": { "type": "number", "minimum": 0 },
+				"median": { "$ref": "common.json#/$defs/share" },
+				"q05": { "$ref": "common.json#/$defs/share" },
+				"q95": { "$ref": "common.json#/$defs/share" },
+				"p_rn": { "$ref": "common.json#/$defs/probability" }
+			}
+		},
+		"rn_image": {
+			"title": "RnImage",
+			"description": "Normalisation du RN et front républicain (runs/<date>-rn-image/). N'entre pas dans la prévision : le centre des reports du modèle reste son défaut.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "study_date", "reference", "barometer", "u_definition", "u_observed", "scatter", "duels_note", "duels"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string", "description": "Phrase de statut affichée (n = 3, 2002 porte la relation, 2022 mal prédite)." },
+				"study_date": { "$ref": "common.json#/$defs/date" },
+				"reference": { "type": "string" },
+				"barometer": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["items", "source", "population", "changes", "first_rounds"],
+					"properties": {
+						"items": { "type": "array", "items": { "$ref": "#/$defs/rn_barometer_item" } },
+						"source": { "$ref": "common.json#/$defs/source_ref" },
+						"population": { "type": ["string", "null"] },
+						"changes": { "type": ["string", "null"], "description": "Changements de nom, d'institut et de mode (registre)." },
+						"first_rounds": { "type": "array", "items": { "$ref": "common.json#/$defs/date" } }
+					}
+				},
+				"u_definition": { "type": "string" },
+				"u_observed": { "type": "array", "items": { "$ref": "#/$defs/rn_u_observed" } },
+				"scatter": {
+					"type": "object",
+					"additionalProperties": false,
+					"required": ["n", "x_label", "points", "line", "slope_ols", "slope_ols_lo90", "slope_ols_hi90", "r2", "x_2027", "hypothetical_2012"],
+					"description": "u contre « danger pour la démocratie » : trois élections, droite pondérée et sa bande à 90 %.",
+					"properties": {
+						"n": { "type": "integer", "minimum": 0, "description": "Nombre d'élections du nuage." },
+						"x_label": { "type": "string" },
+						"points": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"additionalProperties": false,
+								"required": ["election", "x", "wave", "u", "lo90", "hi90", "u_result", "predicted_without"],
+								"properties": {
+									"election": { "type": "integer" },
+									"x": { "type": "number", "description": "% « danger », dernière vague avant le vote." },
+									"wave": {
+										"anyOf": [
+											{ "$ref": "common.json#/$defs/date" },
+											{ "type": "null" }
+										]
+									},
+									"u": { "type": "number" },
+									"lo90": { "type": "number" },
+									"hi90": { "type": "number" },
+									"u_result": { "type": "number" },
+									"predicted_without": { "type": ["number", "null"], "description": "u prédit par la droite des deux autres élections." }
+								}
+							}
+						},
+						"line": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"additionalProperties": false,
+								"required": ["x", "u", "lo90", "hi90"],
+								"properties": { "x": { "type": "number" }, "u": { "type": "number" }, "lo90": { "type": "number" }, "hi90": { "type": "number" } }
+							}
+						},
+						"slope_ols": { "type": "number", "description": "Pente MCO, logit par point de « danger »." },
+						"slope_ols_lo90": { "type": "number" },
+						"slope_ols_hi90": { "type": "number" },
+						"r2": { "type": "number" },
+						"x_2027": { "type": ["number", "null"], "description": "Dernière vague avant 2027." },
+						"hypothetical_2012": {
+							"anyOf": [
+								{ "type": "null" },
+								{
+									"type": "object",
+									"additionalProperties": false,
+									"required": ["x", "u", "lo90", "hi90", "n_duels"],
+									"properties": { "x": { "type": "number" }, "u": { "type": "number" }, "lo90": { "type": "number" }, "hi90": { "type": "number" }, "n_duels": { "type": "integer" } }
+								}
+							],
+							"description": "Point 2012 tiré des sondages de duel hypothétiques de 2011 (hors relation)."
+						}
+					}
+				},
+				"duels_note": { "type": "string" },
+				"duels": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["rn_candidate", "other_candidate", "n_polls", "rows"],
+						"properties": {
+							"rn_candidate": { "$ref": "common.json#/$defs/candidate_id" },
+							"other_candidate": { "$ref": "common.json#/$defs/candidate_id" },
+							"n_polls": { "type": "integer", "minimum": 0, "description": "Sondages de ce duel utilisés." },
+							"rows": { "type": "array", "items": { "$ref": "#/$defs/rn_duel_row" } }
+						}
+					}
+				}
+			}
 		}
 	},
 	"properties": {
@@ -73,6 +242,7 @@
 			"description": "Reports pour les paires principales et les électorats de premier tour significatifs.",
 			"items": { "$ref": "#/$defs/transfer" }
 		},
-		"polls": { "type": "array", "items": { "$ref": "#/$defs/poll" } }
+		"polls": { "type": "array", "items": { "$ref": "#/$defs/poll" } },
+		"rn_image": { "$ref": "#/$defs/rn_image" }
 	}
 }

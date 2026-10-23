@@ -1114,6 +1114,257 @@ const economy = {
 		reference: 'docs/05-economie.md'
 	}
 };
+// volets d'opinion factices (aléa séparé : le reste des données factices ne bouge pas)
+const randOp = mulberry32(1983);
+const noiseOp = () => 2 * (randOp() - 0.5);
+const yearly = (from, to, f) =>
+	Array.from({ length: to - from + 1 }, (_, i) => ({
+		date: `${from + i}-01-01`,
+		value: round(f(i), 1),
+		note: null
+	}));
+const mockOpinionSeries = (id, label, bloc, from, f, extra = {}) => ({
+	id,
+	label,
+	question: `Question factice : ${label.toLowerCase()} ?`,
+	answer: "Total d'accord",
+	population: 'France, 18 ans et plus (quotas)',
+	source: { label: 'Source factice', href: 'data/registry/attitude_series.yaml' },
+	frequency: 'annual',
+	unit: '%',
+	bloc,
+	changes: null,
+	missing: null,
+	note: null,
+	breaks: [],
+	excluded_values: [],
+	points: yearly(from, 2026, f),
+	...extra
+});
+const mockFirstRounds = ['1988-04-24', '1995-04-23', '2002-04-21', '2007-04-22', '2012-04-22'];
+mockFirstRounds.push('2017-04-23', '2022-04-10');
+const mockBlocShare = (b, level) => ({
+	bloc: b,
+	label: { far_right: 'Extrême droite', left: 'Gauche' }[b],
+	note: null,
+	points: Array.from({ length: 60 }, (_, i) => {
+		const d = toDate('2021-11-01');
+		d.setUTCMonth(d.getUTCMonth() + i);
+		return { date: iso(d), value: round(level + 0.1 * i + noiseOp(), 1), n_pollsters: 3 };
+	})
+});
+economy.opinion = {
+	in_forecast: false,
+	note: "Données factices. Ces séries d'opinion n'entrent pas dans la prévision.",
+	first_rounds: mockFirstRounds,
+	themes: [
+		{
+			id: 'immigration_security',
+			label: 'Immigration et sécurité',
+			series: [
+				mockOpinionSeries(
+					'opinion_too_many_immigrants',
+					"Il y a trop d'immigrés",
+					'far_right',
+					2000,
+					(i) => 60 + 0.3 * i + 3 * noiseOp()
+				)
+			]
+		},
+		{
+			id: 'rn_image',
+			label: 'Image du FN/RN',
+			series: [
+				mockOpinionSeries(
+					'rn_danger_democracy_yes',
+					'Le FN/RN est un danger pour la démocratie',
+					'far_right',
+					1990,
+					(i) => 72 - 0.8 * i + 2 * noiseOp(),
+					{ breaks: [{ date: '2026-01-01', label: 'première vague en ligne' }] }
+				)
+			]
+		},
+		{
+			id: 'economy_concerns',
+			label: 'Chômage et prix',
+			series: [
+				mockOpinionSeries(
+					'eb_mii_unemployment',
+					'Le chômage parmi les deux problèmes les plus importants',
+					'left',
+					2004,
+					(i) => 40 - 1.2 * i + 4 * noiseOp()
+				)
+			]
+		}
+	],
+	bloc_shares: [mockBlocShare('far_right', 30), mockBlocShare('left', 25)],
+	excluded: [
+		{
+			series_id: 'credoc_concern_immigration',
+			label: "CRÉDOC : l'immigration",
+			theme: 'immigration_security',
+			n_values: 27,
+			reason: 'Données factices : document réservé aux souscripteurs.'
+		}
+	],
+	study: {
+		date: RUN_DATE,
+		verdict: 'negative',
+		summary: 'Données factices : aucune étude publiée.',
+		findings: [],
+		reference: 'docs/05-economie.md',
+		level: [
+			{
+				bloc: 'far_right',
+				bloc_label: 'Extrême droite',
+				series_id: 'opinion_too_many_immigrants',
+				series_label: "Il y a trop d'immigrés",
+				spec: 'level',
+				n: 5,
+				elections: [2002, 2007, 2012, 2017, 2022],
+				expected_sign: 1,
+				slope_per_sd: -1.2,
+				gain: -0.8,
+				p_placebo: 0.4,
+				testable: true,
+				holds: false
+			}
+		],
+		dynamic: [
+			{
+				bloc: 'left',
+				bloc_label: 'Gauche',
+				series_id: 'eb_mii_unemployment',
+				series_label: 'Le chômage parmi les deux problèmes les plus importants',
+				lag: 1,
+				n: 24,
+				n_cycles: 5,
+				effect_per_sd: 0.3,
+				p_placebo: 0.5,
+				testable: true,
+				holds: false
+			}
+		],
+		false_positives_note: 'Données factices.'
+	}
+};
+const mockDuelRows = (base) =>
+	['with_polls', 'prior_only'].flatMap((polls, k) =>
+		[
+			['default', 'Prior actuel (défaut du modèle)', 0],
+			['local_slope', 'Pente locale 2017 → 2022', 0.35],
+			['relation', 'Relation baromètre (droite sur n = 3)', 0.9]
+		].map(([variant, label, delta]) => {
+			const median = round(base - 4 * k + (k ? 8 : 2.5) * delta, 1);
+			const half = k ? 12 : 6;
+			return {
+				polls,
+				variant,
+				label,
+				delta,
+				sigma_u: 0.3,
+				median,
+				q05: round(median - half, 1),
+				q95: round(median + half, 1),
+				p_rn: round(Math.min(0.99, Math.max(0.01, 0.5 + (median - 50) / (2 * half))), 4)
+			};
+		})
+	);
+secondRound.rn_image = {
+	in_forecast: false,
+	note: "Données factices. N'entre pas dans la prévision (n = 3).",
+	study_date: RUN_DATE,
+	reference: 'docs/05-economie.md',
+	barometer: {
+		items: [
+			['danger', 'rn_danger_democracy_yes', 'Danger pour la démocratie', (i) => 72 - 0.8 * i],
+			[
+				'capable',
+				'rn_can_join_government',
+				'Capable de participer à un gouvernement',
+				(i) => 20 + 0.6 * i
+			],
+			['adhesion', 'rn_ideas_agree', 'Adhésion aux idées', (i) => 15 + 0.6 * i]
+		].map(([id, series_id, label, f]) => ({
+			id,
+			series_id,
+			label,
+			question: `Question factice : ${label.toLowerCase()} ?`,
+			answer: 'Oui',
+			breaks: [],
+			points: yearly(1990, 2026, (i) => f(i) + 2 * noiseOp()).map(({ date, value }) => ({
+				date,
+				value
+			}))
+		})),
+		source: { label: 'Source factice', href: 'data/registry/attitude_series.yaml' },
+		population: 'France, 18 ans et plus (quotas)',
+		changes: null,
+		first_rounds: mockFirstRounds
+	},
+	u_definition: 'Données factices : décalage commun des reports vers le finaliste RN (logit).',
+	u_observed: [
+		[2002, 'Jean-Marie Le Pen – Jacques Chirac', -1.9, 17.8],
+		[2017, 'Marine Le Pen – Emmanuel Macron', -0.3, 33.9],
+		[2022, 'Marine Le Pen – Emmanuel Macron', 0.06, 41.5]
+	].map(([election, duel, u, rn_result]) => ({
+		election,
+		duel,
+		pollsters: 3,
+		u,
+		lo90: round(u - 0.2, 2),
+		hi90: round(u + 0.2, 2),
+		u_result: u,
+		rn_result
+	})),
+	scatter: {
+		n: 3,
+		x_label: '« danger pour la démocratie » (% oui)',
+		points: [
+			[2002, 62, -1.9],
+			[2017, 58, -0.3],
+			[2022, 48, 0.06]
+		].map(([election, x, u]) => ({
+			election,
+			x,
+			wave: `${election}-01-01`,
+			u,
+			lo90: round(u - 0.2, 2),
+			hi90: round(u + 0.2, 2),
+			u_result: u,
+			predicted_without: null
+		})),
+		line: Array.from({ length: 11 }, (_, i) => {
+			const x = 38 + 3 * i;
+			const u = round(-0.12 * (x - 55) - 0.6, 3);
+			return { x, u, lo90: round(u - 0.6, 3), hi90: round(u + 0.6, 3) };
+		}),
+		slope_ols: -0.12,
+		slope_ols_lo90: -0.65,
+		slope_ols_hi90: 0.41,
+		r2: 0.68,
+		x_2027: 41,
+		hypothetical_2012: null
+	},
+	duels_note: 'Données factices : sensibilité, pas prévision.',
+	duels: [
+		{
+			rn_candidate: 'le_pen_marine',
+			other_candidate: 'philippe_edouard',
+			n_polls: 10,
+			rows: mockDuelRows(51)
+		},
+		{
+			rn_candidate: 'bardella_jordan',
+			other_candidate: 'philippe_edouard',
+			n_polls: 5,
+			rows: mockDuelRows(49.5)
+		}
+	]
+};
+
 const mockWeeks = Array.from({ length: 12 }, (_, i) => addDays('2026-07-27', 7 * i));
 const mockMonths = Array.from({ length: 6 }, (_, i) => `2026-0${4 + i}-01`);
 // presse classée factice : six candidats, douze semaines, masquage sous 10 titres

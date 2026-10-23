@@ -14,7 +14,7 @@
 		{ route: '/second-tour', label: 'Second tour' },
 		{ route: '/scenarios', label: 'Scénarios' },
 		{ route: '/sondages', label: 'Sondages' },
-		{ route: '/economie', label: 'Économie' },
+		{ route: '/economie', label: 'Économie et opinion' },
 		{ route: '/presse', label: 'Presse' },
 		{ route: '/methode', label: 'Méthode' }
 	] as const;

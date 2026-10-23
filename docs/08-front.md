@@ -21,10 +21,10 @@ que `manifest.mock` vaut vrai.
 |---|---|
 | `/` | les probabilités du jour (qualification, victoire), la date du dernier sondage intégré, l'évolution des probabilités, un résumé des scénarios ; « Selon vous, qui sera élu ? » face à nos probabilités (hors prévision) |
 | `/premier-tour` | courbes de soutien latent par candidat avec intervalles, sondages en points, filtre par configuration |
-| `/second-tour` | matrice des duels : probabilité de chaque paire, score attendu, intervalle ; reports de voix estimés |
+| `/second-tour` | matrice des duels : probabilité de chaque paire, score attendu, intervalle ; reports de voix estimés ; normalisation du RN et front républicain (hors prévision) |
 | `/scenarios` | configurations de candidats, leurs probabilités, l'historique des révisions, la prévision conditionnelle à chacune |
 | `/sondages` | table de tous les sondages intégrés, dispersion des instituts et électorats fragiles (hors prévision), effets maison estimés par institut, palmarès |
-| `/economie` | séries économiques et popularité, corrélations, ce qui entre ou non dans la prévision |
+| `/economie` | « Économie et opinion » : séries économiques et popularité, corrélations, ce qui entre ou non dans la prévision ; séries longues d'opinion face à la part du bloc lié et étude des attitudes (hors prévision) |
 | `/presse` | presse classée (ton, posture, titres extrêmes, part de voix, agenda, repères 2017 et 2022, qualité), attention Wikipédia, rubriques INA, GDELT, même mention |
 | `/methode` | méthodologie en langage clair, résultats du backtest, variables testées par vague, limites |
 
@@ -127,6 +127,42 @@ phrase de statut, affichée sur la page :
   `top_is_winner` cohérent ; séries de dispersion alignées sur `weeks`, dernière semaine =
   `asof` ; écarts triés, cohérents avec les deux parts (à l'arrondi près), erreur-type nulle si
   et seulement si moins de deux sondages ; candidats présents dans le manifeste.
+
+- Volets d'opinion (ajoutés le 2026-10-23, `vvs.export.opinion`), tous `in_forecast: false` :
+  - `economy.opinion` (`/economie`, page renommée « Économie et opinion ») : séries longues de
+    `attitudes.parquet` groupées par thème (`themes` : immigration et sécurité, tolérance,
+    image du FN/RN, chômage et prix, confiance politique), chacune avec la formulation exacte
+    (`question`, amorce développée quand le registre renvoie à une autre série), `answer`,
+    `population`, `source`, `frequency` (`annual` ou `waves`), `unit`, le bloc lié (`bloc`),
+    les textes `changes` et `missing` du registre, `note` commune, `breaks` datés (vagues
+    annotées du registre, comme le passage en ligne de Verian en janvier 2026, et changements
+    de libellé des items Eurobaromètre) et `points` (valeur, note propre : demi-échantillons,
+    vague particulière). `bloc_shares` : part mensuelle des blocs liés dans les sondages de
+    premier tour (`vvs.studies.panel`, mêmes règles que l'étude économie ; `incumbent` = bloc
+    du président sortant). `first_rounds` : premiers tours couverts (repères, 1988 et 1995
+    compris). `excluded` : séries sans valeur publiable et raison ; tout document dont la note
+    du registre porte « réservé aux souscripteurs » est écarté (note CRÉDOC 2015), ainsi que
+    la note CRÉDOC 2024 (licence non précisée), donc aucune série CRÉDOC n'est publiée.
+    `study` : étude `runs/2026-10-23-attitudes-prior/` (verdict, résumé chiffré, constats,
+    tableaux `level` — gain hors échantillon, p du placebo par permutation — et `dynamic`,
+    phrase des faux positifs attendus).
+  - `second_round.rn_image` (`/second-tour`, section « Normalisation du RN et front
+    républicain ») : étude `runs/2026-10-23-rn-image/`. `barometer` : trois items du baromètre
+    d'image (danger pour la démocratie, capable de participer à un gouvernement, adhésion aux
+    idées) par vague, ruptures et premiers tours ; `u_observed` : décalage commun u des reports
+    vers le finaliste FN/RN en 2002, 2017 et 2022 (enquêtes, intervalle à 90 %, résultat
+    agrégé, score) ; `scatter` : nuage u contre « danger » (`n` = 3, écrit sur la figure),
+    droite pondérée et bande à 90 % (`line`), pente MCO, prédiction de chaque élection par les
+    deux autres, point 2012 hypothétique ; `duels` : pour les quatre duels principaux, part
+    médiane du RN (90 %) et P(RN gagne) avec le défaut et les centrages « persistance 2022 »,
+    « pente 2017 → 2022 » et « relation baromètre », avec et sans sondages de duel
+    (`with_polls`, `prior_only`), présentés comme sensibilité. `note` dit n = 3, que 2002 porte
+    la relation et que 2022 aurait été prédit à +3,85 pour +0,06 observé.
+  Invariants de `validate-data` : dates croissantes et au plus `asof`, ruptures dans la
+  série, bloc lié présent dans `bloc_shares`, pourcentages dans [0, 100], aucune série exclue
+  affichée, aucun test « tient » sans être testable ; u dans son intervalle, nuage cohérent
+  avec `u_observed`, droite ordonnée, candidats des duels dans le manifeste, ligne « défaut »
+  dans chaque mode, q05 ≤ médiane ≤ q95.
 
 Les schémas sont décrits en JSON Schema dans `back/src/vvs/export/schemas/` et validés à
 l'export ; le front les type via génération TypeScript (`npm run types`) et les valide avec

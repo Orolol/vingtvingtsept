@@ -20,7 +20,10 @@ tour, dits rétrospectifs), le bilan versionné de la consolidation chronologiqu
 de rupture). Indicateurs d'opinion de la troisième vague (2026-10-22) : anticipations « qui
 sera élu ? » (`poll_expectations.parquet`, dans summary.json), dispersion des instituts
 (`vvs.model.herding`, recalculée sur les sondages curated) et électorats fragiles
-(`turnout_gap.parquet`), dans polls.json. Ces volets sont
+(`turnout_gap.parquet`), dans polls.json. Volets d'opinion (2026-10-23, `vvs.export.opinion`) :
+séries longues d'attitudes face à la part du bloc lié (`economy.opinion`, étude
+`runs/<date>-attitudes-prior/`) et image du RN face aux reports (`second_round.rn_image`, étude
+`runs/<date>-rn-image/`). Ces volets sont
 explicatifs : tous portent `in_forecast: false`. La validation contre les
 schémas se fait côté front (`npm run validate-data`, ajv) : jsonschema n'est pas une
 dépendance du back.
@@ -43,6 +46,7 @@ import numpy as np
 import polars as pl
 
 from vvs import paths
+from vvs.export.opinion import build_opinion, build_rn_image
 from vvs.registry import Registry, default_registry
 from vvs.registry.scenarios import ScenariosFile, enumerate_configurations, load_scenarios
 
@@ -1824,6 +1828,8 @@ def export_run(
     press_nlp_study: Path | None = None,
     dispersion: dict | None = None,
     chronological: Path | None = None,
+    attitudes_study: Path | None = None,
+    rn_image_study: Path | None = None,
 ) -> dict:
     """Écrit les fichiers du contrat JSON dans `out` ; rend un petit compte rendu.
 
@@ -1832,7 +1838,10 @@ def export_run(
     des parquet explicatifs (macro, attention, presse, titres classés ; défaut data/curated).
     Injectables pour les tests, comme `dispersion` (bloc `polls.dispersion` déjà calculé :
     le calcul relit les sondages curated de toutes les présidentielles) et `chronological`
-    (bilan de la consolidation, défaut <ROOT>/CHRONOLOGICAL_RESULTS)."""
+    (bilan de la consolidation, défaut <ROOT>/CHRONOLOGICAL_RESULTS). `attitudes_study`,
+    `rn_image_study` : études des volets d'opinion (défaut runs/<ATTITUDES_STUDY>,
+    runs/<RN_IMAGE_STUDY>, voir vvs.export.opinion) ; leurs séries viennent de
+    `curated`/attitudes.parquet."""
     run, out = Path(run), Path(out)
     reg = registry or default_registry()
     f = scenarios or load_scenarios(registry=reg)
@@ -1870,6 +1879,8 @@ def export_run(
     polls_json["turnout_gap"] = build_turnout_gap(rm["asof"], curated_dir, reg)
     summary_json["expectations"] = build_expectations(rm["asof"], curated_dir, reg)
     economy = build_economy(rm["asof"], economy_study, curated)
+    economy["opinion"] = build_opinion(rm["asof"], reg, curated_dir, attitudes_study)
+    second_round["rn_image"] = build_rn_image(rm["asof"], reg, curated_dir, rn_image_study)
     press = build_press(rm["asof"], curated, [u["candidate_id"] for u in rm["universe"]],
                         press_nlp_study)
     backtest = build_backtest(
@@ -1885,6 +1896,8 @@ def export_run(
     for p in second_round["pairs"]:
         cited |= {p["candidate_a"], p["candidate_b"]}
     cited |= {t["from"] for t in second_round["transfers"]}
+    for d in second_round["rn_image"]["duels"]:
+        cited |= {d["rn_candidate"], d["other_candidate"]}
     for block in (press["attention"], press["gdelt"], press["tone"]):
         cited |= {t["candidate_id"] for t in block["tracks"]}
     cited |= {e["candidate_id"] for e in press["landmarks"]["events"]}

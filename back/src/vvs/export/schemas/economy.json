@@ -2,10 +2,10 @@
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
 	"$id": "https://schemas.vingtvingtsept.invalid/v1/economy.json",
 	"title": "Economy",
-	"description": "Volet explicatif économie et popularité (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.",
+	"description": "Volet explicatif économie, popularité et opinion (docs/05-economie.md). N'entre dans la prévision que si `in_forecast` est vrai, après admission au backtest.",
 	"type": "object",
 	"additionalProperties": false,
-	"required": ["asof", "in_forecast", "in_forecast_note", "series", "correlations", "correlations_note", "study"],
+	"required": ["asof", "in_forecast", "in_forecast_note", "series", "correlations", "correlations_note", "study", "opinion"],
 	"$defs": {
 		"series": {
 			"title": "EconomySeries",
@@ -74,6 +74,200 @@
 				"findings": { "type": "array", "items": { "type": "string" } },
 				"reference": { "type": "string", "description": "Document du dépôt qui détaille l'étude." }
 			}
+		},
+		"opinion_break": {
+			"title": "OpinionBreak",
+			"description": "Rupture datée signalée dans le registre (vague annotée, changement de libellé de l'item).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["date", "label"],
+			"properties": { "date": { "$ref": "common.json#/$defs/date" }, "label": { "type": "string" } }
+		},
+		"opinion_series": {
+			"title": "OpinionSeries",
+			"description": "Série longue d'attitude ou de préoccupation (data/curated/attitudes.parquet, registre data/registry/attitude_series.yaml).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["id", "label", "question", "answer", "population", "source", "frequency", "unit", "bloc", "changes", "missing", "note", "breaks", "excluded_values", "points"],
+			"properties": {
+				"id": { "type": "string", "description": "series_id du registre." },
+				"label": { "type": "string" },
+				"question": { "type": "string", "description": "Formulation exacte de la question (amorce développée quand le registre renvoie à une autre série)." },
+				"answer": { "type": ["string", "null"], "description": "Modalité comptée." },
+				"population": { "type": "string", "description": "Population interrogée, en clair." },
+				"source": { "$ref": "common.json#/$defs/source_ref" },
+				"frequency": { "type": "string", "enum": ["annual", "waves"], "description": "`waves` : vagues datées, irrégulières ou semestrielles." },
+				"unit": { "type": "string", "description": "« % » ou « indice de 0 à 100 »." },
+				"bloc": {
+					"type": "string",
+					"enum": ["far_right", "right", "centre", "left", "far_left", "incumbent"],
+					"description": "Bloc lié, dont la part mensuelle est dans `opinion.bloc_shares`."
+				},
+				"changes": { "type": ["string", "null"], "description": "Changements de formulation, de méthode ou de mode signalés dans le registre." },
+				"missing": { "type": ["string", "null"], "description": "Ce que le registre n'a pas pu obtenir." },
+				"note": { "type": ["string", "null"], "description": "Note commune à toutes les valeurs (méthode de lecture)." },
+				"breaks": { "type": "array", "items": { "$ref": "#/$defs/opinion_break" } },
+				"excluded_values": {
+					"type": "array",
+					"description": "Valeurs retirées de la série (document non publiable) et raison.",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["document", "n_values", "reason"],
+						"properties": { "document": { "type": "string" }, "n_values": { "type": "integer", "minimum": 0 }, "reason": { "type": "string" } }
+					}
+				},
+				"points": {
+					"type": "array",
+					"minItems": 1,
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["date", "value", "note"],
+						"properties": {
+							"date": { "$ref": "common.json#/$defs/date", "description": "Début du terrain (ou 1er du mois, 1er janvier pour une série annuelle)." },
+							"value": { "type": "number" },
+							"note": { "type": ["string", "null"], "description": "Note propre à la valeur (demi-échantillons, vague particulière)." }
+						}
+					}
+				}
+			}
+		},
+		"opinion_bloc_share": {
+			"title": "OpinionBlocShare",
+			"description": "Part mensuelle du bloc dans les sondages de premier tour (poll_results_by_bloc ; un mois = moyenne des instituts présents, vide sans sondage).",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["bloc", "label", "note", "points"],
+			"properties": {
+				"bloc": { "type": "string", "enum": ["far_right", "right", "centre", "left", "far_left", "incumbent"] },
+				"label": { "type": "string" },
+				"note": { "type": ["string", "null"] },
+				"points": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["date", "value", "n_pollsters"],
+						"properties": {
+							"date": { "$ref": "common.json#/$defs/date", "description": "Premier jour du mois." },
+							"value": { "$ref": "common.json#/$defs/share" },
+							"n_pollsters": { "type": "integer", "minimum": 1 }
+						}
+					}
+				}
+			}
+		},
+		"opinion_study": {
+			"title": "OpinionStudy",
+			"description": "Étude du 2026-10-23 (runs/<date>-attitudes-prior/) : les attitudes améliorent-elles le prior structurel de bloc ?",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["date", "verdict", "summary", "findings", "reference", "level", "dynamic", "false_positives_note"],
+			"properties": {
+				"date": { "$ref": "common.json#/$defs/date" },
+				"verdict": { "type": "string", "enum": ["negative", "positive", "inconclusive"] },
+				"summary": { "type": "string" },
+				"findings": { "type": "array", "items": { "type": "string" } },
+				"reference": { "type": "string" },
+				"level": {
+					"type": "array",
+					"description": "Niveau : écart du bloc à son prior expliqué par l'attitude à J−180, validation croisée par élection.",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["bloc", "bloc_label", "series_id", "series_label", "spec", "n", "elections", "expected_sign", "slope_per_sd", "gain", "p_placebo", "testable", "holds"],
+						"properties": {
+							"bloc": { "type": "string", "enum": ["far_right", "right", "centre", "left", "far_left", "incumbent"] },
+							"bloc_label": { "type": "string" },
+							"series_id": { "type": "string" },
+							"series_label": { "type": "string", "description": "Libellé du registre." },
+							"spec": { "type": "string", "enum": ["level", "change"], "description": "Attitude en niveau ou en variation depuis l'élection précédente." },
+							"n": { "type": "integer", "minimum": 0 },
+							"elections": { "type": "array", "items": { "type": "integer" } },
+							"expected_sign": { "type": "integer", "enum": [-1, 1] },
+							"slope_per_sd": { "type": ["number", "null"], "description": "Points de part par écart type de l'attitude." },
+							"gain": {
+								"type": ["number", "null"],
+								"description": "Gain hors échantillon : RMSE sans l'attitude − RMSE avec (points ; positif = l'attitude aide)."
+							},
+							"p_placebo": { "type": ["number", "null"], "minimum": 0, "maximum": 1, "description": "p du placebo par permutation des valeurs entre élections." },
+							"testable": { "type": "boolean" },
+							"holds": { "type": "boolean" }
+						}
+					}
+				},
+				"dynamic": {
+					"type": "array",
+					"description": "Dynamique : variation de la part du bloc entre deux vagues Eurobaromètre ~ variation de l'attitude (retard 0 contemporain, retard 1 prédictif).",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["bloc", "bloc_label", "series_id", "series_label", "lag", "n", "n_cycles", "effect_per_sd", "p_placebo", "testable", "holds"],
+						"properties": {
+							"bloc": { "type": "string", "enum": ["far_right", "right", "centre", "left", "far_left", "incumbent"] },
+							"bloc_label": { "type": "string" },
+							"series_id": { "type": "string" },
+							"series_label": { "type": "string", "description": "Libellé du registre." },
+							"lag": { "type": "integer", "minimum": 0 },
+							"n": { "type": "integer", "minimum": 0 },
+							"n_cycles": { "type": "integer", "minimum": 0 },
+							"effect_per_sd": { "type": ["number", "null"] },
+							"p_placebo": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+							"testable": { "type": "boolean" },
+							"holds": { "type": "boolean" }
+						}
+					}
+				},
+				"false_positives_note": { "type": "string", "description": "Nombre de tests, faux positifs attendus par hasard, tests qui passent." }
+			}
+		},
+		"opinion": {
+			"title": "Opinion",
+			"description": "Volet « opinion » : séries longues d'attitudes et de préoccupations face à la part du bloc lié dans les sondages. N'entre pas dans la prévision.",
+			"type": "object",
+			"additionalProperties": false,
+			"required": ["in_forecast", "note", "first_rounds", "themes", "bloc_shares", "excluded", "study"],
+			"properties": {
+				"in_forecast": { "type": "boolean" },
+				"note": { "type": "string", "description": "Phrase de statut affichée." },
+				"first_rounds": {
+					"type": "array",
+					"description": "Premiers tours présidentiels couverts par les séries (repères).",
+					"items": { "$ref": "common.json#/$defs/date" }
+				},
+				"themes": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["id", "label", "series"],
+						"properties": {
+							"id": { "type": "string" },
+							"label": { "type": "string" },
+							"series": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/opinion_series" } }
+						}
+					}
+				},
+				"bloc_shares": { "type": "array", "items": { "$ref": "#/$defs/opinion_bloc_share" } },
+				"excluded": {
+					"type": "array",
+					"description": "Séries d'un thème sans valeur publiable.",
+					"items": {
+						"type": "object",
+						"additionalProperties": false,
+						"required": ["series_id", "label", "theme", "n_values", "reason"],
+						"properties": {
+							"series_id": { "type": "string" },
+							"label": { "type": "string" },
+							"theme": { "type": "string" },
+							"n_values": { "type": "integer", "minimum": 0 },
+							"reason": { "type": "string" }
+						}
+					}
+				},
+				"study": { "$ref": "#/$defs/opinion_study" }
+			}
 		}
 	},
 	"properties": {
@@ -86,6 +280,7 @@
 			"type": "string",
 			"description": "Lecture du tableau des corrélations, avec le nombre de paires qui passent le placebo."
 		},
-		"study": { "$ref": "#/$defs/study" }
+		"study": { "$ref": "#/$defs/study" },
+		"opinion": { "$ref": "#/$defs/opinion" }
 	}
 }

@@ -125,8 +125,115 @@ def _toy_explanatory(root):
          for j, b in enumerate(("far_right", "left", "other"))]
     ).write_parquet(ratings / "house_effects.parquet")
     _toy_opinion(curated)
+    attitudes, rn_image = _toy_attitudes(curated, root)
     return {"economy_study": eco, "pollster_ratings": ratings, "curated": curated,
-            "press_nlp_study": root / "press_nlp", "dispersion": TOY_DISPERSION}
+            "press_nlp_study": root / "press_nlp", "dispersion": TOY_DISPERSION,
+            "attitudes_study": attitudes, "rn_image_study": rn_image}
+
+
+def _toy_attitudes(curated, root):
+    """Séries d'opinion, parts de bloc et études jouets (attitudes-prior, rn-image). Les
+    métadonnées des séries viennent du vrai registre attitude_series.yaml."""
+    rows = []
+
+    def add(sid, source, family_wave, date, value, notes="", document="doc", unit="percent"):
+        rows.append({"series_id": sid, "date": date, "value": value, "freq": "wave",
+                     "source": source, "unit": unit, "population": "fr_adults_18plus",
+                     "notes": notes, "wave": family_wave, "document": document})
+
+    for sid, vals in (("rn_danger_democracy_yes", (48.0, 38.0, 41.0)),
+                      ("rn_ideas_agree", (29.0, 39.0, 42.0)),
+                      ("rn_can_join_government", (34.0, 40.0, 44.0))):
+        for (w, d), v in zip((("2022-01", dt.date(2022, 1, 5)), ("2024-11", dt.date(2024, 11, 12)),
+                              ("2026-01", dt.date(2026, 1, 1))), vals):
+            add(sid, "verian", w, d, v, document="rn_image_2026_01")
+    # libellé reformulé en 2021 : une rupture ; demi-échantillons : note propre à la valeur
+    add("eb_mii_rising_prices", "eurobarometer", "2019-11", dt.date(2019, 11, 9), 12.0,
+        "libellé : 4.Rising prices/ inflation")
+    add("eb_mii_rising_prices", "eurobarometer", "2021-02", dt.date(2021, 2, 10), 14.0,
+        "libellé : Rising prices\\ inflation\\ cost of living; demi-échantillons additionnés (QA3a, QA3b)")
+    add("eb_mii_rising_prices", "eurobarometer", "2027-02", dt.date(2027, 2, 1), 99.0)  # après asof
+    # note CRÉDOC 2015 « réservé aux souscripteurs » : la série disparaît, listée dans excluded
+    add("credoc_concern_immigration", "credoc", "2014", dt.date(2014, 1, 1), 20.0,
+        document="credoc_note_2015")
+    add("credoc_concern_immigration", "credoc", "2015", dt.date(2015, 1, 1), 22.0,
+        document="credoc_note_2015")
+    pl.DataFrame(rows).write_parquet(curated / "attitudes.parquet")
+
+    polls = pl.DataFrame({
+        "poll_id": ["p1", "p2", "p3"], "pollster": ["ifop", "elabe", "ifop"],
+        "fieldwork_end": [dt.date(2026, 8, 10), dt.date(2026, 8, 20), dt.date(2026, 9, 5)],
+        "is_rolling": [False, False, False]})
+    polls.write_parquet(curated / "polls.parquet")
+    pl.DataFrame({
+        "poll_id": ["p1", "p1", "p2", "p2", "p3", "p3", "p3"],
+        "election": [2027] * 7, "round": [1] * 7,
+        "hypothesis_id": ["a+b", "a+b", "a+b", "a+b", "a+b", "a+b", "macron_emmanuel+b"],
+        "population": ["registered"] * 7,
+        "bloc": ["far_right", "left", "far_right", "left", "far_right", "left", "far_right"],
+        "share": [30.0, 20.0, 34.0, 22.0, 31.0, 21.0, 90.0],
+        "n_candidates": [2] * 7, "suspect": [False] * 7,
+    }).with_columns(pl.col("election", "n_candidates").cast(pl.Int32),
+                    pl.col("round").cast(pl.Int8)).write_parquet(
+        curated / "poll_results_by_bloc.parquet")
+
+    att = root / "attitudes"
+    att.mkdir()
+    pl.DataFrame({
+        "bloc": ["far_right", "left"], "role": ["rn_danger", "salience_prices"],
+        "series_id": ["rn_danger_democracy_yes", "eb_mii_rising_prices"],
+        "spec": ["level", "change"], "expected_sign": [-1, 1], "n": [5, 3],
+        "elections": ["2002,2007,2012,2017,2022", "2012,2017,2022"],
+        "testable": [True, False], "slope_per_sd": [-5.2, None], "gain_vs_m1": [1.05, None],
+        "p_perm": [0.15, None], "holds": [False, False],
+    }).write_csv(att / "level_results.csv")
+    pl.DataFrame({
+        "bloc": ["left", "left"], "series_id": ["eb_mii_rising_prices"] * 2, "lag": [0, 1],
+        "n": [25, 24], "n_cycles": [5, 5], "effect_per_sd": [0.25, 1.62],
+        "p_placebo": [0.69, 0.15], "testable": [False, True], "holds": [False, False],
+    }).write_csv(att / "dynamic_results.csv")
+    pl.DataFrame({"election": [2007], "horizon": [180], "bloc": ["far_right"], "n_polls": [4],
+                  "posterior": [15.2], "posterior_shifted": [15.21],
+                  "delta_points": [0.012]}).write_csv(att / "leverage.csv")
+
+    rn = root / "rn_image"
+    rn.mkdir()
+    pl.DataFrame({
+        "election": [2002, 2017, 2022],
+        "duel": ["le_pen_jean_marie–chirac_jacques", "le_pen_marine–macron_emmanuel",
+                 "le_pen_marine–macron_emmanuel"],
+        "pollsters": [1, 5, 5], "u_survey": [-1.94, -0.29, 0.06], "se_sampling": [0.1] * 3,
+        "se_house": [0.1] * 3, "se": [0.2, 0.09, 0.08], "lo90": [-2.28, -0.44, -0.07],
+        "hi90": [-1.6, -0.13, 0.19], "u_result": [-1.92, -0.45, 0.02],
+        "rn_result": [17.79, 33.9, 41.45],
+    }).write_csv(rn / "u_observed.csv")
+    pl.DataFrame({
+        "item": ["danger"] * 3, "series_id": ["rn_danger_democracy_yes"] * 3,
+        "point": [2002, 2017, 2022], "cutoff": ["2002-04-21", "2017-04-23", "2022-04-10"],
+        "wave": ["2000-05-01", "2017-02-01", "2022-01-05"], "value": [62.0, 58.0, 48.0],
+    }).write_csv(rn / "barometer_values.csv")
+    (rn / "relation.json").write_text(json.dumps({
+        "tau": 0.3,
+        "h2012": {"u": -0.92, "se": 0.61, "n_duels": 4},
+        "loeo": {"2002": {"u_hat": -0.42}, "2017": {"u_hat": -1.37}, "2022": {"u_hat": 3.85}},
+        "items": {"danger": {
+            "x": {"2002": 62.0, "2017": 58.0, "2022": 48.0}, "ols_slope": -0.122,
+            "ols_lo90": -0.653, "ols_hi90": 0.409, "r2": 0.68, "wls_slope": -0.113,
+            "wls_a": -0.60, "wls_x0": 55.4, "wls_cov": [[0.0357, 0.0], [0.0, 0.00104]],
+            "wls_rss": 6.7, "x2027": 41.0, "c4_x2012": 56.0}},
+    }))
+    duels = []
+    for polls_mode, n in (("avec sondages", 24), ("prior seul", 0)):
+        for variant, delta, med, p in (("défaut", 0.0, 51.2, 0.63),
+                                       ("relation baromètre", 0.94, 53.6, 0.82),
+                                       ("pente 2017-2022", 0.39, 52.1, 0.71)):
+            duels.append({"duel": "le_pen_marine–philippe_edouard", "polls": polls_mode,
+                          "variant": variant, "u_center": -0.09, "delta": delta,
+                          "sigma_u": 0.3, "inedit": False, "n_polls": n, "median": med,
+                          "q05": med - 6, "q95": med + 6, "p_rn": p, "prior_median": 46.5,
+                          "ess": 1000.0, "first_round": "x"})
+    pl.DataFrame(duels).write_csv(rn / "prior_2027_duels.csv")
+    return att, rn
 
 
 # Dispersion des instituts déjà calculée (le calcul réel relit les sondages curated).
@@ -503,6 +610,58 @@ def test_opinion_indicators(exported):
     assert tg["in_forecast"] is False and tg["n_polls"] == 2
     assert [(r["candidate_id"], r["gap"], r["se"], r["n_polls"]) for r in tg["rows"]] == [
         ("melenchon_jean_luc", -0.75, 0.25, 2), ("le_pen_marine", 1.5, 0.5, 2)]
+
+
+def test_opinion_sections(exported):
+    """Volets d'opinion : séries par thème avec formulation développée, ruptures du registre
+    (vague en ligne de 2026, libellé reformulé), valeurs après asof écartées, CRÉDOC 2015
+    exclu avec sa raison, part mensuelle du bloc lié (Macron 2027 écarté), étude et RN."""
+    _, out, _, _ = exported
+    op = json.loads((out / "economy.json").read_text())["opinion"]
+    assert op["in_forecast"] is False and op["note"]
+    series = {s["id"]: s for t in op["themes"] for s in t["series"]}
+    assert set(series) == {"rn_danger_democracy_yes", "rn_ideas_agree", "eb_mii_rising_prices"}
+    danger = series["rn_danger_democracy_yes"]
+    assert danger["question"].startswith("Pensez-vous que le Rassemblement National")
+    assert [b["date"] for b in danger["breaks"]] == ["2026-01-01"]
+    assert "en ligne" in danger["breaks"][0]["label"]
+    prices = series["eb_mii_rising_prices"]
+    assert [p["date"] for p in prices["points"]] == ["2019-11-09", "2021-02-10"]  # 2027 écarté
+    assert prices["breaks"] == [{"date": "2021-02-10", "label":
+                                 "libellé de l'item : « Rising prices / inflation / cost of living »"}]
+    assert prices["points"][1]["note"].startswith("demi-échantillons additionnés")
+    assert prices["points"][0]["note"] is None
+    assert prices["bloc"] == "left" and danger["bloc"] == "far_right"
+    ex = {x["series_id"]: x for x in op["excluded"]}
+    assert set(ex) == {"credoc_concern_immigration"} and "souscripteurs" in ex[
+        "credoc_concern_immigration"]["reason"]
+    shares = {b["bloc"]: b["points"] for b in op["bloc_shares"]}
+    assert shares["far_right"] == [{"date": "2026-08-01", "value": 32.0, "n_pollsters": 2},
+                                   {"date": "2026-09-01", "value": 31.0, "n_pollsters": 1}]
+    assert op["first_rounds"] == ["2022-04-10"]  # premiers tours couverts par les séries
+    st = op["study"]
+    assert st["verdict"] == "negative" and len(st["level"]) == 2 and len(st["dynamic"]) == 2
+    assert st["level"][1]["gain"] is None and st["level"][1]["testable"] is False
+    assert "1 tests testables" not in st["false_positives_note"]
+    assert st["false_positives_note"].startswith("1 test")
+
+    rn = json.loads((out / "second_round.json").read_text())["rn_image"]
+    assert rn["in_forecast"] is False and "n = 3" in rn["note"] and "+3,85" in rn["note"]
+    assert [u["election"] for u in rn["u_observed"]] == [2002, 2017, 2022]
+    sc = rn["scatter"]
+    assert sc["n"] == 3 and [p["x"] for p in sc["points"]] == [62.0, 58.0, 48.0]
+    assert sc["points"][2]["predicted_without"] == 3.85
+    assert all(l["lo90"] <= l["u"] <= l["hi90"] for l in sc["line"])
+    assert sc["line"][0]["x"] == pytest.approx(41.0 - 3)
+    (duel,) = rn["duels"]
+    assert (duel["rn_candidate"], duel["n_polls"]) == ("le_pen_marine", 24)
+    with_polls = {r["variant"]: r for r in duel["rows"] if r["polls"] == "with_polls"}
+    assert set(with_polls) == {"default", "relation", "local_slope"}
+    assert with_polls["relation"]["p_rn"] == 0.82
+    items = {i["id"]: i for i in rn["barometer"]["items"]}
+    assert len(items["danger"]["points"]) == 3 and items["capable"]["points"][-1]["value"] == 44.0
+    m = json.loads((out / "manifest.json").read_text())
+    assert "philippe_edouard" in {c["id"] for c in m["candidates"]}
 
 
 def test_press_nlp_sections(exported):
