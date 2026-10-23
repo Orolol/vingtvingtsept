@@ -26,7 +26,14 @@ choix, attention en ligne : aucune admise (voir `backtest-log.md`). La substitut
 néanmoins activée dans la projection publiée, avec ce statut explicite ; les autres
 restent désactivées et servent, le cas échéant, au volet explicatif.
 
+## Plan de docs/12 (2026-10-23)
+
+Lot 1 registre historique des candidatures : fait. Lot 2 scénarios par décision : testé,
+non admis (conversion état → probabilité). Lot 3 diagnostics par étape : faits. Lot 4
+protocole prospectif, CI, archive durable : faits. Référence et projection inchangées.
+
 ## Questions ouvertes
+- Créer `candidacies_2027.yaml` (structure de 2017) comme audit du fichier de scénarios.
 
 La [suite proposée après consolidation](12-prochaines-etapes.md) détaille les livrables
 et les critères de passage. Priorité au registre historique daté, puis à la reconstruction

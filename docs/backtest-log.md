@@ -376,3 +376,36 @@ Part portée par les seuls « déclarés » à 180 j : 64 % (2012), 76 % (2017),
 ensembles actifs larges (51 à 85 personnes à 180 j) faute de renoncements sourcés. Lacunes
 publiées sans arbitrage par le résultat. Le lot 2 (scénarios par décision de candidature)
 part de `state_at` et des critères par étape du 2026-10-23.
+
+## 2026-10-23 — lot 2 : scénarios historiques par décision de candidature, non admis
+
+Protocole `data/registry/historical_decisions_2026-10-23.yaml` (états de `state_at` →
+probabilités fixées d'avance : declared 0,9, possible 0,15, undetermined 0,3 ; processus non
+tranchés à 1/n ; plafonds par bloc tirés des listes officielles ; aucune liste sondée
+réutilisée ; prior log-normal pour les candidats sans soutien estimé), douze cas, 40 000
+tirages, rejeux de référence identiques au bit près (`runs/2026-10-23-decision-scenarios/`).
+
+| Horizon | Δ log victoire | Δ log paire | Δ CRPS | Δ couverture 90 % | Δ Brier présence |
+|---|---|---|---|---|---|
+| 180 j | −1,15 | −2,31 | +2,70 | −8,9 pts | +5,9 |
+| 90 j | −0,59 | −2,29 | +2,32 | −12,2 pts | +5,4 |
+| 30 et 7 j | 0 | 0 | 0 | 0 | 0 |
+
+Un critère sur six tenu (écarts nuls à 30 et 7 j). P(paire réelle) s'effondre (2022 à 180 j :
+0,52 → 0,012). En 2017 à 180 j, Le Pen tombe à 0,33 de présence (plafond extrême droite à 2
+parmi 6 déclarés), Macron à 0,13, les voix hors support passent de 28,5 à 2,3 % mais avec des
+présences infimes. Sensibilité ±0,1 : rien ne change. Cause : la conversion mécanique
+état → probabilité (déclarés marginaux saturant les plafonds, « possible » mêlant sortants
+tardifs et évocations, primaires diluant les favoris, désignés à 1 % de soutien), pas la
+décomposition par décision elle-même.
+
+Conséquences pour 2027 : `scenarios_2027.yaml` reste la représentation publiée (probabilités
+jugées, datées, sourcées) ; `candidacies_2027.yaml` sera un **audit** (masse sur un retiré,
+déclaré viable oublié, processus en attente, engagements), pas une source de poids. Toute
+nouvelle règle de candidature devra déclarer d'avance une couche de viabilité, un état
+« pressenti » distinct de la mention, des poids de processus fondés sur les sondages de
+primaire datés, et un soutien a priori du désigné tiré de son bloc.
+
+Le plan de docs/12 est entièrement exécuté : lot 1 (registre), lot 3 (diagnostics), lot 4
+(prospectif, CI, archive) livrés ; lot 2 testé et rejeté. Compteur : dix-sept signaux et
+six corrections de structure testés, une admission.

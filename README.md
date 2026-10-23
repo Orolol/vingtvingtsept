@@ -56,7 +56,7 @@ d'intentions appariables dans les microdonnées disponibles.
 ## Pistes étudiées
 
 Règle du projet : aucune source n'entre dans la prévision sans gain au backtest, en
-laissant l'élection évaluée de côté. Dix-sept signaux et cinq corrections de structure ont été testés ; un seul a été admis.
+laissant l'élection évaluée de côté. Dix-sept signaux et six corrections de structure ont été testés ; un seul a été admis.
 Les autres restent des options désactivées dans le code et, pour plusieurs, des volets
 explicatifs du site marqués « n'entre pas dans la prévision ».
 
