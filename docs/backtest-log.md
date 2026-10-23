@@ -302,3 +302,37 @@ parts de 2,85 × 10⁻¹⁴ point ; 409 fichiers de référence inchangés ; 737
 (quatre avertissements préexistants), reprise des douze cas vérifiée.
 Scores détaillés, présence, événements appliqués et figure :
 [bilan versionné](results/historical-scenarios-2026-10-22/README.md).
+
+## 2026-10-23 — diagnostics par étape (lot 3 de docs/12)
+
+`back/studies/stage_diagnostics.py`, sorties `runs/2026-10-23-stage-diagnostics/`, calculés
+sur les tirages de la référence `reference-2026-10-22` sans relance ; reproduction du gel à
+1e-12 ; décomposition log P(W) = log P(présent) + log P(qualifié | présent) + log P(gagne |
+qualifié) vérifiée à 1e-15 sur fréquences brutes (écart de lissage ≤ 3e-3).
+
+Moyennes par horizon, log-score d'étape (référence / témoin mean14d) :
+
+| Horizon | Présence W | Qualif. \| présence W | Paire \| présence | W \| W qualifié | W \| paire réelle | CRPS \| présence |
+|---|---|---|---|---|---|---|
+| 180 j | −0,264 / −0,264 | −0,542 / −0,717 | −1,011 / −1,166 | −0,132 / −0,132 | −0,004 | 2,20 / 2,27 |
+| 90 j | 0 | −0,435 / −0,429 | −1,099 / −1,088 | −0,083 / −0,081 | 0 | 1,95 / 1,94 |
+| 30 j | 0 | −0,109 / −0,117 | −0,417 / −0,416 | −0,007 | 0 | 1,51 / 1,56 |
+| 7 j | 0 | −0,104 / −0,072 | −0,268 / −0,189 | −0,001 | 0 | 0,87 / 0,93 |
+
+Lecture : dans les 24 couples cas × modèle, l'étape dominante est la **qualification sachant
+la présence** ; les reports conditionnels au bon duel ne pèsent jamais (P(W | paire) ≥ 0,994).
+2017 à 180 j : sur 2,53 nats perdus, présence de Macron 31 %, qualification 56 % (un
+« fantôme » se qualifie dans 80 % des tirages où Macron est présent : Juppé, présent à 0,54,
+se qualifie dans 92 % d'entre eux), victoire 13 % (adversaires fantômes). 2017 à 90 j :
+soutien, Macron qualifié à 0,36 contre Fillon 0,76. 2022 : soutien conditionnel, pas reports :
+Le Pen qualifiée à 0,63 / 0,46 / 0,58 (180 / 90 / 30 j), Mélenchon hors de l'intervalle à 90 %
+(CRPS 11 / 10 / 8), Pécresse surestimée à 90 j. 2012 : pertes faibles. Les variantes de
+docs/11 perdent sur l'étape visée (présence) et gagnent un peu en aval.
+
+Critères de promotion par étape proposés pour le lot 2 (à figer avant calcul) : univers fixés
+par comparaison ; critère global de docs/07 inchangé et prioritaire ; pour une variante de
+scénarios, améliorer log P(W présent), log P(paire présente) et le Brier de présence à 180 et
+90 j sur 2 élections sur 3, sans dégrader en aval au-delà de 2 erreurs Monte-Carlo (paire |
+présence, Brier de qualification, CRPS et couverture conditionnels), P(W | paire) inchangée
+(sinon bug), probabilité qu'un fantôme se qualifie non croissante, écarts exactement nuls à
+30 et 7 j.
