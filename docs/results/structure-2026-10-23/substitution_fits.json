@@ -1,0 +1,108 @@
+[
+  {
+    "election": 2012,
+    "fold": "loo",
+    "training_elections": [
+      2002,
+      2007,
+      2017,
+      2022
+    ],
+    "lambda": {
+      "far_right": 0.37714381578577916,
+      "right": 0.49077657110725076,
+      "centre": 0.7839105707313428,
+      "left": 0.5195090946601791,
+      "far_left": 0.5852521283177449
+    },
+    "tau": 0.0,
+    "training_polls": 58,
+    "no_training": false,
+    "objective": 1.8647534493323266
+  },
+  {
+    "election": 2012,
+    "fold": "chronological",
+    "training_elections": [
+      2002,
+      2007
+    ],
+    "lambda": {},
+    "tau": 0.0,
+    "training_polls": 0,
+    "no_training": true
+  },
+  {
+    "election": 2017,
+    "fold": "loo",
+    "training_elections": [
+      2002,
+      2007,
+      2012,
+      2022
+    ],
+    "lambda": {
+      "far_right": 0.37720404905547594,
+      "right": 0.48713558181192823,
+      "left": 0.49815273143371214,
+      "far_left": 0.5773473972937938
+    },
+    "tau": 0.0,
+    "training_polls": 29,
+    "no_training": false,
+    "objective": 2.0141095765062995
+  },
+  {
+    "election": 2017,
+    "fold": "chronological",
+    "training_elections": [
+      2002,
+      2007,
+      2012
+    ],
+    "lambda": {},
+    "tau": 0.0,
+    "training_polls": 0,
+    "no_training": true
+  },
+  {
+    "election": 2022,
+    "fold": "loo",
+    "training_elections": [
+      2002,
+      2007,
+      2012,
+      2017
+    ],
+    "lambda": {
+      "right": 1.0,
+      "centre": 0.7842377426205722,
+      "left": 0.7782372303554014,
+      "far_left": 0.6001604670288005
+    },
+    "tau": 0.0,
+    "training_polls": 29,
+    "no_training": false,
+    "objective": 1.7153646472644501
+  },
+  {
+    "election": 2022,
+    "fold": "chronological",
+    "training_elections": [
+      2002,
+      2007,
+      2012,
+      2017
+    ],
+    "lambda": {
+      "right": 1.0,
+      "centre": 0.7842377426205722,
+      "left": 0.7782372303554014,
+      "far_left": 0.6001604670288005
+    },
+    "tau": 0.0,
+    "training_polls": 29,
+    "no_training": false,
+    "objective": 1.7153646472644501
+  }
+]

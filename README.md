@@ -47,6 +47,12 @@ teste une mémoire des hypothèses et un filtre par événements datés : elle r
 candidats hors support en 2017, mais n'améliore pas globalement les scores. Les deux
 variantes restent expérimentales ; la référence et la projection publiée sont inchangées.
 
+Une [vague de cinq expériences de structure](docs/13-experiences-structure.md) compare
+un mélange 50/50, l'incertitude de calibration et les sondages continus dans la même
+chaîne : aucun gain admissible. Le pilote de substitution entre blocs n'améliore pas
+son témoin ; les transitions des indécis restent bloquées par l'absence de vagues
+d'intentions appariables dans les microdonnées disponibles.
+
 ## Pistes étudiées
 
 Règle du projet : aucune source n'entre dans la prévision sans gain au backtest, en

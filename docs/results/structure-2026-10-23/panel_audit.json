@@ -1,0 +1,26 @@
+{
+  "registered_datasets": 80,
+  "public_microdata": [
+    "fes2017",
+    "fes2022_elipss_v3"
+  ],
+  "available": true,
+  "status": "blocked_missing_longitudinal_intentions",
+  "curated_rows": 1830,
+  "waves": [
+    {
+      "dataset": "fes2017",
+      "series": "fes2017",
+      "election": 2017,
+      "wave": null,
+      "stage": "post_round2",
+      "respondents": 1830,
+      "kinds": [
+        "recall"
+      ]
+    }
+  ],
+  "intention_rows": 0,
+  "intention_datasets": [],
+  "reason": "Aucune paire de vagues d'intentions avec identifiant longitudinal validé. Les souvenirs post-électoraux ne sont pas des intentions préélectorales."
+}

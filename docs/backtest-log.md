@@ -302,3 +302,22 @@ parts de 2,85 × 10⁻¹⁴ point ; 409 fichiers de référence inchangés ; 737
 (quatre avertissements préexistants), reprise des douze cas vérifiée.
 Scores détaillés, présence, événements appliqués et figure :
 [bilan versionné](results/historical-scenarios-2026-10-22/README.md).
+
+## 2026-10-23 — Cinq expériences de structure : aucune admission
+
+Protocole déclaré avant calcul (commits `51ddcde`, précision numérique `ead9e0d`),
+référence immuable, bilan dans [docs/13](13-experiences-structure.md).
+
+| Piste | Comparaison | Résultat |
+|---|---|---|
+| Mélange 50/50 des trajectoires bayésiennes et mean14d | chaîne chronologique, 12 cas | gain partagé à 90/7 jours ; log victoire −0,0756 à 180 jours, CRPS dégradé à 7/30/180 jours : non admis |
+| Incertitude de calibration | 32 pondérations de scrutins par cas, 384 optimisations | faibles écarts partagés ; pas de gain conjoint log-score/CRPS, couverture inchangée : non admise |
+| Sondages continus corrélés | GLS éclairci / toutes vagues indépendantes / recouvrement 0,5 et 1 | pas de domination ; à J−7 contre GLS éclairci, Δ log paire −0,0007 et Δ CRPS +0,0172 : non admis |
+| Substitution entre blocs | mélange de logits emboîtés, 58 sondages, plis par élection | tau supplémentaire nul dans tous les plis ; arrêt au pilote annoncé, pas de score électoral |
+| Transitions indécis/abstention | inventaire et estimateur pondéré testé | table disponible : 1 830 souvenirs post-électoraux, zéro intention ; aucune transition réelle estimable |
+
+96 lignes de scores, référence contrôlée inchangée (409 fichiers), reprise sans recalcul.
+Les contrôles GLS isolent la dépendance des vagues du changement d'agrégateur. Les petits
+écarts du bootstrap sont conditionnels à gamma, nu et aux biais fixés, sur une seule graine.
+Les difficultés historiques de support des candidats ne sont pas corrigées par ces variantes.
+750 tests réussis, un ignoré et quatre avertissements préexistants ; projection inchangée.

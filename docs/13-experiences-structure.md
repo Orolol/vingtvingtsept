@@ -90,4 +90,109 @@ La collecte externe et les demandes d'accès existantes ne sont pas renouvelées
 - [Train : modèles de choix mixtes](https://eml.berkeley.edu/choice2/ch6.pdf).
 - [Bon, Ballard et Baffour : indécis](https://arxiv.org/abs/1703.09430).
 
-Les résultats et les limites d'exécution seront ajoutés après les calculs.
+## Résultats
+
+**Aucune admission, aucun changement de prévision publiée.** Les cinq pistes ont été
+traitées : trois familles comparées dans la chaîne complète, un pilote de substitution
+arrêté au seuil annoncé, un estimateur de transitions prêt mais sans panel exploitable.
+Le [bilan versionné](results/structure-2026-10-23/README.md) contient les scores par cas,
+les comparaisons avec chaque témoin, les paramètres et les diagnostics.
+
+Écarts moyens à la référence, poids égal aux trois élections. Un log-score plus haut
+est préférable, un CRPS plus bas est préférable. La couverture à 90 % reste inchangée
+pour le mélange et la calibration rééchantillonnée.
+
+| Variante | Horizon | Δ log victoire | Δ log paire | Δ CRPS |
+|---|---:|---:|---:|---:|
+| Mélange 50/50 | 180 | −0,0756 | −0,0635 | +0,0053 |
+| Mélange 50/50 | 90 | +0,0041 | +0,0061 | −0,0113 |
+| Mélange 50/50 | 30 | −0,0040 | +0,0003 | +0,0220 |
+| Mélange 50/50 | 7 | +0,0165 | +0,0410 | +0,0315 |
+| Calibration rééchantillonnée | 180 | +0,0044 | +0,0103 | +0,0042 |
+| Calibration rééchantillonnée | 90 | −0,0007 | −0,0004 | −0,0038 |
+| Calibration rééchantillonnée | 30 | −0,0058 | −0,0132 | +0,0024 |
+| Calibration rééchantillonnée | 7 | −0,0008 | −0,0061 | +0,0003 |
+
+Le mélange peut améliorer un événement tout en dégradant les parts ; il ne domine
+pas les deux composants. Pas de recherche a posteriori d'un poids dépendant de l'horizon.
+Le bootstrap de calibration a un effet faible et partagé. Il conserve les biais, gamma,
+nu et les pénalisations du gel : ce résultat négatif ne réfute pas tout modèle bayésien
+de calibration. Les petits écarts sont à lire avec le bruit Monte-Carlo d'une seule graine.
+
+### Sondages continus
+
+Contre l'agrégateur de référence, la variante avec recouvrement gagne en log-score de
+paire à J−7 (+0,0880), mais dégrade le CRPS (+0,0994). Cette comparaison change aussi
+l'agrégateur : elle ne mesure pas seule l'apport du recouvrement.
+
+Contre le **même GLS sur vagues éclaircies**, les effets sont beaucoup plus petits :
+
+| Horizon | Δ log paire | Δ CRPS |
+|---|---:|---:|
+| 180 | 0 | 0 |
+| 90 | −0,0023 | +0,0071 |
+| 30 | +0,0057 | +0,0006 |
+| 7 | −0,0007 | +0,0172 |
+
+Contre le GLS gardant toutes les vagues comme indépendantes, le recouvrement réduit
+le CRPS à J−7 de 0,0075 point mais perd en log-score de paire à J−30 (−0,0172).
+Les sensibilités 0, 0,5 et 1 sont toutes conservées. Pas de gain admissible.
+
+Le gel ne contient aucune vague marquée rolling en 2012, ni à J−180 dans les trois
+élections. Le pilote ne corrige pas ces métadonnées historiques : sa portée se limite
+aux vagues reconnues en 2017 et 2022. La covariance suppose un renouvellement uniforme
+des répondants, non vérifié dans les notices ; ce n'est pas une reconstruction certaine.
+Le GLS autorise de petits poids négatifs (minimum observé −0,00043) ; les parts sont
+contrôlées et aucune troncature silencieuse n'a été appliquée.
+
+### Substitution entre blocs
+
+58 sondages fournissent des paires emboîtées : 29 en 2017, 29 en 2022 ; aucun en
+2002/2007/2012 dans les entrées figées. Sur tous les plis, l'amplitude supplémentaire
+tau retenue est **zéro**. L'erreur absolue moyenne est donc identique au témoin :
+0,654 point en 2017 et 0,754 en 2022 en leave-one-election-out ; 0,660 et 0,754 en
+chronologique. Le premier pli chronologique ne dispose d'aucune paire d'apprentissage,
+ce qui est explicitement enregistré, sans emprunt aux élections futures.
+
+Le critère de passage annoncé échoue : **pas de réajustement NUTS ni de backtest électoral
+pour cette variante**. Le résultat porte sur ce petit mélange symétrique et son axe fixé,
+pas sur tous les modèles de préférences possibles. Ces données agrégées restent trop
+limitées pour identifier des reports individuels.
+
+### Indécis et abstentionnistes
+
+L'inventaire local répertorie 80 jeux Cevipof, dont deux possèdent une alternative de
+microdonnées publique : FES 2017 et FES ELIPSS 2022 vague 3. Cette dernière est une
+vague isolée dont le terrain chevauche le premier tour ; elle ne fournit pas à elle
+seule des transitions chronologiques. L'état des autorisations n'a pas été interrogé
+à nouveau sur l'entrepôt : cet audit décrit les données déjà disponibles localement.
+
+La table curatée contient **1 830 répondants, tous en FES 2017 post-second tour**,
+avec souvenirs de vote ; **zéro ligne d'intention** et aucune paire de vagues utilisable.
+L'estimateur de transitions est implémenté et testé (appariement explicitement validé,
+poids, effectif de Kish, régularisation, refus exclus), mais aucun coefficient réel ni
+score électoral n'est produit. L'étape suivante requiert des vagues d'intentions
+appariables et leurs dates de disponibilité ; aucun accès ni donnée n'est inventé.
+
+## Exécution et validation
+
+- Douze cas, huit distributions par cas : 96 lignes de scores ; 384 optimisations
+  de calibration convergées. Les distributions du mélange contiennent 80 000 trajectoires,
+  celles des autres variantes 40 000 ; le pseudo-effectif de score reste 40 000 partout.
+- Les 409 fichiers de référence sont inchangés. Le témoin `mean14d` est rejoué avant
+  chaque variante et comparé à ses tirages figés (tolérance numérique 10⁻¹²).
+- Les résultats portent sur le niveau chronologique : les variantes échouent déjà à
+  ce niveau nécessaire. Aucun gain rétrospectif supplémentaire n'est recherché pour
+  contourner cet échec ; aucune option n'a satisfait la règle d'admission à deux niveaux.
+- Tests : 750 réussis, un test ignoré (dépendance front absente du worktree), quatre
+  avertissements préexistants. Contrôles Ruff, syntaxe shell et reprise vérifiée.
+- Deux défauts de préparation ont été corrigés : appel à un vérificateur absent du
+  code ancien, puis types entier/décimal à l'assemblage des CSV. L'inventaire a également
+  été corrigé pour inclure les formats alternatifs publics. Les calculs finaux ont été
+  refaits dans `runs/2026-10-23-structure-v2`, avec protocole statistique inchangé.
+
+Reproduction : `bash scripts/run_structure_study.sh`, puis la commande du bilan versionné.
+Le script s'appuie sur un gel déjà présent ; `VVS_STRUCTURE_REFERENCE` permet d'en indiquer
+un autre emplacement. Ses empreintes et versions doivent correspondre au verrou. Il
+refuse une reprise si les sources ou les résultats ont changé, et ne relance pas les
+étapes terminées. Les tirages complets restent hors Git dans `runs/`.
