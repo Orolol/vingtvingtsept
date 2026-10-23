@@ -18,6 +18,7 @@ silence.
 | [10-consolidation.md](10-consolidation.md) | Référence figée, chaîne chronologique jusqu'à la victoire, sensibilité aux scénarios |
 | [11-scenarios-historiques.md](11-scenarios-historiques.md) | Reconstruction avec mémoire et événements datés : comparaison à la référence, variantes non admises |
 | [12-prochaines-etapes.md](12-prochaines-etapes.md) | Suite proposée : registre daté, scénarios par décision de candidature, diagnostics et validation prospective |
+| [13-validation-prospective.md](13-validation-prospective.md) | Archives prospectives 2027 à dates fixes, score après le vote, contrôle des PR, archive durable du gel |
 
 Décisions prises le 2026-10-20 (brainstorm initial) :
 

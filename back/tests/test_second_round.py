@@ -2,6 +2,7 @@
 ajustements réels marqués slow."""
 
 import datetime as dt
+import itertools
 from dataclasses import replace
 
 import numpy as np
@@ -309,7 +310,7 @@ def test_bias_curve_is_shrunk_monotone_and_zero_without_data():
     curve = bias_curve(_errs(rows), lambda a: 1.5 + 2.0 * a / 30)
     ages, b = zip(*curve)
     assert list(ages) == sorted(set(BIAS_NODES.values()))
-    assert all(x >= y - 1e-12 for x, y in zip(b, b[1:]))  # non croissant avec l'âge
+    assert all(x >= y - 1e-12 for x, y in itertools.pairwise(b))  # non croissant avec l'âge
     assert b[-1] == 0.0  # aucun sondage à 180 jours : biais nul
     # rétréci : sous la moyenne brute à chaque nœud
     assert b[0] < 4.5 and b[1] < 4.25
@@ -354,7 +355,7 @@ def test_match_turnout_hits_target_and_keeps_splits():
     np.testing.assert_allclose(turnout, target, atol=1e-6)
     np.testing.assert_allclose(out.sum(-1), 1.0)
     np.testing.assert_allclose(out[:, ~shift], t[:, ~shift])  # finalistes inchangés
-    split = lambda x: x[..., 0] / (x[..., 0] + x[..., 1])  # noqa: E731
+    split = lambda x: x[..., 0] / (x[..., 0] + x[..., 1])
     np.testing.assert_allclose(split(out), split(t), atol=1e-9)
     # cible inatteignable : ramenée à la borne
     hi = match_turnout(w, t, shift, np.full(m, 0.999))
@@ -395,8 +396,8 @@ def test_real_bias_curve_and_coupling():
     from vvs.model.second_round import calibrate_errors, far_right_coupling
 
     e = calibrate_errors({2027}, bias_by_horizon=True)
-    ages, b = zip(*e.bias_curve)
-    assert all(x >= y for x, y in zip(b, b[1:])) and b[0] > 2.0 and b[-1] < b[0]
+    _ages, b = zip(*e.bias_curve)
+    assert all(x >= y for x, y in itertools.pairwise(b)) and b[0] > 2.0 and b[-1] < b[0]
     c = far_right_coupling({2027})
     assert c["elections"] == [2002, 2017, 2022] and abs(c["rho"]) < abs(c["rho_raw"]) <= 1
 

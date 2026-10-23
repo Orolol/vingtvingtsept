@@ -11,13 +11,18 @@
 #   VVS_RN_BIAS_CURVE=1|0  biais RN du second tour par horizon (1 par défaut : choix publié)
 #   VVS_ASOF=AAAA-MM-JJ    date de prévision (défaut : aujourd'hui)
 #   VVS_DRAWS=N            tirages Monte-Carlo (défaut : celui de `vvs simulate`)
-#   VVS_PUBLISH=1|0        commit de front/static/data et data/curated puis push sur main (1 par défaut)
+#   VVS_PUBLISH=1|0        commit de front/static/data, data/curated et data/prospective puis push
+#                          sur main (1 par défaut)
+#   VVS_ARCHIVE=1|0        archive prospective aux dates du calendrier (docs/13, 1 par défaut)
+#   VVS_ARCHIVE_NAME=nom   nom de l'archive (défaut stable avec les choix publiés ; obligatoire
+#                          pour archiver une autre variante)
 #   VVS_ENV_FILE=chemin    fichier d'environnement lu s'il existe (défaut
 #                          ~/.config/vingtvingtsept/env) ; jamais écrit ni journalisé
 #
 # Idempotent : les ingestions n'ajoutent que ce qui manque (data/raw est en ajout seul),
 # l'ajustement n'est refait que si l'empreinte des sondages change, et l'export ne réécrit
-# jamais history/<date>.json. Arrêt au premier échec ; journal dans runs/logs/.
+# jamais history/<date>.json ni une archive prospective existante. Arrêt au premier échec ;
+# journal dans runs/logs/.
 set -euo pipefail
 
 usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; }
@@ -80,6 +85,19 @@ case "${VVS_RN_BIAS_CURVE:-1}" in
 	;;
 esac
 RUN_DIR="$ROOT/runs/${ASOF}-simulate${SUFFIX}"
+# Archive prospective : « stable » seulement pour les choix publiés (substitution et courbe).
+ARCHIVE_NAME="${VVS_ARCHIVE_NAME:-}"
+if [ -z "$ARCHIVE_NAME" ] && [ -n "$SUBST_FLAG" ] && [ -n "$CURVE_FLAG" ]; then
+	ARCHIVE_NAME="stable"
+fi
+case "${VVS_ARCHIVE:-1}" in
+1 | true | yes) ARCHIVE=1 ;;
+0 | false | no) ARCHIVE=0 ;;
+*)
+	echo "VVS_ARCHIVE invalide : ${VVS_ARCHIVE} (1 ou 0)" >&2
+	exit 2
+	;;
+esac
 DRAWS_FLAG=""
 if [ -n "${VVS_DRAWS:-}" ]; then DRAWS_FLAG="--draws ${VVS_DRAWS}"; fi
 
@@ -148,6 +166,12 @@ step "$BACK" uv run vvs export --run "$RUN_DIR"
 step "$FRONT" npm run validate-data
 step "$FRONT" npm run build
 step "$BACK" uv run vvs live-summary --previous "$PREV" --current "$DATA"
+# Aux dates du calendrier seulement ; une archive existante n'est jamais réécrite.
+if [ "$ARCHIVE" = 1 ] && [ -n "$ARCHIVE_NAME" ]; then
+	step "$BACK" uv run vvs archive-forecast --asof "$ASOF" --run "$RUN_DIR" --name "$ARCHIVE_NAME" --scheduled-only --skip-existing
+else
+	echo "[$(ts)] archive prospective sautée (VVS_ARCHIVE=0 ou variante sans VVS_ARCHIVE_NAME)"
+fi
 
 if [ "$DRY_RUN" = 1 ]; then
 	echo "[$(ts)] fin du --dry-run"
@@ -155,13 +179,14 @@ if [ "$DRY_RUN" = 1 ]; then
 fi
 echo "[$(ts)] run terminé en $(($(date +%s) - START)) s ; site construit dans front/build"
 
-# Publication : commit des données exportées et curées, puis push (VVS_PUBLISH=0 pour sauter).
-# Seuls front/static/data et data/curated sont ajoutés ; rien n'est commité si rien n'a changé ;
+# Publication : commit des données exportées et curées et des nouvelles archives prospectives,
+# puis push (VVS_PUBLISH=0 pour sauter). Seuls front/static/data, data/curated et
+# data/prospective sont ajoutés ; rien n'est commité si rien n'a changé ;
 # on ne publie que depuis main, avec un remote origin.
 case "${VVS_PUBLISH:-1}" in
 1 | true | yes) ;;
 0 | false | no)
-	echo "[$(ts)] publication sautée (VVS_PUBLISH=0) : commit de front/static/data et data/curated, puis push"
+	echo "[$(ts)] publication sautée (VVS_PUBLISH=0) : commit de front/static/data, data/curated et data/prospective, puis push"
 	exit 0
 	;;
 *)
@@ -179,11 +204,14 @@ if ! git -C "$ROOT" remote get-url origin >/dev/null 2>&1; then
 	exit 0
 fi
 git -C "$ROOT" add front/static/data data/curated
+if [ -d "$ROOT/data/prospective" ]; then git -C "$ROOT" add data/prospective; fi
+ARCHIVED=""
+if ! git -C "$ROOT" diff --cached --quiet -- data/prospective; then ARCHIVED=" ; archive prospective"; fi
 if git -C "$ROOT" diff --cached --quiet; then
 	echo "[$(ts)] rien à publier : données inchangées"
 	exit 0
 fi
 N_POLLS="$(python3 -c "import json;print(json.load(open('$DATA/manifest.json')).get('n_polls','?'))" 2>/dev/null || echo "?")"
-git -C "$ROOT" commit -q -m "Run du $ASOF : $N_POLLS sondages, projection réexportée (run_live.sh)"
+git -C "$ROOT" commit -q -m "Run du $ASOF : $N_POLLS sondages, projection réexportée${ARCHIVED} (run_live.sh)"
 git -C "$ROOT" push -q origin main
 echo "[$(ts)] publié : commit $(git -C "$ROOT" rev-parse --short HEAD) poussé sur origin/main ; GitHub Pages reconstruit le site"

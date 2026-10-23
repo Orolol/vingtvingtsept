@@ -671,6 +671,93 @@ def live_summary_cmd(
     typer.echo(live_summary(Path(previous) if previous else None, cur))
 
 
+@app.command("archive-forecast")
+def archive_forecast_cmd(
+    asof: str = typer.Option(None, help="Date attendue de l'export publié (contrôle) AAAA-MM-JJ"),
+    name: str = typer.Option("stable", help="Nom de l'archive : stable ou nom d'une variante"),
+    run: str = typer.Option(None, help="Run de simulation (défaut runs/<asof>-simulate-subst)"),
+    data: str = typer.Option(None, help="Export du site (défaut front/static/data)"),
+    scheduled_only: bool = typer.Option(
+        False, "--scheduled-only", help="Hors calendrier : ne rien faire, code 0 (run quotidien)"
+    ),
+    skip_existing: bool = typer.Option(
+        False, "--skip-existing", help="Archive existante différente : la garder, code 0"
+    ),
+) -> None:
+    """Archive prospective de la projection publiée (docs/13), jamais réécrite.
+
+    Code 1 si la date n'est pas au calendrier, si le run ne correspond pas à l'export ou si
+    une archive différente existe déjà pour cette date et ce nom."""
+    from datetime import date
+    from pathlib import Path
+
+    from vvs.export.prospective import ArchiveError, archive_forecast
+
+    try:
+        rep = archive_forecast(
+            data=Path(data) if data else None, run=Path(run) if run else None, name=name,
+            asof=date.fromisoformat(asof) if asof else None, skip_existing=skip_existing,
+            scheduled_only=scheduled_only,
+        )
+    except ArchiveError as e:
+        typer.echo(f"archive refusée : {e}", err=True)
+        raise typer.Exit(code=1) from e
+    messages = {
+        "written": "archive écrite",
+        "unchanged": "archive déjà présente, prévision identique : rien à faire",
+        "kept": "archive déjà présente et différente : conservée telle quelle, export non archivé",
+        "not_scheduled": "pas une date d'archivage : rien à faire",
+    }
+    typer.echo(f"{messages[rep['status']]} ({rep['asof']}) {rep.get('path', '')}".rstrip())
+
+
+@app.command("archive-verify")
+def archive_verify_cmd(
+    path: str = typer.Argument(None, help="Archive data/prospective/<date>/<nom> (défaut : toutes)"),
+    against: str = typer.Option(
+        None, help="Référence Git : refuser toute modification d'une archive qui y existe"
+    ),
+) -> None:
+    """Recalcule les empreintes des archives prospectives, et du run et de l'ajustement
+    archivés tant qu'ils sont dans runs/. Code 1 au moindre écart."""
+    from pathlib import Path
+
+    from vvs import paths
+    from vvs.export.prospective import PROSPECTIVE, archives, rewritten_archives, verify_archive
+
+    folders = [Path(path)] if path else archives(paths.ROOT / PROSPECTIVE)
+    problems = []
+    for folder in folders:
+        rep = verify_archive(folder)
+        state = ", ".join(f"{k} {v}" for k, v in rep["checked"].items()) or "sans run"
+        typer.echo(f"{folder} : {'ok' if not rep['problems'] else 'ÉCART'} ({state})")
+        problems += rep["problems"]
+    if against:
+        problems += [f"archive réécrite : {p}" for p in rewritten_archives(against)]
+    for p in problems:
+        typer.echo(f"  {p}", err=True)
+    typer.echo(f"{len(folders)} archive(s), {len(problems)} écart(s)")
+    if problems:
+        raise typer.Exit(code=1)
+
+
+@app.command("check-integrity")
+def check_integrity_cmd(
+    base: str = typer.Option(
+        None, help="Référence Git de comparaison (base de la PR) pour les fichiers jamais réécrits"
+    ),
+) -> None:
+    """Verrou de la référence, manifest du site, historique et archives (CI, docs/13)."""
+    from vvs.export.integrity import check_all
+
+    problems = check_all(base=base)
+    for p in problems:
+        typer.echo(f"ÉCART : {p}", err=True)
+    typer.echo(f"intégrité : {len(problems)} écart(s)")
+    if problems:
+        raise typer.Exit(code=1)
+
+
 @ingest_app.command("attention")
 def ingest_attention(
     source: str = typer.Option(..., help="wikipedia ou trends"),

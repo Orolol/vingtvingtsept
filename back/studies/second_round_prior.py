@@ -197,7 +197,7 @@ def run_simulations(out: Path, final_dir: Path | None = None, final: str | None 
                     res.draws[c].fill_null(-1).to_numpy().astype(float), atol=1e-9))
                 for c in old.columns
             )
-        logging.info("simulation %s faite", name)
+        logging.getLogger(__name__).info("simulation %s faite", name)
     pl.concat(mix_rows).write_parquet(out / "sim_mix.parquet")
     pl.concat(pair_rows, how="diagonal_relaxed").write_parquet(out / "sim_pairs.parquet")
     (out / "sim_manifest.json").write_text(json.dumps(man, indent=2, ensure_ascii=False))

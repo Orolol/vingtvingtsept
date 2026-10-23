@@ -106,7 +106,7 @@ def run_eval(out: Path, n: int = 8000) -> None:
         frames.append(r["metrics"].with_columns(pl.lit(seed).alias("seed")))
         if folds is None:
             folds = r["folds"]
-        logging.info("graine %d faite", seed)
+        logging.getLogger(__name__).info("graine %d faite", seed)
     out.mkdir(parents=True, exist_ok=True)
     pl.concat(frames).write_parquet(out / "metrics.parquet")
     folds.write_parquet(out / "folds.parquet")
@@ -196,7 +196,7 @@ def run_simulations(out: Path, sim_out: Path, final: str, n_draws: int = 40_000)
             )
             man[name]["identical_to_previous_run"] = same
             man[name]["turnout2_draws"] = sim.quantile_dict(res.draws["turnout_second_round"].to_numpy())
-        logging.info("simulation %s faite", name)
+        logging.getLogger(__name__).info("simulation %s faite", name)
     pl.concat(rows).write_parquet(out / "sim_mix.parquet")
     pl.concat(duel_rows, how="diagonal_relaxed").write_parquet(out / "sim_pairs.parquet")
     (out / "sim_manifest.json").write_text(json.dumps({"final": final, "variants": man}, indent=1,

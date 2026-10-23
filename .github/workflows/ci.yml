@@ -1,0 +1,75 @@
+# Contrôles automatiques des PR et de main (docs/13-validation-prospective.md § CI).
+#
+# Back : tests rapides sur CPU (-m "not slow"), ruff, puis intégrité : verrou de la référence
+# reference-2026-10-22 (empreintes des sources au commit épinglé, d'où l'historique complet),
+# manifest du site, entrées history/<date>.json et archives data/prospective/<date>/<nom>/
+# présentes dans la base jamais modifiées. Front : contrat JSON des données et types.
+# Aucun calcul NUTS, aucun GPU, aucune publication. Durée visée : moins de 10 minutes.
+name: Contrôles
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  back:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      JAX_PLATFORMS: cpu
+    defaults:
+      run:
+        working-directory: back
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v7
+        with:
+          python-version: '3.12'
+          enable-cache: true
+          cache-dependency-glob: back/uv.lock
+      - name: Dépendances (verrou uv)
+        run: uv sync --locked --all-groups
+      - name: Tests rapides (CPU)
+        run: uv run --locked pytest -q -m "not slow" -n auto
+      - name: Ruff
+        run: uv run --locked ruff check
+      - name: Intégrité (verrou, manifest, historique, archives prospectives)
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || [ "$BASE" = 0000000000000000000000000000000000000000 ]; then
+            echo "pas de base de comparaison : contrôle de non-réécriture sauté"
+            uv run --locked vvs check-integrity
+          else
+            uv run --locked vvs check-integrity --base "$BASE"
+          fi
+
+  front:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: front
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: front/package-lock.json
+      - run: npm ci
+      - name: Validation des données contre le contrat JSON
+        run: npm run validate-data
+      - name: Vérification des types
+        run: npm run check

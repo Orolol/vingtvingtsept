@@ -59,6 +59,13 @@ def test_dry_run_substitution_default_and_bad_values(tmp_path):
     assert r.returncode == 0, r.stderr
     sim = [line for line in r.stdout.splitlines() if "vvs simulate" in line]
     assert sim and "--substitution" in sim[0] and "2026-10-20-simulate-subst" in sim[0]
+    # archive prospective en dernier, après le résumé, sans réécriture possible
+    last = r.stdout.splitlines()[-2].split("$ ", 1)[1]
+    assert last.startswith("uv run vvs archive-forecast --asof 2026-10-20 --run ")
+    assert last.endswith("--name stable --scheduled-only --skip-existing")
+    off = _dry_run(tmp_path, VVS_ASOF="2026-10-20", VVS_ARCHIVE="0")
+    assert "archive-forecast" not in off.stdout and "sautée" in off.stdout
+    assert _dry_run(tmp_path, VVS_ARCHIVE="peut-être").returncode == 2
     assert _dry_run(tmp_path, VVS_SUBSTITUTION="peut-être").returncode == 2
     assert _dry_run(tmp_path, VVS_ASOF="20/10/2026").returncode == 2
 
