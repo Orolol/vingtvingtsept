@@ -1,0 +1,91 @@
+# Protocole du lot 2 de docs/12 : scénarios historiques assemblés par décision de candidature.
+# Déclaré le 2026-10-23 AVANT toute simulation et toute lecture de score de cette variante.
+# Règles détaillées : docstring de back/src/vvs/eval/decision_scenarios.py (même date).
+# Les valeurs ci-dessous sont des choix de protocole communs aux trois élections, sans recherche
+# sur les scores ; la sensibilité annoncée est calculée et publiée sans sélection.
+id: decision-scenarios-2026-10-23
+reference: reference-2026-10-22
+reference_run: runs/2026-10-22-consolidation
+registry: data/registry/candidacies_{election}.yaml  # lot 1, vvs.registry.candidacies.state_at
+
+# (a) Probabilités de candidature par personne, selon son état à la date (événements publiés
+# strictement avant la date). Un participant connu d'un processus de désignation non tranché
+# (et une personne « possible » d'un parti organisateur tant qu'aucun tour n'est publié) reçoit
+# 1/n dans ce processus au lieu de la valeur de son état.
+probabilities:
+  official: 1.0
+  designated: 1.0
+  declared: 0.9
+  possible: 0.15
+  undetermined: 0.3
+  excluded: 0.0
+  withdrawn: 0.0
+  process_member: uniform          # 1 / nombre de membres du processus à la date
+probability_clip: [0.01, 0.99]     # pour declared / possible / undetermined (sensibilité)
+sensitivity:                        # ±0,1, toutes publiées, aucune sélection
+  - {id: declared_minus, declared: 0.8}
+  - {id: declared_plus, declared: 0.99}   # 0,9 + 0,1 = 1,0 ramené à 0,99 par le clip
+  - {id: possible_minus, possible: 0.05}
+  - {id: possible_plus, possible: 0.25}
+main_variant: decisions
+
+# (b) Contraintes.
+processes:
+  visible_if: au moins une entrée (primary_entry) publiée avant la date
+  pending_if: aucune désignation du processus publiée avant la date
+  members: entrants encore actifs + personnes « possible » dont le parti organise, tant qu'aucun tour n'est publié
+  outcome: exactement un membre désigné, présent avec probabilité 1 ; membres mutuellement exclusifs
+  never_used: [participants, winner, rounds futurs]   # champs du registre qui révèlent l'avenir
+commitments: engagement publié avant la date sur un processus en attente -> personne forcée absente si l'un des `winners` est désigné
+caps:
+  rule: maximum par bloc (et total) sur les listes officielles des présidentielles du registre strictement antérieures
+  bloc_source: bloc de la personne dans candidacies_<année>.yaml
+  certain_raise: si les personnes certaines d'un bloc (p = 1, désigné du processus) dépassent le plafond, le plafond devient leur nombre
+  values:   # documentés depuis elections.yaml (2002, 2007, 2012, 2017)
+    2012: {far_left: 5, left: 4, centre: 1, right: 4, far_right: 2, other: 1, total: 16}
+    2017: {far_left: 5, left: 4, centre: 1, right: 4, far_right: 2, other: 1, total: 16}
+    2022: {far_left: 5, left: 4, centre: 1, right: 4, far_right: 2, other: 3, total: 16}
+
+# (c) Assemblage et soutien.
+assembly:
+  enumeration: exacte (processus au niveau nominatif, indépendants par bloc), élagage < 1e-12 publié
+  signature: candidats à soutien estimé présents + nombre de candidats sans soutien estimé par type (bloc, centre du prior)
+  max_configurations: 200
+  coverage: 0.95
+  remainder: regroupé par état de présence des gros candidats (strates) ; tirages de la strate répartis entre ses signatures par tirage proportionnel à leur masse (amendement 1)
+  allocation: effectifs entiers des signatures retenues et des strates par plus forts restes (règle `allocate` du gel), sur les 40 000 tirages
+  large_candidate: soutien estimé et part médiane a posteriori >= 5 % parmi les actifs à soutien estimé
+  naming: noms des candidats sans soutien estimé tirés par tirage, loi conditionnelle exacte de la signature
+  rng: {prior_shares: [seed, 1], naming: [seed, 2], strata: [seed, 3]}   # générateurs séparés ; seed = 20261022 du gel
+  poll_lists: jamais réutilisées
+support:
+  estimated_if: candidat présent dans les tirages de l'ajustement figé du cas (au moins une hypothèse sondée)
+  prior: log-normal, sigma 1.0 sur log(part)
+  prior_centre: [médiane des sondages disponibles du cycle, médiane du cycle présidentiel précédent, 1 %]
+  prior_clip: [1.0e-5, 0.5]
+  prior_total_max: 0.9
+  mean14d: règle du gel par nom (médiane du cycle disponible, sinon 1 %), sans loi log-normale
+official_list: inchangée ; à partir de sa publication les tirages de la référence sont repris à l'identique
+fit: ajustements figés réutilisés, aucun NUTS relancé ; candidat absent des tirages -> prior déclaré
+simulation: fonctions du gel a89d304 (simulate_chain reproduite et contrôlée au rejeu), 40 000 tirages, graine du gel
+aggregators: [reference, mean14d]
+
+# (d) Critères de promotion (agrégateur bayésien ; mean14d publié comme témoin).
+criteria:
+  presence: à 180 et 90 j, log P(W présent), log P(paire présente) et Brier de présence (somme, univers commun) meilleurs sur au moins 2 élections sur 3
+  downstream: à 180 et 90 j, moyennes par horizon de log P(paire | présence), Brier de qualification | présence, CRPS et couverture 90 % conditionnels non dégradées au-delà de 2 erreurs Monte-Carlo
+  win_given_pair: P(W | paire réelle) inchangée à 2 erreurs Monte-Carlo dans chaque cas (sinon bug)
+  phantoms: probabilité qu'un fantôme se qualifie (W présent) non croissante au-delà de 2 erreurs Monte-Carlo dans chaque cas à 180 et 90 j
+  late_horizons: écarts exactement nuls à 30 et 7 j
+  global_docs07: log-score moyen de la paire et CRPS améliorés à 180 et 90 j, gain de même signe sur 2 élections sur 3, couverture 90 % non dégradée, aucun autre horizon dégradé
+  mc_error: événements binaires sqrt((1-p)/(n p)) ; autres métriques par lots (20 lots aléatoires de 2 000 tirages), erreur d'une différence = racine de la somme des carrés
+  promotion: "tous les critères ; sinon variante non admise (exploratoire : mêmes élections que le diagnostic)"
+selection: none
+
+amendments:
+  - id: 1
+    date: 2026-10-23
+    timing: après un essai à blanc de construction des configurations (aucune simulation, aucun score de la variante)
+    before: "reste regroupé par état de présence des gros candidats, chaque groupe représenté par sa signature la plus probable, qui reçoit la masse du groupe"
+    after: "même regroupement, utilisé comme strates : la masse de chaque strate reçoit ses tirages (plus forts restes), répartis entre ses signatures par tirage aléatoire proportionnel à leur masse (graine [seed, 3])"
+    reason: "à 180 jours, les 200 signatures les plus probables ne couvrent que 42 % (2017) et 15 % (2022) de la masse ; le représentant unique déplaçait la présence d'une personne jusqu'à 0,29 (2017) et 0,25 (2022). Le tirage stratifié conserve la loi exacte en espérance ; l'audit publie l'écart de présence dû au tirage."
