@@ -55,6 +55,8 @@ Petit mélange de deux logits emboîtés, préférences sur un axe de blocs fix�
 lambda intra-bloc sont appris sur les seules élections d'apprentissage ; un seul tau
 supplémentaire, entre 0 et 2, pénalité 0,01 tau² sur la perte moyenne par sondage.
 À tau=0, le modèle redonne exactement la substitution intra-bloc.
+Les lambda sont bornés à 0,02 pour l'inversion numérique, dans le témoin comme dans
+la variante ; cette convention est fixée avant calcul.
 
 Pour une paire d'hypothèses emboîtées du même sondage, inverser les parts de l'hypothèse
 large pour ses utilités, puis prédire la réduite. Les observations réduites du test
