@@ -1,0 +1,2385 @@
+# Séries longues d'attitudes et d'opinion (contexte, site ; aucune n'entre dans la prévision).
+#
+# Lu par vvs.ingest.attitudes : `vvs ingest attitudes [--series X]` télécharge les documents
+# dans data/raw/attitudes/<group>/<id>.<ext> (+ <id>.meta.json : URL, heure UTC, sha256 ; jamais
+# réécrit) ; `vvs parse attitudes [--series X]` lit les valeurs et écrit
+# data/curated/attitudes.parquet (series_id, date, value, freq, source, unit, population, notes,
+# wave, fieldwork_start, fieldwork_end, method, document, page, raw_sha256).
+#
+# Sections :
+#   documents    un document téléchargé : url (vérifiée le 2026-10-23), group (sous-dossier
+#                brut), ext, éditeur, terrain, échantillon, mode, notes
+#   waves        par famille, dates de terrain des vagues « AAAA-MM » lues dans un document
+#                (`quote` vérifié dans le texte de la page) ; une vague absente est datée du 1er
+#                du mois affiché sur l'axe des graphiques
+#   series       une série publiée : formulation exacte de la question (`question`), modalité
+#                comptée (`answer`), population (codes ci-dessous), changements de formulation
+#                ou de méthode (`changes`), ce qui n'a pas pu être obtenu (`missing`)
+#   extractions  comment lire les valeurs, dans l'ordre de priorité : pour une même série et une
+#                même vague, la première extraction fait foi, les suivantes sont des contrôles
+#                (désaccords listés par `vvs parse attitudes`)
+#
+# Extractions (voir vvs/ingest/attitudes/pdfchart.py et extract.py) :
+#   chart   graphique d'évolution d'un PDF : étiquettes de valeur lues dans la couche texte,
+#           séries séparées par leur couleur de texte (RVB 0-1), vagues par colonne. `columns:
+#           axis` lit les vagues sur l'axe (texte) ; `columns: cluster` quand l'axe est une
+#           image : `waves` est alors la liste des vagues lue sur l'axe du graphique (rendu de la
+#           page), et le nombre de colonnes trouvées doit lui être égal. Coordonnées en points
+#           PDF, origine en haut à gauche : bbox = [x0, haut, x1, bas]. `exclusive` : modalités
+#           d'une même question, somme ≤ 100 % par vague.
+#   table   tableau items × vagues d'un PDF (en-têtes « Mai 2000 », « Nov. 2023 »)
+#   quote   chiffre recopié avec son extrait `quote`, vérifié dans le texte de la page ;
+#           `derived_from_delta` : valeur ancienne = valeur imprimée - écart imprimé
+#   eurobarometer, drees_microdata, cncdh_chart : parseurs propres à ces sources
+#
+# Populations : fr_adults_18plus (France, 18 ans et plus, quotas), fr_registered_18plus
+# (inscrits sur les listes, 18 ans et plus), fr_metro_adults_18plus (France métropolitaine ou
+# hexagonale, 18 ans et plus), fr_adults_15plus (France, 15 ans et plus, Eurobaromètre).
+#
+# AUCUNE valeur n'est saisie de mémoire. Relevé du 2026-10-23.
+
+documents:
+  # ------------------------------------------------------------- baromètre d'image du FN/RN
+  # Baromètre quasi annuel depuis octobre 1983. Mentions relevées dans les éditions
+  # téléchargées : Kantar Public Epoka pour Le Monde et franceinfo (décembre 2022), Verian -
+  # Epoka pour Le Monde et France Info (novembre 2023), Verian pour Le Monde et L'Hémicycle
+  # (novembre 2024, janvier 2026). Instituts et commanditaires antérieurs (SOFRES, TNS Sofres,
+  # Kantar) non vérifiés dans un document téléchargé. Chaque édition reprend les séries longues
+  # en graphiques d'évolution ; l'édition 2026 fait foi, les éditions antérieures servent de
+  # contrôle et de source pour les items abandonnés.
+  - id: rn_image_2026_01
+    group: rn_image
+    url: https://www.veriangroup.com/hubfs/4011%20-%20Barom%C3%A8tre%20dimage%20du%20RN%202026%20-%20VF%2009012026.pdf
+    ext: pdf
+    title: Baromètre d'image du Rassemblement National, édition 2026 (67 p.)
+    publisher: Verian pour Le Monde et L'Hémicycle
+    fieldwork_start: 2026-01-01
+    fieldwork_end: 2026-01-05
+    sample: 1511
+    mode: en ligne sur panel (questionnaire autoadministré), quotas
+    notes: >-
+      Changement de mode : « Jusqu'à la précédente édition, les interviews étaient réalisées en
+      face-à-face. A partir de cette vague, elles sont réalisées en ligne sur panel. Les
+      évolutions indiquées sont donc à considérer avec précaution » (p. 3).
+  - id: rn_image_2024_11
+    group: rn_image
+    url: https://veriangroup.com/hubfs/FR/Barometre-dimage-du-RN-2024.pdf
+    ext: pdf
+    title: Baromètre d'image du Rassemblement National, vague de novembre 2024
+    publisher: Verian pour Le Monde et L'Hémicycle
+    fieldwork_start: 2024-11-12
+    fieldwork_end: 2024-11-20
+    sample: 1004
+    mode: face-à-face au domicile, quotas
+  - id: rn_image_2023_11
+    group: rn_image
+    url: https://veriangroup.com/hubfs/Barometre-dimage-du-RN-2023.pdf
+    ext: pdf
+    title: Baromètre d'image du Rassemblement National, vague de novembre 2023
+    publisher: Verian - Epoka pour Le Monde et France Info
+    fieldwork_start: 2023-11-21
+    fieldwork_end: 2023-11-29
+    sample: 1006
+    mode: face-à-face au domicile, quotas
+  - id: rn_image_2022_12
+    group: rn_image
+    url: https://www.universitepopulairetoulouse.fr/IMG/pdf/2022-12-13-barometre-d-image-du-rn.pdf
+    ext: pdf
+    title: Baromètre d'image du Rassemblement National, vague de décembre 2022 (38 p.)
+    publisher: Kantar Public Epoka pour Le Monde et franceinfo
+    fieldwork_start: 2022-11-29
+    fieldwork_end: 2022-12-06
+    sample: 1014
+    mode: face-à-face au domicile, quotas
+    notes: >-
+      Copie hébergée par l'Université populaire de Toulouse : le PDF n'est plus en ligne chez
+      Kantar ni Verian. Les vagues 2013 à mai 2021 (TNS Sofres, Kantar) sont sur SlideShare
+      (connexion exigée) ou dans les archives de kantar.com (Wayback Machine hors service le
+      2026-10-23) : non téléchargées ; leurs valeurs viennent des graphiques d'évolution des
+      éditions récentes.
+
+  # ------------------------------------------------------- baromètre de la confiance politique
+  - id: cevipof_confidence_v17
+    group: cevipof_confidence
+    url: https://www.sciencespo.fr/cevipof/sites/sciencespo.fr.cevipof/files/Barometre_confiance_CEVIPOFVague17_fev2026_vd1.pdf
+    ext: pdf
+    title: Baromètre de la confiance politique, vague 17 (janvier 2026), rapport OpinionWay (169 p.)
+    publisher: OpinionWay pour le Cevipof (Sciences Po)
+    fieldwork_start: 2026-01-12
+    fieldwork_end: 2026-01-28
+    sample: 3166
+    mode: en ligne (CAWI), quotas ; inscrits sur les listes, issus d'un échantillon de 3 445 personnes
+    notes: >-
+      Rapport de la page « Les résultats par vague » du Cevipof. Les microdonnées des vagues 1 à
+      16 (2009-2025) et les tris à plat sont publics sur data.sciencespo.fr
+      (doi:10.21410/7E4/9K3VGR, version 33.1, fichiers non restreints) ; la vague 17 n'y est pas
+      encore déposée au 2026-10-23.
+  - id: cevipof_confidence_v16
+    group: cevipof_confidence
+    url: https://data.sciencespo.fr/api/access/datafile/10519
+    ext: pdf
+    title: Rapport Baromètre Confiance Vague 16 Février 2025 (Dataverse, fichier 10519)
+    publisher: OpinionWay pour le Cevipof (Sciences Po)
+    mode: en ligne (CAWI), quotas
+    notes: Dépôt public du jeu doi:10.21410/7E4/9K3VGR ; sert de contrôle des séries de la vague 17.
+
+  # ---------------------------------------------------------------------------- CNCDH (ILT)
+  - id: cncdh_racism_report_2025
+    group: cncdh
+    url: https://www.cncdh.fr/sites/default/files/2026-06/CNCDH_Rapport%20racisme%202025.pdf
+    ext: pdf
+    title: CNCDH, La lutte contre le racisme, l'antisémitisme et la xénophobie, année 2025 (383 p., paru le 25 juin 2026)
+    publisher: Commission nationale consultative des droits de l'homme ; baromètre Ipsos en face-à-face
+    fieldwork_start: 2025-11-25
+    fieldwork_end: 2025-12-12
+    sample: 1013
+    mode: face-à-face, quotas, France hexagonale, 18 ans et plus
+    notes: >-
+      Contribution « Le regard des chercheurs (Ando, Mayer, Tiberj, Vitale) », section 4.2 :
+      présentation de l'indice p. 257 du PDF, figure 13 (ILT 1990-2025) p. 258, figure 18
+      (indices par minorités) p. 269. Aucun tableau chiffré ; pas de CSV sur cncdh.fr ni
+      data.gouv.fr (recherche du 2026-10-23).
+
+  # ------------------------------------------------- Eurobaromètre standard, Volume A par vague
+  # Classeurs « Volume A » (tableaux pondérés par pays) du portail open data de l'UE
+  # (data.europa.eu, jeux « Standard Eurobarometer N »), sans compte. `member` : classeur lu
+  # dans le zip (quand une vague a plusieurs versions, la dernière ou la plus complète).
+  - id: eb_std060
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=248A2997EFB92D31105C35DCC8793A49
+    ext: zip
+    title: Standard Eurobarometer 60, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 60
+    member: "EB601 VOLA.xls"
+  - id: eb_std061
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=3BD4455D384098A62DDE679DCAA2A169
+    ext: zip
+    title: Standard Eurobarometer 61, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 61
+    member: "EB61 VOLA.xls"
+  - id: eb_std062
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=6972D6E2B0D388EC310E6D718B4F2927
+    ext: zip
+    title: Standard Eurobarometer 62, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 62
+    member: "VolumeAEB620PRESSstandard20041122.xls"
+  - id: eb_std063
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=EE045B2F6AC5AEBB265E0DB85A84C6F9
+    ext: zip
+    title: Standard Eurobarometer 63, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 63
+    member: "VolumeAEB634PRESSstandardall20050624.xls"
+  - id: eb_std064
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=30225C7330B9F451768C04BCA13F35B1
+    ext: zip
+    title: Standard Eurobarometer 64, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 64
+    member: "VolumeAEB642PRESSstandard20051121.xls"
+  - id: eb_std065
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=43D32D1E78A7137E67328AB6AEFB0EB7
+    ext: zip
+    title: Standard Eurobarometer 65, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 65
+    member: "VolumeAEB652COMMstandard20060510.xls"
+  - id: eb_std066
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=DD7995DC59122A1F34430155EB67B616
+    ext: zip
+    title: Standard Eurobarometer 66, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 66
+    member: "VolumeAEB661COMMstandard20061020.xls"
+  - id: eb_std067
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=4ACA4EF215CDE67C7CE6F0593141B754
+    ext: zip
+    title: Standard Eurobarometer 67, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 67
+    member: "VolumeAEB672COMMstandard20070720.xls"
+  - id: eb_std068
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=E0D8E5ED087B5403CBD9F53BB2C7220E
+    ext: zip
+    title: Standard Eurobarometer 68, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 68
+    member: "VolumeAEB681COMMstandard20071107.xls"
+  - id: eb_std069
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=503E113F9B79B73D0E676002376CA1FC
+    ext: zip
+    title: Standard Eurobarometer 69, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 69
+    member: "VolumeAEB692COMMcomplet20080711.xls"
+  - id: eb_std070
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=BB8AF4966270A2772B6718DA53FA587A
+    ext: zip
+    title: Standard Eurobarometer 70, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 70
+    member: "VolumeAEB701COMMstandard20081118.xls"
+  - id: eb_std071
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=5B493019D2771CB3835DA26F2E5B8DDD
+    ext: zip
+    title: Standard Eurobarometer 71, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 71
+    member: "VolumeAEB713COMMstandard20091126.xls"
+  - id: eb_std072
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=EDAF5DE6E375CE9271EEB6F8C854EFEE
+    ext: zip
+    title: Standard Eurobarometer 72, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 72
+    member: "VolumeAEB724COMMstandard20091124.xls"
+  - id: eb_std073
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=8421775A8B1E12A04F124BB7C86F13DF
+    ext: zip
+    title: Standard Eurobarometer 73, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 73
+    member: "VolumeAEB734COMMcomplet20100602.xls"
+  - id: eb_std074
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=DA6AD785FBBCF420F2E7B95B24965BC7
+    ext: zip
+    title: Standard Eurobarometer 74, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 74
+    member: "VolumeAEB742COMMcomplet20101206.xls"
+  - id: eb_std075
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=C6350E8249A3DE7CE09B2DEE9B3C5F50
+    ext: zip
+    title: Standard Eurobarometer 75, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 75
+    member: "VolumeAEB753COMMstandard20110531.xls"
+  - id: eb_std076
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=DF67813612DE969F4D50752DC5BBF0C8
+    ext: zip
+    title: Standard Eurobarometer 76, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 76
+    member: "VolumeAEB763COMMstandard.xls"
+  - id: eb_std077
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=24464CF53F8F579341CA8A859F406846
+    ext: zip
+    title: Standard Eurobarometer 77, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 77
+    member: "VolumeAEB773COMMstandard20120601.xls"
+  - id: eb_std078
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=6EF76676DFD366222F2C207F8203DAB5
+    ext: zip
+    title: Standard Eurobarometer 78, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 78
+    member: "VolumeAEB781COMMstandard20121217.xls"
+  - id: eb_std079
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=B9900837DFA241A7C7BFD96D505FF6B3
+    ext: zip
+    title: Standard Eurobarometer 79, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 79
+    member: "VolumeAEB793COMMstandardEU2820130603.xls"
+  - id: eb_std080
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=16BE61B137D0A53B5329F17F8BB3C76E
+    ext: zip
+    title: Standard Eurobarometer 80, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 80
+    member: "VolumeAEB801COMMstandard20131129.xls"
+  - id: eb_std081
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=5DBA0562EF6C2AB930EF7347E81310E8
+    ext: zip
+    title: Standard Eurobarometer 81, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 81
+    member: "VolumeAEB814COMMstandard.xls"
+  - id: eb_std082
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=8470B92AF4DE9E2B6330A66842131AC2
+    ext: zip
+    title: Standard Eurobarometer 82, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 82
+    member: "VolumeAEB823COMMstandard20141120.xls"
+  - id: eb_std083
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=546421185E5D70B523A194E58C3AACD1
+    ext: zip
+    title: Standard Eurobarometer 83, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 83
+    member: "VolumeAEB833COMMcomplet20150619.xls"
+  - id: eb_std084
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=DD0D0511ADA485576EDBCFB34FA84F62
+    ext: zip
+    title: Standard Eurobarometer 84, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 84
+    member: "VolumeAEB843COMMstandard20151119.xls"
+  - id: eb_std085
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=E7795D544EC9141DE2B3F718F1C69E80
+    ext: zip
+    title: Standard Eurobarometer 85, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 85
+    member: "EB85.2 Volume A.xls"
+  - id: eb_std086
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=0DFE05B6D69DACACAF2CBDAC57B4ED37
+    ext: zip
+    title: Standard Eurobarometer 86, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 86
+    member: "ST86 - Volume A.xls"
+  - id: eb_std087
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=F01145E536AAFD4E292E91165A232CA5
+    ext: zip
+    title: Standard Eurobarometer 87, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 87
+    member: "eb87_Volume_A_final.xls"
+  - id: eb_std088
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=E84CDFA31A2687A1864EC02078F99BEA
+    ext: zip
+    title: Standard Eurobarometer 88, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 88
+    member: "eb88_Volume_A_final.xls"
+  - id: eb_std089
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=ED91B120BAF1F44FFD008C77E9BA34FE
+    ext: zip
+    title: Standard Eurobarometer 89, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 89
+    member: "eb_89_vol_A.xls"
+  - id: eb_std090
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=AA59CDC91B966A9A7064F4F700A916C3
+    ext: zip
+    title: Standard Eurobarometer 90, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 90
+    member: "eb_90_volume_A.xls"
+  - id: eb_std091
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=BD32911BEED333EC8E89A49A4EE084F5
+    ext: zip
+    title: Standard Eurobarometer 91, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 91
+    member: "eb_91_volume_A.xls"
+  - id: eb_std092
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=3A3D4A80BC3648F6E1BF5F2157F58A1E
+    ext: zip
+    title: Standard Eurobarometer 92, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 92
+    member: "eb92_Volume_A.xls"
+  - id: eb_std093
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=30C0FB6220D55B50B2DBE9A093B20A11
+    ext: zip
+    title: Standard Eurobarometer 93, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 93
+    member: "eb_93_volume_A.xlsx"
+  - id: eb_std094
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/eurobarometer/api/public/odp/download?key=ACD89D783A5E2C6E54B6B9BA1C5751EF
+    ext: xlsx
+    title: Standard Eurobarometer 94, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 94
+  - id: eb_std095
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=3DBFC38A29B12076FF0CF68FE03E83CF
+    ext: xlsx
+    title: Standard Eurobarometer 95, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 95
+  - id: eb_std096
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=380C6267C97A89EEC7117E72F4948595
+    ext: xlsx
+    title: Standard Eurobarometer 96, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 96
+  - id: eb_std097
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=BFB9C0CCD4CDFA7AE9B5828600C2BCC7
+    ext: xlsx
+    title: Standard Eurobarometer 97, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 97
+  - id: eb_std098
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=8B1605BC8964BBFFEC49C32E79FF9A63
+    ext: xlsx
+    title: Standard Eurobarometer 98, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 98
+  - id: eb_std099
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=0CCD7D6A9EDFF30E68F80A00649E91B6
+    ext: xlsx
+    title: Standard Eurobarometer 99, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 99
+  - id: eb_std100
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=63ACA1A088544CA14E217226F8E32A1F
+    ext: xlsx
+    title: Standard Eurobarometer 100, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 100
+  - id: eb_std101
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=202289A0E60356141402B692C20F5193
+    ext: xlsx
+    title: Standard Eurobarometer 101, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 101
+  - id: eb_std102
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=A2534D981B6C0CF8878DEB8447FB08F4
+    ext: xlsx
+    title: Standard Eurobarometer 102, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 102
+  - id: eb_std103
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=AF452C0A6DD70E5D13273C5DF2086956
+    ext: xlsx
+    title: Standard Eurobarometer 103, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 103
+  - id: eb_std104
+    group: eurobarometer
+    url: https://webgate.ec.europa.eu/ebsm/api/public/odp/download?key=A68C45C80315C6F37BBA366C32491DED
+    ext: xlsx
+    title: Standard Eurobarometer 104, Volume A
+    publisher: Commission européenne, Eurobaromètre standard 104
+
+  - id: eb_std060_survey
+    group: eurobarometer
+    url: https://europa.eu/eurobarometer/api/survey/get/one?id=397
+    ext: json
+    title: Fiche de l'enquête Standard Eurobarometer 60 (API du portail Eurobaromètre)
+    publisher: Commission européenne
+  - id: eb_std061_survey
+    group: eurobarometer
+    url: https://europa.eu/eurobarometer/api/survey/get/one?id=408
+    ext: json
+    title: Fiche de l'enquête Standard Eurobarometer 61 (API du portail Eurobaromètre)
+    publisher: Commission européenne
+  - id: eb_std062_survey
+    group: eurobarometer
+    url: https://europa.eu/eurobarometer/api/survey/get/one?id=455
+    ext: json
+    title: Fiche de l'enquête Standard Eurobarometer 62 (API du portail Eurobaromètre)
+    publisher: Commission européenne
+
+  # -------------------------------------------------------- baromètre d'opinion de la DREES
+  - id: drees_barometer_2000_2025_csv
+    group: drees
+    url: https://data.drees.solidarites-sante.gouv.fr/api/explore/v2.1/catalog/datasets/431_le-barometre-d-opinion/attachments/barometre2000_2025_diff_csv
+    ext: csv
+    title: Baromètre d'opinion de la DREES, microdonnées de diffusion 2000-2025 (barometre2000_2025_diff.csv, 53 Mo)
+    publisher: DREES (ministère des Solidarités) ; terrain Ipsos BVA (2025)
+    mode: face-à-face, quotas, France métropolitaine, 18 ans et plus ; environ 3 000 (2014-2019) à 4 000 personnes par an
+    notes: >-
+      Open data, jeu 431_le-barometre-d-opinion (modifié le 7 juillet 2026). Ne contient que
+      les variables posées en 2025 et leur historique ; les modules des années paires sont dans
+      barometre2000_2024_diff.csv (non téléchargé). Pas d'enquête en 2003.
+  - id: drees_barometer_2025_tap
+    group: drees
+    url: https://data.drees.solidarites-sante.gouv.fr/api/explore/v2.1/catalog/datasets/431_le-barometre-d-opinion/attachments/2025_barometre_drees_tap_complets_v2_xlsx
+    ext: xlsx
+    title: Baromètre DREES 2025, tris à plat complets V2 (2018 à 2025, parts pondérées)
+    publisher: DREES
+
+  # ------------------------------------------------- CRÉDOC, Conditions de vie et aspirations
+  - id: credoc_note_2015
+    group: credoc
+    url: https://www.credoc.fr/download/pdf/Sou/Sou2015-4235.pdf
+    ext: pdf
+    title: "CRÉDOC, Note de conjoncture sociétale « Début 2015 : un nouvel élan » (avril 2015, 56 p.)"
+    publisher: CRÉDOC, département Conditions de vie et aspirations
+    notes: >-
+      Annexe 1, tableau 2 « Les préoccupations des Français à travers le temps », p. 53 du PDF
+      (1991 à 2015). La couverture porte « CONFIDENTIEL - Document réservé aux souscripteurs du
+      système d'enquête » ; le PDF est en téléchargement libre sur credoc.fr : vérifier les
+      droits avant toute republication des chiffres sur le site.
+  - id: credoc_note_2024
+    group: credoc
+    url: https://www.credoc.fr/download/pdf/Sou/Sou2024-4992.pdf
+    ext: pdf
+    title: CRÉDOC, « Sensibilité à l'environnement, action publique et fiscalité environnementale - l'opinion des Français en 2024 »
+    publisher: CRÉDOC
+    mode: en ligne, 3 000 personnes de 15 ans et plus, France métropolitaine, Corse et DROM
+
+waves:
+  rn_image:
+    "2022-01":
+      start: 2022-01-05
+      end: 2022-01-11
+      document: rn_image_2022_12
+      page: 2
+      quote: même méthodologie du 5 […] au 11 janvier 2022
+    "2022-12":
+      start: 2022-11-29
+      end: 2022-12-06
+      document: rn_image_2022_12
+      page: 2
+      quote: Le terrain s’est déroulé du […] 29 novembre au 6 […] décembre 2022
+    "2023-11":
+      start: 2023-11-21
+      end: 2023-11-29
+      document: rn_image_2023_11
+      page: 3
+      quote: 21 au 29 novembre 2023
+    "2024-11":
+      start: 2024-11-12
+      end: 2024-11-20
+      document: rn_image_2024_11
+      page: 3
+      quote: 12 au 20 novembre 2024
+    "2026-01":
+      start: 2026-01-01
+      end: 2026-01-05
+      document: rn_image_2026_01
+      page: 3
+      quote: 1er au 5 janvier 2026
+      note: première vague en ligne (face-à-face jusqu'en 2024) ; évolutions à lire avec précaution
+  cevipof_confidence:
+    "2015-02":
+      start: 2015-02-01
+      note: vague 6 bis, réalisée après les attentats de janvier 2015 (date de terrain au mois près)
+    "2026-01":
+      start: 2026-01-12
+      end: 2026-01-28
+      document: cevipof_confidence_v17
+      page: 3
+      quote: Du 12 au 28 janvier 2026
+
+series:
+  # ------------------------------------------------------------------- baromètre d'image du RN
+  - series_id: rn_danger_democracy_yes
+    family: rn_image
+    label: Le FN/RN représente un danger pour la démocratie (oui)
+    question: Pensez-vous que le Rassemblement National représente un danger pour la démocratie en France ?
+    answer: Oui, il représente un danger
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 1983-10
+    changes: >-
+      Front national jusqu'à la vague de février 2018, Rassemblement national ensuite (même
+      question). Instituts successifs (voir le commentaire des documents). Face-à-face au domicile
+      jusqu'en novembre 2024, en ligne sur panel en janvier 2026 (Verian : « évolutions à
+      considérer avec précaution »). Rythme annuel irrégulier (axe du graphique de l'édition
+      2026) : aucune vague en 1986, 1992, 1995, 2001, 2007-2009 ni 2025, deux en 2022 (janvier
+      et décembre).
+    missing: >-
+      Dates de terrain exactes avant janvier 2022 : seul le mois est publié sur l'axe des
+      graphiques (les éditions TNS Sofres et Kantar 2013-2021 ne sont pas téléchargeables sans
+      compte). Pas de question sur le vote « barrage » au second tour avant 2026 (voir
+      rn_barrage_withdrawal_agree).
+  - series_id: rn_danger_democracy_no
+    family: rn_image
+    label: Le FN/RN ne représente pas un danger pour la démocratie
+    question: Pensez-vous que le Rassemblement National représente un danger pour la démocratie en France ?
+    answer: Non, il ne représente pas un danger
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 1983-10
+    changes: voir rn_danger_democracy_yes
+  - series_id: rn_ideas_agree
+    family: rn_image
+    label: Adhésion aux idées du FN/RN (total d'accord)
+    question: >-
+      Diriez-vous que vous êtes tout à fait d'accord, assez d'accord, plutôt en désaccord ou
+      tout à fait en désaccord avec les idées défendues par le Rassemblement National ?
+    answer: Total d'accord (tout à fait + assez d'accord)
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 1984-11
+    changes: voir rn_danger_democracy_yes (série commencée en novembre 1984)
+  - series_id: rn_ideas_disagree
+    family: rn_image
+    label: Désaccord avec les idées du FN/RN (total en désaccord)
+    question: >-
+      Diriez-vous que vous êtes tout à fait d'accord, assez d'accord, plutôt en désaccord ou
+      tout à fait en désaccord avec les idées défendues par le Rassemblement National ?
+    answer: Total en désaccord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 1984-11
+    changes: voir rn_danger_democracy_yes
+  - series_id: rn_can_join_government
+    family: rn_image
+    label: Le FN/RN est un parti qui a la capacité de participer à un gouvernement
+    question: >-
+      Que vous soyez en accord ou en désaccord avec les idées du Rassemblement National, selon
+      vous : c'est un parti qui a la capacité de participer à un gouvernement / c'est seulement
+      un parti qui a vocation à rassembler les votes d'opposition
+    answer: C'est un parti qui a la capacité de participer à un gouvernement
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2011-01
+    changes: >-
+      Question posée depuis janvier 2011 (Front national puis Rassemblement national). C'est la
+      seule mesure « capable de gouverner » du baromètre dans les documents obtenus.
+    missing: >-
+      Aucune question « le FN est capable de gouverner le pays » avant 2011 dans les éditions
+      téléchargées.
+  - series_id: rn_opposition_vote_only
+    family: rn_image
+    label: Le FN/RN est seulement un parti qui a vocation à rassembler les votes d'opposition
+    question: voir rn_can_join_government
+    answer: C'est seulement un parti qui a vocation à rassembler les votes d'opposition
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2011-01
+  - series_id: rn_can_reach_power_yes
+    family: rn_image
+    label: Le RN peut accéder au pouvoir un jour en France (sous-total oui)
+    question: Pensez-vous que le Rassemblement National puisse accéder au pouvoir un jour en France ?
+    answer: ST Oui
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2018-02
+  - series_id: rn_can_reach_power_no
+    family: rn_image
+    label: Le RN ne peut pas accéder au pouvoir un jour en France (sous-total non)
+    question: Pensez-vous que le Rassemblement National puisse accéder au pouvoir un jour en France ?
+    answer: ST Non
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2018-02
+  - series_id: rn_would_do_better_than_government
+    family: rn_image
+    label: Le RN ferait mieux que le gouvernement actuel pour améliorer la situation
+    question: >-
+      Au regard de la situation actuelle, diriez-vous que le Rassemblement national ferait mieux,
+      moins bien ou ni mieux ni moins bien que le gouvernement actuel pour améliorer la situation
+      en France ?
+    answer: Ferait mieux
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2023-11
+    changes: Le « gouvernement actuel » change d'une vague à l'autre (Borne, Barnier, Lecornu).
+  - series_id: rn_would_do_worse_than_government
+    family: rn_image
+    label: Le RN ferait moins bien que le gouvernement actuel
+    question: voir rn_would_do_better_than_government
+    answer: Ferait moins bien
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2023-11
+  - series_id: mlp_findings_and_solutions
+    family: rn_image
+    label: Adhère aux constats et aux solutions de Marine Le Pen
+    question: "Laquelle des propositions suivantes se rapproche le plus de ce que vous pensez de Marine Le Pen :"
+    answer: Vous adhérez aux constats qu'elle exprime et aux solutions qu'elle propose
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2011-01
+    missing: Question non posée de février 2020 à décembre 2022 (absente du graphique d'évolution).
+  - series_id: mlp_findings_only
+    family: rn_image
+    label: Adhère aux constats mais pas aux solutions de Marine Le Pen
+    question: "Laquelle des propositions suivantes se rapproche le plus de ce que vous pensez de Marine Le Pen :"
+    answer: Vous adhérez aux constats qu'elle exprime, mais pas aux solutions qu'elle propose
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2011-01
+    missing: voir mlp_findings_and_solutions
+  - series_id: mlp_neither_findings_nor_solutions
+    family: rn_image
+    label: N'adhère ni aux constats ni aux solutions de Marine Le Pen
+    question: "Laquelle des propositions suivantes se rapproche le plus de ce que vous pensez de Marine Le Pen :"
+    answer: Vous n'adhérez ni aux constats qu'elle exprime, ni aux solutions qu'elle propose
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2011-01
+    missing: voir mlp_findings_and_solutions
+  - series_id: mlp_good_president
+    family: rn_image
+    label: Marine Le Pen ferait une bonne présidente de la République (s'applique bien)
+    question: >-
+      Pour chacun des qualificatifs suivants, diriez-vous qu'il s'applique très bien, assez bien,
+      assez mal ou très mal à l'image que vous avez de Marine Le Pen ? Ferait une bonne
+      présidente de la République
+    answer: ST s'applique bien
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2016-02
+    missing: Item absent du graphique d'évolution avant février 2016 (le graphique commence en 2013 pour les autres qualificatifs).
+  - series_id: mlp_able_to_unite_beyond_camp
+    family: rn_image
+    label: Marine Le Pen est capable de rassembler au-delà de son camp (s'applique bien)
+    question: voir mlp_good_president ; qualificatif « Capable de rassembler au-delà de son camp »
+    answer: ST s'applique bien
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2013-01
+  - series_id: mlp_able_to_decide
+    family: rn_image
+    label: Marine Le Pen est capable de prendre des décisions (s'applique bien)
+    question: voir mlp_good_president ; qualificatif « Capable de prendre des décisions »
+    answer: ST s'applique bien
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2013-01
+  - series_id: mlp_understands_daily_problems
+    family: rn_image
+    label: Marine Le Pen comprend les problèmes quotidiens des Français (s'applique bien)
+    question: voir mlp_good_president ; qualificatif « Comprend les problèmes quotidiens des Français »
+    answer: ST s'applique bien
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2013-01
+  - series_id: mlp_honest_trustworthy
+    family: rn_image
+    label: Marine Le Pen est honnête, inspire confiance (s'applique bien)
+    question: voir mlp_good_president ; qualificatif « Honnête, inspire confiance »
+    answer: ST s'applique bien
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2013-01
+  - series_id: mlp_patriotic_right
+    family: rn_image
+    label: Marine Le Pen est plutôt la représentante d'une droite patriote et attachée aux valeurs traditionnelles
+    question: "Que pensez-vous de Marine Le Pen aujourd'hui ? Est-elle à vos yeux…"
+    answer: Plutôt la représentante d'une droite patriote et attachée aux valeurs traditionnelles
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2010-01
+    missing: Question non posée en février 2020 et mai 2021 (pointillés sur le graphique).
+  - series_id: mlp_nationalist_far_right
+    family: rn_image
+    label: Marine Le Pen est plutôt la représentante d'une extrême droite nationaliste et xénophobe
+    question: "Que pensez-vous de Marine Le Pen aujourd'hui ? Est-elle à vos yeux…"
+    answer: Plutôt la représentante d'une extrême droite nationaliste et xénophobe
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2010-01
+    missing: voir mlp_patriotic_right
+  - series_id: mlp_danger_democracy
+    family: rn_image
+    label: Marine Le Pen représente aujourd'hui un danger pour la démocratie (ST oui)
+    question: >-
+      Pour chacune des personnalités suivantes, pensez-vous qu'elle représente aujourd'hui un
+      danger pour la démocratie en France ? Marine Le Pen
+    answer: ST Oui (oui, tout à fait + oui, plutôt)
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2022-01
+  - series_id: bardella_danger_democracy
+    family: rn_image
+    label: Jordan Bardella représente aujourd'hui un danger pour la démocratie (ST oui)
+    question: voir mlp_danger_democracy ; personnalité Jordan Bardella
+    answer: ST Oui
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2022-12
+  - series_id: lr_should_ally_with_rn_globally
+    family: rn_image
+    label: Les Républicains devraient traiter le RN comme un allié (alliance électorale globale)
+    question: >-
+      Quelle doit être, selon vous, l'attitude du parti Les Républicains (RPR-UDF, UMP selon les
+      années) à l'égard du Rassemblement National ?
+    answer: Le traiter désormais comme un allié en passant avec lui une alliance électorale globale
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2002-06
+    missing: >-
+      Les modalités « Le combattre » et « Refuser tout accord politique avec lui sans le
+      combattre » ont la même couleur de texte dans le PDF : séparées seulement par leur
+      sous-total (lr_should_refuse_or_fight_rn).
+  - series_id: lr_should_ally_with_rn_case_by_case
+    family: rn_image
+    label: Les Républicains devraient faire des alliances électorales avec le RN selon les circonstances
+    question: voir lr_should_ally_with_rn_globally
+    answer: Faire des alliances électorales avec lui selon les circonstances
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2002-06
+  - series_id: lr_should_ally_with_rn_total
+    family: rn_image
+    label: Les Républicains devraient s'allier au RN (selon les circonstances ou en général)
+    question: voir lr_should_ally_with_rn_globally
+    answer: ST Faire des alliances selon les circonstances + en général
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2002-06
+  - series_id: lr_should_refuse_or_fight_rn
+    family: rn_image
+    label: Les Républicains devraient refuser toute alliance avec le RN ou le combattre
+    question: voir lr_should_ally_with_rn_globally
+    answer: ST Refuser les alliances + Le combattre
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2002-06
+  - series_id: rn_barrage_withdrawal_agree
+    family: rn_image
+    label: Pour faire barrage au RN, les listes opposées doivent fusionner ou se retirer au second tour (municipales)
+    question: >-
+      Toujours en pensant à ces élections municipales, chacune des affirmations suivantes
+      correspond-elle à ce que vous pensez ? Pour faire barrage au Rassemblement national les
+      listes qui s'opposent à lui au second tour doivent fusionner ou se retirer au profit de la
+      mieux placée
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2020-02
+    changes: >-
+      Question posée avant les municipales de 2020 et de 2026 seulement. La valeur 2020 est
+      déduite de l'écart imprimé (« Évolutions / 2020 ») ; la vague 2020 elle-même (février
+      2020) n'a pas été téléchargée.
+    missing: Aucune question sur le front républicain aux présidentielles ou législatives dans les éditions obtenues.
+  - series_id: rn_lr_municipal_alliance_agree
+    family: rn_image
+    label: Les listes RN et LR devraient s'allier ou fusionner au second tour (municipales)
+    question: >-
+      Toujours en pensant à ces élections municipales, chacune des affirmations suivantes
+      correspond-elle à ce que vous pensez ? Les listes Rassemblement National et Les
+      Républicains devraient s'allier ou fusionner au second tour
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2020-02
+    changes: voir rn_barrage_withdrawal_agree (2020 déduit de l'écart imprimé)
+  - series_id: rn_mayor_satisfied
+    family: rn_image
+    label: Serait satisfait que sa commune soit dirigée par un maire du Rassemblement national
+    question: >-
+      Les élections municipales auront lieu les 15 et 22 mars prochains. Dans quelle mesure
+      seriez-vous satisfait si, à l'issue de ces élections, votre commune était dirigée par un
+      maire… du Rassemblement national
+    answer: ST Satisfait
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2020-02
+    changes: 2020 déduit de l'écart imprimé (« Évolutions / 2020 »)
+  # Opinions sur la société (même enquête, items posés à tous)
+  - series_id: opinion_too_many_immigrants
+    family: rn_image
+    label: Il y a trop d'immigrés en France (ST d'accord)
+    question: >-
+      Êtes-vous tout à fait d'accord, plutôt d'accord, plutôt pas d'accord ou pas d'accord du
+      tout avec chacune des affirmations suivantes ? Il y a trop d'immigrés en France
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2000-05
+    missing: Item non reposé en janvier 2026 (absent des pages 60 et 65 de l'édition 2026).
+  - series_id: opinion_not_at_home_anymore
+    family: rn_image
+    label: On ne se sent plus vraiment chez soi en France (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « On ne se sent plus vraiment chez soi en France »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2000-05
+    missing: Item non reposé en janvier 2026.
+  - series_id: opinion_more_power_to_police
+    family: rn_image
+    label: Il faut donner beaucoup plus de pouvoir à la police (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « Il faut donner beaucoup plus de pouvoir à la police »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2000-05
+  - series_id: opinion_justice_too_lenient
+    family: rn_image
+    label: La justice n'est pas assez sévère avec les petits délinquants (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « La justice n'est pas assez sévère avec les petits délinquants »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2003-11
+  - series_id: opinion_ban_islamic_veil
+    family: rn_image
+    label: Il faut interdire le port du voile islamique dans l'espace public (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « Il faut interdire le port du voile islamique dans l'espace public »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2021-05
+  - series_id: opinion_hiring_priority_french
+    family: rn_image
+    label: Il faut donner la priorité aux Français plutôt qu'aux étrangers en matière d'embauche (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « Il faut donner la priorité aux français plutôt qu'aux étrangers en matière d'embauche »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2024-11
+  - series_id: opinion_abolish_birthright_citizenship
+    family: rn_image
+    label: Il faut supprimer le droit du sol (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « Il faut supprimer le droit du sol »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2022-01
+    missing: Non posé en novembre 2023 (« - » dans le tableau de l'édition 2024).
+  - series_id: opinion_abolish_ame
+    family: rn_image
+    label: Il faut supprimer l'aide médicale d'État (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « Il faut supprimer l'aide médicale d'Etat (AME), qui permet aux étrangers en situation irrégulière d'avoir accès aux soins »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2022-01
+  - series_id: opinion_europe_threat_identity
+    family: rn_image
+    label: La construction de l'Europe est une menace pour l'identité de la France (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « La construction de l'Europe est une menace pour l'identité de la France »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2019-02
+  - series_id: opinion_too_many_rights_islam
+    family: rn_image
+    label: On accorde trop de droits à l'islam et aux musulmans en France (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « On accorde trop de droits à l'Islam et aux musulmans en France »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2010-01
+    missing: Absent des tableaux de novembre 2023, novembre 2024 et janvier 2026 (dernier point décembre 2022).
+  - series_id: opinion_traditional_values_not_defended
+    family: rn_image
+    label: On ne défend pas assez les valeurs traditionnelles en France (ST d'accord)
+    question: voir opinion_too_many_immigrants ; « On ne défend pas assez les valeurs traditionnelles en France »
+    answer: ST D'accord
+    source: verian
+    freq: wave
+    unit: percent
+    population: fr_adults_18plus
+    since: 2000-05
+    missing: Absent des tableaux de novembre 2023, novembre 2024 et janvier 2026 (dernier point décembre 2022).
+
+  # --------------------------------------------------------- CNCDH, indice longitudinal de tolérance
+  - series_id: cncdh_tolerance_index
+    family: cncdh
+    label: Indice longitudinal de tolérance (CNCDH, V. Tiberj), 0 à 100
+    question: >-
+      Indice synthétique (méthode de J. Stimson) de 75 séries de questions du baromètre racisme
+      de la CNCDH sur la tolérance envers les minorités, l'immigration et le multiculturalisme ;
+      chaque série vaut la part des réponses tolérantes parmi les réponses tolérantes et
+      intolérantes (rapport 2025, p. 257).
+    answer: valeur annuelle de l'indice (0 = jamais la réponse tolérante, 100 = toujours)
+    source: cncdh
+    freq: A
+    unit: index_0_100
+    population: fr_metro_adults_18plus
+    since: 1990
+    changes: >-
+      Indice créé en 2008 et recalculé chaque année sur toute la période : les éditions
+      successives ne sont pas cumulables (le rapport 2024 donne 2023 = 62 et 2024 = 63, le
+      rapport 2025 donne 63 et 64). Recalibrage de 5 séries en novembre 2022 (moyenne de l'ILT
+      ramenée de 58 à 56). Enquête en face-à-face, terrain en novembre-décembre de l'année
+      (25 novembre au 12 décembre 2025) : la date curated est le 1er janvier de l'année
+      d'enquête. Pas d'enquête en 2020 ; l'enquête en ligne de mars 2021 n'est pas sur la courbe.
+    missing: >-
+      1992, 2020 et 2021 absents de la courbe. Sous-indices par minorité (Juifs, islam et
+      musulmans, Maghrébins, Noirs, Roms ; figure 18 p. 269) publiés seulement en petits
+      graphiques sans étiquettes annuelles (une seule valeur imprimée par graphique) : non
+      extraits, l'appariement des marqueurs aux années n'étant pas univoque.
+
+  # ---------------------------------------- Eurobaromètre standard : deux problèmes les plus importants
+  - series_id: eb_mii_immigration
+    family: eurobarometer
+    label: "Eurobaromètre, France : l'immigration parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Immigration"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_unemployment
+    family: eurobarometer
+    label: "Eurobaromètre, France : le chômage parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Unemployment"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_rising_prices
+    family: eurobarometer
+    label: "Eurobaromètre, France : la hausse des prix, l'inflation, le coût de la vie parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Rising prices/inflation (cost of living depuis 2021)"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_crime
+    family: eurobarometer
+    label: "Eurobaromètre, France : l'insécurité parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Crime"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_health
+    family: eurobarometer
+    label: "Eurobaromètre, France : la santé, le système de santé parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Health / Healthcare system / Health and social security"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_environment_climate
+    family: eurobarometer
+    label: "Eurobaromètre, France : l'environnement, le changement climatique parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Protecting the environment, puis The environment and climate change, The environment, climate and energy issues, The environment and risks related to climate change"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_economic_situation
+    family: eurobarometer
+    label: "Eurobaromètre, France : la situation économique parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "The economic situation"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_pensions
+    family: eurobarometer
+    label: "Eurobaromètre, France : les retraites parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Pensions"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_terrorism
+    family: eurobarometer
+    label: "Eurobaromètre, France : le terrorisme parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Terrorism"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_housing
+    family: eurobarometer
+    label: "Eurobaromètre, France : le logement parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Housing"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_taxation
+    family: eurobarometer
+    label: "Eurobaromètre, France : les impôts parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Taxation"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_government_debt
+    family: eurobarometer
+    label: "Eurobaromètre, France : la dette publique parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Government debt (depuis 2010)"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_energy
+    family: eurobarometer
+    label: "Eurobaromètre, France : les enjeux énergétiques parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "Energy related issues / Energy supply"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+  - series_id: eb_mii_education
+    family: eurobarometer
+    label: "Eurobaromètre, France : le système éducatif parmi les deux problèmes les plus importants du pays"
+    question: >-
+      QA3a. What do you think are the two most important issues facing (OUR COUNTRY) at the
+      moment? (MAX. 2 ANSWERS) / A votre avis, quels sont les deux problèmes les plus importants
+      auxquels doit faire face (NOTRE PAYS) actuellement ? (numéro QA3a ou QA3 depuis 2014,
+      Q.26, Q.27, Q33, QA26, QA30, QA28a, QA23.1, QA18a, QA6a, QA8a, QA4a, QA5a, QA7a avant)
+    answer: "The education system"
+    source: eurobarometer
+    freq: wave
+    unit: percent
+    population: fr_adults_15plus
+    since: 2003-10
+    changes: >-
+      Part des répondants citant l'item (2 réponses au plus), France, deux vagues standard par
+      an ; mode de collecte : voir la note technique de chaque vague (non relue ici). La liste
+      d'items change : nouveaux items (dette publique, énergie, situation
+      internationale, guerre en Ukraine, menaces sur la démocratie, sécurité et défense,
+      conflit au Moyen-Orient) qui retirent des citations aux anciens ; libellés reformulés
+      (notes de chaque ligne : `libellé : …`). Demi-échantillons (STD65, STD74 à STD76, STD92)
+      additionnés quand ils posent les mêmes items.
+    missing: >-
+      Printemps 2026 (STD105) : pas encore de Volume A en open data au 2026-10-23 (seul l'annexe
+      PDF existe). STD57 à STD59 (2002-2003) non lus. Microdonnées GESIS (compte requis) non
+      utilisées.
+
+  # --------------------------------------------------------------- baromètre d'opinion DREES
+  - series_id: drees_society_unfair
+    family: drees
+    label: "La société française paraît plutôt injuste"
+    question: >-
+      IN01. La société française aujourd'hui, vous paraît-elle… ? (plutôt juste / plutôt injuste)
+    answer: "Plutôt injuste"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). 
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_inequalities_increased
+    family: drees
+    label: "Les inégalités ont plutôt augmenté depuis 5 ans"
+    question: >-
+      IN02. Globalement, depuis 5 ans, diriez-vous que les inégalités en France... ? (ont plutôt augmenté / ont plutôt diminué / sont restées stables, non suggéré)
+    answer: "Ont plutôt augmenté"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). 
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_poverty_increased
+    family: drees
+    label: "La pauvreté et l'exclusion ont augmenté depuis 5 ans"
+    question: >-
+      PE01. Selon vous, depuis 5 ans, la pauvreté et l'exclusion en France... (ont diminué / ont augmenté / sont restées stables, non suggéré)
+    answer: "Ont augmenté"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). 
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_poor_do_not_want_to_work
+    family: drees
+    label: "Les personnes pauvres le sont parce qu'elles ne veulent pas travailler (d'accord)"
+    question: >-
+      PE06_1. Si des personnes se trouvent dans ces situations [pauvreté, exclusion], c'est parce qu'elles ne veulent pas travailler ?
+    answer: "Tout à fait + plutôt d'accord"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). Posée certaines années seulement (2000-2014, 2016, 2018, 2020, 2022-2025 d'après le fichier).
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_rsa_should_increase
+    family: drees
+    label: "Il faut augmenter le RMI/RSA"
+    question: >-
+      PE09. Aujourd'hui, le RSA pour une personne seule qui ne travaille pas est de 647 euros par mois. Avec laquelle de ces opinions êtes-vous le plus d'accord ? (augmenter / diminuer / laisser à ce niveau, non suggéré)
+    answer: "Il faut augmenter le RSA"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). Le montant cité change chaque année ; RMI avant juin 2009 (libellé de 2025 seul dans le dictionnaire).
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_rsa_should_decrease
+    family: drees
+    label: "Il faut diminuer le RMI/RSA"
+    question: >-
+      voir drees_rsa_should_increase
+    answer: "Il faut diminuer le RSA"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). 
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_public_action_poor_not_enough
+    family: drees
+    label: "Les pouvoirs publics ne font pas assez pour les plus démunis"
+    question: >-
+      CS18. Estimez-vous que les pouvoirs publics font trop, font ce qu'ils doivent ou ne font pas assez pour les plus démunis ?
+    answer: "Ne font pas assez pour les plus démunis"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2015
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). Question posée depuis 2015.
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_public_action_poor_too_much
+    family: drees
+    label: "Les pouvoirs publics font trop pour les plus démunis"
+    question: >-
+      voir drees_public_action_poor_not_enough
+    answer: "Les pouvoirs publics font trop"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2015
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). Question posée depuis 2015.
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_state_intervention_too_much
+    family: drees
+    label: "Il y a trop d'intervention de l'État en matière économique et sociale"
+    question: >-
+      OG07. Pensez-vous qu'il y a trop d'intervention de l'État en matière économique et sociale, juste ce qu'il faut ou pas assez ?
+    answer: "Trop"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). 
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_state_intervention_not_enough
+    family: drees
+    label: "Il n'y a pas assez d'intervention de l'État en matière économique et sociale"
+    question: >-
+      voir drees_state_intervention_too_much
+    answer: "Pas assez"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). 
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+  - series_id: drees_too_many_immigrant_workers
+    family: drees
+    label: "Il y a trop de travailleurs immigrés (d'accord)"
+    question: >-
+      OG08_AB_1. Voici un certain nombre d'opinions. Pour chacune d'entre elles vous me direz si vous êtes d'accord ou non - Il y a trop de travailleurs immigrés
+    answer: "Tout à fait + plutôt d'accord"
+    source: drees
+    freq: A
+    unit: percent
+    population: fr_metro_adults_18plus
+    since: 2000
+    changes: >-
+      Parts pondérées (poids de redressement), NSP au dénominateur, sur les répondants à qui la
+      question est posée. Face-à-face, quotas ; date curated au 1er janvier de l'année
+      d'enquête (terrain 2025 : 13 octobre au 18 décembre, 4 002 personnes, selon la note
+      méthodologique 2025 du même jeu open data). Posée à un demi-échantillon en 2025 (base 2 001) ; « Il y a trop d'immigrés » (OG08_CD_1) posée à l'autre moitié en 2025 seulement.
+    missing: Pas d'enquête en 2003. Microdonnées PROGEDO/Quetelet (inscription) non utiles ici.
+
+  # ------------------------------------------- CRÉDOC, Conditions de vie et aspirations
+  - series_id: credoc_concern_unemployment
+    family: credoc
+    label: "CRÉDOC : le chômage parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "Le chômage"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_violence_insecurity
+    family: credoc
+    label: "CRÉDOC : la violence et l'insécurité parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "La violence et l'insécurité"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_serious_illness
+    family: credoc
+    label: "CRÉDOC : les maladies graves parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "Les maladies graves"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_poverty_france
+    family: credoc
+    label: "CRÉDOC : la pauvreté en France parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "La pauvreté en France"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_immigration
+    family: credoc
+    label: "CRÉDOC : l'immigration parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "L'immigration"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_poverty_world
+    family: credoc
+    label: "CRÉDOC : la pauvreté dans le monde parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "La pauvreté dans le monde"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_environment
+    family: credoc
+    label: "CRÉDOC : la dégradation de l'environnement parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "La dégradation de l'environnement"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_international_tensions
+    family: credoc
+    label: "CRÉDOC : les tensions internationales parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "Les tensions internationales"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_drugs
+    family: credoc
+    label: "CRÉDOC : la drogue parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "La drogue"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_social_conflicts
+    family: credoc
+    label: "CRÉDOC : les conflits sociaux parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "Les conflits sociaux"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+  - series_id: credoc_concern_europe
+    family: credoc
+    label: "CRÉDOC : l'Europe parmi les deux sujets qui préoccupent le plus"
+    question: "« Parmi les sujets suivants, quels sont les deux qui vous préoccupent le plus ? » (cumul des deux réponses, en %)"
+    answer: "L'Europe"
+    source: credoc
+    freq: A
+    unit: percent
+    population: fr_adults_15plus
+    since: 1991
+    changes: >-
+      Enquête « Conditions de vie et aspirations » de début d'année (date curated au 1er janvier).
+      Liste de 11 sujets. Face-à-face jusqu'en 2015, puis en ligne : le passage « peut
+      expliquer, en partie, des ruptures de série, notamment la forte hausse des préoccupations
+      sur l'immigration » (note 2024, p. 6). Population et mode avant 2015 non décrits dans les
+      notes téléchargées (code population : celui de l'enquête en ligne, 15 ans et plus).
+    missing: >-
+      1978-1990 : aucun tableau publié retrouvé. 2016-2022 : séries seulement en graphiques
+      sans valeurs (note 2020, graphique 77 ; note 2024, graphique 3 en image) ; seuls quelques
+      chiffres de 2023 et 2024 sont imprimés dans le texte de la note 2024.
+
+  # ---------------------------------------------- baromètre de la confiance politique (Cevipof)
+  - series_id: cevipof_trust_government
+    family: cevipof_confidence
+    label: Confiance dans le gouvernement (très + plutôt confiance)
+    question: >-
+      Q13. Avez-vous très confiance, plutôt confiance, plutôt pas confiance ou pas confiance du
+      tout dans les institutions suivantes : Le gouvernement
+    answer: Confiance (très + plutôt)
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2009-12
+    changes: >-
+      Baromètre annuel OpinionWay pour le Cevipof depuis décembre 2009 ; vague 1 en ligne et par
+      téléphone, puis en ligne (CAWI). Terrain en décembre jusqu'en 2018, puis en janvier ou
+      février. Vague 6 bis (février 2015) après les attentats de janvier 2015.
+    missing: >-
+      Le graphique de la vague 17 ne montre pas décembre 2010 ni octobre 2011 pour cet item ;
+      les microdonnées publiques (Dataverse) permettraient de les recalculer.
+  - series_id: cevipof_trust_parties
+    family: cevipof_confidence
+    label: Confiance dans les partis politiques (très + plutôt confiance)
+    question: >-
+      Q25. Avez-vous très confiance, plutôt confiance, plutôt pas confiance ou pas confiance du
+      tout dans chacune des organisations suivantes... ? Les partis politiques
+    answer: Confiance (très + plutôt)
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2009-12
+    changes: voir cevipof_trust_government
+    missing: Pas d'étiquette pour janvier 2022 sur le graphique de la vague 17 (point non lisible).
+  - series_id: cevipof_democracy_works_badly
+    family: cevipof_confidence
+    label: En France, la démocratie fonctionne mal (pas très bien + pas bien du tout)
+    question: >-
+      Q22. Diriez-vous qu'en France la démocratie fonctionne très bien, assez bien, pas très bien
+      ou pas bien du tout ?
+    answer: Pas bien (pas très bien + pas bien du tout)
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2009-12
+    changes: voir cevipof_trust_government
+  - series_id: cevipof_democracy_works_well
+    family: cevipof_confidence
+    label: En France, la démocratie fonctionne bien (très bien + assez bien)
+    question: voir cevipof_democracy_works_badly
+    answer: Bien (très bien + assez bien)
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2009-12
+  - series_id: cevipof_strongman_good
+    family: cevipof_confidence
+    label: Avoir à sa tête un homme fort qui n'a pas à se préoccuper du parlement ni des élections (bonne façon de gouverner)
+    question: >-
+      Q55. Je vais vous décrire différents types de systèmes politiques et vous demander ce que
+      vous en pensez pour gouverner ce pays. Pour chacun, veuillez me dire si cette façon de
+      gouverner le pays serait très bonne, assez bonne, assez mauvaise ou très mauvaise. Avoir
+      à sa tête un homme fort qui n'a pas à se préoccuper du parlement ni des élections
+    answer: Bonne image (très + assez bonne)
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2014-12
+    changes: Item présent sur le graphique depuis décembre 2014.
+  - series_id: cevipof_army_rule_good
+    family: cevipof_confidence
+    label: Que l'armée dirige le pays (bonne façon de gouverner)
+    question: voir cevipof_strongman_good ; « Que l'armée dirige le pays »
+    answer: Bonne image
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2014-12
+  - series_id: cevipof_experts_rule_good
+    family: cevipof_confidence
+    label: Que ce soient des experts et non un gouvernement qui décident (bonne façon de gouverner)
+    question: voir cevipof_strongman_good ; « Que ce soient des experts et non un gouvernement qui décident ce qui leur semble le meilleur pour le pays »
+    answer: Bonne image
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2009-12
+  - series_id: cevipof_democratic_system_good
+    family: cevipof_confidence
+    label: Avoir un système politique démocratique (bonne façon de gouverner)
+    question: voir cevipof_strongman_good ; « Avoir un système politique démocratique »
+    answer: Bonne image
+    source: cevipof
+    freq: wave
+    unit: percent
+    population: fr_registered_18plus
+    since: 2013-12
+    missing: Pas d'étiquette pour janvier 2022 (pointillés sur le graphique de la vague 17).
+
+extractions:
+  # ------------------------------------------------------------- RN, édition 2026 (fait foi)
+  - id: rn2026_p6_ideas
+    kind: chart
+    document: rn_image_2026_01
+    page: 6
+    columns: cluster
+    bbox: [40, 130, 770, 470]
+    exclusive: true
+    waves: [1984-11, 1985-10, 1987-10, 1988-12, 1989-05, 1990-09, 1991-10, 1993-06, 1994-01,
+            1996-04, 1997-03, 1998-04, 1999-05, 2000-05, 2002-05, 2003-11, 2004-03, 2005-12,
+            2006-12, 2010-01, 2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02,
+            2018-02, 2019-02, 2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11, 2026-01]
+    series:
+      - {series_id: rn_ideas_disagree, color: [1.0, 0.49, 0.016]}
+      - {series_id: rn_ideas_agree, color: [0.125, 0.729, 0.686]}
+  - id: rn2026_p7_danger
+    kind: chart
+    document: rn_image_2026_01
+    page: 7
+    columns: cluster
+    bbox: [40, 130, 770, 470]
+    exclusive: true
+    waves: [1983-10, 1984-11, 1985-10, 1987-10, 1988-12, 1989-05, 1990-09, 1991-10, 1993-06,
+            1994-01, 1996-04, 1997-03, 1998-04, 1999-05, 2000-05, 2002-05, 2003-11, 2004-03,
+            2005-12, 2006-12, 2010-01, 2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02,
+            2017-02, 2018-02, 2019-02, 2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11,
+            2026-01]
+    series:
+      - {series_id: rn_danger_democracy_yes, color: [1.0, 0.49, 0.016]}
+      - {series_id: rn_danger_democracy_no, color: [0.125, 0.729, 0.686]}
+  - id: rn2026_p8_mlp_findings
+    kind: chart
+    document: rn_image_2026_01
+    page: 8
+    columns: cluster
+    bbox: [540, 280, 960, 440]  # graphique d'évolution seul (les anneaux ont les mêmes couleurs)
+    exclusive: true
+    waves: [2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02, 2018-02, 2019-02,
+            2023-11, 2024-11, 2026-01]
+    series:
+      - {series_id: mlp_findings_and_solutions, color: [0.125, 0.729, 0.686]}
+      - {series_id: mlp_findings_only, color: [0.6, 0.749, 1.0]}
+      - {series_id: mlp_neither_findings_nor_solutions, color: [1.0, 0.49, 0.016]}
+  - id: rn2026_p16_role
+    kind: chart
+    document: rn_image_2026_01
+    page: 16
+    columns: cluster
+    bbox: [100, 230, 760, 380]
+    exclusive: true
+    waves: [2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02, 2018-02, 2019-02,
+            2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11, 2026-01]
+    series:
+      - {series_id: rn_can_join_government, color: [0.125, 0.729, 0.686]}
+      - {series_id: rn_opposition_vote_only, color: [1.0, 0.49, 0.016]}
+  - id: rn2026_p22_better_than_government
+    kind: chart
+    document: rn_image_2026_01
+    page: 22
+    columns: cluster
+    bbox: [80, 280, 760, 420]
+    exclusive: true
+    waves: [2023-11, 2024-11, 2026-01]
+    series:
+      - {series_id: rn_would_do_better_than_government, color: [0.125, 0.729, 0.686]}
+      - {series_id: rn_would_do_worse_than_government, color: [1.0, 0.49, 0.016]}
+  - id: rn2026_p24_reach_power
+    kind: chart
+    document: rn_image_2026_01
+    page: 24
+    columns: cluster
+    bbox: [60, 240, 760, 420]
+    exclusive: true
+    waves: [2018-02, 2019-02, 2020-02, 2021-05, 2022-12, 2023-11, 2024-11, 2026-01]
+    series:
+      - {series_id: rn_can_reach_power_yes, color: [0.125, 0.729, 0.686]}
+      - {series_id: rn_can_reach_power_no, color: [1.0, 0.49, 0.016]}
+  - id: rn2026_p30_lr_attitude
+    kind: chart
+    document: rn_image_2026_01
+    page: 30
+    columns: cluster
+    bbox: [40, 140, 640, 400]
+    waves: &lr_waves [2002-06, 2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02,
+                      2018-02, 2019-02, 2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11,
+                      2026-01]
+    series:
+      - {series_id: lr_should_ally_with_rn_globally, color: [0.125, 0.729, 0.686]}
+      - {series_id: lr_should_ally_with_rn_case_by_case, color: [0.392, 0.784, 0.749]}
+  - id: rn2026_p31_lr_attitude_totals
+    kind: chart
+    document: rn_image_2026_01
+    page: 31
+    columns: cluster
+    bbox: [40, 190, 640, 410]
+    exclusive: true
+    waves: *lr_waves
+    series:
+      - {series_id: lr_should_ally_with_rn_total, color: [0.125, 0.729, 0.686]}
+      - {series_id: lr_should_refuse_or_fight_rn, color: [1.0, 0.49, 0.016]}
+  - id: rn2026_p34_danger_personalities
+    kind: chart
+    document: rn_image_2026_01
+    page: 34
+    columns: axis
+    axis_bbox: [770, 495, 960, 540]
+    bbox: [770, 180, 960, 480]
+    waves: [2022-01, 2022-12, 2023-11, 2024-11, 2026-01]
+    series:
+      - {series_id: mlp_danger_democracy, color: [1.0, 0.49, 0.016], bbox: [770, 345, 960, 375]}
+      - {series_id: bardella_danger_democracy, color: [1.0, 0.49, 0.016], bbox: [770, 395, 960, 420]}
+  - id: rn2026_p36_mlp_perception
+    kind: chart
+    document: rn_image_2026_01
+    page: 36
+    columns: cluster
+    bbox: [60, 200, 760, 400]
+    exclusive: true
+    waves: [2010-01, 2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02, 2018-02,
+            2019-02, 2022-01, 2022-12, 2023-11, 2024-11, 2026-01]
+    series:
+      - {series_id: mlp_patriotic_right, color: [0.125, 0.729, 0.686]}
+      - {series_id: mlp_nationalist_far_right, color: [1.0, 0.49, 0.016]}
+  - id: rn2026_p40_mlp_image
+    kind: chart
+    document: rn_image_2026_01
+    page: 40
+    columns: axis
+    axis_bbox: [30, 440, 700, 510]
+    bbox: [30, 130, 700, 440]
+    waves: [2013-01, 2014-02, 2015-02, 2016-02, 2017-02, 2018-02, 2019-02, 2020-02, 2021-05,
+            2022-01, 2022-12, 2023-11, 2024-11, 2026-01]
+    series:
+      # couleurs des étiquettes ; légende appariée par la couleur des traits (p. 40)
+      - {series_id: mlp_able_to_decide, color: [0.78, 0.0, 0.827]}
+      - {series_id: mlp_understands_daily_problems, color: [1.0, 0.753, 0.0]}
+      - {series_id: mlp_able_to_unite_beyond_camp, color: [0.0, 0.376, 1.0]}
+      - {series_id: mlp_good_president, color: [0.125, 0.729, 0.686]}
+      - {series_id: mlp_honest_trustworthy, color: [0.922, 0.0, 0.392]}
+  - id: rn2026_p65_opinions
+    kind: table
+    document: rn_image_2026_01
+    page: 65
+    header_bbox: [500, 130, 960, 160]
+    label_x1: 495
+    waves: [2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11, 2026-01]
+    rows:
+      opinion_justice_too_lenient: La justice n’est pas assez sévère avec les petits délinquants
+      opinion_ban_islamic_veil: Il faut interdire le port du voile islamique dans l’espace public
+      opinion_more_power_to_police: Il faut donner beaucoup plus de pouvoir à la police
+      opinion_abolish_ame: Il faut supprimer l’aide médicale d’Etat
+      opinion_hiring_priority_french: Il faut donner la priorité aux français plutôt qu'aux étrangers
+      opinion_abolish_birthright_citizenship: Il faut supprimer le droit du sol
+      opinion_europe_threat_identity: La construction de l'Europe est une menace pour l'identité
+  - id: rn2026_municipal_quotes
+    kind: quote
+    document: rn_image_2026_01
+    rows:
+      - series_id: rn_barrage_withdrawal_agree
+        wave: 2026-01
+        page: 50
+        value: 43
+        quote: les listes qui s’opposent à lui au 33% 24 22 11 28 15 43%
+      - series_id: rn_barrage_withdrawal_agree
+        wave: 2020-02
+        page: 50
+        method: derived_from_delta
+        printed: 43
+        delta: -9
+        quote: lui au 33% 24 22 11 28 15 43% […] se retirer (+5) (-9) Évolutions / 2020
+        note: valeur 2020 déduite de l'écart imprimé (43 % en 2026, -9 points)
+      - series_id: rn_lr_municipal_alliance_agree
+        wave: 2026-01
+        page: 49
+        value: 36
+        quote: 39% 25 27 12 22 14 36%
+      - series_id: rn_lr_municipal_alliance_agree
+        wave: 2020-02
+        page: 49
+        method: derived_from_delta
+        printed: 36
+        delta: 13
+        quote: 39% 25 27 12 22 14 36% […] s’allier ou fusionner (-18) (+13) Évolutions / 2020
+        note: valeur 2020 déduite de l'écart imprimé (36 % en 2026, +13 points)
+      - series_id: rn_mayor_satisfied
+        wave: 2026-01
+        page: 48
+        value: 31
+        quote: Du Rassemblement national 41% 15 33 8 13 17 14 31%
+      - series_id: rn_mayor_satisfied
+        wave: 2020-02
+        page: 48
+        method: derived_from_delta
+        printed: 31
+        delta: 17
+        quote: Du Rassemblement national 41% 15 33 8 13 17 14 31% […] (-13) (+17)
+        note: valeur 2020 déduite de l'écart imprimé (31 % en 2026, +17 points)
+
+  # --------------------------------------------------- RN, éditions antérieures (contrôles)
+  - id: rn2024_p40_opinions
+    kind: table
+    document: rn_image_2024_11
+    page: 40
+    header_bbox: [280, 130, 960, 160]
+    label_x1: 280
+    waves: &opinion_waves_2024 [2000-05, 2002-05, 2003-11, 2005-12, 2006-12, 2010-01, 2011-01,
+                                2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02, 2018-02,
+                                2019-02, 2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11]
+    rows:
+      opinion_justice_too_lenient: La justice n’est pas assez sévère avec les petits délinquants
+      opinion_more_power_to_police: Il faut donner beaucoup plus de pouvoir à la police
+      opinion_ban_islamic_veil: Il faut interdire le port du voile islamique dans l’espace public
+      opinion_too_many_immigrants: Il y a trop d'immigrés en France
+      opinion_hiring_priority_french: Il faut donner la priorité aux français plutôt qu'aux étrangers
+      opinion_abolish_birthright_citizenship: Il faut supprimer le droit du sol
+      opinion_not_at_home_anymore: On ne se sent plus vraiment chez soi en France
+      opinion_abolish_ame: Il faut supprimer l’aide médicale d’Etat
+      opinion_europe_threat_identity: La construction de l'Europe est une menace pour l'identité
+  - id: rn2022_p13_opinions
+    kind: table
+    document: rn_image_2022_12
+    page: 13
+    header_bbox: [290, 100, 960, 128]
+    label_x1: 290
+    rows:
+      opinion_traditional_values_not_defended: On ne défend pas assez les valeurs traditionnelles en France
+      opinion_too_many_rights_islam: On accorde trop de droits à l’Islam et aux musulmans en France
+      opinion_too_many_immigrants: Il y a trop d’immigrés en France
+      opinion_not_at_home_anymore: On ne se sent plus vraiment chez soi en France
+      opinion_more_power_to_police: Il faut donner beaucoup plus de pouvoir à la police
+      opinion_abolish_birthright_citizenship: Il faut supprimer le droit du sol
+      opinion_abolish_ame: Il faut supprimer l'aide médicale d'Etat
+  - id: rn2024_p6_danger
+    kind: chart
+    document: rn_image_2024_11
+    page: 6
+    columns: cluster
+    bbox: [40, 130, 770, 470]
+    exclusive: true
+    waves: [1983-10, 1984-11, 1985-10, 1987-10, 1988-12, 1989-05, 1990-09, 1991-10, 1993-06,
+            1994-01, 1996-04, 1997-03, 1998-04, 1999-05, 2000-05, 2002-05, 2003-11, 2004-03,
+            2005-12, 2006-12, 2010-01, 2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02,
+            2017-02, 2018-02, 2019-02, 2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11]
+    series:
+      - {series_id: rn_danger_democracy_yes, color: [1.0, 0.49, 0.016]}
+      - {series_id: rn_danger_democracy_no, color: [0.125, 0.729, 0.686]}
+  - id: rn2024_p5_ideas
+    kind: chart
+    document: rn_image_2024_11
+    page: 5
+    columns: cluster
+    bbox: [40, 130, 770, 470]
+    exclusive: true
+    waves: [1984-11, 1985-10, 1987-10, 1988-12, 1989-05, 1990-09, 1991-10, 1993-06, 1994-01,
+            1996-04, 1997-03, 1998-04, 1999-05, 2000-05, 2002-05, 2003-11, 2004-03, 2005-12,
+            2006-12, 2010-01, 2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02,
+            2018-02, 2019-02, 2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11]
+    series:
+      # couleurs inversées par rapport à l'édition 2026
+      - {series_id: rn_ideas_disagree, color: [0.125, 0.729, 0.686]}
+      - {series_id: rn_ideas_agree, color: [1.0, 0.49, 0.016], missing: [2011-01]}  # étiquette absente
+  - id: rn2024_p8_role
+    kind: chart
+    document: rn_image_2024_11
+    page: 8
+    columns: cluster
+    bbox: [540, 230, 960, 400]
+    exclusive: true
+    waves: [2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02, 2017-02, 2018-02, 2019-02,
+            2020-02, 2021-05, 2022-01, 2022-12, 2023-11, 2024-11]
+    series:
+      - {series_id: rn_can_join_government, color: [0.125, 0.729, 0.686]}
+      - {series_id: rn_opposition_vote_only, color: [1.0, 0.49, 0.016]}
+  - id: rn2022_p19_danger
+    kind: chart
+    document: rn_image_2022_12
+    page: 19
+    columns: cluster
+    bbox: [40, 130, 770, 470]
+    exclusive: true
+    waves: [1983-10, 1984-11, 1985-10, 1987-10, 1988-12, 1989-05, 1990-09, 1991-10, 1993-06,
+            1994-01, 1996-04, 1997-03, 1998-04, 1999-05, 2000-05, 2002-05, 2003-11, 2004-03,
+            2005-12, 2006-12, 2010-01, 2011-01, 2012-01, 2013-01, 2014-02, 2015-02, 2016-02,
+            2017-02, 2018-02, 2019-02, 2020-02, 2021-05, 2022-01, 2022-12]
+    series:
+      - {series_id: rn_danger_democracy_yes, color: [0.882, 0.0, 0.0]}
+      - {series_id: rn_danger_democracy_no, color: [0.0, 0.376, 1.0]}
+
+  # ------------------------------------------------- Cevipof, vague 17 (fait foi), vague 16
+  - id: cevipof_v17_p29_trust_institutions
+    kind: chart
+    document: cevipof_confidence_v17
+    page: 29
+    columns: axis
+    axis_bbox: [40, 470, 700, 500]
+    bbox: [40, 100, 700, 468]
+    series:
+      - {series_id: cevipof_trust_government, color: [0.651]}
+  - id: cevipof_v17_p34_democracy
+    kind: chart
+    document: cevipof_confidence_v17
+    page: 34
+    columns: axis
+    axis_bbox: [450, 452, 940, 480]
+    bbox: [450, 140, 940, 451]
+    exclusive: true
+    notes: {"2015-02": "vague 6 bis : étiquette grise sur le graphique"}
+    series:
+      - series_id: cevipof_democracy_works_badly
+        color: [1.0, 0.314, 0.314]
+        extra: [{color: [0.651], bbox: [600, 240, 650, 265]}]
+      - series_id: cevipof_democracy_works_well
+        color: [0.216, 0.376, 0.573]
+        extra: [{color: [0.651], bbox: [600, 320, 650, 345]}]
+  - id: cevipof_v17_p42_trust_organisations
+    kind: chart
+    document: cevipof_confidence_v17
+    page: 42
+    columns: axis
+    axis_bbox: [40, 492, 700, 515]
+    bbox: [50, 90, 700, 490]
+    series:
+      - series_id: cevipof_trust_parties
+        color: [0.498]
+        extra: [{color: [0.651], bbox: [270, 440, 292, 456]}]  # vague 6 bis, étiquette grise
+  - id: cevipof_v17_p95_political_systems
+    kind: chart
+    document: cevipof_confidence_v17
+    page: 95
+    columns: axis
+    axis_bbox: [40, 472, 690, 500]
+    bbox: [40, 100, 690, 470]
+    series:
+      - {series_id: cevipof_strongman_good, color: [0.216, 0.376, 0.573]}
+      - {series_id: cevipof_army_rule_good, color: [0.149]}
+      - {series_id: cevipof_experts_rule_good, color: [0.91, 0.533, 0.659]}
+      - {series_id: cevipof_democratic_system_good, color: [1.0, 0.6, 0.2]}
+
+  # ------------------------------------------------------------- CNCDH, rapport 2025, figure 13
+  - id: cncdh2025_p258_ilt
+    kind: cncdh_chart
+    document: cncdh_racism_report_2025
+    page: 258
+    series: [cncdh_tolerance_index]
+    bbox: [103, 75, 400, 241]
+    ticks_bbox: [85, 75, 103, 240]
+    marker_color: [0.939, 0.52, 0.206]
+    first_year: 1990
+    last_year: 2025
+    min_labels: 15
+    note: valeur lue sur le graphique vectoriel (marqueur annuel), arrondie à l'entier
+
+  # ------------------------------------------------------- Eurobaromètre standard (Volume A)
+  - id: eurobarometer_mii
+    kind: eurobarometer
+    sheets:
+      eb_std065: [QA28a]  # QA28b (demi-échantillon B) : question ouverte « ne pas lire », écartée
+    survey_metadata: {eb_std060: eb_std060_survey, eb_std061: eb_std061_survey, eb_std062: eb_std062_survey}
+    notes:
+      eb_std065: demi-échantillon A seul (liste lue) ; le B, en question ouverte, est écarté
+    series: [eb_mii_immigration, eb_mii_unemployment, eb_mii_rising_prices, eb_mii_crime, eb_mii_health, eb_mii_environment_climate, eb_mii_economic_situation, eb_mii_pensions, eb_mii_terrorism, eb_mii_housing, eb_mii_taxation, eb_mii_government_debt, eb_mii_energy, eb_mii_education]
+    documents: [eb_std060, eb_std061, eb_std062, eb_std063, eb_std064, eb_std065, eb_std066, eb_std067, eb_std068, eb_std069, eb_std070, eb_std071, eb_std072, eb_std073, eb_std074, eb_std075, eb_std076, eb_std077, eb_std078, eb_std079, eb_std080, eb_std081, eb_std082, eb_std083, eb_std084, eb_std085, eb_std086, eb_std087, eb_std088, eb_std089, eb_std090, eb_std091, eb_std092, eb_std093, eb_std094, eb_std095, eb_std096, eb_std097, eb_std098, eb_std099, eb_std100, eb_std101, eb_std102, eb_std103, eb_std104]
+
+  # ---------------------------------------------------- DREES, microdonnées 2000-2025
+  - id: drees_microdata_2000_2025
+    kind: drees_microdata
+    document: drees_barometer_2000_2025_csv
+    check_document: drees_barometer_2025_tap
+    series: [drees_society_unfair, drees_inequalities_increased, drees_poverty_increased, drees_poor_do_not_want_to_work, drees_rsa_should_increase, drees_rsa_should_decrease, drees_public_action_poor_not_enough, drees_public_action_poor_too_much, drees_state_intervention_too_much, drees_state_intervention_not_enough, drees_too_many_immigrant_workers]
+    items:
+      - {series_id: drees_society_unfair, variable: in01, codes: [2], check_row: "Plutôt injuste"}
+      - {series_id: drees_inequalities_increased, variable: in02, codes: [1], check_row: "Ont plutôt augmenté"}
+      - {series_id: drees_poverty_increased, variable: pe01, codes: [2], check_row: "Ont augmenté"}
+      - {series_id: drees_poor_do_not_want_to_work, variable: pe06_1, codes: [1, 2], check_row: "S/T D'accord"}
+      - {series_id: drees_rsa_should_increase, variable: pe09, codes: [1], check_row: "Il faut augmenter le RSA"}
+      - {series_id: drees_rsa_should_decrease, variable: pe09, codes: [2], check_row: "Il faut diminuer le RSA"}
+      - {series_id: drees_public_action_poor_not_enough, variable: cs18, codes: [3], check_row: "Les pouvoirs publics ne font pas assez pour les plus démunis"}
+      - {series_id: drees_public_action_poor_too_much, variable: cs18, codes: [1], check_row: "Les pouvoirs publics font trop"}
+      - {series_id: drees_state_intervention_too_much, variable: og07, codes: [1], check_row: "Trop"}
+      - {series_id: drees_state_intervention_not_enough, variable: og07, codes: [3], check_row: "Pas assez"}
+      - {series_id: drees_too_many_immigrant_workers, variable: og08_ab_1, codes: [1, 2], check_row: "S/T D'accord"}
+
+  # ------------------------------------------------------------ CRÉDOC, notes 2015 et 2024
+  - id: credoc2015_p53_concerns
+    kind: table
+    document: credoc_note_2015
+    page: 53
+    header: declared
+    header_bbox: [260, 150, 712, 180]
+    label_x1: 262
+    bbox: [80, 180, 712, 420]
+    waves: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004,
+            2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015]
+    rows:
+      credoc_concern_unemployment: "Le chômage"
+      credoc_concern_violence_insecurity: "La violence et l'insécurité"
+      credoc_concern_serious_illness: "Les maladies graves"
+      credoc_concern_poverty_france: "La pauvreté en France"
+      credoc_concern_immigration: "L'immigration"
+      credoc_concern_poverty_world: "La pauvreté dans le monde"
+      credoc_concern_environment: "La dégradation de l'environnement"
+      credoc_concern_international_tensions: "Les tensions internationales"
+      credoc_concern_drugs: "La drogue"
+      credoc_concern_social_conflicts: "Les conflits sociaux"
+      credoc_concern_europe: "L'Europe"
+  - id: credoc2024_text
+    kind: quote
+    document: credoc_note_2024
+    page: 5
+    rows:
+      - series_id: credoc_concern_violence_insecurity
+        wave: 2024
+        value: 45
+        quote: en 2024, 45 % des personnes placent les questions de sécurité dans leurs premières préoccupations
+      - series_id: credoc_concern_violence_insecurity
+        wave: 2023
+        method: derived_from_delta
+        printed: 45
+        delta: 7
+        quote: en 2024, 45 % des personnes placent […] (+7 points de pourcentage)
+        note: valeur 2023 déduite de l'écart imprimé (45 % en 2024, +7 points)
+      - series_id: credoc_concern_immigration
+        wave: 2024
+        value: 32
+        quote: concurrencée par l'immigration (32 %, +8 points)
+      - series_id: credoc_concern_immigration
+        wave: 2023
+        method: derived_from_delta
+        printed: 32
+        delta: 8
+        quote: concurrencée par l'immigration (32 %, +8 points)
+        note: valeur 2023 déduite de l'écart imprimé (32 % en 2024, +8 points)
+      - series_id: credoc_concern_poverty_france
+        wave: 2024
+        value: 26
+        quote: la pauvreté en France (26 %, stable)
+      - series_id: credoc_concern_environment
+        wave: 2024
+        value: 25
+        quote: elle rassemble 25 % de nos concitoyens
+        note: le texte écrit « début 2023 » pour ce chiffre, manifestement pour début 2024 (la phrase précédente donne 30 % en 2023)
+      - series_id: credoc_concern_environment
+        wave: 2023
+        value: 30
+        quote: en 2023, la dégradation de l’environnement était en tête des préoccupations de 30 % des Français

@@ -937,5 +937,40 @@ def parse_conflit_politique() -> None:
     typer.echo(f"écrit : {out} ({df.height} lignes, {df['codecommune'].n_unique()} communes, années {years})")
 
 
+@ingest_app.command("attitudes")
+def ingest_attitudes(
+    series: Annotated[
+        list[str] | None,
+        typer.Option("--series", help="series_id ou famille de data/registry/attitude_series.yaml (répétable ; toutes par défaut)"),
+    ] = None,
+) -> None:
+    """Documents des séries d'attitudes et d'opinion -> data/raw/attitudes/<groupe>/."""
+    from vvs.ingest.attitudes import ingest
+
+    out = ingest(series or None, log=typer.echo)
+    typer.echo(f"{len(out['téléchargé'])} téléchargé(s), {len(out['présent'])} déjà présent(s), "
+               f"{len(out['échec'])} en échec")
+    if out["échec"]:
+        raise typer.Exit(code=1)
+
+
+@parse_app.command("attitudes")
+def parse_attitudes(
+    series: Annotated[
+        list[str] | None,
+        typer.Option("--series", help="series_id ou famille à relire (les autres lignes du parquet sont conservées)"),
+    ] = None,
+) -> None:
+    """data/raw/attitudes -> data/curated/attitudes.parquet (code 1 si deux documents se contredisent)."""
+    from vvs import paths
+    from vvs.ingest.attitudes import OUTPUT_NAME, parse
+
+    df, report = parse(series or None)
+    typer.echo(report.summary())
+    typer.echo(f"écrit : {paths.CURATED / OUTPUT_NAME} ({df.height} lignes)")
+    if report.disagreements:
+        raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()

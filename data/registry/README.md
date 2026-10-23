@@ -25,6 +25,7 @@ Fichiers :
 | `transfers.yaml` | matrices de reports de voix des seconds tours 2002-2022 par source (`vvs.registry.transfers`) |
 | `outlets.yaml` | panel de titres de presse nationale, domaines, présence dans la collection Media Cloud (`vvs.ingest.press.outlets`) |
 | `press_queries.yaml` | requêtes presse par candidat (alias, exclusions, formes rejetées) et par thème (mots-clés, thèmes GKG, rubriques INA) |
+| `attitude_series.yaml` | séries longues d'attitudes et d'opinion (image du RN, confiance politique Cevipof, ILT CNCDH, Eurobaromètre, CRÉDOC, DREES) : documents, formulations, extractions (`vvs.ingest.attitudes`) |
 
 Validations croisées (`vvs/registry/loader.py`) : candidats et partis d'`elections.yaml`
 présents dans les autres fichiers, parti actif l'année de l'élection, cas limites de
