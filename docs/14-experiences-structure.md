@@ -1,4 +1,4 @@
-# 13 — Cinq expériences de structure
+# 14 — Cinq expériences de structure
 
 Protocole déclaré le 23 octobre 2026, avant calcul, sur la branche
 `codex/prediction-structure`. Étude exploratoire : les mêmes trois élections ont déjà

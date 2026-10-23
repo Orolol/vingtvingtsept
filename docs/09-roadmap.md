@@ -14,7 +14,7 @@
 | 9 | Législatives (seconde étape, hors périmètre actuel) | nouvelle spec | plus tard |
 | 10 | Référence figée, backtest chronologique de la chaîne jusqu'à la victoire, sensibilité aux scénarios | `scripts/run_consolidation.sh`, `10-consolidation.md` | fait le 2026-10-22 : douze cas, diagnostics conformes, 47 variantes ; tag `reference-2026-10-22`, résultats et limites dans `10-consolidation.md` |
 | 11 | Reconstruction des scénarios historiques incomplets | `scripts/run_historical_scenarios.sh`, `11-scenarios-historiques.md` | fait le 2026-10-22 : mémoire annuelle et filtre événementiel testés sur le même gel ; support élargi, variantes non admises |
-| 12 | Cinq expériences de structure | `scripts/run_structure_study.sh`, `13-experiences-structure.md` | fait le 2026-10-23 : mélange, calibration et rollings comparés sur douze cas sans admission ; substitution sans gain ; transitions implémentées, données longitudinales manquantes |
+| 14 | Cinq expériences de structure | `scripts/run_structure_study.sh`, `14-experiences-structure.md` | fait le 2026-10-23 : mélange, calibration et rollings comparés sur douze cas sans admission ; substitution sans gain ; transitions implémentées, données longitudinales manquantes |
 
 Les phases 6 et 7 sont indépendantes l'une de l'autre et de la 5 ; elles peuvent démarrer
 dès que la 3 fournit un backtest de référence.
