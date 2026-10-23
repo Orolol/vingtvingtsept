@@ -336,3 +336,23 @@ scénarios, améliorer log P(W présent), log P(paire présente) et le Brier de 
 présence, Brier de qualification, CRPS et couverture conditionnels), P(W | paire) inchangée
 (sinon bug), probabilité qu'un fantôme se qualifie non croissante, écarts exactement nuls à
 30 et 7 j.
+
+## 2026-10-23 — Cinq expériences de structure : aucune admission
+
+Protocole déclaré avant calcul (commits `51ddcde`, précision numérique `ead9e0d`),
+référence immuable, bilan dans [docs/13](13-experiences-structure.md).
+
+| Piste | Comparaison | Résultat |
+|---|---|---|
+| Mélange 50/50 des trajectoires bayésiennes et mean14d | chaîne chronologique, 12 cas | gain partagé à 90/7 jours ; log victoire −0,0756 à 180 jours, CRPS dégradé à 7/30/180 jours : non admis |
+| Incertitude de calibration | 32 pondérations de scrutins par cas, 384 optimisations | faibles écarts partagés ; pas de gain conjoint log-score/CRPS, couverture inchangée : non admise |
+| Sondages continus corrélés | GLS éclairci / toutes vagues indépendantes / recouvrement 0,5 et 1 | pas de domination ; à J−7 contre GLS éclairci, Δ log paire −0,0007 et Δ CRPS +0,0172 : non admis |
+| Substitution entre blocs | mélange de logits emboîtés, 58 sondages, plis par élection | tau supplémentaire nul dans tous les plis ; arrêt au pilote annoncé, pas de score électoral |
+| Transitions indécis/abstention | inventaire et estimateur pondéré testé | table disponible : 1 830 souvenirs post-électoraux, zéro intention ; aucune transition réelle estimable |
+
+96 lignes de scores, référence contrôlée inchangée (409 fichiers), reprise sans recalcul.
+Les contrôles GLS isolent la dépendance des vagues du changement d'agrégateur. Les petits
+écarts du bootstrap sont conditionnels à gamma, nu et aux biais fixés, sur une seule graine.
+Les difficultés historiques de support des candidats ne sont pas corrigées par ces variantes.
+771 tests réussis après intégration de main, un ignoré et quatre avertissements
+préexistants ; projection inchangée.

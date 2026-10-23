@@ -17,6 +17,29 @@ jamais un instantané. `--verify` contrôle les sommes, restaure dans un dossier
 (`rsync`) reste manuelle. Contenu, tailles, contrôle de restauration et options de
 destination : [`docs/13-validation-prospective.md`](../docs/13-validation-prospective.md) § 8.
 
+## `run_structure_study.sh` : cinq expériences de structure
+
+```sh
+bash scripts/run_structure_study.sh
+```
+
+Protocole, résultats et limites : [expériences de structure](../docs/13-experiences-structure.md).
+Requiert l'environnement `back` installé et le gel complet du 22 octobre. Le gel peut
+être indiqué par `VVS_STRUCTURE_REFERENCE`. Sortie par défaut :
+`runs/2026-10-23-structure-v2/`, ou premier argument. Trois processus CPU au maximum
+(`VVS_STRUCTURE_JOBS`), journaux par étape, verrou exclusif, reprise avec vérification
+des empreintes. Sources ou sorties différentes : échec explicite, nouveau dossier requis.
+
+Douze cas avec mélange 50/50, 32 calibrations pondérées par cas, moyennes GLS avec
+trois hypothèses de recouvrement des sondages continus et témoin éclairci. Le pilote
+de substitution et l'audit des panels sont séparés. Aucune modification du live.
+
+Depuis `back/`, le bilan compact et sa figure :
+
+```sh
+uv run --no-sync python studies/structure_report.py --run ../runs/2026-10-23-structure-v2 --out ../docs/results/structure-2026-10-23
+```
+
 ## `run_historical_scenarios.sh` : reconstruction historique expérimentale
 
 ```sh
