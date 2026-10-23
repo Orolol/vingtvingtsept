@@ -365,3 +365,14 @@ préexistants ; projection inchangée.
 | Image du RN contre décalage commun des reports | signe attendu mais relation portée par 2002, prédiction 2022 fausse de 3,8 ; n = 3 | affichage seulement |
 
 Compteur : vingt-deux pistes testées, une admise.
+
+## 2026-10-23 — lot 1 : registre historique des candidatures (préalable, pas un test)
+
+`data/registry/candidacies_{2012,2017,2022}.yaml`, `vvs.registry.candidacies.state_at`,
+audit `runs/2026-10-23-candidacies/`. Couverture des voix finales par les candidats
+officiels présents dans le registre à chaque date : 100 % (99,98 % en 2022, arrondi), contre
+71,5 % dans les configurations sondées des 30 jours en 2017 à 180 j (99,75 à 100 % ailleurs).
+Part portée par les seuls « déclarés » à 180 j : 64 % (2012), 76 % (2017), 65 % (2022) ;
+ensembles actifs larges (51 à 85 personnes à 180 j) faute de renoncements sourcés. Lacunes
+publiées sans arbitrage par le résultat. Le lot 2 (scénarios par décision de candidature)
+part de `state_at` et des critères par étape du 2026-10-23.
