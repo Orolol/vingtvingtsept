@@ -184,7 +184,8 @@ appariables et leurs dates de disponibilité ; aucun accès ni donnée n'est inv
 - Les résultats portent sur le niveau chronologique : les variantes échouent déjà à
   ce niveau nécessaire. Aucun gain rétrospectif supplémentaire n'est recherché pour
   contourner cet échec ; aucune option n'a satisfait la règle d'admission à deux niveaux.
-- Tests : 750 réussis, un test ignoré (dépendance front absente du worktree), quatre
+- Tests après intégration des ajouts récents de main : 771 réussis, un test ignoré
+  (dépendance front absente du worktree), quatre
   avertissements préexistants. Contrôles Ruff, syntaxe shell et reprise vérifiée.
 - Deux défauts de préparation ont été corrigés : appel à un vérificateur absent du
   code ancien, puis types entier/décimal à l'assemblage des CSV. L'inventaire a également

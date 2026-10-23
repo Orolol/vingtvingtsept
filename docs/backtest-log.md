@@ -354,4 +354,5 @@ référence immuable, bilan dans [docs/13](13-experiences-structure.md).
 Les contrôles GLS isolent la dépendance des vagues du changement d'agrégateur. Les petits
 écarts du bootstrap sont conditionnels à gamma, nu et aux biais fixés, sur une seule graine.
 Les difficultés historiques de support des candidats ne sont pas corrigées par ces variantes.
-750 tests réussis, un ignoré et quatre avertissements préexistants ; projection inchangée.
+771 tests réussis après intégration de main, un ignoré et quatre avertissements
+préexistants ; projection inchangée.
