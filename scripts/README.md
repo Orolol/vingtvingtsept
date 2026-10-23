@@ -23,7 +23,7 @@ destination : [`docs/13-validation-prospective.md`](../docs/13-validation-prospe
 bash scripts/run_structure_study.sh
 ```
 
-Protocole, résultats et limites : [expériences de structure](../docs/13-experiences-structure.md).
+Protocole, résultats et limites : [expériences de structure](../docs/14-experiences-structure.md).
 Requiert l'environnement `back` installé et le gel complet du 22 octobre. Le gel peut
 être indiqué par `VVS_STRUCTURE_REFERENCE`. Sortie par défaut :
 `runs/2026-10-23-structure-v2/`, ou premier argument. Trois processus CPU au maximum
