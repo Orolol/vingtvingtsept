@@ -52,10 +52,14 @@ y_i · n_i ~ Multinomial(n_i, π_i)       avec n_i = taille d'échantillon effec
 
 ### Prior structurel au début de la série
 
-À la première date observée, `β_{b}` a pour prior la part du bloc aux dernières élections
-nationales (présidentielle précédente, européennes et législatives intermédiaires, pondérées
-par récence), avec une variance large. Ce prior pèse peu dès que les sondages s'accumulent ;
-c'est l'équivalent des « fundamentals » de Silver, avec un rôle volontairement modeste.
+À la première date observée, `β_{b}` a pour prior la part du bloc à la présidentielle
+précédente (c'est ce que fait le code, `prior_bloc_shares` ; la version pondérée sur les
+européennes et législatives intermédiaires n'a pas été implémentée), écart-type 1 en logit,
+78 semaines avant le vote. Mesuré le 2026-10-23 : ce prior n'a pratiquement aucun levier,
+un décalage de 0,3 logit (environ 4 points) déplace la part a posteriori de 0,013 point au
+plus, même en 2007 à 180 jours avec quatre sondages. Il n'est donc pas une porte d'entrée
+pour une variable externe ; c'est l'équivalent des « fundamentals » de Silver, réduit à
+presque rien par les sondages.
 
 ## 2. Modèle d'erreur et projection au jour du vote
 

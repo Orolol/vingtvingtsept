@@ -56,7 +56,7 @@ d'intentions appariables dans les microdonnées disponibles.
 ## Pistes étudiées
 
 Règle du projet : aucune source n'entre dans la prévision sans gain au backtest, en
-laissant l'élection évaluée de côté. Quinze signaux ont été testés ; un seul a été admis.
+laissant l'élection évaluée de côté. Dix-sept signaux et cinq corrections de structure ont été testés ; un seul a été admis.
 Les autres restent des options désactivées dans le code et, pour plusieurs, des volets
 explicatifs du site marqués « n'entre pas dans la prévision ».
 
@@ -77,6 +77,8 @@ explicatifs du site marqués « n'entre pas dans la prévision ».
 | 13 | Anticipations « qui va gagner ? » (110 mesures) | le plus cité gagne toujours, mais trop sous-confiant pour servir de probabilité |
 | 14 | Abstention différentielle (certains − inscrits) | stable, mais lien avec l'erreur limité à 2022 et de signe inverse |
 | 15 | Reports de voix par inférence écologique sur les communes (données Cagé-Piketty) | biais d'agrégation ; la sociologie des communes ne prédit pas l'érosion du front républicain |
+| 16 | Préoccupations et attitudes (Eurobaromètre, CRÉDOC, CNCDH, Verian, Cevipof) dans le prior de bloc | aucun effet, et le prior n'a pas de levier face aux sondages |
+| 17 | Image du RN (Verian, 1983-2026) contre l'érosion du front républicain | bon signe mais une relation portée par 2002 seul ; affichée, pas utilisée |
 | ✓ | **Calibration de l'erreur finale sur dix scrutins** (présidentielles + européennes + législatives) | **admise** au protocole rétrospectif : log-score et CRPS meilleurs à 90, 30 et 7 jours ; confirmation chronologique à faire |
 
 Ces verdicts relèvent du protocole rétrospectif. Depuis la consolidation, toute admission

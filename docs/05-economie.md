@@ -107,3 +107,23 @@ Décisions :
 
 Le volet « Économie » du site garde les séries et les corrélations avec la mention
 « n'entre pas dans la prévision ».
+
+## Attitudes et préoccupations (2026-10-23, `runs/2026-10-23-attitudes-prior/report.md`)
+
+Séries longues ingérées (`data/curated/attitudes.parquet`, 85 séries : image du FN/RN
+Verian 1983-2026, confiance Cevipof 2009-2026, tolérance CNCDH 1990-2025, Eurobaromètre
+« problèmes les plus importants » 2003-2025, CRÉDOC 1991-2024, DREES 2000-2025). Test du
+seul point d'entrée possible, le prior structurel de bloc à 180 jours, en leave-one-election-
+out sur 5 élections (4 pour l'Eurobaromètre) : 0 test sur 27 tient, les saillances
+Eurobaromètre dégradent la prévision hors échantillon, les quelques pentes proches du seuil
+ont le signe contraire à l'hypothèse. Dynamique semestrielle : 0 paire sur 6. Et surtout le
+prior n'a pas de levier (voir `04-modele.md`). **Question close** : aucune série annuelle ou
+semestrielle n'entrera dans la prévision du premier tour. Les séries restent pour le volet
+« Économie et opinion » du site.
+
+Image du RN et front républicain (`runs/2026-10-23-rn-image/report.md`) : u observé −1,94
+(2002), −0,29 (2017), +0,06 (2022) ; la relation avec « danger pour la démocratie » a le bon
+signe mais tient par 2002 seul et aurait prédit +3,85 pour 2022 ; à afficher sur la page
+second tour comme sensibilité, pas à centrer. Réglages défendables si on voulait bouger le
+centre : pente locale 2017 → 2022 (δ ≈ +0,3) ou persistance de 2022 (δ ≈ +0,15), à tester
+comme réglages injectables.

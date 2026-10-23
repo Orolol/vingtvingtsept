@@ -356,3 +356,12 @@ Les contrôles GLS isolent la dépendance des vagues du changement d'agrégateur
 Les difficultés historiques de support des candidats ne sont pas corrigées par ces variantes.
 771 tests réussis après intégration de main, un ignoré et quatre avertissements
 préexistants ; projection inchangée.
+
+## 2026-10-23 — attitudes, préoccupations, image du RN : rien n'entre
+
+| Piste | Résultat | Verdict |
+|---|---|---|
+| Préoccupations et attitudes dans le prior de bloc (15 séries) | 0 test sur 27 au niveau, 0 sur 6 en dynamique ; levier du prior ≤ 0,013 point | non candidate ; porte fermée |
+| Image du RN contre décalage commun des reports | signe attendu mais relation portée par 2002, prédiction 2022 fausse de 3,8 ; n = 3 | affichage seulement |
+
+Compteur : vingt-deux pistes testées, une admise.
