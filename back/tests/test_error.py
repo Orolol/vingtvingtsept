@@ -186,7 +186,8 @@ def _toy_with_extra(weight: float, seed: int = 0):
 
 def test_extra_items_weighted_and_never_excluded():
     true, items, extra = _toy_with_extra(1.0)
-    kw = dict(elections=range(20), items=items, nu=math.inf, gamma=true.gamma, use_bias=False)
+    kw = {"elections": range(20), "items": items, "nu": math.inf, "gamma": true.gamma,
+          "use_bias": False}
     base = er.ErrorModel.fit(**kw)
     sc = {}
     for w in (0.0, 0.5, 1.0):
@@ -211,7 +212,8 @@ def test_extra_items_weighted_and_never_excluded():
 
 def test_with_lists_false_is_current_behaviour_and_true_adds_list_finals():
     true, items, _ = _toy_with_extra(1.0)
-    kw = dict(elections=range(20), items=items, nu=math.inf, gamma=true.gamma, use_bias=False)
+    kw = {"elections": range(20), "items": items, "nu": math.inf, "gamma": true.gamma,
+          "use_bias": False}
     a = er.ErrorModel.fit(**kw)
     b = er.ErrorModel.fit(**kw, with_lists=False, extra_items=None,
                           far_right_bias_since_2017=False)
@@ -252,8 +254,8 @@ def test_far_right_bias_since_2017_estimate_and_shift():
 
 def test_far_right_bias_applied_only_to_elections_since_2017():
     items = [_fr_final(e, x) for e, x in ((2007, 0.2), (2012, 0.15), (2017, -0.1), (2022, -0.12))]
-    kw = dict(elections=(2007, 2012, 2017, 2022), items=items, nu=math.inf, gamma=0.4,
-              use_bias=False, far_right_bias_since_2017=True)
+    kw = {"elections": (2007, 2012, 2017, 2022), "items": items, "nu": math.inf, "gamma": 0.4,
+          "use_bias": False, "far_right_bias_since_2017": True}
     m22 = er.ErrorModel.fit(**kw, exclude=[2022])
     d = m22.info["far_right_bias_since_2017"]
     assert d["applied"] and "2022" not in d["errors"] and "2017" in d["errors"]

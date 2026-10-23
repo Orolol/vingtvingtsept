@@ -1,5 +1,22 @@
 # scripts/
 
+## `archive_runs.sh` : archive durable des runs hors du dépôt
+
+```sh
+scripts/archive_runs.sh /home/orosius/vingtvingtsept-archives            # nouvel instantané
+scripts/archive_runs.sh --verify /home/orosius/vingtvingtsept-archives/<AAAA-MM-JJTHHMMSS>
+```
+
+Sans liste, archive le gel `runs/2026-10-22-consolidation/`, `runs/*-fit-2027*`,
+`runs/*-simulate*` et `runs/prospective/` : une archive `tar.zst` par dossier (`tar.gz` si
+`zstd` manque), les empreintes de chaque fichier, `index.tsv`, `meta.txt` et `SHA256SUMS`.
+Refuse de s'exécuter sans destination ou avec une destination dans le dépôt ; n'écrase
+jamais un instantané. `--verify` contrôle les sommes, restaure dans un dossier temporaire
+(ou celui donné en second argument) et compare chaque fichier. Destination actuelle :
+`/home/orosius/vingtvingtsept-archives/` (même disque) ; la copie vers un support externe
+(`rsync`) reste manuelle. Contenu, tailles, contrôle de restauration et options de
+destination : [`docs/13-validation-prospective.md`](../docs/13-validation-prospective.md) § 8.
+
 ## `run_structure_study.sh` : cinq expériences de structure
 
 ```sh
@@ -103,6 +120,7 @@ Enchaîne, depuis la racine du dépôt :
 | export | | `uv run vvs export --run runs/<aujourd'hui>-simulate-subst` (après copie de l'export précédent) |
 | site | `front/` | `npm run validate-data`, `npm run build` |
 | résumé | `back/` | `uv run vvs live-summary --previous <copie> --current front/static/data` |
+| archive | | `uv run vvs archive-forecast --asof <aujourd'hui> --run <run> --name stable --scheduled-only --skip-existing` |
 
 ```sh
 scripts/run_live.sh            # run complet
@@ -137,6 +155,17 @@ Variables d'environnement :
 | `VVS_ASOF` | aujourd'hui | date de prévision `AAAA-MM-JJ` |
 | `VVS_DRAWS` | celui de `vvs simulate` (40 000) | tirages Monte-Carlo |
 | `VVS_ENV_FILE` | `~/.config/vingtvingtsept/env` | fichier d'environnement lu s'il existe |
+| `VVS_ARCHIVE` | `1` | archive prospective aux dates du calendrier ; `0` pour sauter |
+| `VVS_ARCHIVE_NAME` | `stable` avec les choix publiés | nom de l'archive ; obligatoire pour archiver une variante |
+
+**Archive prospective** ([`docs/13`](../docs/13-validation-prospective.md)) : aux dix-neuf
+dates du calendrier (premier du mois jusqu'en février 2027, chaque semaine ensuite, horizons
+J-90, J-30, J-7 et veille de chaque tour), la projection publiée est copiée dans
+`data/prospective/<date>/stable/` avec les empreintes du run, du code, des données et des
+hypothèses ; le run est copié dans `runs/prospective/<date>/stable/`. Hors calendrier,
+l'étape ne fait rien. Une archive existante n'est jamais réécrite : un second run le même
+jour la garde telle quelle. Avant avril 2027, décider du silence électoral (veille et jour
+du vote) : voir docs/13 § 6.
 
 ## Planification (à installer par Gaétan)
 
@@ -216,10 +245,14 @@ git push
 
 Le dépôt distant et le site Pages sont en place (URL dans le README).
 
+Les PR et les pushs sur `main` passent par `.github/workflows/ci.yml` : tests rapides sur CPU,
+`ruff`, `vvs check-integrity` (verrou de la référence, manifest, historique et archives
+prospectives jamais réécrits), puis `validate-data` et `check` du front. Détails : docs/13 § 7.
+
 ## Publication automatique
 
-À la fin d'un run, le script commite `front/static/data` et `data/curated` (seulement si quelque
-chose a changé), puis pousse sur `origin/main`, ce qui déclenche le workflow GitHub Pages. Il ne
+À la fin d'un run, le script commite `front/static/data`, `data/curated` et les nouvelles archives
+de `data/prospective` (seulement si quelque chose a changé), puis pousse sur `origin/main`, ce qui déclenche le workflow GitHub Pages. Il ne
 publie que depuis la branche `main` et seulement si un remote `origin` existe. `VVS_PUBLISH=0`
 désactive cette étape (le site construit reste dans `front/build`). Le push passe par la clé SSH
 de la machine : pour cron, elle doit être utilisable sans agent interactif.

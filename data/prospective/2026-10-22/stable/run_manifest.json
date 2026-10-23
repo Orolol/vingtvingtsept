@@ -1,0 +1,482 @@
+{
+  "kind": "simulate",
+  "election": 2027,
+  "asof": "2026-10-22",
+  "first_round": "2027-04-18",
+  "second_round": "2027-05-02",
+  "horizon_days": 178.0,
+  "created_at": "2026-10-22T16:32:53+00:00",
+  "commit": "137abfa",
+  "versions": {
+    "vvs": "0.0.1",
+    "numpy": "2.5.4",
+    "polars": "2.0.0",
+    "jax": "0.12.0",
+    "numpyro": "0.22.0",
+    "scipy": "1.18.1"
+  },
+  "n_draws": 40000,
+  "seed": 0,
+  "fit": {
+    "dir": "/home/orosius/workspace/vingtvingtsept/runs/2026-10-22-fit-2027-subst",
+    "n_posterior_draws": 4000,
+    "n_polls": 47,
+    "n_hypotheses": 210,
+    "first_poll_date": "2025-10-29",
+    "diagnostics": {
+      "r_hat_max": 1.0048072338104248,
+      "ess_min": 792.4538670971247,
+      "divergences": 0,
+      "derived": {
+        "share_asof": {
+          "r_hat_max": 1.0001164655996042,
+          "ess_min": 5118.9841605628235
+        },
+        "share_vote": {
+          "r_hat_max": 1.0002174407247695,
+          "ess_min": 5744.089814905837
+        },
+        "share_observed_weeks": {
+          "r_hat_max": 1.0010283893539618,
+          "ess_min": 4413.503195393717
+        }
+      }
+    },
+    "posterior": {
+      "sigma_beta": {
+        "median": 0.01846189983189106,
+        "q05": 0.007927440106868744,
+        "q95": 0.029298825189471245
+      },
+      "sigma_delta": {
+        "median": 0.03145766258239746,
+        "q05": 0.022220365703105927,
+        "q95": 0.04335140809416771
+      },
+      "sigma_house_bloc": {
+        "median": 0.01656724512577057,
+        "q05": 0.0018140574684366584,
+        "q95": 0.0412631556391716
+      },
+      "sigma_house_cand": {
+        "median": 0.037696417421102524,
+        "q05": 0.005146514158695936,
+        "q95": 0.06510435789823532
+      },
+      "design": {
+        "median": 0.5364553928375244,
+        "q05": 0.430462509393692,
+        "q95": 0.6787203550338745
+      },
+      "n_max": {
+        "median": 1605.4241943359375,
+        "q05": 1104.7786865234375,
+        "q95": 2398.07861328125
+      },
+      "lam": {
+        "far_right": {
+          "median": 0.5305455923080444,
+          "q05": 0.18528980016708374,
+          "q95": 0.8529810905456543
+        },
+        "right": {
+          "median": 0.5554993748664856,
+          "q05": 0.3676345646381378,
+          "q95": 0.7462228536605835
+        },
+        "centre": {
+          "median": 0.502006471157074,
+          "q05": 0.4299318492412567,
+          "q95": 0.5770513415336609
+        },
+        "left": {
+          "median": 0.49200236797332764,
+          "q05": 0.3844728469848633,
+          "q95": 0.6051673293113708
+        },
+        "far_left": {
+          "median": 0.6700655817985535,
+          "q05": 0.3842330276966095,
+          "q95": 0.8949557542800903
+        },
+        "other": {
+          "median": 0.6053802967071533,
+          "q05": 0.335686594247818,
+          "q95": 0.8776406049728394
+        }
+      }
+    },
+    "commit": "137abfa"
+  },
+  "scenarios": {
+    "as_of": "2026-10-20",
+    "sha256": "6d7592e317b93d56",
+    "mode": "marginal",
+    "n_configurations": 168,
+    "impossible_mass": 0.019999999999999993,
+    "n_top_configurations": 39,
+    "top_mass": 0.9521084489795919,
+    "mass_without_draws": 0.00011916734693877551
+  },
+  "universe": [
+    {
+      "candidate_id": "le_pen_marine",
+      "bloc": "far_right",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "bardella_jordan",
+      "bloc": "far_right",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "philippe_edouard",
+      "bloc": "centre",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "attal_gabriel",
+      "bloc": "centre",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "placeholder_centre",
+      "bloc": "centre",
+      "source": "bloc",
+      "prior_share": null,
+      "prior_basis": "β du bloc centre"
+    },
+    {
+      "candidate_id": "glucksmann_raphael",
+      "bloc": "left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "tondelier_marine",
+      "bloc": "left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "retailleau_bruno",
+      "bloc": "right",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "melenchon_jean_luc",
+      "bloc": "far_left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "bompard_manuel",
+      "bloc": "far_left",
+      "source": "bloc",
+      "prior_share": null,
+      "prior_basis": "β du bloc far_left"
+    },
+    {
+      "candidate_id": "zemmour_eric",
+      "bloc": "far_right",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "knafo_sarah",
+      "bloc": "far_right",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "dupont_aignan_nicolas",
+      "bloc": "far_right",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "philippot_florian",
+      "bloc": "far_right",
+      "source": "prior",
+      "prior_share": 1.0,
+      "prior_basis": "valeur par défaut"
+    },
+    {
+      "candidate_id": "de_villiers_philippe",
+      "bloc": "far_right",
+      "source": "prior",
+      "prior_share": 4.5,
+      "prior_basis": "médiane de 1 hypothèse(s) de la grille"
+    },
+    {
+      "candidate_id": "bertrand_xavier",
+      "bloc": "right",
+      "source": "prior",
+      "prior_share": 3.25,
+      "prior_basis": "médiane de 2 hypothèse(s) de la grille"
+    },
+    {
+      "candidate_id": "lisnard_david",
+      "bloc": "right",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "platret_gilles",
+      "bloc": "right",
+      "source": "prior",
+      "prior_share": 1.0,
+      "prior_basis": "valeur par défaut"
+    },
+    {
+      "candidate_id": "becht_olivier",
+      "bloc": "centre",
+      "source": "prior",
+      "prior_share": 1.0,
+      "prior_basis": "valeur par défaut"
+    },
+    {
+      "candidate_id": "ruffin_francois",
+      "bloc": "far_left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "cazeneuve_bernard",
+      "bloc": "left",
+      "source": "prior",
+      "prior_share": 1.0,
+      "prior_basis": "valeur par défaut"
+    },
+    {
+      "candidate_id": "hollande_francois",
+      "bloc": "left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "bouamrane_karim",
+      "bloc": "left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "batho_delphine",
+      "bloc": "left",
+      "source": "prior",
+      "prior_share": 1.0,
+      "prior_basis": "valeur par défaut"
+    },
+    {
+      "candidate_id": "roussel_fabien",
+      "bloc": "far_left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "arthaud_nathalie",
+      "bloc": "far_left",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "kazib_anasse",
+      "bloc": "far_left",
+      "source": "prior",
+      "prior_share": 1.0,
+      "prior_basis": "valeur par défaut"
+    },
+    {
+      "candidate_id": "labib_selma",
+      "bloc": "far_left",
+      "source": "prior",
+      "prior_share": 1.0,
+      "prior_basis": "valeur par défaut"
+    },
+    {
+      "candidate_id": "poutou_philippe",
+      "bloc": "far_left",
+      "source": "prior",
+      "prior_share": 0.77,
+      "prior_basis": "résultat 2022"
+    },
+    {
+      "candidate_id": "lassalle_jean",
+      "bloc": "other",
+      "source": "prior",
+      "prior_share": 3.13,
+      "prior_basis": "résultat 2022"
+    },
+    {
+      "candidate_id": "asselineau_francois",
+      "bloc": "other",
+      "source": "prior",
+      "prior_share": 0.92,
+      "prior_basis": "résultat 2017"
+    },
+    {
+      "candidate_id": "de_villepin_dominique",
+      "bloc": "other",
+      "source": "posterior",
+      "prior_share": null,
+      "prior_basis": null
+    },
+    {
+      "candidate_id": "polony_natacha",
+      "bloc": "other",
+      "source": "prior",
+      "prior_share": 1.25,
+      "prior_basis": "médiane de 2 hypothèse(s) de la grille"
+    }
+  ],
+  "error_model": {
+    "sigma_bloc_final": 0.05155281676594125,
+    "sigma_cand_final": 0.12781071602436897,
+    "rho": 0.0018177332192738825,
+    "a_bloc": 0.053745125210442474,
+    "a_cand": 0.057070719894138755,
+    "gamma": 0.369985238137892,
+    "nu": 8.0,
+    "final_age": 7.852094474153295,
+    "bloc_weight": {
+      "far_right": 0.8134287263044927,
+      "right": 0.8964742023044909,
+      "centre": 1.0098244391941853,
+      "left": 1.2275379064566785,
+      "far_left": 1.0535744436578276,
+      "other": 1.03311340527298
+    },
+    "bias": {}
+  },
+  "error_model_nu_scores": {
+    "4.0": -68.45926262252189,
+    "8.0": -67.68434968248648,
+    "16.0": -68.10202596374768,
+    "inf": -71.73408101808305
+  },
+  "error_model_extra_elections": [
+    "euro2014",
+    "euro2019",
+    "euro2024",
+    "leg2022",
+    "leg2024"
+  ],
+  "second_round_model": {
+    "sigma0": 1.35,
+    "sigma1": 1.65,
+    "sigma_house": 0.5,
+    "bias_far_right_calibrated": 2.965,
+    "rn_bias_scale": 1.0,
+    "bias_far_right_applied": 2.965,
+    "rn_bias_full_days": 30,
+    "rn_bias_zero_days": 180,
+    "bias_mode": "curve",
+    "bias_curve_calibrated": [
+      [
+        7.0,
+        2.966
+      ],
+      [
+        22.0,
+        2.929
+      ],
+      [
+        45.0,
+        1.644
+      ],
+      [
+        105.0,
+        1.359
+      ],
+      [
+        195.0,
+        1.259
+      ]
+    ],
+    "bias_curve_applied": [
+      [
+        7.0,
+        2.966
+      ],
+      [
+        22.0,
+        2.929
+      ],
+      [
+        45.0,
+        1.644
+      ],
+      [
+        105.0,
+        1.359
+      ],
+      [
+        195.0,
+        1.259
+      ]
+    ],
+    "couple_far_right": false,
+    "coupling": null,
+    "second_round_turnout": false,
+    "turnout2": null,
+    "turnout2_draws": {
+      "q05": 0.6168009716518281,
+      "q25": 0.6896760001049834,
+      "q50": 0.7357542435897761,
+      "q75": 0.7791129429785673,
+      "q95": 0.8387771043096414
+    },
+    "calibrated_on": [
+      2002,
+      2007,
+      2012,
+      2017,
+      2022
+    ],
+    "n_pairs": 126,
+    "n_cells": 753
+  },
+  "turnout": {
+    "elections": {
+      "2002": 0.6918,
+      "2007": 0.8257,
+      "2012": 0.7796,
+      "2017": 0.7577,
+      "2022": 0.7207
+    },
+    "logit_mean": 1.1430422684806567,
+    "logit_sd": 0.2890704951993434
+  },
+  "settings": {
+    "min_hypotheses": 3,
+    "sparse_sd": 0.5,
+    "sparse_default_share": 1.0,
+    "config_mass": 0.95,
+    "share_rule": "nested_shares"
+  },
+  "duration_s": 24.9,
+  "polls_hash": "83e3f5616881b5f5",
+  "fit_reused": false
+}
