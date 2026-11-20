@@ -290,6 +290,10 @@ def archive_forecast(
             return {"status": "not_scheduled", "asof": published.isoformat()}
         nxt = next((s.date.isoformat() for s in slots if s.date > published), "aucune")
         raise ArchiveError(f"{published} n'est pas une date d'archivage (suivante : {nxt})")
+    # `today` injectable (tests, rejeu) ; à défaut VVS_TODAY, puis l'horloge. La date de création
+    # enregistrée est cette même date, pour que le contrôle de délai reste cohérent.
+    if today is None and os.environ.get("VVS_TODAY"):
+        today = dt.date.fromisoformat(os.environ["VVS_TODAY"])
     today = today or dt.date.today()
     if today > slot.date + dt.timedelta(days=slot.grace_days) or today >= slot.deadline:
         raise ArchiveError(f"trop tard pour archiver le {slot.date} (aujourd'hui {today})")
@@ -299,6 +303,7 @@ def archive_forecast(
               "asof": published.isoformat()}
     now = dt.datetime.now(dt.UTC)
     record = build_record(data, run, root, name, slot, now)
+    record["created_on"] = today.isoformat()
     if target.exists():
         old = json.loads((target / "archive.json").read_text())
         staged = {"asof": record["asof"], "data": record["data"], "run": record["run"]}

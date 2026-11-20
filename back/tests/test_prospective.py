@@ -197,6 +197,7 @@ def test_cli_exit_codes(tmp_path, monkeypatch):
     _archive(root)
     _write_json(root / "front/static/data/summary.json", {"asof": ASOF, "mixture": {"p_win": 0.1}})
     monkeypatch.setattr(paths, "ROOT", root)
+    monkeypatch.setenv("VVS_TODAY", ASOF)  # l'horloge réelle dépasserait le délai
     runner = CliRunner()
     run = str(root / f"runs/{ASOF}-simulate-subst")
     r = runner.invoke(app, ["archive-forecast", "--run", run])
