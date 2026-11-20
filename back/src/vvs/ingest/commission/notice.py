@@ -369,7 +369,9 @@ class Block:
 
 
 # Pieds de page qui finissent par un numéro et passeraient pour des lignes de données.
-_FOOTER = re.compile(r"^\s*(?:p+o+u+r+\b|©|notice technique|retrouvez)", re.IGNORECASE)
+_FOOTER = re.compile(
+    r"^\s*(?:p+o+u+r+\b|©|notice technique|retrouvez|ifop[- ]fiducial pour\b)", re.IGNORECASE
+)
 
 
 def _only_values(line: str) -> bool:

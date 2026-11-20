@@ -137,6 +137,7 @@ candidates:
     polony: polony_natacha
     poutou: poutou_philippe
     retailleau: retailleau_bruno
+    riner: riner_teddy
     rousseau: rousseau_sandrine
     roussel: roussel_fabien
     royal: royal_segolene
@@ -177,6 +178,9 @@ candidates:
     2027:
       marine le pen: le_pen_marine
       le pen: le_pen_marine
+      # 2027 : « Lagarde » désigne Christine Lagarde (testée par Cluster17, novembre 2026)
+      christine lagarde: lagarde_christine
+      lagarde: lagarde_christine
 
 pollsters:
   atlas politico: atlasintel

@@ -779,6 +779,15 @@ candidates:
     notes: >-
       Animateur de télévision testé par quelques instituts (2025) sans candidature ni parti :
       nuance div.
+  riner_teddy:
+    name: Teddy Riner
+    first_name: Teddy
+    last_name: Riner
+    parties:
+      - {party: div, from: 2026, to: null}
+    notes: >-
+      Judoka testé par OpinionWay, Elabe et Ifop (novembre 2026) comme personnalité de la
+      société civile ; aucune candidature ni parti : nuance div.
   hulot_nicolas:
     name: Nicolas Hulot
     first_name: Nicolas
@@ -808,6 +817,15 @@ candidates:
       - {party: ump, from: null, to: 2015}
       - {party: lr, from: 2015, to: null}
     notes: Candidat au congrès LR de 2021 (sondages 2022).
+  lagarde_christine:
+    name: Christine Lagarde
+    first_name: Christine
+    last_name: Lagarde
+    parties:
+      - {party: dvc, from: 2026, to: null}
+    notes: >-
+      Présidente de la BCE, ancienne ministre UMP, testée comme candidate du bloc central par
+      Cluster17 (novembre 2026) ; aucune candidature : nuance dvc, à revoir si elle se déclare.
   lagarde_jean_christophe:
     name: Jean-Christophe Lagarde
     first_name: Jean-Christophe

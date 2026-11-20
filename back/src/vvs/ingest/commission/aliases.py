@@ -153,6 +153,8 @@ CANDIDATES: dict[str, tuple[str, ...]] = {
     "hanouna_cyril": ("Cyril Hanouna",),
     "bonnal_sebastien": ("Sébastien Bonnal",),  # candidat déclaré, sondage OpinionWay 09/2026
     "leclerc_michel_edouard": ("Michel-Édouard Leclerc",),
+    "lagarde_christine": ("Christine Lagarde",),  # testée par Cluster17, 11/2026
+    "riner_teddy": ("Teddy Riner",),  # testé par OpinionWay, Elabe, Ifop, 11/2026
 }
 
 
