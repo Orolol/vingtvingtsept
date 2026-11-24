@@ -166,7 +166,7 @@
 			</div>
 		</div>
 
-		<h3 class="mt-6 mb-2 font-medium">Reports de voix estimés</h3>
+		<h3 class="mt-6 mb-2 font-medium">Reports de voix supposés par le modèle</h3>
 		{#if transfers.length}
 			<div class="overflow-x-auto rounded-md border border-line bg-surface">
 				<table class="w-full text-sm">
@@ -197,7 +197,10 @@
 				</table>
 			</div>
 			<p class="mt-1 text-xs text-muted">
-				En % de l'électorat de premier tour du candidat : médiane (intervalle à 90 %).
+				En % de l'électorat de premier tour du candidat : médiane (intervalle à 90 %). Ce sont
+				surtout des hypothèses par famille politique (les candidats d'une même famille ont les
+				mêmes reports), que les sondages de duel déplacent peu ; elles peuvent s'écarter des
+				reports publiés par les instituts.
 			</p>
 		{:else}
 			<p class="text-sm text-muted">Reports non exportés pour ce duel (probabilité trop faible).</p>
