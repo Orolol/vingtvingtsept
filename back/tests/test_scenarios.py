@@ -99,27 +99,24 @@ def _load(tmp_path, data):
 def test_real_file_and_marginal_enumeration(real):
     assert real.as_of == real.revisions[-1].date
     e = enumerate_configurations(real, small="marginal")
-    # produit des dimensions moins les combinaisons rally × attal_only exclues
+    # aucune combinaison impossible depuis la révision du 2026-11-24 : produit des dimensions
+    assert not any(c.impossible for c in real.constraints)
     n_states = [len(d.states) for d in real.dimensions]
-    excluded = 1
-    for d in real.dimensions:
-        if d.id not in ("lr", "centre"):
-            excluded *= len(d.states)
-    assert len(e) == math.prod(n_states) - excluded
-    assert e.impossible_mass == pytest.approx(
-        real.dimension("lr").state("rally").probability
-        * real.dimension("centre").state("attal_only").probability
-    )
+    assert len(e) == math.prod(n_states)
+    assert e.impossible_mass == 0
     assert sum(c.probability for c in e) == pytest.approx(1)
     presence = e.presence()
-    # la consolidation à gauche exclut Ruffin : présence = P(fragmented) × p(Ruffin)
+    # la consolidation à gauche exclut Ruffin : présence = P(non consolidée) × p(Ruffin)
+    left = real.dimension("left")
     assert presence["ruffin_francois"] == pytest.approx(
-        real.dimension("left").state("fragmented").probability
-        * real.small("ruffin_francois").probability
+        (1 - left.state("consolidated").probability) * real.small("ruffin_francois").probability
     )
-    assert presence["retailleau_bruno"] == pytest.approx(
-        real.dimension("lr").state("retailleau").probability / (1 - e.impossible_mass)
-    )
+    # la présence d'un candidat de dimension est la masse des états qui le citent
+    rc = real.dimension("right_centre")
+    for cid in ("retailleau_bruno", "lisnard_david"):
+        assert presence[cid] == pytest.approx(
+            sum(s.probability for s in rc.states if cid in s.candidates)
+        )
 
 
 @pytest.mark.parametrize("mode", ["enumerate", "bloc", "marginal"])
