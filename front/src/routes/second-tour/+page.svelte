@@ -95,6 +95,13 @@
 		scores viennent des reports de voix estimés de chaque électorat de premier tour ; les sondages
 		de second tour hypothétiques, très incertains loin du vote, servent à les corriger.
 	</p>
+	<p class="mt-2 text-sm text-muted">
+		Ces probabilités dépendent aussi d'un choix de calcul que les élections passées ne permettent
+		pas de trancher nettement : la façon d'accorder les sondages de duel avec le premier tour
+		simulé. Au 24 novembre 2026, l'autre calcul donnait à Marine Le Pen 69 % de chances de
+		victoire au lieu de 73 %, surtout à cause du duel face à Édouard Philippe (44 % au lieu de
+		72 %). Les intervalles affichés ne tiennent pas compte de cette incertitude.
+	</p>
 </PageTitle>
 
 <section aria-labelledby="titre-matrice" class="mb-10">
