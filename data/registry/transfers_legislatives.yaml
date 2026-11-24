@@ -1,0 +1,1238 @@
+# Reports de voix publiés pour les législatives 2022 et 2024 et pour des duels présidentiels
+# hypothétiques RN contre Mélenchon (étude docs/results/2026-11-24-duel-rn-lfi.md).
+#
+# Fichier séparé de transfers.yaml, qu'il ne modifie pas, et que le modèle ne lit pas : il sert
+# au seul diagnostic de vvs.eval.duel_rn_lfi (`load_surveys`). Relevé le 2026-11-24.
+#
+# Même doctrine que transfers.yaml : chiffres recopiés tels quels, en % ; AUCUNE cellule n'est
+# complétée de mémoire ni déduite par différence à 100 ; une cellule non lue mot à mot dans la
+# source est absente. Champ `verified` : qui a lu le tableau dans la source.
+#
+# Différences de format avec transfers.yaml (les électorats ne sont pas des candidats du registre) :
+# - `election` : leg2022, leg2024 ou pres_hypothetical ; `duel` : type de duel (rn_vs_nfp,
+#   rn_vs_nfp_lfi, rn_vs_nfp_non_lfi, rn_vs_ensemble, rn_vs_lr_dvd, rn_vs_nupes,
+#   nupes_vs_ensemble, le_pen_vs_melenchon, bardella_vs_melenchon, rn_vs_nfp_by_label) ;
+# - `timing` : between_rounds (intention avant le second tour), second_round_day (déclaration le
+#   jour du vote), second_round_night_estimate (enquête + bureaux de vote, publiée le soir),
+#   hypothetical_presidential ;
+# - `rows[].from` : électorat de premier tour libellé par camp (nfp, nupes, ensemble, lr, lr_dvd,
+#   lr_udi_dvd, rn, rn_uxd, reconquete, dvg_hors_nupes, abstain…, ou vote présidentiel
+#   `<candidat>_2022` / intention `<candidat>_2027`, ou all_registered / proximite_<parti>) ;
+#   `rows[].to` : camps du second tour (rn, nfp, nfp_lfi, nupes, ensemble, lr, le_pen,
+#   melenchon, bardella) puis selon la source blank_or_abstain, non_expressed, abstain ;
+# - `base` : first_round_electorate (lignes sommant à 100 avec l'abstention),
+#   second_round_expressed (exprimés seulement), other (souhait de victoire en choix forcé,
+#   échantillon entier, etc. : voir base_note).
+#
+# Cherché sans succès (2026-11-24) : matrice Ipsos du second tour 2024 (jour du vote ou soir),
+# Ifop-Fiducial, Harris/Toluna, Cluster17, Odoxa et OpinionWay 2024 (pas de tableau de reports
+# publié), hypothèses Le Pen contre Mélenchon de 2017 et 2022 avec détail des reports.
+# Écarté : Fondation Jean-Jaurès du 30 août 2024 (Ipsos, Enquête électorale française vague 7 :
+# « 73 % des électeurs Ensemble ont choisi un candidat NFP » dans les duels NFP-RN), base non
+# précisée et incompatible avec « un gros tiers » d'abstention cité dans le même texte.
+
+transfers:
+- id: elabe_leg2024_entre2tours_rn_vs_nfp
+  election: leg2024
+  duel: rn_vs_nfp
+  timing: between_rounds
+  pollster: elabe
+  sponsor: BFMTV et La Tribune Dimanche
+  title: Les Français et les élections législatives — Reports de voix T1 / T2 – Configuration duel NFP-DVG
+    vs. RN
+  url: https://elabe.fr/wp-content/uploads/2024/07/05072024_elabe_bfmtv_la-tribune-dimanche_les-francais-et-les-elections-legislatives.pdf
+  published: '2024-07-05'
+  pages: diapositive 13 (synthèse chiffrée aussi en diapositive 6)
+  fieldwork_start: '2024-07-03'
+  fieldwork_end: '2024-07-04'
+  sample_size: 2005
+  mode: online
+  base: first_round_electorate
+  base_note: '« En % » ; lignes = électorat du 1er tour, colonnes = intention au 2nd tour, avec une colonne
+    « Abstention, vote blanc ou nul ». La fiche technique précise : « Pour les questions d''intention
+    de vote, seules les personnes inscrites sur les listes électorales et ayant l''intention d''aller
+    voter sont prises en compte » (s''applique a priori aux intentions, pas à cette matrice qui contient
+    l''abstention). La source ne dit pas si la question est posée à tous ou seulement dans les circonscriptions
+    concernées.'
+  columns_in_source:
+  - Nouveau Front Populaire (France Insoumise, Parti Socialiste, Europe Ecologie Les Verts, Parti Communiste)
+    / DVG
+  - Rassemblement National et alliés (candidats de droite soutenus par Eric Ciotti)
+  - Abstention, vote blanc ou nul
+  rows:
+  - from: nfp
+    from_label: Nouveau Front Populaire (La France Insoumise, Europe Ecologie Les Verts, Parti Socialiste,
+      Parti Communiste) / DVG
+    to:
+      nfp: 86
+      rn: 3
+      blank_or_abstain: 11
+  - from: ensemble
+    from_label: Ensemble (Renaissance – ex La République en Marche, MoDem, Horizons) / DVC
+    to:
+      nfp: 32
+      rn: 18
+      blank_or_abstain: 50
+  - from: rn_uxd
+    from_label: Rassemblement National et alliés (candidats de droite soutenus par Éric Ciotti)
+    to:
+      nfp: 1
+      rn: 92
+      blank_or_abstain: 7
+  notes: 'Pas de ligne LR-DVD dans ce tableau. Pas de distinction NFP-LFI / non-LFI. Texte de synthèse
+    p. 6 : « Dans les duels NFP-DVG / RN, 50% des électeurs d''Ensemble s''abstiendraient, 32% voteraient
+    pour le candidat NFP et 18% RN ».'
+  verified: 'relu dans la source par l''agent principal : diapositive 13 relue (pdftotext)'
+- id: elabe_leg2024_entre2tours_rn_vs_ensemble
+  election: leg2024
+  duel: rn_vs_ensemble
+  timing: between_rounds
+  pollster: elabe
+  sponsor: BFMTV et La Tribune Dimanche
+  title: Les Français et les élections législatives — Reports de voix T1 / T2 – Configuration duel ENS
+    vs. RN
+  url: https://elabe.fr/wp-content/uploads/2024/07/05072024_elabe_bfmtv_la-tribune-dimanche_les-francais-et-les-elections-legislatives.pdf
+  published: '2024-07-05'
+  pages: diapositive 14
+  fieldwork_start: '2024-07-03'
+  fieldwork_end: '2024-07-04'
+  sample_size: 2005
+  mode: online
+  base: first_round_electorate
+  base_note: Idem entrée précédente.
+  columns_in_source:
+  - Ensemble (Renaissance ex-La République en marche, le MoDem et Horizons)
+  - Rassemblement National et alliés (candidats de droite soutenus par Eric Ciotti)
+  - Abstention, vote blanc ou nul
+  rows:
+  - from: nfp
+    from_label: Nouveau Front Populaire (...) / DVG
+    to:
+      ensemble: 62
+      rn: 6
+      blank_or_abstain: 32
+  - from: ensemble
+    from_label: Ensemble (...) / DVC
+    to:
+      ensemble: 81
+      rn: 8
+      blank_or_abstain: 11
+  - from: rn_uxd
+    from_label: Rassemblement National et alliés (candidats de droite soutenus par Éric Ciotti)
+    to:
+      ensemble: 2
+      rn: 88
+      blank_or_abstain: 10
+  notes: Pas de ligne LR-DVD.
+  verified: 'relu dans la source par l''agent principal : diapositive 14 relue (pdftotext)'
+- id: elabe_leg2024_entre2tours_rn_vs_lr
+  election: leg2024
+  duel: rn_vs_lr_dvd
+  timing: between_rounds
+  pollster: elabe
+  sponsor: BFMTV et La Tribune Dimanche
+  title: Les Français et les élections législatives — Reports de voix T1 / T2 – Configuration duel LR-DVD
+    vs. RN
+  url: https://elabe.fr/wp-content/uploads/2024/07/05072024_elabe_bfmtv_la-tribune-dimanche_les-francais-et-les-elections-legislatives.pdf
+  published: '2024-07-05'
+  pages: diapositive 15
+  fieldwork_start: '2024-07-03'
+  fieldwork_end: '2024-07-04'
+  sample_size: 2005
+  mode: online
+  base: first_round_electorate
+  base_note: Idem.
+  columns_in_source:
+  - Les Républicains / DVD
+  - Le Rassemblement National et ses alliés (candidats de droite soutenus par Eric Ciotti)
+  - Abstention, vote blanc ou nul
+  rows:
+  - from: nfp
+    from_label: Nouveau Front Populaire (...) / DVG
+    to:
+      lr: 57
+      rn: 5
+      blank_or_abstain: 38
+  - from: lr_dvd
+    from_label: Les Républicains / DVD
+    to:
+      lr: 90
+      rn: 2
+      blank_or_abstain: 8
+  - from: rn_uxd
+    from_label: Rassemblement National et alliés (candidats de droite soutenus par Éric Ciotti)
+    to:
+      lr: 1
+      rn: 87
+      blank_or_abstain: 12
+  notes: 'Hors périmètre strict (pas de NFP finaliste) mais utile : report NFP vers une droite non-RN.
+    Le même PDF a aussi une triangulaire NFP-DVG / ENS / RN (diapositive 16).'
+  verified: 'relu dans la source par l''agent principal : diapositive 15 relue (pdftotext)'
+- id: ifop_lci_leg2024_souhait_victoire_rn_vs_nfp_ps_eco
+  election: leg2024
+  duel: rn_vs_nfp_non_lfi
+  timing: between_rounds
+  pollster: ifop
+  sponsor: LCI
+  title: 'Le climat législatif à l''approche du second tour — Le souhait de victoire dans différentes
+    configurations de second tour : NFP (Écologiste ou PS) / RN'
+  url: https://www.ifop.com/wp-content/uploads/2024/07/120977-Resultats.pdf
+  published: null
+  pages: p. 6 (tableau par vote au 1er tour), p. 8 (détail)
+  fieldwork_start: '2024-07-01'
+  fieldwork_end: '2024-07-02'
+  sample_size: 1118
+  mode: online
+  base: other
+  base_note: 'Question : « En pensant au second tour des élections législatives qui aura lieu le 7 juillet
+    prochain, de quel candidat souhaitez-vous la victoire dans chacune des configurations suivantes ?
+    » Choix forcé entre les deux candidats, total = 100, AUCUNE modalité abstention/blanc. C''est un souhait
+    de victoire, pas une intention de vote. Hypothèse posée à tout l''échantillon, pas restreinte aux
+    circonscriptions concernées.'
+  columns_in_source:
+  - Un(e) candidat(e) des Ecologistes ou du Parti Socialiste soutenu(e) par le Nouveau Front Populaire
+  - Un(e) candidat(e) soutenu(e) par le Rassemblement National
+  rows:
+  - from: all_registered
+    from_label: Ensemble des électeurs 1er-2 juillet 2024
+    to:
+      nfp: 53
+      rn: 47
+  - from: nfp
+    from_label: Un(e) candidat(e) NFP
+    to:
+      nfp: 95
+      rn: 5
+  - from: ensemble
+    from_label: Un(e) candidat(e) Ensemble
+    to:
+      nfp: 77
+      rn: 23
+  - from: lr_dvd
+    from_label: Un(e) candidat(e) LR ou DVD
+    to:
+      nfp: 52
+      rn: 48
+  - from: rn
+    from_label: Un(e) candidat(e) RN
+    to:
+      nfp: 2
+      rn: 98
+  - from: macron
+    from_label: 'Vote présidentielle 2022 (1er tour) : Emmanuel Macron'
+    to:
+      nfp: 77
+      rn: 23
+  - from: pecresse
+    from_label: 'Vote présidentielle 2022 (1er tour) : Valérie Pécresse'
+    to:
+      nfp: 39
+      rn: 61
+  - from: melenchon
+    from_label: 'Vote présidentielle 2022 (1er tour) : Jean-Luc Mélenchon'
+    to:
+      nfp: 86
+      rn: 14
+  notes: 'Paire avec l''entrée LFI suivante : même question, même échantillon → seule source trouvée qui
+    isole proprement l''effet « candidat LFI » par électorat du 1er tour. Ensemble : 77 → 66 ; LR/DVD
+    : 52 → 41.'
+  verified: 'relu dans la source par l''agent principal : p. 6 relue (pdftotext), question et fiche technique
+    p. 1-2'
+- id: ifop_lci_leg2024_souhait_victoire_rn_vs_nfp_lfi
+  election: leg2024
+  duel: rn_vs_nfp_lfi
+  timing: between_rounds
+  pollster: ifop
+  sponsor: LCI
+  title: 'Le climat législatif à l''approche du second tour — souhait de victoire : NFP (LFI) / RN'
+  url: https://www.ifop.com/wp-content/uploads/2024/07/120977-Resultats.pdf
+  published: null
+  pages: p. 6 (tableau par vote au 1er tour), p. 10 (détail)
+  fieldwork_start: '2024-07-01'
+  fieldwork_end: '2024-07-02'
+  sample_size: 1118
+  mode: online
+  base: other
+  base_note: 'Idem : souhait de victoire, choix forcé, total = 100, pas d''abstention.'
+  columns_in_source:
+  - Un(e) candidat(e) de la France Insoumise soutenu(e) par le Nouveau Front Populaire
+  - Un(e) candidat(e) soutenu(e) par le Rassemblement National
+  rows:
+  - from: all_registered
+    from_label: Ensemble des électeurs
+    to:
+      nfp_lfi: 50
+      rn: 50
+  - from: nfp
+    from_label: Un(e) candidat(e) NFP
+    to:
+      nfp_lfi: 98
+      rn: 2
+  - from: ensemble
+    from_label: Un(e) candidat(e) Ensemble
+    to:
+      nfp_lfi: 66
+      rn: 34
+  - from: lr_dvd
+    from_label: Un(e) candidat(e) LR ou DVD
+    to:
+      nfp_lfi: 41
+      rn: 59
+  - from: rn
+    from_label: Un(e) candidat(e) RN
+    to:
+      nfp_lfi: 2
+      rn: 98
+  - from: macron
+    from_label: 'Vote présidentielle 2022 (1er tour) : Emmanuel Macron'
+    to:
+      nfp_lfi: 68
+      rn: 32
+  - from: pecresse
+    from_label: 'Vote présidentielle 2022 (1er tour) : Valérie Pécresse'
+    to:
+      nfp_lfi: 29
+      rn: 71
+  - from: melenchon
+    from_label: 'Vote présidentielle 2022 (1er tour) : Jean-Luc Mélenchon'
+    to:
+      nfp_lfi: 90
+      rn: 10
+  notes: 'Proximité Les Républicains : 16 LFI / 84 RN (vs 27/73 face à un candidat PS/Écolo) ; Renaissance
+    : 73/27 (vs 83/17).'
+  verified: 'relu dans la source par l''agent principal : p. 6 relue (pdftotext), question et fiche technique
+    p. 1-2'
+- id: ifop_lci_leg2024_souhait_victoire_rn_vs_ensemble
+  election: leg2024
+  duel: rn_vs_ensemble
+  timing: between_rounds
+  pollster: ifop
+  sponsor: LCI
+  title: 'Le climat législatif à l''approche du second tour — souhait de victoire : Majorité présidentielle
+    / RN'
+  url: https://www.ifop.com/wp-content/uploads/2024/07/120977-Resultats.pdf
+  published: null
+  pages: p. 11 (tableau), p. 13 (détail)
+  fieldwork_start: '2024-07-01'
+  fieldwork_end: '2024-07-02'
+  sample_size: 1118
+  mode: online
+  base: other
+  base_note: Souhait de victoire, choix forcé, total = 100.
+  columns_in_source:
+  - Un(e) candidat(e) de la majorité présidentielle
+  - Un(e) candidat(e) soutenu(e) par le Rassemblement National
+  rows:
+  - from: all_registered
+    from_label: Ensemble des électeurs
+    to:
+      ensemble: 53
+      rn: 47
+  - from: nfp
+    from_label: Un(e) candidat(e) NFP
+    to:
+      ensemble: 84
+      rn: 16
+  - from: ensemble
+    from_label: Un(e) candidat(e) Ensemble
+    to:
+      ensemble: 92
+      rn: 8
+  - from: lr_dvd
+    from_label: Un(e) candidat(e) LR ou DVD
+    to:
+      ensemble: 57
+      rn: 43
+  - from: rn
+    from_label: Un(e) candidat(e) RN
+    to:
+      ensemble: 3
+      rn: 97
+  notes: 'Le même PDF contient aussi NFP (PS/Éco) vs Ensemble, NFP (LFI) vs Ensemble (p. 14) et LR-DVD
+    vs RN (p. 19 : NFP 87/13, Ensemble 90/10, LR-DVD 81/19, RN 5/95).'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: ipsos_leg2024_veille_t1_nfp_vs_rn_selon_etiquette
+  election: leg2024
+  duel: rn_vs_nfp_by_label
+  timing: between_rounds
+  pollster: ipsos
+  sponsor: France Télévisions, Radio France et Public Sénat (Ipsos Talan)
+  title: Élections législatives 2024 – Comprendre le vote — Le vote pour le NFP face à un candidat RN
+    selon l'étiquette politique du candidat
+  url: https://www.ipsos.com/sites/default/files/ct/news/documents/2024-06/ipsos-talan-comprendre-le-vote-legislatives-30juin-2024-rapport-complet.pdf
+  published: '2024-06-30'
+  pages: diapositives 33 (ensemble de l'échantillon) et 34 (selon la proximité partisane)
+  fieldwork_start: '2024-06-27'
+  fieldwork_end: '2024-06-28'
+  sample_size: 10286
+  mode: online
+  base: other
+  base_note: '« Base : Chaque parti a été présenté à un tiers de l''échantillon » (inscrits). Question
+    : « Dans votre circonscription, au second tour, si le candidat de la coalition de la gauche « Le Nouveau
+    Front Populaire » était du XX et était opposé au RN et ses alliés au second tour… ? ». Ventilation
+    publiée seulement pour l''ensemble et par proximité partisane de gauche, PAS par électorat du 1er
+    tour.'
+  columns_in_source:
+  - Cela conforterait votre volonté de voter pour le candidat du NFP
+  - Cela serait gênant, mais vous voteriez quand même pour le candidat du NFP
+  - Vous auriez pu voter pour la coalition NFP, mais l'origine politique de ce ou cette candidat.e fait
+    que c'est impossible et vous voteriez pour le candidat RN
+  - Vous voteriez de toute façon pour le candidat du RN
+  - Vous auriez pu voter pour la coalition NFP, mais l'origine politique (...) fait que c'est impossible
+    et vous vous abstiendriez
+  - Vous vous abstiendriez de toute façon, quelle que soit l'origine politique du candidat du NFP
+  - '% Voterait pour le NFP'
+  rows:
+  - from: all_registered
+    from_label: Ensemble (candidat PS)
+    to:
+      nfp_reinforced: 29
+      nfp_reluctant: 11
+      rn_because_label: 6
+      rn_anyway: 33
+      abstain_because_label: 3
+      abstain_anyway: 18
+      nfp: 40
+  - from: all_registered
+    from_label: Ensemble (candidat EELV)
+    to:
+      nfp_reinforced: 28
+      nfp_reluctant: 10
+      rn_because_label: 6
+      rn_anyway: 35
+      abstain_because_label: 4
+      abstain_anyway: 17
+      nfp: 38
+  - from: all_registered
+    from_label: Ensemble (candidat LFI)
+    to:
+      nfp_reinforced: 18
+      nfp_reluctant: 14
+      rn_because_label: 5
+      rn_anyway: 36
+      abstain_because_label: 7
+      abstain_anyway: 20
+      nfp: 32
+  - from: proximite_lfi
+    from_label: Proximité LFI — % voterait NFP si PS / EELV / LFI
+    to:
+      nfp_if_ps: 90
+      nfp_if_eelv: 88
+      nfp_if_lfi: 87
+  - from: proximite_pcf
+    from_label: Proximité PCF
+    to:
+      nfp_if_ps: 76
+      nfp_if_eelv: 75
+      nfp_if_lfi: 71
+  - from: proximite_ecologistes
+    from_label: Proximité Les Écologistes
+    to:
+      nfp_if_ps: 86
+      nfp_if_eelv: 89
+      nfp_if_lfi: 71
+  - from: proximite_ps
+    from_label: Proximité PS
+    to:
+      nfp_if_ps: 85
+      nfp_if_eelv: 81
+      nfp_if_lfi: 76
+  notes: 'PIÈGE : Public Sénat (articles du 2 juillet 2024 et suivants) a présenté 40/38/32 comme le vote
+    des « électeurs proches d''Ensemble » ; c''est en réalité la colonne « ENS. » = ensemble de l''échantillon
+    (vérifié sur l''image de la diapositive 34). Les diapositives 24-32 donnent les CONSIGNES souhaitées
+    par électorat (ex. électeurs Ensemble, duel NFP-RN : 12 % appel à voter NFP quel que soit le parti,
+    32 % uniquement s''il n''est pas LFI, 5 % appel à voter RN, 51 % pas de consigne) — attitudes, pas
+    reports.'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: harris_leg2022_t2_jour_du_vote_nupes_vs_rn
+  election: leg2022
+  duel: rn_vs_nupes
+  timing: second_round_day
+  pollster: harris
+  sponsor: M6 et RTL (Harris Interactive x Toluna)
+  title: 'Sondage Jour du vote — Second tour — 19 juin 2022 : Reports de voix entre les deux tours, circonscriptions
+    NUPES – RN'
+  url: https://tolunacorporate.com/wp-content/uploads/2025/05/Harris-x-Toluna-pour-M6-et-RTL-Jour-du-vote-au-2nd-tour-des-elections-legislatives-2022.pdf
+  published: '2022-06-19'
+  pages: 'diapositive 14 (et 15 : selon la proximité politique)'
+  fieldwork_start: '2022-06-19'
+  fieldwork_end: '2022-06-19'
+  sample_size: 6310
+  mode: online
+  base: first_round_electorate
+  base_note: « Aux inscrits sur les listes électorales des circonscriptions dans lesquelles le 2nd tour
+    oppose un candidat soutenu par la NUPES et un candidat soutenu par le Rassemblement national – En
+    % ». Lignes = vote au 1er tour. Restreint aux 66 circonscriptions de ce type (diapositive 6).
+  columns_in_source:
+  - Candidat soutenu par la NUPES
+  - Candidat soutenu par le Rassemblement national
+  - Non-exprimés
+  rows:
+  - from: nupes
+    from_label: Un candidat soutenu par la Nouvelle Union populaire écologique et sociale
+    to:
+      nupes: 89
+      rn: 7
+      non_expressed: 4
+  - from: dvg_hors_nupes
+    from_label: Un candidat de gauche, non soutenu par la NUPES
+    to:
+      nupes: 56
+      rn: 17
+      non_expressed: 27
+  - from: ensemble
+    from_label: Un candidat soutenu par Ensemble !, la majorité présidentielle
+    to:
+      nupes: 34
+      rn: 18
+      non_expressed: 48
+  - from: lr
+    from_label: Un candidat soutenu par Les Républicains / l'UDI
+    to:
+      nupes: 36
+      rn: 27
+      non_expressed: 37
+  - from: rn
+    from_label: Un candidat soutenu par le Rassemblement National
+    to:
+      nupes: 4
+      rn: 95
+      non_expressed: 1
+  - from: reconquete
+    from_label: Un candidat soutenu par Reconquête !
+    to:
+      nupes: 10
+      rn: 77
+      non_expressed: 13
+  notes: 'Diapositive 15 (proximité) : Ensemble ! 38/17/45 ; Les Républicains 14/54/32. Pas de distinction
+    NUPES-LFI. Les chiffres 2022 cités sans source par Public Sénat le 2 juillet 2024 (Ensemble 48/34/18,
+    LR 37/36/27, NUPES en duel Ensemble-RN 45/31/24) sont ceux de cette enquête.'
+  verified: 'relu dans la source par l''agent principal : diapositive 14 relue (pdftotext)'
+- id: harris_leg2022_t2_jour_du_vote_ensemble_vs_rn
+  election: leg2022
+  duel: rn_vs_ensemble
+  timing: second_round_day
+  pollster: harris
+  sponsor: M6 et RTL (Harris Interactive x Toluna)
+  title: 'Sondage Jour du vote — Second tour — 19 juin 2022 : circonscriptions Ensemble ! – RN'
+  url: https://tolunacorporate.com/wp-content/uploads/2025/05/Harris-x-Toluna-pour-M6-et-RTL-Jour-du-vote-au-2nd-tour-des-elections-legislatives-2022.pdf
+  published: '2022-06-19'
+  pages: 'diapositive 11 (et 12 : proximité)'
+  fieldwork_start: '2022-06-19'
+  fieldwork_end: '2022-06-19'
+  sample_size: 6310
+  mode: online
+  base: first_round_electorate
+  base_note: Inscrits des circonscriptions où le 2nd tour oppose Ensemble ! et le RN (107 circonscriptions).
+  columns_in_source:
+  - Candidat soutenu par Ensemble !
+  - Candidat soutenu par le Rassemblement national
+  - Non-exprimés
+  rows:
+  - from: nupes
+    from_label: Un candidat soutenu par la NUPES
+    to:
+      ensemble: 31
+      rn: 24
+      non_expressed: 45
+  - from: dvg_hors_nupes
+    from_label: Un candidat de gauche, non soutenu par la NUPES
+    to:
+      ensemble: 34
+      rn: 36
+      non_expressed: 30
+  - from: ensemble
+    from_label: Un candidat soutenu par Ensemble !
+    to:
+      ensemble: 92
+      rn: 5
+      non_expressed: 3
+  - from: lr
+    from_label: Un candidat soutenu par Les Républicains / l'UDI
+    to:
+      ensemble: 49
+      rn: 32
+      non_expressed: 19
+  - from: rn
+    from_label: Un candidat soutenu par le Rassemblement National
+    to:
+      ensemble: 2
+      rn: 94
+      non_expressed: 4
+  - from: reconquete
+    from_label: Un candidat soutenu par Reconquête !
+    to:
+      ensemble: null
+      rn: 83
+      non_expressed: 17
+  notes: 'Reconquête → Ensemble imprimé « - » dans la source (null ici). Proximité (diap. 12) : LFI 27/22/51,
+    PS 48/17/35.'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: harris_leg2022_t2_jour_du_vote_nupes_vs_ensemble
+  election: leg2022
+  duel: nupes_vs_ensemble
+  timing: second_round_day
+  pollster: harris
+  sponsor: M6 et RTL (Harris Interactive x Toluna)
+  title: 'Sondage Jour du vote — Second tour — 19 juin 2022 : circonscriptions NUPES – Ensemble !'
+  url: https://tolunacorporate.com/wp-content/uploads/2025/05/Harris-x-Toluna-pour-M6-et-RTL-Jour-du-vote-au-2nd-tour-des-elections-legislatives-2022.pdf
+  published: '2022-06-19'
+  pages: 'diapositive 8 (et 9 : proximité)'
+  fieldwork_start: '2022-06-19'
+  fieldwork_end: '2022-06-19'
+  sample_size: 6310
+  mode: online
+  base: first_round_electorate
+  base_note: Inscrits des circonscriptions NUPES – Ensemble ! (280 circonscriptions).
+  columns_in_source:
+  - Candidat soutenu par la NUPES
+  - Candidat soutenu par Ensemble !
+  - Non-exprimés
+  rows:
+  - from: nupes
+    from_label: Un candidat soutenu par la NUPES
+    to:
+      nupes: 91
+      ensemble: 5
+      non_expressed: 4
+  - from: dvg_hors_nupes
+    from_label: Un candidat de gauche, non soutenu par la NUPES
+    to:
+      nupes: 53
+      ensemble: 29
+      non_expressed: 18
+  - from: ensemble
+    from_label: Un candidat soutenu par Ensemble !
+    to:
+      nupes: 2
+      ensemble: 96
+      non_expressed: 2
+  - from: lr
+    from_label: Un candidat soutenu par Les Républicains / l'UDI
+    to:
+      nupes: 9
+      ensemble: 64
+      non_expressed: 27
+  - from: rn
+    from_label: Un candidat soutenu par le Rassemblement National
+    to:
+      nupes: 24
+      ensemble: 25
+      non_expressed: 51
+  - from: reconquete
+    from_label: Un candidat soutenu par Reconquête !
+    to:
+      nupes: 15
+      ensemble: 24
+      non_expressed: 61
+  notes: Hors duel RN mais donne le comportement des électeurs RN face à NUPES vs Ensemble.
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: ipsos_leg2022_t2_reports_nupes_vs_ensemble
+  election: leg2022
+  duel: nupes_vs_ensemble
+  timing: second_round_night_estimate
+  pollster: ipsos
+  sponsor: Ipsos Sopra Steria pour France Télévisions, Radio France (et partenaires)
+  title: Reports de voix et profil des abstentionnistes — Les reports de voix entre les deux tours dans
+    les duels opposant la NUPES à Ensemble! (271 circonscriptions)
+  url: https://www.ipsos.com/sites/default/files/ct/news/documents/2022-06/Ipsos%20Sopra%20Steria_Reports%20de%20voix%20et%20Profil%20des%20abstentionnistes_19%20Juin%2020h15.pdf
+  published: '2022-06-19'
+  pages: diapositive 4
+  fieldwork_start: '2022-06-15'
+  fieldwork_end: '2022-06-18'
+  sample_size: 4004
+  mode: online
+  base: first_round_electorate
+  base_note: 'Matrice en % par vote au 1er tour, total 100 avec « Non exprimés ». Note de la source :
+    « Les reports de voix tiennent compte à la fois des résultats du sondage et des éléments issus de
+    l''analyse des transferts de voix dans les 700 bureaux de vote ayant servi à l''estimation des résultats
+    2nd tour. » Donc mixte sondage pré-2nd tour + écologique bureaux de vote.'
+  columns_in_source:
+  - NUPES
+  - ENSEMBLE!
+  - Non exprimés
+  - TOTAL
+  rows:
+  - from: nupes
+    from_label: NUPES
+    to:
+      nupes: 99
+      ensemble: 0
+      non_expressed: 1
+  - from: dvg_hors_nupes
+    from_label: Divers Gauche (hors NUPES)
+    to:
+      nupes: 55
+      ensemble: 40
+      non_expressed: 5
+  - from: ensemble
+    from_label: ENSEMBLE!
+    to:
+      nupes: 0
+      ensemble: 99
+      non_expressed: 1
+  - from: lr_udi_dvd
+    from_label: LR-UDI-DVD
+    to:
+      nupes: 5
+      ensemble: 60
+      non_expressed: 35
+  - from: rn
+    from_label: Rassemblement national
+    to:
+      nupes: 30
+      ensemble: 18
+      non_expressed: 52
+  - from: reconquete
+    from_label: Reconquête!
+    to:
+      nupes: 5
+      ensemble: 40
+      non_expressed: 55
+  notes: Seul duel publié dans ce PDF Ipsos 2022 ; pas de matrice NUPES-RN ni Ensemble-RN dans le document.
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: ipsos_leg2022_t2_nupes_vs_rn_citation_presse
+  election: leg2022
+  duel: rn_vs_nupes
+  timing: second_round_night_estimate
+  pollster: ipsos
+  sponsor: Ipsos Sopra Steria (cité par Brice Teinturier sur France 2, repris par Public Sénat)
+  title: 'Reports de voix, profils des abstentionnistes : que nous apprend le second tour des législatives
+    ?'
+  url: https://www.publicsenat.fr/actualites/politique/reports-de-voix-profils-des-abstentionnistes-que-nous-apprend-le-second-tour-des
+  published: '2022-06-20'
+  pages: texte de l'article
+  fieldwork_start: '2022-06-15'
+  fieldwork_end: '2022-06-18'
+  sample_size: 4004
+  mode: online
+  base: first_round_electorate
+  base_note: Non précisé dans l'article ; probablement même méthode que la matrice NUPES-Ensemble (sondage
+    + bureaux de vote).
+  columns_in_source: []
+  rows:
+  - from: ensemble
+    from_label: électeurs Ensemble !, duel NUPES / RN
+    to:
+      abstain: 72
+  - from: lr
+    from_label: électeurs des Républicains, duel NUPES / RN
+    to:
+      rn: 30
+      abstain: 58
+  notes: 'Citations exactes de l''article : « s''étaient majoritairement abstenus (72 %) en cas de duel
+    entre la Nupes et le RN » (électeurs Ensemble) et « 58 % des électeurs des Républicains se sont abstenus
+    mais 30 % ont choisi de voter pour le RN ». Les autres cellules (Ensemble vers NUPES et RN, LR vers
+    NUPES) n''ont pas été lues mot à mot : retirées. Matrice Ipsos d''origine non trouvée. Très différent
+    de Harris jour du vote (Ensemble 34 / 18 / 48 de non-exprimés) : méthodes différentes.'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: toluna_pres2027_v2_mai2026_le_pen_vs_melenchon
+  election: pres_hypothetical
+  duel: le_pen_vs_melenchon
+  timing: hypothetical_presidential
+  pollster: harris
+  sponsor: M6 et RTL (Toluna Harris Interactive, baromètre vague 2)
+  title: Intentions de vote à l'élection présidentielle — Vague 2 — Reports de voix au 2nd tour, Hypothèse
+    Marine Le Pen et Jean-Luc Mélenchon
+  url: https://tolunacorporate.com/wp-content/uploads/2026/05/Rapport-Toluna-Barometre-Presidentielle-2027-Vague-2-M6-RTL-Mai-2026.pdf
+  published: 2026-05
+  pages: diapositive 33
+  fieldwork_start: '2026-05-25'
+  fieldwork_end: '2026-05-27'
+  sample_size: 1744
+  mode: online
+  base: first_round_electorate
+  base_note: 'Colonnes = « Intention de vote au 1er tour de l''élection présidentielle 2027 — Hypothèse
+    Jean-Luc Mélenchon et Marine Le Pen candidats » ; chaque colonne somme à 100 avec « N''exprime pas
+    d''intention de vote (vote blanc, nul ou abstention) ». Note de lecture : « Parmi les Français exprimant
+    une intention de vote pour Raphaël Glucksmann au 1er tour (...), 31% auraient l''intention de voter
+    pour Jean-Luc Mélenchon au 2nd tour ». Le pied de diapositive générique dit « Base : Aux inscrits
+    sur les listes électorales, en % des votes exprimés » (s''applique au score agrégé 33/67).'
+  columns_in_source:
+  - Jean-Luc MÉLENCHON
+  - Raphaël GLUCKSMANN
+  - Gabriel ATTAL
+  - Bruno RETAILLEAU
+  - Marine LE PEN
+  rows:
+  - from: melenchon_2027
+    from_label: IV 1er tour Jean-Luc Mélenchon
+    to:
+      melenchon: 90
+      le_pen: 3
+      non_expressed: 7
+  - from: glucksmann_2027
+    from_label: IV 1er tour Raphaël Glucksmann
+    to:
+      melenchon: 31
+      le_pen: 11
+      non_expressed: 58
+  - from: attal_2027
+    from_label: IV 1er tour Gabriel Attal
+    to:
+      melenchon: 11
+      le_pen: 19
+      non_expressed: 70
+  - from: retailleau_2027
+    from_label: IV 1er tour Bruno Retailleau
+    to:
+      melenchon: 4
+      le_pen: 59
+      non_expressed: 37
+  - from: le_pen_2027
+    from_label: IV 1er tour Marine Le Pen
+    to:
+      melenchon: 1
+      le_pen: 98
+      non_expressed: 1
+  notes: 'Score agrégé : Mélenchon 33 / Le Pen 67 (exprimés). Même PDF : Le Pen vs Attal (diap. 35) et
+    Le Pen vs Philippe (diapositive suivante, numéro non lu) avec les mêmes colonnes ; Mélenchon → Attal
+    30 / Le Pen 7 / NE 63 ; Mélenchon → Philippe 36 / 6 / 58.'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: toluna_pres2027_v2_mai2026_bardella_vs_melenchon
+  election: pres_hypothetical
+  duel: bardella_vs_melenchon
+  timing: hypothetical_presidential
+  pollster: harris
+  sponsor: M6 et RTL (Toluna Harris Interactive, baromètre vague 2)
+  title: Reports de voix au 2nd tour — Hypothèse Jordan Bardella et Jean-Luc Mélenchon
+  url: https://tolunacorporate.com/wp-content/uploads/2026/05/Rapport-Toluna-Barometre-Presidentielle-2027-Vague-2-M6-RTL-Mai-2026.pdf
+  published: 2026-05
+  pages: diapositive 26
+  fieldwork_start: '2026-05-25'
+  fieldwork_end: '2026-05-27'
+  sample_size: 1744
+  mode: online
+  base: first_round_electorate
+  base_note: Colonnes = IV 1er tour 2027, « Hypothèse Jean-Luc Mélenchon et Jordan Bardella candidats
+    » ; même structure que l'entrée précédente.
+  columns_in_source:
+  - Jean-Luc MÉLENCHON
+  - Raphaël GLUCKSMANN
+  - Gabriel ATTAL
+  - Bruno RETAILLEAU
+  - Jordan BARDELLA
+  rows:
+  - from: melenchon_2027
+    from_label: IV 1er tour Jean-Luc Mélenchon
+    to:
+      melenchon: 88
+      bardella: 2
+      non_expressed: 10
+  - from: glucksmann_2027
+    from_label: IV 1er tour Raphaël Glucksmann
+    to:
+      melenchon: 31
+      bardella: 9
+      non_expressed: 60
+  - from: attal_2027
+    from_label: IV 1er tour Gabriel Attal
+    to:
+      melenchon: 12
+      bardella: 21
+      non_expressed: 67
+  - from: retailleau_2027
+    from_label: IV 1er tour Bruno Retailleau
+    to:
+      melenchon: 5
+      bardella: 59
+      non_expressed: 36
+  - from: bardella_2027
+    from_label: IV 1er tour Jordan Bardella
+    to:
+      melenchon: 1
+      bardella: 98
+      non_expressed: 1
+  notes: 'Score agrégé : Mélenchon 32 / Bardella 68.'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: toluna_pres2027_v3_juillet2026_le_pen_vs_melenchon
+  election: pres_hypothetical
+  duel: le_pen_vs_melenchon
+  timing: hypothetical_presidential
+  pollster: harris
+  sponsor: M6 et RTL (Toluna Harris Interactive, baromètre vague 3)
+  title: Intentions de vote à l'élection présidentielle — Vague 3 — Reports de voix au 2nd tour, Hypothèse
+    Marine Le Pen et Jean-Luc Mélenchon
+  url: https://tolunacorporate.com/wp-content/uploads/2026/07/Rapport-Toluna-Barometre-Presidentielle-2027-Vague-3-M6-RTL-Juillet-2026-Rapport-complet.pdf
+  published: 2026-07
+  pages: diapositive 26
+  fieldwork_start: '2026-07-07'
+  fieldwork_end: '2026-07-08'
+  sample_size: 1592
+  mode: online
+  base: first_round_electorate
+  base_note: Colonnes = IV 1er tour 2027, « Hypothèse Raphaël Glucksmann, Gabriel Attal et Édouard Philippe
+    candidats » ; colonnes sommant à 100 avec « N'exprime pas d'intention de vote (vote blanc, nul ou
+    abstention) ». Terrain après le verdict en appel de Marine Le Pen et sa déclaration de candidature.
+  columns_in_source:
+  - Jean-Luc MÉLENCHON
+  - Raphaël GLUCKSMANN
+  - Gabriel ATTAL
+  - Édouard PHILIPPE
+  - Bruno RETAILLEAU
+  - Marine LE PEN
+  rows:
+  - from: melenchon_2027
+    from_label: IV 1er tour Jean-Luc Mélenchon
+    to:
+      melenchon: 93
+      le_pen: 3
+      non_expressed: 4
+  - from: glucksmann_2027
+    from_label: IV 1er tour Raphaël Glucksmann
+    to:
+      melenchon: 34
+      le_pen: 7
+      non_expressed: 59
+  - from: attal_2027
+    from_label: IV 1er tour Gabriel Attal
+    to:
+      melenchon: 18
+      le_pen: 15
+      non_expressed: 67
+  - from: philippe_2027
+    from_label: IV 1er tour Édouard Philippe
+    to:
+      melenchon: 4
+      le_pen: 26
+      non_expressed: 70
+  - from: retailleau_2027
+    from_label: IV 1er tour Bruno Retailleau
+    to:
+      melenchon: 9
+      le_pen: 51
+      non_expressed: 40
+  - from: le_pen_2027
+    from_label: IV 1er tour Marine Le Pen
+    to:
+      melenchon: 1
+      le_pen: 97
+      non_expressed: 2
+  notes: 'Score agrégé : 33 / 67. Même PDF : Le Pen vs Attal (diap. 28 : Mélenchon → Attal 37, Le Pen
+    11, NE 52) et Le Pen vs Philippe (diap. 30 : Mélenchon → Philippe 40, Le Pen 11, NE 49).'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: toluna_pres2027_v4_aout2026_le_pen_vs_melenchon
+  election: pres_hypothetical
+  duel: le_pen_vs_melenchon
+  timing: hypothetical_presidential
+  pollster: harris
+  sponsor: M6 et RTL (Toluna Harris Interactive, baromètre vague 4)
+  title: Intentions de vote à l'élection présidentielle — Vague 4 — Reports de voix au 2nd tour, Hypothèse
+    Marine Le Pen et Jean-Luc Mélenchon
+  url: https://tolunacorporate.com/wp-content/uploads/2026/08/Rapport-Toluna-Barometre-Presidentielle-2027-Vague-4-M6-RTL-Aout-2026.pdf
+  published: 2026-08
+  pages: diapositive 29
+  fieldwork_start: '2026-08-18'
+  fieldwork_end: '2026-08-19'
+  sample_size: 1764
+  mode: online
+  base: first_round_electorate
+  base_note: Colonnes = IV 1er tour 2027, « Hypothèse Raphaël Glucksmann, Gabriel Attal et Édouard Philippe
+    candidats » ; idem vague 3.
+  columns_in_source:
+  - Jean-Luc MÉLENCHON
+  - Raphaël GLUCKSMANN
+  - Gabriel ATTAL
+  - Édouard PHILIPPE
+  - Bruno RETAILLEAU
+  - Marine LE PEN
+  rows:
+  - from: melenchon_2027
+    from_label: IV 1er tour Jean-Luc Mélenchon
+    to:
+      melenchon: 90
+      le_pen: 3
+      non_expressed: 7
+  - from: glucksmann_2027
+    from_label: IV 1er tour Raphaël Glucksmann
+    to:
+      melenchon: 26
+      le_pen: 14
+      non_expressed: 60
+  - from: attal_2027
+    from_label: IV 1er tour Gabriel Attal
+    to:
+      melenchon: 20
+      le_pen: 28
+      non_expressed: 52
+  - from: philippe_2027
+    from_label: IV 1er tour Édouard Philippe
+    to:
+      melenchon: 12
+      le_pen: 25
+      non_expressed: 63
+  - from: retailleau_2027
+    from_label: IV 1er tour Bruno Retailleau
+    to:
+      melenchon: 5
+      le_pen: 63
+      non_expressed: 32
+  - from: le_pen_2027
+    from_label: IV 1er tour Marine Le Pen
+    to:
+      melenchon: 1
+      le_pen: 98
+      non_expressed: 1
+  notes: 'Score agrégé : 32 / 68 (évolution mai 33/67, juillet 33/67). Même PDF : Le Pen vs Attal (diap.
+    32 : Mélenchon → Attal 36, Le Pen 19, NE 55) et Le Pen vs Philippe (diap. 35 : Mélenchon → Philippe
+    39, Le Pen 7, NE 54).'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: elabe_pres2027_mars2026_bardella_vs_melenchon
+  election: pres_hypothetical
+  duel: bardella_vs_melenchon
+  timing: hypothetical_presidential
+  pollster: elabe
+  sponsor: BFMTV et La Tribune Dimanche
+  title: Les Français et l'élection présidentielle — Configuration A – 2nd tour (Mélenchon / Bardella),
+    détail par catégories politiques
+  url: https://elabe.fr/fichier-pdf/12955-20260328_elabe_bfmtv_la-tribune-dimanche_election-presidentielle-2027
+  published: '2026-03-28'
+  pages: p. 49 (détail politique) ; p. 23 (résultat agrégé)
+  fieldwork_start: '2026-03-25'
+  fieldwork_end: '2026-03-27'
+  sample_size: 1504
+  mode: online
+  base: second_round_expressed
+  base_note: '« En % des intentions de vote exprimées (probabilité d''aller voter notes 8 à 10) » ; 33
+    % n''expriment aucune intention de vote. Lignes en % des exprimés : PAS d''abstention par électorat.
+    Électorats = vote passé (présidentielle 2022, législatives 2024), pas l''IV 1er tour 2027.'
+  columns_in_source:
+  - Jean-Luc MÉLENCHON
+  - Jordan BARDELLA
+  rows:
+  - from: melenchon_2022
+    from_label: 'Vote présidentielle 2022 (1er tour) : Jean-Luc MELENCHON'
+    to:
+      melenchon: 85
+      bardella: 15
+  - from: jadot_2022
+    from_label: Yannick JADOT
+    to:
+      melenchon: 85
+      bardella: 15
+  - from: macron_2022
+    from_label: Emmanuel MACRON
+    to:
+      melenchon: 18
+      bardella: 82
+  - from: pecresse_2022
+    from_label: Valérie PECRESSE
+    to:
+      melenchon: 0
+      bardella: 100
+  - from: le_pen_2022
+    from_label: Marine LE PEN
+    to:
+      melenchon: 1
+      bardella: 99
+  - from: zemmour_2022
+    from_label: Eric ZEMMOUR
+    to:
+      melenchon: 0
+      bardella: 100
+  - from: abstain_2022
+    from_label: Abstention, vote blanc ou nul, non-inscrits (prés. 2022 T1)
+    to:
+      melenchon: 25
+      bardella: 75
+  - from: nfp_leg2024
+    from_label: 'Vote législatives 2024 (1er tour) : NFP (LFI, EELV, PS, PCF)'
+    to:
+      melenchon: 85
+      bardella: 15
+  - from: ensemble_leg2024
+    from_label: Ensemble (Renaissance, MoDem, Horizons, etc.)
+    to:
+      melenchon: 11
+      bardella: 89
+  - from: lr_leg2024
+    from_label: LR, DVD, UDI
+    to:
+      melenchon: 11
+      bardella: 89
+  - from: rn_leg2024
+    from_label: Rassemblement National et ses alliés
+    to:
+      melenchon: 1
+      bardella: 99
+  - from: abstain_leg2024
+    from_label: Abstention, vote blanc ou nul, non-inscrits (lég. 2024 T1)
+    to:
+      melenchon: 27
+      bardella: 73
+  notes: 'Agrégé 28,5 / 71,5. Abstention par électorat seulement en verbal dans la synthèse : « les électeurs
+    du centre s''abstiendraient massivement (2 sur 3, alors qu''1 sur 4 voterait pour J. Bardella) » (base
+    = électeurs d''IV 1er tour 2027, chiffres arrondis, pas de tableau publié).'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu
+- id: elabe_pres2027_juillet2026_le_pen_vs_melenchon
+  election: pres_hypothetical
+  duel: le_pen_vs_melenchon
+  timing: hypothetical_presidential
+  pollster: elabe
+  sponsor: BFMTV et La Tribune Dimanche
+  title: Les Français et l'élection présidentielle 2027 — 2nd tour Configuration 1 (JL. Mélenchon / M.
+    Le Pen), détail par catégories politiques
+  url: https://elabe.fr/fichier-pdf/13159-les-francais-et-lelection-presidentielle-2027/
+  published: '2026-07-11'
+  pages: p. 45 (détail politique) ; p. 22 (agrégé) ; p. 7 (synthèse)
+  fieldwork_start: '2026-07-09'
+  fieldwork_end: '2026-07-10'
+  sample_size: 1503
+  mode: online
+  base: second_round_expressed
+  base_note: « En % des intentions de vote exprimées (probabilité d'aller voter notes 8 à 10) » ; 29 %
+    n'expriment aucune intention de vote. Pas d'abstention par électorat.
+  columns_in_source:
+  - Jean-Luc MÉLENCHON
+  - Marine LE PEN
+  rows:
+  - from: melenchon_2022
+    from_label: 'Vote présidentielle 2022 (1er tour) : Jean-Luc MELENCHON'
+    to:
+      melenchon: 85
+      le_pen: 15
+  - from: jadot_2022
+    from_label: Yannick JADOT
+    to:
+      melenchon: 74
+      le_pen: 26
+  - from: macron_2022
+    from_label: Emmanuel MACRON
+    to:
+      melenchon: 26
+      le_pen: 74
+  - from: pecresse_2022
+    from_label: Valérie PECRESSE
+    to:
+      melenchon: 1
+      le_pen: 99
+  - from: le_pen_2022
+    from_label: Marine LE PEN
+    to:
+      melenchon: 0
+      le_pen: 100
+  - from: zemmour_2022
+    from_label: Eric ZEMMOUR
+    to:
+      melenchon: 0
+      le_pen: 100
+  - from: abstain_2022
+    from_label: Abstention, vote blanc ou nul, non-inscrits (prés. 2022 T1)
+    to:
+      melenchon: 37
+      le_pen: 63
+  - from: nfp_leg2024
+    from_label: 'Vote législatives 2024 (1er tour) : NFP (LFI, EELV, PS, PCF)'
+    to:
+      melenchon: 85
+      le_pen: 15
+  - from: ensemble_leg2024
+    from_label: Ensemble (Renaissance, MoDem, Horizons, etc.)
+    to:
+      melenchon: 24
+      le_pen: 76
+  - from: lr_leg2024
+    from_label: LR, DVD, UDI
+    to:
+      melenchon: 12
+      le_pen: 88
+  - from: rn_leg2024
+    from_label: Rassemblement National et ses alliés
+    to:
+      melenchon: 1
+      le_pen: 99
+  - from: abstain_leg2024
+    from_label: Abstention, vote blanc ou nul, non-inscrits (lég. 2024 T1)
+    to:
+      melenchon: 35
+      le_pen: 65
+  notes: 'Agrégé 32,5 / 67,5. Synthèse verbale (IV 1er tour 2027) : « les électeurs du PS et du centre
+    s''abstiendraient massivement (6 sur 10). 1 électeurs du centre sur 3 et 7 électeurs de Bruno Retailleau
+    sur 10 voteraient Marine Le Pen. » Pas de tableau correspondant publié.'
+  verified: 'relu dans la source par l''agent principal : p. 45 relue (pdftotext)'
+- id: elabe_pres2027_aout2026_le_pen_vs_melenchon
+  election: pres_hypothetical
+  duel: le_pen_vs_melenchon
+  timing: hypothetical_presidential
+  pollster: elabe
+  sponsor: BFMTV et La Tribune Dimanche
+  title: Les Français et l'élection présidentielle 2027 — 2nd tour Configuration 1 (JL. Mélenchon / M.
+    Le Pen), détail par catégories politiques
+  url: https://elabe.fr/fichier-pdf/13224-les-francais-et-lelection-presidentielle-2027/
+  published: '2026-08-29'
+  pages: p. 46 (détail politique) ; p. 23 (agrégé) ; p. 7 (synthèse)
+  fieldwork_start: '2026-08-26'
+  fieldwork_end: '2026-08-28'
+  sample_size: 1501
+  mode: online
+  base: second_round_expressed
+  base_note: En % des intentions de vote exprimées (probabilité notes 8 à 10). Pas d'abstention par électorat.
+  columns_in_source:
+  - Jean-Luc MÉLENCHON
+  - Marine LE PEN
+  rows:
+  - from: melenchon_2022
+    from_label: 'Vote présidentielle 2022 (1er tour) : Jean-Luc MELENCHON'
+    to:
+      melenchon: 84
+      le_pen: 16
+  - from: jadot_2022
+    from_label: Yannick JADOT
+    to:
+      melenchon: 69
+      le_pen: 31
+  - from: macron_2022
+    from_label: Emmanuel MACRON
+    to:
+      melenchon: 16
+      le_pen: 84
+  - from: pecresse_2022
+    from_label: Valérie PECRESSE
+    to:
+      melenchon: 0
+      le_pen: 100
+  - from: le_pen_2022
+    from_label: Marine LE PEN
+    to:
+      melenchon: 0
+      le_pen: 100
+  - from: zemmour_2022
+    from_label: Eric ZEMMOUR
+    to:
+      melenchon: 6
+      le_pen: 94
+  - from: abstain_2022
+    from_label: Abstention, vote blanc ou nul, non-inscrits (prés. 2022 T1)
+    to:
+      melenchon: 35
+      le_pen: 65
+  - from: nfp_leg2024
+    from_label: 'Vote législatives 2024 (1er tour) : NFP (LFI, EELV, PS, PCF)'
+    to:
+      melenchon: 89
+      le_pen: 11
+  - from: ensemble_leg2024
+    from_label: Ensemble (Renaissance, MoDem, Horizons, etc.)
+    to:
+      melenchon: 14
+      le_pen: 86
+  - from: lr_leg2024
+    from_label: LR, DVD, UDI
+    to:
+      melenchon: 8
+      le_pen: 92
+  - from: rn_leg2024
+    from_label: Rassemblement National et ses alliés
+    to:
+      melenchon: 1
+      le_pen: 99
+  - from: abstain_leg2024
+    from_label: Abstention, vote blanc ou nul, non-inscrits (lég. 2024 T1)
+    to:
+      melenchon: 29
+      le_pen: 71
+  notes: 'Agrégé 30,5 / 69,5. Synthèse verbale (IV 1er tour 2027) : « les électeurs de premier tour du
+    PS (1 sur 2) et du centre (6 sur 10) s''abstiendraient massivement. JL. Mélenchon ne récupérerait
+    qu''1 électeur sur 3 du PS et 1 sur 10 du centre. M. Le Pen capterait 1 à 2 électeurs sur 10 du PS,
+    3 sur 10 du centre et 6 sur 10 de B. Retailleau. »'
+  verified: lu dans la source par le sous-agent de recherche (2026-11-24), non relu

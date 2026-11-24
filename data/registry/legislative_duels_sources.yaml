@@ -1,0 +1,305 @@
+# Sources des duels de second tour des législatives 2022 et 2024 (étude duel RN contre LFI,
+# docs/results/2026-11-24-duel-rn-lfi.md). Lu par vvs.ingest.legislative_duels :
+#   uv run --project back python -m vvs.ingest.legislative_duels ingest   # télécharge dans data/raw/legislative_duels/
+#   uv run --project back python -m vvs.ingest.legislative_duels parse    # écrit data/curated/legislative_*.parquet
+#
+# Fichiers du ministère de l'Intérieur (data.gouv.fr), un par tour, niveau circonscription
+# législative ; empreintes sha256 relevées au premier téléchargement (2026-11-24) et vérifiées
+# ensuite. Un fichier présent n'est jamais réécrit (data/raw immuable).
+#
+# Appartenance partisane des candidats d'union de la gauche : le ministère ne donne que la
+# nuance (NUP en 2022, UG en 2024), pas le parti. Sources retenues :
+# - 2022 : tableau « Répartition par circonscription » de l'article Wikipédia de la NUPES
+#   (couleur de parti par circonscription, d'après les listes d'investiture de la NUPES, de LFI,
+#   du PCF et d'EELV citées par l'article) ; contrôle : pages Wikipédia départementales ;
+# - 2024 : colonne « Parti et coalition » des pages Wikipédia départementales (une ligne par
+#   candidat, appariée au ministère par les voix de premier tour) ; contrôle indépendant :
+#   répartition des circonscriptions de l'accord du Nouveau Front populaire (fichier diffusé
+#   dans la presse le 14 juin 2024, mis en CSV sur data.gouv.fr par un particulier, non
+#   officiel, avant les dernières corrections d'investiture).
+# Les pages Wikipédia sont figées par leur numéro de révision (oldid) relevé le 2026-11-24.
+# Les pages de Wallis-et-Futuna, de Saint-Martin/Saint-Barthélemy et des Français de
+# l'étranger n'ont pas été trouvées sous le titre attendu : sans parti, leurs candidats
+# d'union restent `unknown`.
+
+results:
+  leg2022:
+    year: 2022
+    files:
+      - name: resultats-par-niveau-cirlg-t1-france-entiere.txt
+        round: 1
+        format: leg2022_cirlg
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-12-et-19-juin-2022-resultats-definitifs-du-premier-tour/20220614-192511/resultats-par-niveau-cirlg-t1-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/62a8c3f92b3b572a67d307f4/
+        sha256: cf3827f8d14df369a7821d02323ab0aff6031e3e9bf64d62c3a54a96c1545d93
+        notes: >-
+          latin-1, « ; », CRLF, une ligne par circonscription : 19 colonnes fixes (dont
+          inscrits, votants, blancs, nuls, exprimés) puis blocs de 9 (panneau, sexe, nom,
+          prénom, nuance, voix, % ins, % exp, sièges). Départements sur 2 caractères,
+          outre-mer et étranger en Z*.
+      - name: resultats-par-niveau-cirlg-t2-france-entiere.txt
+        round: 2
+        format: leg2022_cirlg
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-12-et-19-juin-2022-resultats-definitifs-du-second-tour/20220621-175613/resultats-par-niveau-cirlg-t2-france-entiere.txt
+        dataset: https://www.data.gouv.fr/fr/datasets/62b1e903ee80a47a20129bf2/
+        sha256: 0878a6943a609cf489c7af1f52e38e9152d788995c76ecbba58eb75926962fc7
+        notes: Même format ; seules les circonscriptions ayant un second tour.
+  leg2024:
+    year: 2024
+    files:
+      - name: resultats-definitifs-par-circonscriptions-legislatives-t1.csv
+        round: 1
+        format: leg2024_circ
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-1er-tour/20240710-171413/resultats-definitifs-par-circonscriptions-legislatives.csv
+        dataset: https://www.data.gouv.fr/fr/datasets/6682d0c255dcda5df20b1d90/
+        sha256: dbeb0214bc9f54d44d4641400177ea93203b0b90d35485a2b4ed4fc3c300ab3f
+        notes: >-
+          UTF-8, « ; », sans guillemets, pourcentages suffixés « % » ; 18 colonnes fixes puis
+          blocs de 9 (panneau, nuance, nom, prénom, sexe, voix, % ins, % exp, élu). Code
+          département sans zéro initial (« 1 »), circonscription « 101 », outre-mer en 97x/98x,
+          ZX et ZZ.
+      - name: resultats-definitifs-par-circonscription-t2.csv
+        round: 2
+        format: leg2024_circ
+        url: https://static.data.gouv.fr/resources/elections-legislatives-des-30-juin-et-7-juillet-2024-resultats-definitifs-du-2nd-tour/20240710-170728/resultats-definitifs-par-circonscription.csv
+        dataset: https://www.data.gouv.fr/fr/datasets/668b4092826ddcf70e9e62cd/
+        sha256: bcc062b9264dcf3dc1eac5463acf1e8743171b86385923e7f770fd9028271083
+        notes: >-
+          Même découpage de colonnes que le T1, mais champs texte entre guillemets, code
+          département sur 2 caractères (« 01 ») et circonscription « 0101 ».
+
+parties:
+  leg2022:
+    nupes_table:
+      title: Nouvelle Union populaire écologique et sociale
+      revid: 241127023
+      section: 6
+      notes: >-
+        Section « Répartition par circonscription » : une ligne par circonscription, parti
+        donné par le modèle {{Infobox Parti politique français/couleurs|<code>}} (LFI, PS,
+        EELV, PCF, G.s, …), candidat, scores. Sources citées par l'article : site de la
+        NUPES, investitures LFI du 10 mai 2022, listes PCF et EELV, cartes France Inter et
+        franceinfo du 6 mai 2022.
+    department_pages:
+      - {dept: "01", title: "Élections législatives de 2022 dans l'Ain", revid: 235800825}
+      - {dept: "02", title: "Élections législatives de 2022 dans l'Aisne", revid: 240984101}
+      - {dept: "03", title: "Élections législatives de 2022 dans l'Allier", revid: 240984116}
+      - {dept: "04", title: "Élections législatives de 2022 dans les Alpes-de-Haute-Provence", revid: 240984243}
+      - {dept: "05", title: "Élections législatives de 2022 dans les Hautes-Alpes", revid: 235736471}
+      - {dept: "06", title: "Élections législatives de 2022 dans les Alpes-Maritimes", revid: 238823205}
+      - {dept: "07", title: "Élections législatives de 2022 dans l'Ardèche", revid: 238894560}
+      - {dept: "08", title: "Élections législatives de 2022 dans les Ardennes", revid: 238812516}
+      - {dept: "09", title: "Élections législatives de 2022 dans l'Ariège", revid: 239792422}
+      - {dept: "10", title: "Élections législatives de 2022 dans l'Aube", revid: 241004716}
+      - {dept: "11", title: "Élections législatives de 2022 dans l'Aude", revid: 238957091}
+      - {dept: "12", title: "Élections législatives de 2022 dans l'Aveyron", revid: 237261634}
+      - {dept: "13", title: "Élections législatives de 2022 dans les Bouches-du-Rhône", revid: 241279949}
+      - {dept: "14", title: "Élections législatives de 2022 dans le Calvados", revid: 241108783}
+      - {dept: "15", title: "Élections législatives de 2022 dans le Cantal", revid: 237404684}
+      - {dept: "16", title: "Élections législatives de 2022 en Charente", revid: 240984259}
+      - {dept: "17", title: "Élections législatives de 2022 en Charente-Maritime", revid: 239451979}
+      - {dept: "18", title: "Élections législatives de 2022 dans le Cher", revid: 241117533}
+      - {dept: "19", title: "Élections législatives de 2022 en Corrèze", revid: 240599872}
+      - {dept: "21", title: "Élections législatives de 2022 dans la Côte-d'Or", revid: 240846149}
+      - {dept: "22", title: "Élections législatives de 2022 dans les Côtes-d'Armor", revid: 241099901}
+      - {dept: "23", title: "Élections législatives de 2022 dans la Creuse", revid: 240197157}
+      - {dept: "24", title: "Élections législatives de 2022 en Dordogne", revid: 240984269}
+      - {dept: "25", title: "Élections législatives de 2022 dans le Doubs", revid: 240984177}
+      - {dept: "26", title: "Élections législatives de 2022 dans la Drôme", revid: 240984144}
+      - {dept: "27", title: "Élections législatives de 2022 dans l'Eure", revid: 241170140}
+      - {dept: "28", title: "Élections législatives de 2022 en Eure-et-Loir", revid: 240803442}
+      - {dept: "29", title: "Élections législatives de 2022 dans le Finistère", revid: 241493931}
+      - {dept: "2A", title: "Élections législatives de 2022 en Corse-du-Sud", revid: 231377932}
+      - {dept: "2B", title: "Élections législatives de 2022 en Haute-Corse", revid: 231379290}
+      - {dept: "30", title: "Élections législatives de 2022 dans le Gard", revid: 240984191}
+      - {dept: "31", title: "Élections législatives de 2022 dans la Haute-Garonne", revid: 237952551}
+      - {dept: "32", title: "Élections législatives de 2022 dans le Gers", revid: 237952728}
+      - {dept: "33", title: "Élections législatives de 2022 en Gironde", revid: 240984283}
+      - {dept: "34", title: "Élections législatives de 2022 dans l'Hérault", revid: 240984126}
+      - {dept: "35", title: "Élections législatives de 2022 en Ille-et-Vilaine", revid: 241307258}
+      - {dept: "36", title: "Élections législatives de 2022 dans l'Indre", revid: 240436835}
+      - {dept: "37", title: "Élections législatives de 2022 en Indre-et-Loire", revid: 235735710}
+      - {dept: "38", title: "Élections législatives de 2022 dans l'Isère", revid: 240984131}
+      - {dept: "39", title: "Élections législatives de 2022 dans le Jura", revid: 232903544}
+      - {dept: "40", title: "Élections législatives de 2022 dans les Landes", revid: 235802157}
+      - {dept: "41", title: "Élections législatives de 2022 en Loir-et-Cher", revid: 240984289}
+      - {dept: "42", title: "Élections législatives de 2022 dans la Loire", revid: 240934439}
+      - {dept: "43", title: "Élections législatives de 2022 dans la Haute-Loire", revid: 241244964}
+      - {dept: "44", title: "Élections législatives de 2022 dans la Loire-Atlantique", revid: 233626376}
+      - {dept: "45", title: "Élections législatives de 2022 dans le Loiret", revid: 241046526}
+      - {dept: "46", title: "Élections législatives de 2022 dans le Lot", revid: 237953204}
+      - {dept: "47", title: "Élections législatives de 2022 en Lot-et-Garonne", revid: 239658080}
+      - {dept: "48", title: "Élections législatives de 2022 en Lozère", revid: 237953246}
+      - {dept: "49", title: "Élections législatives de 2022 en Maine-et-Loire", revid: 238877051}
+      - {dept: "50", title: "Élections législatives de 2022 dans la Manche", revid: 239013740}
+      - {dept: "51", title: "Élections législatives de 2022 dans la Marne", revid: 240984155}
+      - {dept: "52", title: "Élections législatives de 2022 dans la Haute-Marne", revid: 237953416}
+      - {dept: "53", title: "Élections législatives de 2022 dans la Mayenne", revid: 239566205}
+      - {dept: "54", title: "Élections législatives de 2022 en Meurthe-et-Moselle", revid: 236444160}
+      - {dept: "55", title: "Élections législatives de 2022 dans la Meuse", revid: 240984163}
+      - {dept: "56", title: "Élections législatives de 2022 dans le Morbihan", revid: 239591418}
+      - {dept: "57", title: "Élections législatives de 2022 en Moselle", revid: 240984298}
+      - {dept: "58", title: "Élections législatives de 2022 dans la Nièvre", revid: 237404599}
+      - {dept: "59", title: "Élections législatives de 2022 dans le Nord", revid: 241278651}
+      - {dept: "60", title: "Élections législatives de 2022 dans l'Oise", revid: 240984137}
+      - {dept: "61", title: "Élections législatives de 2022 dans l'Orne", revid: 237404940}
+      - {dept: "62", title: "Élections législatives de 2022 dans le Pas-de-Calais", revid: 240984224}
+      - {dept: "63", title: "Élections législatives de 2022 dans le Puy-de-Dôme", revid: 240607692}
+      - {dept: "64", title: "Élections législatives de 2022 dans les Pyrénées-Atlantiques", revid: 240608012}
+      - {dept: "65", title: "Élections législatives de 2022 dans les Hautes-Pyrénées", revid: 240608121}
+      - {dept: "66", title: "Élections législatives de 2022 dans les Pyrénées-Orientales", revid: 237953645}
+      - {dept: "67", title: "Élections législatives de 2022 dans le Bas-Rhin", revid: 238573080}
+      - {dept: "68", title: "Élections législatives de 2022 dans le Haut-Rhin", revid: 237954050}
+      - {dept: "69", title: "Élections législatives de 2022 dans le Rhône", revid: 240607486}
+      - {dept: "70", title: "Élections législatives de 2022 dans la Haute-Saône", revid: 237954082}
+      - {dept: "71", title: "Élections législatives de 2022 en Saône-et-Loire", revid: 237404902}
+      - {dept: "72", title: "Élections législatives de 2022 dans la Sarthe", revid: 241281919}
+      - {dept: "73", title: "Élections législatives de 2022 en Savoie", revid: 237954217}
+      - {dept: "74", title: "Élections législatives de 2022 en Haute-Savoie", revid: 237954388}
+      - {dept: "75", title: "Élections législatives de 2022 à Paris", revid: 239520413}
+      - {dept: "76", title: "Élections législatives de 2022 dans la Seine-Maritime", revid: 239772780}
+      - {dept: "77", title: "Élections législatives de 2022 en Seine-et-Marne", revid: 240963596}
+      - {dept: "78", title: "Élections législatives de 2022 dans les Yvelines", revid: 234713015}
+      - {dept: "79", title: "Élections législatives de 2022 dans les Deux-Sèvres", revid: 240873765}
+      - {dept: "80", title: "Élections législatives de 2022 dans la Somme", revid: 241152226}
+      - {dept: "81", title: "Élections législatives de 2022 dans le Tarn", revid: 240984233}
+      - {dept: "82", title: "Élections législatives de 2022 en Tarn-et-Garonne", revid: 240995893}
+      - {dept: "83", title: "Élections législatives de 2022 dans le Var", revid: 240600077}
+      - {dept: "84", title: "Élections législatives de 2022 en Vaucluse", revid: 237953061}
+      - {dept: "85", title: "Élections législatives de 2022 dans la Vendée", revid: 241306286}
+      - {dept: "86", title: "Élections législatives de 2022 dans la Vienne", revid: 240714567}
+      - {dept: "87", title: "Élections législatives de 2022 dans la Haute-Vienne", revid: 234640655}
+      - {dept: "88", title: "Élections législatives de 2022 dans les Vosges", revid: 235736211}
+      - {dept: "89", title: "Élections législatives de 2022 dans l'Yonne", revid: 237388052}
+      - {dept: "90", title: "Élections législatives de 2022 dans le Territoire de Belfort", revid: 235395745}
+      - {dept: "91", title: "Élections législatives de 2022 dans l'Essonne", revid: 241102648}
+      - {dept: "92", title: "Élections législatives de 2022 dans les Hauts-de-Seine", revid: 240247295}
+      - {dept: "93", title: "Élections législatives de 2022 dans la Seine-Saint-Denis", revid: 241330134}
+      - {dept: "94", title: "Élections législatives de 2022 dans le Val-de-Marne", revid: 233811095}
+      - {dept: "95", title: "Élections législatives de 2022 dans le Val-d'Oise", revid: 239482242}
+      - {dept: "ZA", title: "Élections législatives de 2022 en Guadeloupe", revid: 241493799}
+      - {dept: "ZB", title: "Élections législatives de 2022 en Martinique", revid: 240609535}
+      - {dept: "ZC", title: "Élections législatives de 2022 en Guyane", revid: 241418204}
+      - {dept: "ZD", title: "Élections législatives de 2022 à La Réunion", revid: 239643230}
+      - {dept: "ZM", title: "Élections législatives de 2022 à Mayotte", revid: 241333791}
+      - {dept: "ZN", title: "Élections législatives de 2022 en Nouvelle-Calédonie", revid: 235395675}
+      - {dept: "ZP", title: "Élections législatives de 2022 en Polynésie française", revid: 239729149}
+      - {dept: "ZS", title: "Élections législatives de 2022 à Saint-Pierre-et-Miquelon", revid: 235395738}
+  leg2024:
+    nfp_allocation:
+      name: circonscriptions-front-populaire.csv
+      url: https://static.data.gouv.fr/resources/repartition-des-circonscriptions-front-populaire-legislatives-2024/20240614-085551/circonscriptions-front-populaire.csv
+      dataset: https://www.data.gouv.fr/fr/datasets/repartition-des-circonscriptions-front-populaire-legislatives-2024/
+      sha256: 8af5d2acd4580d2918914009211a7932aad2d78c7b4b0b0b96cc222ec771e97e
+      notes: >-
+        Non officiel (publié par un particulier le 14 juin 2024 d'après le fichier de l'accord
+        diffusé dans la presse) ; colonnes Circonscription (« 01-01 ») et Etiquette (FI, PS,
+        PE pour le pôle écologiste, PCF). Erreurs signalées par l'auteur : deux « 49-01 »
+        (la seconde est 49-02), et 64-01, 64-03, 66-01 finalement investies FI au lieu du PS
+        (jeu « Candidatures Nouveau Front Populaire et dissidents »). Sert de contrôle, pas de
+        source principale.
+    department_pages:
+      - {dept: "1", title: "Élections législatives de 2024 dans l'Ain", revid: 241388213}
+      - {dept: "10", title: "Élections législatives de 2024 dans l'Aube", revid: 241115160}
+      - {dept: "11", title: "Élections législatives de 2024 dans l'Aude", revid: 240984338}
+      - {dept: "12", title: "Élections législatives de 2024 dans l'Aveyron", revid: 241563933}
+      - {dept: "13", title: "Élections législatives de 2024 dans les Bouches-du-Rhône", revid: 240984461}
+      - {dept: "14", title: "Élections législatives de 2024 dans le Calvados", revid: 238823752}
+      - {dept: "15", title: "Élections législatives de 2024 dans le Cantal", revid: 224387197}
+      - {dept: "16", title: "Élections législatives de 2024 en Charente", revid: 240984486}
+      - {dept: "17", title: "Élections législatives de 2024 en Charente-Maritime", revid: 240984493}
+      - {dept: "18", title: "Élections législatives de 2024 dans le Cher", revid: 237163913}
+      - {dept: "19", title: "Élections législatives de 2024 en Corrèze", revid: 240598022}
+      - {dept: "2", title: "Élections législatives de 2024 dans l'Aisne", revid: 240984611}
+      - {dept: "21", title: "Élections législatives de 2024 dans la Côte-d'Or", revid: 240984360}
+      - {dept: "22", title: "Élections législatives de 2024 dans les Côtes-d'Armor", revid: 237163674}
+      - {dept: "23", title: "Élections législatives de 2024 dans la Creuse", revid: 228680571}
+      - {dept: "24", title: "Élections législatives de 2024 en Dordogne", revid: 240720618}
+      - {dept: "25", title: "Élections législatives de 2024 dans le Doubs", revid: 240720982}
+      - {dept: "26", title: "Élections législatives de 2024 dans la Drôme", revid: 240720974}
+      - {dept: "27", title: "Élections législatives de 2024 dans l'Eure", revid: 240721019}
+      - {dept: "28", title: "Élections législatives de 2024 en Eure-et-Loir", revid: 239994676}
+      - {dept: "29", title: "Élections législatives de 2024 dans le Finistère", revid: 240413020}
+      - {dept: "2A", title: "Élections législatives de 2024 en Corse-du-Sud", revid: 231377985}
+      - {dept: "2B", title: "Élections législatives de 2024 en Haute-Corse", revid: 241297790}
+      - {dept: "3", title: "Élections législatives de 2024 dans l'Allier", revid: 240984323}
+      - {dept: "30", title: "Élections législatives de 2024 dans le Gard", revid: 241532828}
+      - {dept: "31", title: "Élections législatives de 2024 dans la Haute-Garonne", revid: 239692252}
+      - {dept: "32", title: "Élections législatives de 2024 dans le Gers", revid: 237101413}
+      - {dept: "33", title: "Élections législatives de 2024 en Gironde", revid: 240741552}
+      - {dept: "34", title: "Élections législatives de 2024 dans l'Hérault", revid: 240773747}
+      - {dept: "35", title: "Élections législatives de 2024 en Ille-et-Vilaine", revid: 240117241}
+      - {dept: "36", title: "Élections législatives de 2024 dans l'Indre", revid: 224471882}
+      - {dept: "37", title: "Élections législatives de 2024 en Indre-et-Loire", revid: 241175203}
+      - {dept: "38", title: "Élections législatives de 2024 dans l'Isère", revid: 241118346}
+      - {dept: "39", title: "Élections législatives de 2024 dans le Jura", revid: 236478384}
+      - {dept: "4", title: "Élections législatives de 2024 dans les Alpes-de-Haute-Provence", revid: 240984450}
+      - {dept: "40", title: "Élections législatives de 2024 dans les Landes", revid: 224472655}
+      - {dept: "41", title: "Élections législatives de 2024 en Loir-et-Cher", revid: 240984503}
+      - {dept: "42", title: "Élections législatives de 2024 dans la Loire", revid: 240773921}
+      - {dept: "43", title: "Élections législatives de 2024 dans la Haute-Loire", revid: 240287343}
+      - {dept: "44", title: "Élections législatives de 2024 dans la Loire-Atlantique", revid: 241551179}
+      - {dept: "45", title: "Élections législatives de 2024 dans le Loiret", revid: 240882561}
+      - {dept: "46", title: "Élections législatives de 2024 dans le Lot", revid: 241123396}
+      - {dept: "47", title: "Élections législatives de 2024 en Lot-et-Garonne", revid: 241594982}
+      - {dept: "48", title: "Élections législatives de 2024 en Lozère", revid: 241390050}
+      - {dept: "49", title: "Élections législatives de 2024 en Maine-et-Loire", revid: 230376631}
+      - {dept: "5", title: "Élections législatives de 2024 dans les Hautes-Alpes", revid: 241520650}
+      - {dept: "50", title: "Élections législatives de 2024 dans la Manche", revid: 237953342}
+      - {dept: "51", title: "Élections législatives de 2024 dans la Marne", revid: 240402461}
+      - {dept: "52", title: "Élections législatives de 2024 dans la Haute-Marne", revid: 232003037}
+      - {dept: "53", title: "Élections législatives de 2024 dans la Mayenne", revid: 240735612}
+      - {dept: "54", title: "Élections législatives de 2024 en Meurthe-et-Moselle", revid: 240775446}
+      - {dept: "55", title: "Élections législatives de 2024 dans la Meuse", revid: 240775502}
+      - {dept: "56", title: "Élections législatives de 2024 dans le Morbihan", revid: 241597120}
+      - {dept: "57", title: "Élections législatives de 2024 en Moselle", revid: 240780208}
+      - {dept: "58", title: "Élections législatives de 2024 dans la Nièvre", revid: 240780173}
+      - {dept: "59", title: "Élections législatives de 2024 dans le Nord", revid: 241460314}
+      - {dept: "6", title: "Élections législatives de 2024 dans les Alpes-Maritimes", revid: 240702289}
+      - {dept: "60", title: "Élections législatives de 2024 dans l'Oise", revid: 240783101}
+      - {dept: "61", title: "Élections législatives de 2024 dans l'Orne", revid: 232660250}
+      - {dept: "62", title: "Élections législatives de 2024 dans le Pas-de-Calais", revid: 240984401}
+      - {dept: "63", title: "Élections législatives de 2024 dans le Puy-de-Dôme", revid: 237948507}
+      - {dept: "64", title: "Élections législatives de 2024 dans les Pyrénées-Atlantiques", revid: 241496714}
+      - {dept: "65", title: "Élections législatives de 2024 dans les Hautes-Pyrénées", revid: 237163838}
+      - {dept: "66", title: "Élections législatives de 2024 dans les Pyrénées-Orientales", revid: 240984473}
+      - {dept: "67", title: "Élections législatives de 2024 dans le Bas-Rhin", revid: 240984395}
+      - {dept: "68", title: "Élections législatives de 2024 dans le Haut-Rhin", revid: 240901567}
+      - {dept: "69", title: "Élections législatives de 2024 dans le Rhône", revid: 240984408}
+      - {dept: "7", title: "Élections législatives de 2024 dans l'Ardèche", revid: 240715954}
+      - {dept: "70", title: "Élections législatives de 2024 dans la Haute-Saône", revid: 241132999}
+      - {dept: "71", title: "Élections législatives de 2024 en Saône-et-Loire", revid: 241582622}
+      - {dept: "72", title: "Élections législatives de 2024 dans la Sarthe", revid: 232660149}
+      - {dept: "73", title: "Élections législatives de 2024 en Savoie", revid: 237164333}
+      - {dept: "74", title: "Élections législatives de 2024 en Haute-Savoie", revid: 233156438}
+      - {dept: "75", title: "Élections législatives de 2024 à Paris", revid: 240647740}
+      - {dept: "76", title: "Élections législatives de 2024 dans la Seine-Maritime", revid: 240984381}
+      - {dept: "77", title: "Élections législatives de 2024 en Seine-et-Marne", revid: 240984521}
+      - {dept: "78", title: "Élections législatives de 2024 dans les Yvelines", revid: 233038587}
+      - {dept: "79", title: "Élections législatives de 2024 dans les Deux-Sèvres", revid: 237163858}
+      - {dept: "8", title: "Élections législatives de 2024 dans les Ardennes", revid: 240984455}
+      - {dept: "80", title: "Élections législatives de 2024 dans la Somme", revid: 240984387}
+      - {dept: "81", title: "Élections législatives de 2024 dans le Tarn", revid: 240984417}
+      - {dept: "82", title: "Élections législatives de 2024 en Tarn-et-Garonne", revid: 240984531}
+      - {dept: "83", title: "Élections législatives de 2024 dans le Var", revid: 240600250}
+      - {dept: "84", title: "Élections législatives de 2024 en Vaucluse", revid: 240984544}
+      - {dept: "85", title: "Élections législatives de 2024 dans la Vendée", revid: 239828123}
+      - {dept: "86", title: "Élections législatives de 2024 dans la Vienne", revid: 237163939}
+      - {dept: "87", title: "Élections législatives de 2024 dans la Haute-Vienne", revid: 227667240}
+      - {dept: "88", title: "Élections législatives de 2024 dans les Vosges", revid: 240984481}
+      - {dept: "89", title: "Élections législatives de 2024 dans l'Yonne", revid: 240984350}
+      - {dept: "9", title: "Élections législatives de 2024 dans l'Ariège", revid: 237101399}
+      - {dept: "90", title: "Élections législatives de 2024 dans le Territoire de Belfort", revid: 240984425}
+      - {dept: "91", title: "Élections législatives de 2024 dans l'Essonne", revid: 241505348}
+      - {dept: "92", title: "Élections législatives de 2024 dans les Hauts-de-Seine", revid: 241360514}
+      - {dept: "93", title: "Élections législatives de 2024 dans la Seine-Saint-Denis", revid: 241518369}
+      - {dept: "94", title: "Élections législatives de 2024 dans le Val-de-Marne", revid: 237949319}
+      - {dept: "95", title: "Élections législatives de 2024 dans le Val-d'Oise", revid: 240984437}
+      - {dept: "971", title: "Élections législatives de 2024 en Guadeloupe", revid: 237484120}
+      - {dept: "972", title: "Élections législatives de 2024 en Martinique", revid: 237484122}
+      - {dept: "973", title: "Élections législatives de 2024 en Guyane", revid: 237379254}
+      - {dept: "974", title: "Élections législatives de 2024 à La Réunion", revid: 240984554}
+      - {dept: "975", title: "Élections législatives de 2024 à Saint-Pierre-et-Miquelon", revid: 238986797}
+      - {dept: "976", title: "Élections législatives de 2024 à Mayotte", revid: 240984562}
+      - {dept: "987", title: "Élections législatives de 2024 en Polynésie française", revid: 237164423}
+      - {dept: "988", title: "Élections législatives de 2024 en Nouvelle-Calédonie", revid: 237041758}
