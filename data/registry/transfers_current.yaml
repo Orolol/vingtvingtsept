@@ -1,0 +1,1131 @@
+# Reports de voix publiés AVANT le premier tour, dans les sondages de duel hypothétique de
+# l'élection en cours (étude docs/results/2026-11-24-reports-publies.md).
+#
+# Fichier séparé de transfers.yaml (reports réalisés, lus par le modèle par défaut), qu'il ne
+# modifie pas. Il n'est lu que si l'option est activée : SecondRoundModel(current_transfers=…),
+# chargé par vvs.registry.transfers_current.load_current_transfers. Relevé le 2026-11-24.
+#
+# Doctrine de transfers.yaml : chiffres recopiés tels quels de la source primaire (PDF de
+# l'institut ou notice de la Commission des sondages), en % ; aucune cellule complétée de mémoire
+# ni déduite par différence à 100 ; « - » de la source = 0 (noté). Chaque tableau a été relu par
+# l'agent principal dans le texte du PDF (pdftotext -layout) à la page indiquée ; les PDF
+# historiques sont conservés sous runs/2026-11-24-reports-publies/sources/ (hors Git).
+#
+# - `pair` : les deux finalistes de l'hypothèse ; `to` de chaque ligne : ces deux candidats et
+#   `none` (colonne « abstention / blanc / nul / ne se prononce pas » de la source, telle quelle).
+# - `rows[].from` : candidate_id de l'électorat (intention de vote au premier tour). Seules les
+#   lignes des candidats NON finalistes sont recopiées : le modèle ignore la fidélité des
+#   électorats des finalistes, les lignes « Ensemble » et « abstention, vote blanc ».
+# - `hypotheses` : une entrée par hypothèse de premier tour quand le tableau en distingue
+#   plusieurs (sinon une seule, `label` décrivant la configuration).
+# - `published` : date de publication lue (document ou page de l'institut) ; absente, la
+#   disponibilité vaut fieldwork_end + 2 jours.
+# - `base` : likely_voters (certains d'aller voter ou probabilité 8-10 sur 10), registered
+#   (inscrits), ou other (voir base_note).
+
+tables:
+  # ===================================================================== 2012 : Hollande – Sarkozy
+  - id: ifop_jdd_2011_12
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: JDD.fr
+    title: "Les intentions de vote pour l'élection présidentielle de 2012 – Résultats détaillés – Décembre 2011 : les reports de voix du premier au second tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1711-1-study_file.pdf
+    pages: "p. 14 du PDF (page imprimée 12)"
+    fieldwork_start: 2011-12-13
+    fieldwork_end: 2011-12-15
+    sample_size: 937
+    mode: online
+    base: registered
+    base_note: "Lignes = intention de vote au 1er tour, sommant à 100 avec « Ne se prononce pas » (abstention, blanc et indécis confondus). 937 inscrits extraits de 1008."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 78, sarkozy_nicolas: 0, none: 22}, note: "« - » pour Sarkozy"}
+          - {from: joly_eva, to: {hollande_francois: 77, sarkozy_nicolas: 6, none: 17}}
+          - {from: bayrou_francois, to: {hollande_francois: 41, sarkozy_nicolas: 23, none: 36}}
+          - {from: de_villepin_dominique, to: {hollande_francois: 49, sarkozy_nicolas: 31, none: 20}}
+          - {from: le_pen_marine, to: {hollande_francois: 20, sarkozy_nicolas: 43, none: 37}}
+    notes: "Duel agrégé 56 / 44."
+
+  - id: ifop_jdd_2012_01
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Journal du Dimanche
+    title: "Les intentions de vote pour l'élection présidentielle de 2012 – Résultats détaillés – Janvier 2012 : les reports de voix du premier au second tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1723-1-study_file.pdf
+    pages: "p. 14 du PDF (page imprimée 12)"
+    fieldwork_start: 2012-01-04
+    fieldwork_end: 2012-01-06
+    sample_size: 1163
+    mode: online
+    base: registered
+    base_note: "Lignes sommant à 100 avec « Ne se prononce pas ». 1163 inscrits extraits de 1216."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 73, sarkozy_nicolas: 8, none: 19}}
+          - {from: joly_eva, to: {hollande_francois: 63, sarkozy_nicolas: 12, none: 25}}
+          - {from: bayrou_francois, to: {hollande_francois: 41, sarkozy_nicolas: 26, none: 33}}
+          - {from: de_villepin_dominique, to: {hollande_francois: 37, sarkozy_nicolas: 41, none: 22}}
+          - {from: le_pen_marine, to: {hollande_francois: 21, sarkozy_nicolas: 38, none: 41}}
+    notes: "Duel agrégé 54 / 46."
+
+  - id: ifop_barometre_2012_v1
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Paris Match, Europe 1, Public Sénat (Ifop-Fiducial)
+    title: "Le baromètre de l'élection présidentielle 2012 – Vague 1 : les reports entre le 1er tour et le 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1846-1-study_file.pdf
+    pages: "p. 23 (graphique, étiquettes extraites par pdftotext)"
+    fieldwork_start: 2012-01-11
+    fieldwork_end: 2012-01-13
+    sample_size: 1550
+    mode: mixed
+    base: registered
+    base_note: "Colonnes F. Hollande / N. Sarkozy / NSP ; lignes = intention de 1er tour."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 83, sarkozy_nicolas: 6, none: 11}}
+          - {from: joly_eva, to: {hollande_francois: 82, sarkozy_nicolas: 12, none: 6}}
+          - {from: bayrou_francois, to: {hollande_francois: 48, sarkozy_nicolas: 28, none: 24}}
+          - {from: de_villepin_dominique, to: {hollande_francois: 49, sarkozy_nicolas: 29, none: 22}}
+          - {from: le_pen_marine, to: {hollande_francois: 27, sarkozy_nicolas: 41, none: 32}}
+    notes: "Duel agrégé 57 / 43."
+
+  - id: ifop_barometre_2012_v3
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Paris Match, Europe 1, Public Sénat (Ifop-Fiducial)
+    title: "Le baromètre de l'élection présidentielle 2012 – Vague 3 : les reports entre le 1er tour et le 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1761-1-study_file.pdf
+    pages: "p. 25"
+    fieldwork_start: 2012-02-09
+    fieldwork_end: 2012-02-12
+    sample_size: 1723
+    mode: mixed
+    base: registered
+    base_note: "Colonnes F. Hollande / N. Sarkozy / NSP."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 87, sarkozy_nicolas: 5, none: 8}}
+          - {from: joly_eva, to: {hollande_francois: 77, sarkozy_nicolas: 9, none: 14}}
+          - {from: bayrou_francois, to: {hollande_francois: 42, sarkozy_nicolas: 34, none: 24}}
+          - {from: le_pen_marine, to: {hollande_francois: 33, sarkozy_nicolas: 38, none: 29}}
+    notes: "Duel agrégé 57,5 / 42,5."
+
+  - id: ifop_barometre_2012_v4
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Paris Match, Europe 1, Public Sénat (Ifop-Fiducial)
+    title: "Le baromètre de l'élection présidentielle 2012 – Vague 4 : les reports entre le 1er tour et le 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1843-1-study_file.pdf
+    pages: "p. 29"
+    fieldwork_start: 2012-02-23
+    fieldwork_end: 2012-02-26
+    sample_size: 1723
+    mode: mixed
+    base: registered
+    base_note: "Colonnes F. Hollande / N. Sarkozy / NSP."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 78, sarkozy_nicolas: 3, none: 19}}
+          - {from: joly_eva, to: {hollande_francois: 82, sarkozy_nicolas: 13, none: 5}}
+          - {from: bayrou_francois, to: {hollande_francois: 45, sarkozy_nicolas: 28, none: 27}}
+          - {from: le_pen_marine, to: {hollande_francois: 26, sarkozy_nicolas: 39, none: 35}}
+    notes: "Duel agrégé 56,5 / 43,5. Échantillon tel que relevé par le sous-agent (non relu)."
+
+  - id: ifop_barometre_2012_v5
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Paris Match, Europe 1, Public Sénat (Ifop-Fiducial)
+    title: "Le baromètre de l'élection présidentielle 2012 – Vague 5 : les reports entre le 1er tour et le 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1793-1-study_file.pdf
+    pages: "p. 21"
+    fieldwork_start: 2012-03-11
+    fieldwork_end: 2012-03-12
+    sample_size: 1638
+    mode: mixed
+    base: registered
+    base_note: "Colonnes F. Hollande / N. Sarkozy / NSP."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 90, sarkozy_nicolas: 1, none: 9}}
+          - {from: joly_eva, to: {hollande_francois: 79, sarkozy_nicolas: 10, none: 11}}
+          - {from: bayrou_francois, to: {hollande_francois: 41, sarkozy_nicolas: 34, none: 25}}
+          - {from: le_pen_marine, to: {hollande_francois: 25, sarkozy_nicolas: 43, none: 32}}
+    notes: "Terrain du 11 mars (18 h) au 12 mars."
+
+  - id: ifop_jdd_2012_03
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Journal du Dimanche
+    title: "Les intentions de vote pour l'élection présidentielle de 2012 – Résultats détaillés – Mars 2012 : les reports de voix du premier au second tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1806-1-study_file.pdf
+    pages: "p. 12 du PDF (page imprimée 10 ; pied de page « Janvier 2012 », erreur de gabarit)"
+    fieldwork_start: 2012-03-16
+    fieldwork_end: 2012-03-17
+    sample_size: 961
+    mode: online
+    base: registered
+    base_note: "Lignes sommant à 100 avec « Ne se prononcent pas ». 961 inscrits extraits de 1011."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 82, sarkozy_nicolas: 5, none: 13}}
+          - {from: joly_eva, to: {hollande_francois: 74, sarkozy_nicolas: 0, none: 26}, note: "« - » pour Sarkozy"}
+          - {from: bayrou_francois, to: {hollande_francois: 33, sarkozy_nicolas: 30, none: 37}}
+          - {from: le_pen_marine, to: {hollande_francois: 20, sarkozy_nicolas: 42, none: 38}}
+    notes: "Duel agrégé 54 / 46."
+
+  - id: ifop_barometre_2012_v6
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Paris Match, Europe 1, Public Sénat (Ifop-Fiducial)
+    title: "Le baromètre de l'élection présidentielle 2012 – Vague 6 : les reports entre le 1er tour et le 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1817-1-study_file.pdf
+    pages: "p. 26"
+    fieldwork_start: 2012-03-22
+    fieldwork_end: 2012-03-25
+    sample_size: 1769
+    mode: mixed
+    base: registered
+    base_note: "Colonnes F. Hollande / N. Sarkozy / NSP."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 79, sarkozy_nicolas: 5, none: 16}}
+          - {from: joly_eva, to: {hollande_francois: 68, sarkozy_nicolas: 11, none: 21}}
+          - {from: bayrou_francois, to: {hollande_francois: 32, sarkozy_nicolas: 43, none: 25}}
+          - {from: le_pen_marine, to: {hollande_francois: 31, sarkozy_nicolas: 39, none: 30}}
+    notes: "Duel agrégé 54 / 46."
+
+  - id: ifop_barometre_2012_v7
+    election: 2012
+    pair: [hollande_francois, sarkozy_nicolas]
+    pollster: ifop
+    sponsor: Paris Match, Europe 1, Public Sénat (Ifop-Fiducial)
+    title: "Le baromètre de l'élection présidentielle 2012 – Vague 7 : les reports entre le 1er tour et le 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/1842-1-study_file.pdf
+    pages: "p. 25"
+    fieldwork_start: 2012-04-05
+    fieldwork_end: 2012-04-07
+    sample_size: 1869
+    mode: mixed
+    base: registered
+    base_note: "Colonnes F. Hollande / N. Sarkozy / NSP."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {hollande_francois: 76, sarkozy_nicolas: 9, none: 15}}
+          - {from: joly_eva, to: {hollande_francois: 72, sarkozy_nicolas: 4, none: 24}}
+          - {from: bayrou_francois, to: {hollande_francois: 29, sarkozy_nicolas: 31, none: 40}}
+          - {from: le_pen_marine, to: {hollande_francois: 22, sarkozy_nicolas: 45, none: 33}}
+    notes: "Duel agrégé 53 / 47. Publication le 10 avril 2012 d'après la page Ifop (relevé du sous-agent, non lu dans le PDF) ; la règle terrain + 2 jours (9 avril) donne le même résultat aux horizons de la chaîne."
+
+  # ===================================================================== 2017 : Macron – Le Pen
+  - id: ifop_rapports_de_force_2016_12
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ifop
+    sponsor: iTélé, Paris Match, Sud Radio
+    title: "Présidentielle 2017 : les rapports de force électoraux à cinq mois du scrutin – les reports de voix du premier au second tour, hypothèse Macron – Le Pen 62 % - 38 %"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/3576-1-study_file.pdf
+    pages: "p. 22"
+    fieldwork_start: 2016-11-28
+    fieldwork_end: 2016-12-03
+    published: 2016-12-06
+    sample_size: 1882
+    mode: online
+    base: registered
+    base_note: "« Sur 100 électeurs de… », colonnes Macron / Le Pen / Abstention-blanc-nul-NSP. Deux terrains (28-30 nov., 2-3 déc.) ; l'hypothèse de 1er tour (avec Hollande et Bayrou) n'est pas précisée sur la diapositive."
+    hypotheses:
+      - label: "hypothèse avec F. Hollande et F. Bayrou (inférée des lignes)"
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 53, le_pen_marine: 9, none: 38}}
+          - {from: hollande_francois, to: {macron_emmanuel: 70, le_pen_marine: 8, none: 22}}
+          - {from: bayrou_francois, to: {macron_emmanuel: 67, le_pen_marine: 9, none: 24}}
+          - {from: fillon_francois, to: {macron_emmanuel: 55, le_pen_marine: 23, none: 22}}
+
+  - id: ipsos_france2_2017_01
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: France 2
+    title: "La gauche peut-elle l'emporter en 2017 ? – Tableau de report de voix (hypothèse de 2nd tour Macron / Le Pen)"
+    url: https://www.ipsos.com/sites/default/files/ct/news/documents/2017-08/rapport_ipsos_france2_enquete_gauche_-_.pdf
+    pages: "p. 13"
+    fieldwork_start: 2017-01-20
+    fieldwork_end: 2017-01-20
+    published: 2017-01-22
+    sample_size: 1443
+    mode: online
+    base: likely_voters
+    base_note: "Base « certains d'aller voter » (992) ; colonnes Macron / Le Pen / Non exprimé. Électorats de gauche et de Macron seulement (pas de ligne Fillon ni Le Pen). Publication lue sur la page web Ipsos."
+    hypotheses:
+      - label: "1er tour avec B. Hamon"
+        rows:
+          - {from: hamon_benoit, to: {macron_emmanuel: 78, le_pen_marine: 7, none: 15}}
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 49, le_pen_marine: 4, none: 47}}
+      - label: "1er tour avec M. Valls"
+        rows:
+          - {from: valls_manuel, to: {macron_emmanuel: 84, le_pen_marine: 1, none: 15}}
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 51, le_pen_marine: 7, none: 42}}
+      - label: "1er tour avec A. Montebourg"
+        rows:
+          - {from: montebourg_arnaud, to: {macron_emmanuel: 80, le_pen_marine: 9, none: 11}}
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 51, le_pen_marine: 4, none: 45}}
+
+  - id: ifop_rapports_de_force_2017_03
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ifop
+    sponsor: Paris Match, CNews, Sud Radio
+    title: "Présidentielle 2017 : les rapports de force électoraux à deux mois du second tour – les reports de voix du premier au second tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/3677-1-study_file.pdf
+    pages: "p. 24"
+    fieldwork_start: 2017-03-02
+    fieldwork_end: 2017-03-04
+    published: 2017-03-07
+    sample_size: 1822
+    mode: mixed
+    base: registered
+    base_note: "« Sur 100 électeurs de… », colonnes Macron / Le Pen / Abstention-blanc-nul-NSP."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 55, le_pen_marine: 4, none: 41}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 68, le_pen_marine: 3, none: 29}}
+          - {from: fillon_francois, to: {macron_emmanuel: 35, le_pen_marine: 31, none: 34}}
+
+  - id: ifop_rolling_2017_03_10
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ifop
+    sponsor: Paris Match, CNews, Sud Radio (Ifop-Fiducial)
+    title: "Rolling 2017 – Les reports de voix du 1er tour au 2nd tour en cas de duel E. Macron / M. Le Pen"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/3684-1-study_file.pdf
+    pages: "p. 16"
+    fieldwork_start: 2017-03-07
+    fieldwork_end: 2017-03-10
+    published: 2017-03-10
+    sample_size: 1379
+    mode: online
+    base: registered
+    base_note: "Colonnes dans l'ordre de la source : Macron / Abstention-blanc-nul-NSP / Le Pen (ordre confirmé par la note de lecture)."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 46, le_pen_marine: 17, none: 37}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 71, le_pen_marine: 7, none: 22}}
+          - {from: fillon_francois, to: {macron_emmanuel: 37, le_pen_marine: 30, none: 33}}
+
+  - id: ifop_rolling_2017_03_31
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ifop
+    sponsor: Paris Match, CNews, Sud Radio (Ifop-Fiducial)
+    title: "Rolling 2017 – Les reports de voix du premier tour au second tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/3713-1-study_file.pdf
+    pages: "p. 17"
+    fieldwork_start: 2017-03-28
+    fieldwork_end: 2017-03-31
+    published: 2017-03-31
+    sample_size: 2204
+    mode: online
+    base: registered
+    base_note: "Colonnes Macron / Abstention-blanc-nul-NSP / Le Pen (note de lecture)."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 47, le_pen_marine: 12, none: 41}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 65, le_pen_marine: 4, none: 31}}
+          - {from: fillon_francois, to: {macron_emmanuel: 35, le_pen_marine: 30, none: 35}}
+
+  - id: ifop_rolling_2017_04_06
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ifop
+    sponsor: Paris Match, CNews, Sud Radio (Ifop-Fiducial)
+    title: "Rolling 2017 – Les reports de voix du premier tour au second tour"
+    url: https://www.ifop.com/wp-content/uploads/2018/03/3722-1-study_file.pdf
+    pages: "p. 17"
+    fieldwork_start: 2017-04-03
+    fieldwork_end: 2017-04-06
+    published: 2017-04-06
+    sample_size: 2243
+    mode: online
+    base: registered
+    base_note: "Colonnes Macron / Abstention-blanc-nul-NSP / Le Pen (note de lecture). Lignes Mélenchon (99) et Fillon (101) telles quelles."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 53, le_pen_marine: 14, none: 32}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 70, le_pen_marine: 5, none: 25}}
+          - {from: fillon_francois, to: {macron_emmanuel: 42, le_pen_marine: 24, none: 35}}
+
+  - id: ipsos_cevipof_2017_v12
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: Cevipof, Fondation Jean-Jaurès, Le Monde (Enquête électorale française 2017, vague 12)
+    title: "L'intention de vote 2nd tour, hypothèse E. Macron face à M. Le Pen – report de voix"
+    url: https://www.ipsos.com/sites/default/files/files-fr-fr/doc_associe/rapport_cevipof-eef2017_vague_12_ipsos_lemonde.pdf
+    pages: "p. 12"
+    fieldwork_start: 2017-03-14
+    fieldwork_end: 2017-03-15
+    published: 2017-03-17
+    sample_size: 11990
+    mode: online
+    base: likely_voters
+    base_note: "« Certains d'aller voter » (8 205) ; colonnes Macron / Le Pen / Non exprimés (total 100)."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 45, le_pen_marine: 8, none: 47}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 73, le_pen_marine: 4, none: 23}}
+          - {from: fillon_francois, to: {macron_emmanuel: 40, le_pen_marine: 33, none: 27}}
+          - {from: dupont_aignan_nicolas, to: {macron_emmanuel: 32, le_pen_marine: 36, none: 32}}
+
+  - id: ipsos_francetv_2017_03_27
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: France Télévisions, Radio France
+    title: "L'état d'esprit des Français à 4 semaines de l'élection présidentielle – intention de vote 2nd tour, report de voix"
+    url: https://www.ipsos.com/sites/default/files/files-fr-fr/doc_associe/enquetepresidentielle1v4_1.pdf
+    pages: "p. 9"
+    fieldwork_start: 2017-03-25
+    fieldwork_end: 2017-03-27
+    published: 2017-03-28
+    sample_size: 1005
+    mode: online
+    base: likely_voters
+    base_note: "Colonnes Macron / Le Pen / Non exprimés. Publication lue sur la page web Ipsos."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 54, le_pen_marine: 12, none: 34}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 77, le_pen_marine: 6, none: 17}}
+          - {from: fillon_francois, to: {macron_emmanuel: 38, le_pen_marine: 26, none: 36}}
+
+  - id: ipsos_cevipof_2017_v12bis
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: Cevipof, Fondation Jean-Jaurès, Le Monde (EEF 2017, vague 12 bis)
+    title: "L'intention de vote 2nd tour, hypothèse E. Macron face à M. Le Pen – report de voix"
+    url: https://www.ipsos.com/sites/default/files/files-fr-fr/doc_associe/cevipof_vague12bis.pdf
+    pages: "p. 17"
+    fieldwork_start: 2017-03-31
+    fieldwork_end: 2017-04-02
+    published: 2017-04-03
+    sample_size: 14300
+    mode: online
+    base: likely_voters
+    base_note: "« Certains d'aller voter, exprimés » ; colonnes Macron / Le Pen / Non exprimés."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 48, le_pen_marine: 9, none: 43}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 71, le_pen_marine: 3, none: 26}}
+          - {from: fillon_francois, to: {macron_emmanuel: 37, le_pen_marine: 32, none: 31}}
+          - {from: dupont_aignan_nicolas, to: {macron_emmanuel: 31, le_pen_marine: 42, none: 27}}
+
+  - id: ipsos_francetv_2017_04_09
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: France Télévisions, Radio France
+    title: "Le rapport de forces et l'état d'esprit des Français à 2 semaines du 1er tour – report de voix"
+    url: https://www.ipsos.com/sites/default/files/files-fr-fr/doc_associe/le-rapport-de-forces-et-etat-desprit-desfrancais-a-2-semaines-du-premier-tour-de-lelection-presidentielle.pdf
+    pages: "p. 11"
+    fieldwork_start: 2017-04-07
+    fieldwork_end: 2017-04-09
+    published: 2017-04-11
+    sample_size: 1604
+    mode: online
+    base: likely_voters
+    base_note: "Colonnes Macron / Le Pen / Non exprimés. Publication lue sur la page web Ipsos."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 47, le_pen_marine: 6, none: 47}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 76, le_pen_marine: 2, none: 22}}
+          - {from: fillon_francois, to: {macron_emmanuel: 42, le_pen_marine: 26, none: 32}}
+
+  - id: ipsos_2017_04_13
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: non indiqué dans le PDF
+    title: "Le rapport de forces et l'état d'esprit des Français à 10 jours du 1er tour – report de voix"
+    url: https://www.ipsos.com/sites/default/files/files-fr-fr/doc_associe/enquete_presidentielle_ipsos_le_monde.pdf
+    pages: "p. 15"
+    fieldwork_start: 2017-04-12
+    fieldwork_end: 2017-04-13
+    sample_size: 1509
+    mode: online
+    base: likely_voters
+    base_note: "Colonnes Macron / Le Pen / Non exprimés. Publication non lue (métadonnées du PDF : 14 avril) : disponibilité = terrain + 2 jours = 15 avril."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 51, le_pen_marine: 5, none: 44}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 63, le_pen_marine: 3, none: 34}}
+          - {from: fillon_francois, to: {macron_emmanuel: 48, le_pen_marine: 22, none: 30}}
+
+  - id: harris_francetv_2017_03_08
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: harris
+    sponsor: France Télévisions
+    title: "Reports de voix entre le 1er tour et le 2nd tour de l'élection présidentielle – Hypothèse Macron / Le Pen"
+    url: https://tolunacorporate.com/wp-content/uploads/2025/06/Rapport-Harris-Intentions-vote-election-presidentielle-France-TV-2.pdf
+    pages: "p. 18"
+    fieldwork_start: 2017-03-06
+    fieldwork_end: 2017-03-08
+    published: 2017-03-09
+    sample_size: 4533
+    mode: online
+    base: registered
+    base_note: "« Aux inscrits sur les listes électorales, en % » ; électorats en colonnes, sommant à 100 avec « Blancs, nuls et abstentions »."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 50, le_pen_marine: 8, none: 42}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 76, le_pen_marine: 3, none: 21}}
+          - {from: fillon_francois, to: {macron_emmanuel: 42, le_pen_marine: 26, none: 32}}
+
+  - id: harris_francetv_2017_03_22
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: harris
+    sponsor: France Télévisions
+    title: "Reports de voix entre le 1er tour et le 2nd tour de l'élection présidentielle – Hypothèse Macron / Le Pen"
+    url: https://tolunacorporate.com/wp-content/uploads/2025/06/Rapport-Intentions-de-vote-election-presidentielle-France-TV.pdf
+    pages: "p. 18"
+    fieldwork_start: 2017-03-21
+    fieldwork_end: 2017-03-22
+    published: 2017-03-23
+    sample_size: 6383
+    mode: online
+    base: registered
+    base_note: "Comme la vague du 8 mars."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 51, le_pen_marine: 6, none: 43}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 71, le_pen_marine: 3, none: 26}}
+          - {from: fillon_francois, to: {macron_emmanuel: 42, le_pen_marine: 23, none: 35}}
+
+  - id: harris_francetv_2017_04_05
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: harris
+    sponsor: France Télévisions
+    title: "Reports de voix entre le 1er tour et le 2nd tour de l'élection présidentielle – Hypothèse Macron / Le Pen"
+    url: https://tolunacorporate.com/wp-content/uploads/2025/06/Rapport-Harris-Intentions-de-vote-a-lelection-presidentielle-France-TV.pdf
+    pages: "p. 18"
+    fieldwork_start: 2017-04-03
+    fieldwork_end: 2017-04-05
+    published: 2017-04-06
+    sample_size: 5736
+    mode: online
+    base: registered
+    base_note: "Comme la vague du 8 mars. Échantillon en deux parties (avant et après le débat du 4 avril, 3 639 et 2 097 inscrits) ; le tableau ne dit pas laquelle."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 42, le_pen_marine: 8, none: 50}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 66, le_pen_marine: 4, none: 30}}
+          - {from: fillon_francois, to: {macron_emmanuel: 36, le_pen_marine: 28, none: 36}}
+
+  - id: harris_lcp_2017_04_06
+    election: 2017
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: harris
+    sponsor: LCP
+    title: "Reports de voix entre le 1er tour et le 2nd tour de l'élection présidentielle – Hypothèse Macron / Le Pen"
+    url: https://tolunacorporate.com/wp-content/uploads/2025/06/Rapport-Harris-Intentions-vote-election-presidentielle-LCP-1.pdf
+    pages: "p. 12"
+    fieldwork_start: 2017-04-05
+    fieldwork_end: 2017-04-06
+    published: 2017-04-07
+    sample_size: 928
+    mode: online
+    base: registered
+    base_note: "Comme les vagues France Télévisions."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 49, le_pen_marine: 6, none: 45}}
+          - {from: hamon_benoit, to: {macron_emmanuel: 69, le_pen_marine: 3, none: 28}}
+          - {from: fillon_francois, to: {macron_emmanuel: 38, le_pen_marine: 24, none: 38}}
+
+  # ===================================================================== 2022 : Macron – Le Pen
+  - id: elabe_2021_10_06
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: elabe
+    sponsor: BFMTV
+    title: "Les Français et l'élection présidentielle 2022 – Report de voix du 1er tour au 2nd tour, configurations de 1er tour avec Éric Zemmour"
+    url: https://elabe.fr/fichier-pdf/9072-les-francais-et-lelection-presidentielle-2022/
+    pages: "p. 18"
+    fieldwork_start: 2021-10-05
+    fieldwork_end: 2021-10-06
+    published: 2021-10-06
+    sample_size: 1204
+    mode: online
+    base: likely_voters
+    base_note: "Inscrits, probabilité d'aller voter 8 à 10 ; colonnes Macron / Le Pen / Abstention-vote blanc. Trois hypothèses de candidat LR."
+    hypotheses:
+      - label: "hypothèse X. Bertrand"
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 27, le_pen_marine: 16, none: 57}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 62, le_pen_marine: 0, none: 38}, note: "pas d'étiquette Le Pen (0)"}
+          - {from: jadot_yannick, to: {macron_emmanuel: 52, le_pen_marine: 5, none: 43}}
+          - {from: bertrand_xavier, to: {macron_emmanuel: 48, le_pen_marine: 19, none: 34}}
+          - {from: dupont_aignan_nicolas, to: {macron_emmanuel: 14, le_pen_marine: 45, none: 41}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 10, le_pen_marine: 69, none: 21}}
+      - label: "hypothèse V. Pécresse"
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 36, le_pen_marine: 14, none: 50}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 57, le_pen_marine: 0, none: 43}, note: "pas d'étiquette Le Pen (0)"}
+          - {from: jadot_yannick, to: {macron_emmanuel: 51, le_pen_marine: 4, none: 45}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 43, le_pen_marine: 24, none: 33}}
+          - {from: dupont_aignan_nicolas, to: {macron_emmanuel: 18, le_pen_marine: 32, none: 51}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 12, le_pen_marine: 67, none: 22}}
+      - label: "hypothèse M. Barnier"
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 34, le_pen_marine: 15, none: 51}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 54, le_pen_marine: 2, none: 44}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 53, le_pen_marine: 5, none: 42}}
+          - {from: barnier_michel, to: {macron_emmanuel: 50, le_pen_marine: 17, none: 34}}
+          - {from: dupont_aignan_nicolas, to: {macron_emmanuel: 23, le_pen_marine: 36, none: 41}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 11, le_pen_marine: 68, none: 21}}
+
+  - id: harris_challenges_2021_v16
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: harris
+    sponsor: Challenges
+    title: "Intentions de vote pour le 2nd tour de l'élection présidentielle 2022 – reports de voix – Hypothèse Emmanuel Macron / Marine Le Pen (vague 16)"
+    url: https://harris-interactive.fr/wp-content/uploads/sites/6/2021/10/Rapport-Harris-Vague-16-Intentions-de-vote-Presidentielle-2022-Challenges.pdf
+    pages: "p. 28"
+    fieldwork_start: 2021-10-01
+    fieldwork_end: 2021-10-04
+    sample_size: 1310
+    mode: online
+    base: registered
+    base_note: "« Aux inscrits, en % de votes exprimés » (en-tête générique) ; électorats en colonnes (hypothèse X. Bertrand candidat de la droite), sommant à 100 avec « Non exprimés (blancs, nuls, abstention) »."
+    hypotheses:
+      - label: "hypothèse X. Bertrand"
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 28, le_pen_marine: 21, none: 51}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 51, le_pen_marine: 6, none: 43}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 38, le_pen_marine: 18, none: 44}}
+          - {from: bertrand_xavier, to: {macron_emmanuel: 32, le_pen_marine: 33, none: 35}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 12, le_pen_marine: 66, none: 22}}
+    notes: "Publication « semaine du 6 octobre » (non datée précisément) : terrain + 2 jours."
+
+  - id: harris_challenges_2021_v25
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: harris
+    sponsor: Challenges
+    title: "Intentions de vote pour le 2nd tour de l'élection présidentielle 2022 – reports de voix – Hypothèse Emmanuel Macron / Marine Le Pen (vague 25)"
+    url: https://harris-interactive.fr/wp-content/uploads/sites/6/2021/12/GJTDKD-021R.pdf
+    pages: "p. 15"
+    fieldwork_start: 2021-12-03
+    fieldwork_end: 2021-12-06
+    sample_size: 2613
+    mode: online
+    base: registered
+    base_note: "Comme la vague 16."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 33, le_pen_marine: 13, none: 54}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 49, le_pen_marine: 9, none: 42}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 61, le_pen_marine: 5, none: 34}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 41, le_pen_marine: 25, none: 34}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 11, le_pen_marine: 74, none: 15}}
+
+  - id: elabe_2021_12_21
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    title: "Les Français et l'élection présidentielle 2022 – Emmanuel Macron / Marine Le Pen, reports de voix du 1er tour au 2nd tour"
+    url: https://elabe.fr/fichier-pdf/9290-les-francais-et-lelection-presidentielle-2022/
+    pages: "p. 19"
+    fieldwork_start: 2021-12-17
+    fieldwork_end: 2021-12-20
+    published: 2021-12-21
+    sample_size: 1351
+    mode: online
+    base: likely_voters
+    base_note: "Inscrits, probabilité d'aller voter 8 à 10 ; colonnes Macron / Le Pen / Abstention-vote blanc."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 27, le_pen_marine: 20, none: 53}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 57, le_pen_marine: 2, none: 41}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 46, le_pen_marine: 25, none: 29}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 11, le_pen_marine: 69, none: 20}}
+
+  - id: opinionway_vsd_2021_12
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: opinionway
+    sponsor: VSD
+    title: "Intentions de vote pour l'élection présidentielle 2022 – Décembre 2021, hypothèse 2 : Marine Le Pen face à Emmanuel Macron"
+    url: https://www.opinion-way.com/wp-content/uploads/2025/01/OpinionWay-pour-VSD-Intentions-de-vote-election-presidentielle-2022-Decembre-2021.pdf
+    pages: "p. 15"
+    fieldwork_start: 2021-12-21
+    fieldwork_end: 2021-12-22
+    sample_size: 1048
+    mode: online
+    base: registered
+    base_note: "Électorats en colonnes, sommant à 100 avec « N'exprime pas d'intention de vote »."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 58, le_pen_marine: 10, none: 32}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 56, le_pen_marine: 10, none: 34}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 43, le_pen_marine: 30, none: 27}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 9, le_pen_marine: 83, none: 8}}
+
+  - id: ipsos_cevipof_2022_v5
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: Cevipof, Fondation Jean-Jaurès, Le Monde (Enquête électorale française 2022, vague 5)
+    title: "L'intention de vote au second tour (2/3), hypothèse 2 : Emmanuel Macron / Marine Le Pen – report de voix"
+    url: "https://www.ipsos.com/sites/default/files/ct/news/documents/2022-02/Rapport%20Ipsos_CEVIPOF%20LEMONDE%20FJJ%20_Enque%CC%82te%20e%CC%81lectorale%202022%20vague%205%20-%20Fe%CC%81vrier2022.pdf"
+    pages: "p. 40"
+    fieldwork_start: 2022-02-03
+    fieldwork_end: 2022-02-07
+    sample_size: 12499
+    mode: online
+    base: likely_voters
+    base_note: "En %, « certains d'aller voter au 1er tour » ; colonnes Macron / Le Pen / Non exprimés (total 100)."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 24, le_pen_marine: 17, none: 59}}
+          - {from: roussel_fabien, to: {macron_emmanuel: 35, le_pen_marine: 12, none: 53}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 58, le_pen_marine: 8, none: 34}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 56, le_pen_marine: 8, none: 36}}
+          - {from: taubira_christiane, to: {macron_emmanuel: 61, le_pen_marine: 4, none: 35}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 45, le_pen_marine: 30, none: 25}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 9, le_pen_marine: 78, none: 13}}
+
+  - id: harris_challenges_2022_v32
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: harris
+    sponsor: Challenges
+    title: "Intentions de vote pour le 2nd tour de l'élection présidentielle 2022 – Reports de voix – Hypothèse Emmanuel Macron / Marine Le Pen (vague 32)"
+    url: http://harris-interactive.fr/wp-content/uploads/sites/6/2022/02/EKHVTREC6778.pdf
+    pages: "p. 16"
+    fieldwork_start: 2022-02-04
+    fieldwork_end: 2022-02-07
+    sample_size: 2421
+    mode: online
+    base: registered
+    base_note: "Comme la vague 16."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 35, le_pen_marine: 19, none: 46}}
+          - {from: taubira_christiane, to: {macron_emmanuel: 53, le_pen_marine: 10, none: 37}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 46, le_pen_marine: 19, none: 35}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 50, le_pen_marine: 9, none: 41}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 47, le_pen_marine: 24, none: 29}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 11, le_pen_marine: 73, none: 16}}
+
+  - id: elabe_2022_02_23
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    title: "Les Français et l'élection présidentielle 2022 – Emmanuel Macron / Marine Le Pen, reports de voix du 1er tour au 2nd tour"
+    url: https://elabe.fr/fichier-pdf/9427-les-francais-et-lelection-presidentielle-2022/
+    pages: "p. 19"
+    fieldwork_start: 2022-02-21
+    fieldwork_end: 2022-02-22
+    published: 2022-02-23
+    sample_size: 1372
+    mode: online
+    base: likely_voters
+    base_note: "Inscrits, probabilité d'aller voter 8 à 10."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 28, le_pen_marine: 35, none: 37}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 57, le_pen_marine: 5, none: 38}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 47, le_pen_marine: 24, none: 29}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 12, le_pen_marine: 74, none: 14}}
+
+  - id: ipsos_cevipof_2022_v6
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: Cevipof, Fondation Jean-Jaurès, Le Monde (EEF 2022, vague 6)
+    title: "L'intention de vote au second tour (1/4), hypothèse 1 : Emmanuel Macron / Marine Le Pen – report de voix (résultats du 2-3 mars)"
+    url: "https://www.ipsos.com/sites/default/files/ct/news/documents/2022-03/Ipsos%20-%20Enque%CC%82te%20Electorale%20-%20Vague%206%20-%205%20mars%202022.pdf"
+    pages: "p. 48"
+    fieldwork_start: 2022-03-02
+    fieldwork_end: 2022-03-03
+    published: 2022-03-05
+    sample_size: 3599
+    mode: online
+    base: likely_voters
+    base_note: "« Certains d'aller voter au 1er tour » ; colonnes Macron / Le Pen / Non exprimés. Publication : date du nom de fichier."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 31, le_pen_marine: 21, none: 48}}
+          - {from: roussel_fabien, to: {macron_emmanuel: 29, le_pen_marine: 18, none: 53}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 60, le_pen_marine: 8, none: 32}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 67, le_pen_marine: 8, none: 25}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 46, le_pen_marine: 30, none: 24}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 8, le_pen_marine: 81, none: 11}}
+
+  - id: elabe_2022_03_22
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    title: "Les Français et l'élection présidentielle 2022 – Emmanuel Macron / Marine Le Pen, reports de voix du 1er tour au 2nd tour"
+    url: https://elabe.fr/wp-content/uploads/2022/03/presidentielle-2022.pdf
+    pages: "p. 22"
+    fieldwork_start: 2022-03-20
+    fieldwork_end: 2022-03-21
+    published: 2022-03-22
+    sample_size: 1450
+    mode: online
+    base: likely_voters
+    base_note: "Inscrits, probabilité d'aller voter 9 à 10."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 27, le_pen_marine: 28, none: 45}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 62, le_pen_marine: 9, none: 29}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 44, le_pen_marine: 29, none: 27}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 10, le_pen_marine: 69, none: 21}}
+
+  - id: ipsos_cevipof_2022_v8
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ipsos
+    sponsor: Cevipof, Fondation Jean-Jaurès, Le Monde (EEF 2022, vague 8)
+    title: "L'intention de vote au second tour, hypothèse Emmanuel Macron / Marine Le Pen – report de voix"
+    url: "https://www.ipsos.com/sites/default/files/ct/news/documents/2022-03/Ipsos%20-%20Enque%CC%82te%20Electorale%20-%20Vague%208%20-%2028%20mars%202022.pdf"
+    pages: "p. 45"
+    fieldwork_start: 2022-03-21
+    fieldwork_end: 2022-03-24
+    published: 2022-03-28
+    sample_size: 13269
+    mode: online
+    base: likely_voters
+    base_note: "« Certains d'aller voter au 1er tour » ; colonnes Macron / Le Pen / Non exprimés. Publication : date du nom de fichier."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 29, le_pen_marine: 21, none: 50}}
+          - {from: roussel_fabien, to: {macron_emmanuel: 37, le_pen_marine: 11, none: 52}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 65, le_pen_marine: 7, none: 28}}
+          - {from: hidalgo_anne, to: {macron_emmanuel: 70, le_pen_marine: 3, none: 27}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 46, le_pen_marine: 28, none: 26}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 9, le_pen_marine: 80, none: 11}}
+
+  - id: ifop_rolling_2022_03_29
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ifop
+    sponsor: Paris Match, LCI, Sud Radio (Ifop-Fiducial)
+    title: "Rolling 2022 – L'intention de vote au 2nd tour : hypothèse Emmanuel Macron face à Marine Le Pen – reports de voix du 1er au 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2022/03/ROL22_2022.03.29.pdf
+    pages: "p. 10"
+    fieldwork_start: 2022-03-25
+    fieldwork_end: 2022-03-29
+    published: 2022-03-29
+    sample_size: 2004
+    mode: online
+    base: registered
+    base_note: "Lignes = électorats, réparties entre Macron, blanc-nul-abstention et Le Pen (dans cet ordre dans le graphique, note de bas de page)."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: roussel_fabien, to: {macron_emmanuel: 37, le_pen_marine: 17, none: 46}}
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 31, le_pen_marine: 22, none: 47}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 48, le_pen_marine: 8, none: 44}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 43, le_pen_marine: 29, none: 28}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 8, le_pen_marine: 82, none: 10}}
+
+  - id: ifop_rolling_2022_04_01
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: ifop
+    sponsor: Paris Match, LCI, Sud Radio (Ifop-Fiducial)
+    title: "Rolling 2022 – L'intention de vote au 2nd tour : hypothèse Emmanuel Macron face à Marine Le Pen – reports de voix du 1er au 2nd tour"
+    url: https://www.ifop.com/wp-content/uploads/2022/04/ROL22_2022.04.01.pdf
+    pages: "p. 10"
+    fieldwork_start: 2022-03-29
+    fieldwork_end: 2022-04-01
+    published: 2022-04-01
+    sample_size: 2994
+    mode: online
+    base: registered
+    base_note: "Comme le rolling du 29 mars."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: roussel_fabien, to: {macron_emmanuel: 28, le_pen_marine: 19, none: 53}}
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 36, le_pen_marine: 23, none: 41}}
+          - {from: jadot_yannick, to: {macron_emmanuel: 56, le_pen_marine: 14, none: 30}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 36, le_pen_marine: 36, none: 28}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 10, le_pen_marine: 75, none: 15}}
+
+  - id: elabe_2022_04_02
+    election: 2022
+    pair: [macron_emmanuel, le_pen_marine]
+    pollster: elabe
+    sponsor: BFMTV, L'Express, SFR
+    title: "Les Français et l'élection présidentielle 2022 – Emmanuel Macron / Marine Le Pen, reports de voix du 1er tour au 2nd tour"
+    url: https://elabe.fr/fichier-pdf/9522-les-francais-et-lelection-presidentielle-2022/
+    pages: "p. 19"
+    fieldwork_start: 2022-03-31
+    fieldwork_end: 2022-04-01
+    published: 2022-04-02
+    sample_size: 1377
+    mode: online
+    base: likely_voters
+    base_note: "Inscrits, probabilité d'aller voter 9 à 10. Pas de ligne Jadot, Hidalgo ni Roussel."
+    hypotheses:
+      - label: unique
+        rows:
+          - {from: melenchon_jean_luc, to: {macron_emmanuel: 25, le_pen_marine: 26, none: 49}}
+          - {from: pecresse_valerie, to: {macron_emmanuel: 52, le_pen_marine: 28, none: 20}}
+          - {from: zemmour_eric, to: {macron_emmanuel: 11, le_pen_marine: 79, none: 10}}
+
+  # ===================================================================== 2027 : Toluna Harris Interactive (notices de la Commission des sondages)
+  - id: harris_2027_notice2321_le_pen_melenchon
+    election: 2027
+    pair: [le_pen_marine, melenchon_jean_luc]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10305 de la Commission des sondages)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Jean-Luc Mélenchon"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2321
+    file: data/raw/commission/2321.pdf
+    pages: "texte pdftotext l. 1400-1431 (rapport détaillé)"
+    fieldwork_start: 2026-10-05
+    fieldwork_end: 2026-10-08
+    sample_size: 2004
+    mode: online
+    base: likely_voters
+    base_note: "« Aux inscrits, certains d'aller voter et ayant exprimé une intention de vote » (1 093) ; colonnes = intention de 1er tour, hypothèse Glucksmann, Attal et Philippe candidats ; lignes Mélenchon / Le Pen / « N'exprime pas d'intention de vote (vote blanc, nul ou abstention) »."
+    hypotheses:
+      - label: "1er tour avec R. Glucksmann, G. Attal et É. Philippe"
+        rows:
+          - {from: glucksmann_raphael, to: {le_pen_marine: 9, melenchon_jean_luc: 30, none: 61}}
+          - {from: attal_gabriel, to: {le_pen_marine: 30, melenchon_jean_luc: 16, none: 54}}
+          - {from: philippe_edouard, to: {le_pen_marine: 33, melenchon_jean_luc: 9, none: 58}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 64, melenchon_jean_luc: 3, none: 33}}
+
+  - id: harris_2027_notice2321_le_pen_philippe
+    election: 2027
+    pair: [le_pen_marine, philippe_edouard]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10305)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Édouard Philippe"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2321
+    file: data/raw/commission/2321.pdf
+    pages: "texte pdftotext l. 1482-1514"
+    fieldwork_start: 2026-10-05
+    fieldwork_end: 2026-10-08
+    sample_size: 2004
+    mode: online
+    base: likely_voters
+    base_note: "Comme la ligne précédente (1 156 exprimant une intention) ; hypothèse Glucksmann et Philippe candidats."
+    hypotheses:
+      - label: "1er tour avec R. Glucksmann et É. Philippe"
+        rows:
+          - {from: melenchon_jean_luc, to: {le_pen_marine: 10, philippe_edouard: 35, none: 55}}
+          - {from: glucksmann_raphael, to: {le_pen_marine: 7, philippe_edouard: 61, none: 32}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 40, philippe_edouard: 47, none: 13}}
+
+  - id: harris_2027_notice2351_le_pen_melenchon
+    election: 2027
+    pair: [le_pen_marine, melenchon_jean_luc]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10332)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Jean-Luc Mélenchon"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2351
+    file: data/raw/commission/2351.pdf
+    pages: "texte pdftotext l. 1456-1487"
+    fieldwork_start: 2026-10-19
+    fieldwork_end: 2026-10-21
+    sample_size: 2094
+    mode: online
+    base: likely_voters
+    base_note: "Hypothèse Attal et Philippe candidats ; 1 127 exprimant une intention."
+    hypotheses:
+      - label: "1er tour avec G. Attal et É. Philippe"
+        rows:
+          - {from: glucksmann_raphael, to: {le_pen_marine: 14, melenchon_jean_luc: 23, none: 63}}
+          - {from: attal_gabriel, to: {le_pen_marine: 28, melenchon_jean_luc: 15, none: 57}}
+          - {from: philippe_edouard, to: {le_pen_marine: 33, melenchon_jean_luc: 6, none: 61}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 70, melenchon_jean_luc: 1, none: 29}}
+
+  - id: harris_2027_notice2351_le_pen_glucksmann
+    election: 2027
+    pair: [le_pen_marine, glucksmann_raphael]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10332)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Raphaël Glucksmann"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2351
+    file: data/raw/commission/2351.pdf
+    pages: "texte pdftotext l. 1513-1544"
+    fieldwork_start: 2026-10-19
+    fieldwork_end: 2026-10-21
+    sample_size: 2094
+    mode: online
+    base: likely_voters
+    base_note: "Hypothèse Attal et Philippe candidats ; 1 239 exprimant une intention."
+    hypotheses:
+      - label: "1er tour avec G. Attal et É. Philippe"
+        rows:
+          - {from: melenchon_jean_luc, to: {le_pen_marine: 8, glucksmann_raphael: 43, none: 49}}
+          - {from: attal_gabriel, to: {le_pen_marine: 14, glucksmann_raphael: 52, none: 34}}
+          - {from: philippe_edouard, to: {le_pen_marine: 16, glucksmann_raphael: 60, none: 24}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 58, glucksmann_raphael: 18, none: 24}}
+
+  - id: harris_2027_notice2351_le_pen_philippe
+    election: 2027
+    pair: [le_pen_marine, philippe_edouard]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10332)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Édouard Philippe"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2351
+    file: data/raw/commission/2351.pdf
+    pages: "texte pdftotext l. 1595-1627"
+    fieldwork_start: 2026-10-19
+    fieldwork_end: 2026-10-21
+    sample_size: 2094
+    mode: online
+    base: likely_voters
+    base_note: "Hypothèse Philippe candidat unique du centre ; 1 223 exprimant une intention."
+    hypotheses:
+      - label: "1er tour avec É. Philippe candidat unique du centre"
+        rows:
+          - {from: melenchon_jean_luc, to: {le_pen_marine: 11, philippe_edouard: 35, none: 54}}
+          - {from: glucksmann_raphael, to: {le_pen_marine: 10, philippe_edouard: 59, none: 31}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 46, philippe_edouard: 41, none: 13}}
+
+  - id: harris_2027_notice2381_le_pen_melenchon
+    election: 2027
+    pair: [le_pen_marine, melenchon_jean_luc]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10362)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Jean-Luc Mélenchon"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2381
+    file: data/raw/commission/2381.pdf
+    pages: "texte pdftotext l. 1470-1501"
+    fieldwork_start: 2026-11-03
+    fieldwork_end: 2026-11-05
+    sample_size: 2101
+    mode: online
+    base: likely_voters
+    base_note: "Hypothèse Attal et Philippe candidats ; 1 171 exprimant une intention."
+    hypotheses:
+      - label: "1er tour avec G. Attal et É. Philippe"
+        rows:
+          - {from: glucksmann_raphael, to: {le_pen_marine: 12, melenchon_jean_luc: 26, none: 62}}
+          - {from: attal_gabriel, to: {le_pen_marine: 31, melenchon_jean_luc: 9, none: 60}}
+          - {from: philippe_edouard, to: {le_pen_marine: 30, melenchon_jean_luc: 7, none: 63}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 59, melenchon_jean_luc: 4, none: 37}}
+
+  - id: harris_2027_notice2381_le_pen_glucksmann
+    election: 2027
+    pair: [le_pen_marine, glucksmann_raphael]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10362)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Raphaël Glucksmann"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2381
+    file: data/raw/commission/2381.pdf
+    pages: "texte pdftotext l. 1529-1560"
+    fieldwork_start: 2026-11-03
+    fieldwork_end: 2026-11-05
+    sample_size: 2101
+    mode: online
+    base: likely_voters
+    base_note: "Hypothèse Attal candidat unique du centre ; 1 237 exprimant une intention."
+    hypotheses:
+      - label: "1er tour avec G. Attal candidat unique du centre"
+        rows:
+          - {from: melenchon_jean_luc, to: {le_pen_marine: 12, glucksmann_raphael: 36, none: 52}}
+          - {from: attal_gabriel, to: {le_pen_marine: 15, glucksmann_raphael: 57, none: 28}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 39, glucksmann_raphael: 31, none: 30}}
+
+  - id: harris_2027_notice2381_le_pen_philippe
+    election: 2027
+    pair: [le_pen_marine, philippe_edouard]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10362)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Édouard Philippe"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2381
+    file: data/raw/commission/2381.pdf
+    pages: "texte pdftotext l. 1610-1642"
+    fieldwork_start: 2026-11-03
+    fieldwork_end: 2026-11-05
+    sample_size: 2101
+    mode: online
+    base: likely_voters
+    base_note: "Hypothèse Philippe candidat unique du centre ; 1 211 exprimant une intention."
+    hypotheses:
+      - label: "1er tour avec É. Philippe candidat unique du centre"
+        rows:
+          - {from: melenchon_jean_luc, to: {le_pen_marine: 7, philippe_edouard: 33, none: 60}}
+          - {from: glucksmann_raphael, to: {le_pen_marine: 7, philippe_edouard: 58, none: 35}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 36, philippe_edouard: 45, none: 19}}
+
+  - id: harris_2027_notice2417_le_pen_melenchon
+    election: 2027
+    pair: [le_pen_marine, melenchon_jean_luc]
+    pollster: harris
+    sponsor: Toluna Harris Interactive (notice 10393, vague 10)
+    title: "Reports de voix au 2nd tour de l'élection présidentielle – Hypothèse Marine Le Pen et Jean-Luc Mélenchon"
+    url: https://www.commission-des-sondages.fr/notices/medias/fichiers/add/2417
+    file: data/raw/commission/2417.pdf
+    pages: "diapositive 51 (texte pdftotext l. 1343-1380)"
+    fieldwork_start: 2026-11-18
+    fieldwork_end: 2026-11-19
+    sample_size: 2088
+    mode: online
+    base: likely_voters
+    base_note: "Hypothèse Attal et Philippe candidats ; 1 208 exprimant une intention ; duel agrégé 35 / 65 (Mélenchon / Le Pen)."
+    hypotheses:
+      - label: "1er tour avec G. Attal et É. Philippe"
+        rows:
+          - {from: glucksmann_raphael, to: {le_pen_marine: 9, melenchon_jean_luc: 28, none: 63}}
+          - {from: attal_gabriel, to: {le_pen_marine: 34, melenchon_jean_luc: 21, none: 45}}
+          - {from: philippe_edouard, to: {le_pen_marine: 23, melenchon_jean_luc: 17, none: 60}}
+          - {from: lisnard_david, to: {le_pen_marine: 65, melenchon_jean_luc: 8, none: 27}}
+          - {from: retailleau_bruno, to: {le_pen_marine: 60, melenchon_jean_luc: 4, none: 36}}
+          - {from: riner_teddy, to: {le_pen_marine: 33, melenchon_jean_luc: 20, none: 47}}

@@ -409,3 +409,33 @@ primaire datés, et un soutien a priori du désigné tiré de son bloc.
 Le plan de docs/12 est entièrement exécuté : lot 1 (registre), lot 3 (diagnostics), lot 4
 (prospectif, CI, archive) livrés ; lot 2 testé et rejeté. Compteur : dix-sept signaux et
 six corrections de structure testés, une admission.
+
+## 2026-11-24 — second tour, duel Le Pen – Mélenchon
+
+Quatre notes : `docs/results/2026-11-24-duel-le-pen-melenchon-diagnostic.md`,
+`2026-11-24-premier-tour-fixe.md`, `2026-11-24-duel-rn-lfi.md`, `2026-11-24-reports-publies.md`.
+Critères écrits avant calcul dans chacune.
+
+Diagnostic : les sondages du duel donnent Le Pen à 67,3 %, la projection 63,1 %. L'écart se
+décompose en pondération de récence (−1,1), biais RN (−1,3), prior des reports centré sur 54 %
+(−4,2) et rééchantillonnage du premier tour par les sondages de duel (+2,4). Ce dernier point est
+un défaut de cohérence : le second tour est calculé avec un premier tour que la ligne n'a pas.
+
+| Variante | Protocole | Δ log victoire (barre) | Δ CRPS 2ᵉ tour (barre) | Verdict |
+|---|---|---|---|---|
+| Premier tour fixé (`fixed_first_round`) | chaîne chronologique, 12 cas | −0,0099 (−0,0029) ; −0,0043 à 16 384 propositions | −0,104 ; −0,014 à 16 384 propositions | non admis |
+| Analogue RN contre LFI, législatives 2022 → 2024 | 47 duels de 2024 | erreur absolue 6,08 contre 4,99, couverture 53 % | | non admis |
+| Reports publiés pour l'élection en cours (`current_transfers`) | chaîne chronologique, 12 cas | −0,0010 (−0,0029) | +0,138 (+0,011) | non admis |
+| Reports publiés + premier tour fixé | chaîne chronologique, 12 cas | −0,0075 (−0,0029) | +0,132 (+0,011) | non admis |
+
+Lecture : les tableaux de reports des instituts viennent des mêmes enquêtes que les sondages de
+duel et en partagent le biais (Hollande trop haut en 2012, Le Pen trop haute en 2017 et 2022) ;
+ils corrigent les reports affichés sans améliorer la part. Le comportement des électorats face à
+LFI a changé entre les législatives 2022 et 2024 au point de déplacer le prior de 7 points selon
+l'année. Diagnostic annexe : les enquêtes d'avant second tour de 2024 surestimaient le RN de 2 à
+5 points dans les duels RN contre LFI, comme dans les duels contre le centre.
+
+Les trois options sont dans le code, désactivées. Défauts et projection publiée inchangés. Dette
+ouverte : le mode conjoint reste incohérent ligne à ligne (documenté dans `simulate.py`), et la
+projection y est sensible (Le Pen 73,4 % de victoire en mode conjoint, 68,9 % à premier tour
+fixé). Compteur : dix-sept signaux et neuf corrections de structure testés, une admission.

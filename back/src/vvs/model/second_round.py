@@ -92,6 +92,11 @@ runs/2026-10-20-second-round-v2) :
   (`turnout2_model`) et imposée par un décalage commun des parts « ni l'un ni l'autre »
   (`match_turnout`) ; le poids des abstentionnistes reste celui du premier tour.
 
+Reports publiés pour l'élection en cours (option `current_transfers` de `SecondRoundModel`,
+désactivée ; docs/results/2026-11-24-reports-publies.md) : les groupes de bloc couverts par les
+tableaux de reports des sondages de duel publiés avant la date de prévision
+(data/registry/transfers_current.yaml) sont recentrés sur ces tableaux, κ = `KAPPA_CURRENT`.
+
 Horizon. `predict(..., horizon)` prend `horizon` = jours entre la date de prévision et le
 premier tour (négatif après le premier tour : la veille du second tour vaut −(écart − 1)).
 L'âge d'un sondage au second tour vaut horizon + écart entre les tours + (asof − fin de
@@ -117,6 +122,7 @@ from vvs.registry.transfers import (
     default_transfers,
     transfer_prior,
 )
+from vvs.registry.transfers_current import CurrentTable
 
 log = logging.getLogger(__name__)
 
@@ -163,6 +169,15 @@ SIGMA_V = {"analog": 0.25, "inedit": 0.40}
 # Un analogue plus ancien que cela est moyenné avec la matrice (cas traité comme inédit)
 ANALOG_MAX_AGE = 20
 MIN_MEAN = 0.005  # plancher des moyennes de Dirichlet (évite des paramètres nuls)
+
+# --- reports publiés pour l'élection en cours (option `current_transfers`, désactivée ;
+# docs/results/2026-11-24-reports-publies.md, paramètres fixés avant calcul)
+
+# Concentration du prior centré sur les tableaux : écart-type d'environ 0,11 sur une part de 0,4,
+# deux fois la dispersion d'une vague à l'autre d'un même institut (intention déclarée ≠ vote)
+KAPPA_CURRENT = 20.0
+CURRENT_WINDOW = 60  # jours : fin de terrain au plus tard ce nombre de jours avant la prévision
+CURRENT_WEIGHT_DAYS = 30  # jours de sondages de premier tour pour pondérer les candidats d'un bloc
 
 # --- mode « premier tour fixé » (option `fixed_first_round` de `sample_pair`)
 
@@ -737,7 +752,7 @@ class GroupPrior:
     mean: tuple[float, float, float]
     kappa: float
     shift: bool  # concerné par les décalages communs u et v
-    source: str  # own | analog | analog_old | proximity
+    source: str  # own | analog | analog_old | proximity | current
     analogs: tuple[int, ...] = ()
     note: str = ""
 
@@ -909,6 +924,83 @@ def own_prior(
         return (0.94, 0.02, 0.04)
     m = np.mean(per_election, axis=0)
     return tuple(float(x) for x in m / m.sum())  # type: ignore[return-value]
+
+
+def current_tables(
+    pair: tuple[str, str], election: int, asof: dt.date, tables: Iterable[CurrentTable]
+) -> list[CurrentTable]:
+    """Tableaux publiés retenus pour un duel à la date `asof` : même élection et même paire,
+    disponibles au plus tard à `asof` (publication, sinon fin de terrain + 2 jours), terrain
+    terminé depuis au plus `CURRENT_WINDOW` jours ; par institut, le plus récent seulement (fin
+    de terrain, puis disponibilité). Triés par institut."""
+    key = set(pair)
+    eligible = [
+        t for t in tables
+        if t.election == election and set(t.pair) == key and t.available <= asof
+        and (asof - t.fieldwork_end).days <= CURRENT_WINDOW
+    ]
+    latest: dict[str, CurrentTable] = {}
+    for t in sorted(eligible, key=lambda t: (t.fieldwork_end, t.available, t.id)):
+        latest[t.pollster] = t
+    return [latest[p] for p in sorted(latest)]
+
+
+def current_group_means(
+    pair: tuple[str, str],
+    tables: list[CurrentTable],
+    bloc_of: Callable[[str], str],
+    weight_of: Callable[[str], float | None],
+) -> dict[str, tuple[tuple[float, float, float], tuple[str, ...]]]:
+    """Moyenne (vers pair[0], vers pair[1], ni l'un ni l'autre) des tableaux retenus, par groupe
+    `bloc:<bloc>` du modèle ; rend {groupe: (moyenne, ids des tableaux)}.
+
+    Dans une hypothèse de premier tour, les candidats d'un même bloc sont pondérés par
+    `weight_of` (part moyenne dans les sondages de premier tour ; poids égaux si l'un d'eux
+    n'en a pas) ; moyenne à poids égal entre hypothèses d'un tableau, puis entre tableaux
+    (instituts). Un candidat sans bloc connu est ignoré."""
+    per_group: dict[str, list[tuple[np.ndarray, str]]] = {}
+    for t in tables:
+        acc: dict[str, list[np.ndarray]] = {}
+        for h in t.hypotheses:
+            members: dict[str, list[tuple[np.ndarray, float | None]]] = {}
+            for r in h.rows:
+                try:
+                    g = f"bloc:{bloc_of(r.from_)}"
+                except KeyError:
+                    log.warning("%s : bloc inconnu pour %s, ligne ignorée", t.id, r.from_)
+                    continue
+                members.setdefault(g, []).append((np.array(t.vector(r, pair)), weight_of(r.from_)))
+            for g, rows in members.items():
+                w = np.array([x if x is not None else np.nan for _, x in rows], dtype=float)
+                if np.isnan(w).any() or w.sum() <= 0:
+                    w = np.ones(len(rows))
+                acc.setdefault(g, []).append(
+                    np.sum([wi * v for wi, (v, _) in zip(w, rows)], axis=0) / w.sum()
+                )
+        for g, vs in acc.items():
+            per_group.setdefault(g, []).append((np.mean(vs, axis=0), t.id))
+    return {
+        g: (tuple(float(x) for x in np.mean([v for v, _ in items], axis=0)),  # type: ignore[misc]
+            tuple(i for _, i in items))
+        for g, items in sorted(per_group.items())
+    }
+
+
+def first_round_poll_shares(
+    election: int, asof: dt.date, curated: Path | None = None, days: int = CURRENT_WEIGHT_DAYS
+) -> dict[str, float]:
+    """Part moyenne (points) de chaque candidat dans les sondages de premier tour terminés dans
+    les `days` jours avant `asof` (toutes hypothèses) ; à défaut, dans les `days` jours avant le
+    dernier sondage disponible. Sert à pondérer les candidats d'un même bloc."""
+    from vvs.model.data import load_polls
+
+    df = load_polls(election, asof, curated=curated, round_=1)
+    if df.is_empty():
+        return {}
+    end = asof if (df["fieldwork_end"] > asof - dt.timedelta(days=days)).any() else df["fieldwork_end"].max()
+    win = df.filter(pl.col("fieldwork_end") > end - dt.timedelta(days=days))
+    mean = win.group_by("candidate_id").agg(pl.col("share").mean()).sort("candidate_id")
+    return {c: float(s) for c, s in mean.iter_rows()}
 
 
 # --- un duel ajusté
@@ -1582,6 +1674,13 @@ class SecondRoundModel:
 
     `settings` : réglages du prior des reports (`SecondRoundSettings` : σ_u, σ_v, matrice de
     proximité) ; défaut : les constantes du module.
+
+    `current_transfers` (désactivé par défaut, None) : tableaux de reports publiés avant le
+    premier tour pour l'élection ajustée (`vvs.registry.transfers_current`). Pour chaque duel,
+    les groupes de bloc couverts par les tableaux retenus à la date de prévision
+    (`current_tables`, `current_group_means`) sont recentrés sur leur moyenne, concentration
+    `current_kappa` (défaut `KAPPA_CURRENT`), décalages communs inchangés (source `current`) ;
+    fidélités des finalistes, abstentionnistes et groupes non couverts inchangés.
     """
 
     def __init__(
@@ -1600,8 +1699,12 @@ class SecondRoundModel:
         coupling_rho: float | None = None,
         second_round_turnout: bool = False,
         settings: SecondRoundSettings | None = None,
+        current_transfers: Iterable[CurrentTable] | None = None,
+        current_kappa: float | None = None,
     ) -> None:
         self.registry = registry or default_registry()
+        self.current_transfers = None if current_transfers is None else tuple(current_transfers)
+        self.current_kappa = current_kappa
         # réglages du prior des reports (σ_u, σ_v, matrice de proximité) ; défaut : constantes
         self.settings = settings or SecondRoundSettings()
         self.bias_by_horizon = bias_by_horizon
@@ -1645,12 +1748,29 @@ class SecondRoundModel:
         gap = (e.round_(2).date - e.round_(1).date).days
         abst, _ = abstain_ratio(self.registry, election, asof)
         own = own_prior(election, excl, self.transfers, self.registry)
+        poll_shares: dict[str, float] | None = None  # pondération des tableaux, calculée au besoin
         for pair in pairs:
             pair = tuple(pair)  # type: ignore[assignment]
             blocs = tuple(self.registry.bloc_of(c, election) for c in pair)
             groups, inedit, notes = build_groups(
                 pair, blocs, election, excl, own, self.transfers, self.registry, self.settings
             )
+            if self.current_transfers is not None:
+                chosen = current_tables(pair, election, asof, self.current_transfers)
+                if chosen:
+                    if poll_shares is None:
+                        poll_shares = first_round_poll_shares(election, asof, self.curated)
+                    kappa = KAPPA_CURRENT if self.current_kappa is None else self.current_kappa
+                    found = current_group_means(
+                        pair, chosen, lambda c, e=election: self.registry.bloc_of(c, e),
+                        poll_shares.get,
+                    )
+                    for g, (mean, ids) in found.items():
+                        groups[g] = GroupPrior(
+                            g, mean, kappa, True, "current", note="tableaux " + ", ".join(ids)
+                        )
+                    used = ", ".join(t.id for t in chosen)
+                    notes = notes + [f"reports publiés ({used}) pour {', '.join(found)}"]
             polls = (
                 load_duel_polls(election, asof, pair, self.curated)
                 if self.use_polls

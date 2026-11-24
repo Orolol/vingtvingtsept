@@ -673,6 +673,7 @@ def simulate(
     second_round_errors=None,
     second_round_settings=None,
     trajectory_draws: int | None = None,
+    current_transfers=None,
 ) -> SimulationResult:
     """Simulation complète ; écrit les sorties dans `out` si donné.
 
@@ -685,7 +686,9 @@ def simulate(
     couvrent `config_mass`). `error_model`, `second_round_errors`, `scenarios`, `registry` :
     injectables pour les tests (défaut : calibrés sur 2002-2022, fichiers du dépôt).
     `second_round_settings` : réglages du prior des reports (`SecondRoundSettings` : σ_u, σ_v,
-    matrice de proximité ; défaut : constantes de second_round.py), écrits dans le manifeste."""
+    matrice de proximité ; défaut : constantes de second_round.py), écrits dans le manifeste.
+    `current_transfers` : tableaux de reports publiés pour l'élection en cours
+    (`SecondRoundModel(current_transfers=…)`, désactivé par défaut)."""
     from vvs.model.error import ErrorModel
     from vvs.model.second_round import (
         FIXED_MIN_ROW_ESS,
@@ -767,6 +770,7 @@ def simulate(
         couple_far_right=couple_far_right,
         second_round_turnout=second_round_turnout,
         settings=second_round_settings,
+        current_transfers=current_transfers,
     ).fit(election, asof, pair_list)
     cell = np.where(cfg < n_top, cfg, OTHER_CELL)
     share_a = np.full(n_draws, np.nan)
@@ -884,6 +888,9 @@ def simulate(
             "second_round_turnout": second_round_turnout,
             "fixed_first_round": fixed_first_round,
             "fixed_first_round_proposals": FIXED_PROPOSALS if fixed_first_round else None,
+            **({} if current_transfers is None else {"current_transfers": sorted(
+                t.id for t in current_transfers if t.election == election
+            )}),
             "fixed_first_round_row_ess": None if not row_ess else {
                 **quantile_dict(np.concatenate(row_ess)),
                 "share_below_min": float(np.mean(np.concatenate(row_ess) < FIXED_MIN_ROW_ESS)),
