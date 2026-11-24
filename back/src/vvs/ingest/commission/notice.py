@@ -602,7 +602,7 @@ _SKIP_CONTEXT = re.compile(
     r"reconstitution|evolutions?\b|report(s)? de voix|transfert|pour memoire|primaire|souvenir de vote"
     r"|vote au (1er|premier|2nd|second) tour de l election presidentielle (de )?2022"
     r"|chances d etre elu|meilleur president|potentiel electoral|pourriez voter"
-    r"|pourrait voter|pourriez vous voter|bon candidat|mieux place|souhait\w* (vous )?(que|qu|voir)"
+    r"|pourrait voter|pourriez vous voter|bon candidat|mieux place|souhait\w* (de )?(vous )?(que|qu|voir)"
     r"|recapitulatif|plus dangereux|voir gagner|prefer|plus proche|incarne"
     r"|ferait le meilleur"
 )
