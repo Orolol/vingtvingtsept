@@ -21,6 +21,7 @@ from vvs.model.second_round import (
     PairFit,
     SecondRoundModel,
     SecondRoundSettings,
+    _weights_matrix,
     analog_prior,
     bias_curve,
     duel_share,
@@ -389,6 +390,80 @@ def test_turnout2_model_uses_second_rounds():
     assert t["elections"]["2017"] == pytest.approx(r2.expressed / r2.registered, abs=1e-4)
     # seconds tours, pas premiers tours : 2017 vaut 66 % (premier tour 76 %)
     assert t["elections"]["2017"] < 0.70
+
+
+# --- mode premier tour fixé (fixed_first_round)
+
+
+def _spread_first(m: int, seed: int = 20) -> dict[str, np.ndarray]:
+    """Premiers tours hétérogènes : la part de a varie de 15 à 45 %, au détriment de b."""
+    a = np.random.default_rng(seed).uniform(0.15, 0.45, m)
+    return {"a": a, "b": 0.6 - a, "l2": np.full(m, 0.1), "r2": np.full(m, 0.2),
+            "x": np.full(m, 0.1)}
+
+
+def test_fixed_first_round_is_aligned_row_by_row():
+    first = _spread_first(3000)
+    z = np.random.default_rng(21).standard_normal(3000)
+    fit = _rn_fit(_polls(55.0), coupling_rho=0.5)
+    d = sample_pair(fit, first, 10, np.random.default_rng(22), n=3000, shared_error=z,
+                    fixed_first_round=True, proposals=16)
+    _, w_in = _weights_matrix(fit, first)
+    np.testing.assert_array_equal(d.rows, np.arange(3000))
+    np.testing.assert_array_equal(d.weights, w_in)  # même premier tour, même ligne
+    np.testing.assert_array_equal(d.shared, z)  # couplage appliqué ligne à ligne
+    np.testing.assert_allclose(d.share, duel_share(d.weights, d.transfers))
+    assert d.ess_row.min() >= 1 - 1e-9 and d.ess_row.max() <= 16 + 1e-9
+    assert d.ess == pytest.approx(3000**2 / np.sum(1 / d.ess_row))
+    assert len(d.prior_share) == 3000 * 16
+    # n différent du nombre de tirages : lignes tirées uniformément
+    e = sample_pair(fit, first, 10, np.random.default_rng(23), n=500, fixed_first_round=True)
+    np.testing.assert_array_equal(e.weights, w_in[e.rows])
+    assert len(np.unique(e.rows)) > 400
+
+
+def test_fixed_first_round_without_duel_polls_matches_joint_law():
+    """Sans sondage ni plafond, les poids sont uniformes : même loi dans les deux modes."""
+    first = _spread_first(20_000)
+    joint = sample_pair(_fit(), first, 10, np.random.default_rng(24), n=20_000)
+    fixed = sample_pair(_fit(), first, 10, np.random.default_rng(25), n=20_000,
+                        fixed_first_round=True)
+    np.testing.assert_allclose(fixed.ess_row, 64)
+    for q in (0.05, 0.25, 0.5, 0.75, 0.95):
+        assert np.quantile(fixed.share, q) == pytest.approx(np.quantile(joint.share, q), abs=0.4)
+    assert fixed.weights[:, 0].mean() == pytest.approx(joint.weights[:, 0].mean(), abs=0.003)
+
+
+def test_fixed_first_round_keeps_first_round_law_under_duel_polls():
+    """Des sondages favorables à a déplacent la part de premier tour de a dans le mode
+    conjoint (défaut), pas dans le mode premier tour fixé, qui suit pourtant les sondages."""
+    first = _spread_first(20_000)
+    prior = sample_pair(_fit(), first, 10, np.random.default_rng(26), n=20_000)
+    target = np.median(prior.share) + 8
+    fit = _fit(_polls(target))
+    joint = sample_pair(fit, first, 10, np.random.default_rng(27), n=20_000)
+    fixed = sample_pair(fit, first, 10, np.random.default_rng(27), n=20_000,
+                        fixed_first_round=True)
+    a_in = first["a"].mean()  # poids de a parmi les candidats (somme 1)
+    assert joint.weights[:, 0].mean() > a_in + 0.02
+    np.testing.assert_array_equal(fixed.weights[:, 0], _weights_matrix(fit, first)[1][:, 0])
+    assert np.median(prior.share) + 2 < np.median(fixed.share) < target
+    # même graine, mêmes tirages ; autre graine, autres tirages
+    again = sample_pair(fit, first, 10, np.random.default_rng(27), n=20_000,
+                        fixed_first_round=True)
+    np.testing.assert_array_equal(again.share, fixed.share)
+    other = sample_pair(fit, first, 10, np.random.default_rng(28), n=20_000,
+                        fixed_first_round=True)
+    assert not np.array_equal(other.share, fixed.share)
+
+
+def test_fixed_first_round_warns_on_degenerate_rows(caplog):
+    sharp = ErrorParams(sigma0=0.05, sigma1=0.0, sigma_house=0.0)
+    with caplog.at_level("WARNING", logger="vvs.model.second_round"):
+        d = sample_pair(_fit(_polls(90.0, k=50), errors=sharp), FIRST, 10,
+                        np.random.default_rng(29), n=200, fixed_first_round=True)
+    assert np.mean(d.ess_row < 2) > 0.5
+    assert "premier tour fixé" in caplog.text
 
 
 @pytest.mark.slow

@@ -564,6 +564,11 @@ def simulate_cmd(
         None, "--lists/--no-lists",
         help="η calibré aussi sur les scrutins de liste (défaut : ERROR_WITH_LISTS de simulate.py)",
     ),
+    fixed_first_round: bool = typer.Option(
+        False, "--fixed-first-round",
+        help="Second tour à premier tour fixé : reports tirés sachant le premier tour de chaque "
+        "tirage, sans rééchantillonner le premier tour (désactivé par défaut)",
+    ),
 ) -> None:
     """Simulation de l'élection (docs/04-modele.md § 5) : scénarios, premier tour, second tour.
 
@@ -617,7 +622,7 @@ def simulate_cmd(
     out_dir = Path(out) if out else paths.RUNS / f"{date.today().isoformat()}-simulate"
     kw_sim = {} if lists is None else {"error_with_lists": lists}
     res = simulate(fit_dir, d, out_dir, election=election, n_draws=draws, seed=seed, rn_bias=rn_bias,
-                   rn_bias_curve=rn_bias_curve, **kw_sim)
+                   rn_bias_curve=rn_bias_curve, fixed_first_round=fixed_first_round, **kw_sim)
     manifest_path = out_dir / "manifest.json"
     if manifest_path.exists():
         m = json.loads(manifest_path.read_text())

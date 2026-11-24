@@ -127,6 +127,18 @@ def test_pairs_and_transfers(toy):
     assert not srm["couple_far_right"] and not srm["second_round_turnout"]
 
 
+def test_fixed_first_round_changes_only_the_second_round(toy, tmp_path):
+    """Option relayée jusqu'au second tour et au manifeste ; premier tour et qualifiés
+    identiques à graine égale (le second tour est tiré après eux)."""
+    fixed = run_toy(tmp_path, n=3000, fixed_first_round=True)
+    second = ["share_a_second_round", "winner", "turnout_second_round"]
+    assert fixed.draws.drop(second).equals(toy.draws.drop(second))
+    srm, ref = fixed.manifest["second_round_model"], toy.manifest["second_round_model"]
+    assert srm["fixed_first_round"] and srm["fixed_first_round_proposals"] == 64
+    assert 1.0 <= srm["fixed_first_round_row_ess"]["q05"] <= 64.0
+    assert not ref["fixed_first_round"] and ref["fixed_first_round_row_ess"] is None
+
+
 def test_coupling_requires_bloc_component(tmp_path):
     """Couplage demandé avec un modèle d'erreur qui ne rend pas la composante de bloc : échec
     explicite plutôt qu'un second tour silencieusement découplé."""

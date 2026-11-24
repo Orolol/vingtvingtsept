@@ -18,6 +18,7 @@ from vvs.eval.consolidation import (
     main,
     report,
     score_chain,
+    score_second_round,
     verify,
 )
 from vvs.eval.sensitivity import draw_weights, probability_bounds, set_probability
@@ -99,6 +100,20 @@ def test_score_penalizes_absent_winner_without_substitution():
     assert np.isfinite(summary["log_score_winner"])
     macron = next(r for r in rows if r["candidate_id"] == "macron_emmanuel")
     assert macron["p_win"] == 0 and not macron["in_support"]
+
+
+def test_second_round_score_uses_only_the_realized_duel_oriented_by_name():
+    # 2012 : Hollande 51,64 contre Sarkozy ; share_second est la part du premier qualifié
+    sim = {
+        "candidates": np.array(["hollande_francois", "le_pen_marine", "sarkozy_nicolas"]),
+        "qualified": np.array([[0, 2], [0, 2], [2, 0], [0, 1]]),
+        "share_second": np.array([51.64, 51.64, 48.36, 70.0]),
+    }
+    s = score_second_round(sim, 2012, default_registry())
+    assert (s["duel_a"], s["n_duel_draws"]) == ("hollande_francois", 3)
+    assert s["crps2"] == pytest.approx(0.0, abs=1e-9) and s["coverage90_2"] == 1.0
+    sim["qualified"] = np.array([[0, 1]] * 4)
+    assert score_second_round(sim, 2012, default_registry())["crps2"] is None
 
 
 def test_reweighting_matches_states_after_reordering_and_constraints():

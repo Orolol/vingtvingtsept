@@ -353,10 +353,16 @@ def simulate_chain(
     spec: dict,
     polls: pl.DataFrame,
     method: str = "reference",
+    fixed_first_round: bool = False,
 ) -> tuple[dict, list[dict]]:
-    """Les finalistes sont tirés du premier tour ; aucun résultat réel n'entre ici."""
+    """Les finalistes sont tirés du premier tour ; aucun résultat réel n'entre ici.
+
+    `fixed_first_round` : variante du second tour à premier tour fixé
+    (`second_round.sample_pair`), désactivée dans la référence. Le premier tour et les paires
+    étant tirés avant le second tour, elle ne change ni l'un ni l'autre à graine égale."""
     from vvs.eval.metrics import top2
     from vvs.model.run import draws_log_shares
+    from vvs.model.second_round import FIXED_MIN_ROW_ESS
     from vvs.model.simulate import allocate, sample_turnout
     from vvs.registry import default_registry
 
@@ -415,19 +421,24 @@ def simulate_chain(
             pair = pairs[code]
             fr = {c: shares[rows, index[c]] / 100 for c in configs[k]["candidates"]}
             fr["abstain"] = (1 - tau[rows]) / tau[rows]
-            second = model2.sample(pair, fr, case["horizon"], rng, n=len(rows))
+            second = model2.sample(
+                pair, fr, case["horizon"], rng, n=len(rows), fixed_first_round=fixed_first_round
+            )
             share2[rows] = second.share
             winner[rows] = np.where(second.share > 50, pair_codes[code, 0], pair_codes[code, 1])
-            details.append(
-                {
-                    "config": int(k),
-                    "candidate_a": pair[0],
-                    "candidate_b": pair[1],
-                    "n": len(rows),
-                    "ess_ratio": second.ess / len(rows),
-                    "n_duel_polls": model2.pair_fit(pair).polls.n,
-                }
-            )
+            detail = {
+                "config": int(k),
+                "candidate_a": pair[0],
+                "candidate_b": pair[1],
+                "n": len(rows),
+                "ess_ratio": second.ess / len(rows),
+                "n_duel_polls": model2.pair_fit(pair).polls.n,
+            }
+            if second.ess_row is not None:
+                detail["ess_row_min"] = float(second.ess_row.min())
+                detail["ess_row_q05"] = float(np.quantile(second.ess_row, 0.05))
+                detail["ess_row_low_share"] = float(np.mean(second.ess_row < FIXED_MIN_ROW_ESS))
+            details.append(detail)
     return {
         "candidates": np.array(candidates),
         "shares": shares,
@@ -488,6 +499,30 @@ def score_chain(sim: dict, election: int, registry) -> tuple[dict, list[dict]]:
         for i, c in enumerate(universe)
     ]
     return summary, rows
+
+
+def score_second_round(sim: dict, election: int, registry) -> dict:
+    """Part de second tour du duel réellement disputé, sur les tirages où ce duel est qualifié :
+    diagnostic conditionnel, séparé du score de victoire (docs/10). Part orientée sur le
+    finaliste réel premier par ordre alphabétique ; None sans tirage de ce duel."""
+    from vvs.eval import metrics as mt
+
+    actual = {r.candidate_id: r.share for r in registry.elections[election].round_(2).results}
+    a, b = sorted(actual)
+    names = np.array(sim["candidates"])[sim["qualified"]]
+    first = names[:, 0]
+    sel = np.sort(names, axis=1).tolist()
+    mask = np.array([q == [a, b] for q in sel], dtype=bool)
+    x = np.where(first[mask] == a, sim["share_second"][mask], 100.0 - sim["share_second"][mask])
+    out = {"duel_a": a, "duel_b": b, "actual2": actual[a], "n_duel_draws": int(mask.sum())}
+    if not mask.any():
+        return out | {"crps2": None, "coverage50_2": None, "coverage90_2": None, "median2": None}
+    return out | {
+        "crps2": float(mt.crps(x, actual[a])),
+        "coverage50_2": float(mt.covered(x, actual[a], 0.5)),
+        "coverage90_2": float(mt.covered(x, actual[a], 0.9)),
+        "median2": float(np.median(x)),
+    }
 
 
 def score_case(out: Path, election: int, horizon: int) -> None:

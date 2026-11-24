@@ -128,7 +128,7 @@ class StubErrorModel:
         return {"params": {"stub": True}}
 
 
-def run_toy(root: Path, n: int = 3000, seed: int = 0, out: Path | None = None):
+def run_toy(root: Path, n: int = 3000, seed: int = 0, out: Path | None = None, **kw):
     from vvs.model.simulate import simulate
 
     fit_dir = make_fit_dir(root, seed)
@@ -142,4 +142,5 @@ def run_toy(root: Path, n: int = 3000, seed: int = 0, out: Path | None = None):
         error_model=StubErrorModel(),
         second_round_errors=ErrorParams(bias_far_right=3.0),
         trajectory_draws=200,
+        **kw,
     )

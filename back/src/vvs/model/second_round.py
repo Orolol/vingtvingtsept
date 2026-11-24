@@ -49,6 +49,19 @@ compilation, et `V ≥ σ0²` borne la concentration de la vraisemblance, donc l
 dégénèrent pas (taille effective rapportée). NUTS n'apporterait rien ici : la postérieure ne
 vit que dans la direction de `part_i`.
 
+Deux modes d'échantillonnage (`sample_pair`) :
+- conjoint (défaut) : le tirage de premier tour est tiré avec les reports puis rééchantillonné
+  avec eux. Les sondages de duel déplacent donc aussi la loi des parts de premier tour (le
+  rééchantillonnage favorise les premiers tours compatibles avec eux), et les tirages rendus
+  ne sont pas alignés ligne à ligne sur ceux fournis ;
+- premier tour fixé (`fixed_first_round=True`) : pour chaque tirage de premier tour fourni,
+  `FIXED_PROPOSALS` tirages du prior des reports, pondérés par la même log-vraisemblance,
+  un seul retenu. Le premier tour n'est pas rééchantillonné : c'est la loi des reports
+  sachant ce premier tour et les sondages de duel, et la sortie est alignée ligne à ligne
+  sur l'entrée quand `n` vaut le nombre de tirages fournis. Quand les sondages contredisent
+  le prior des reports sachant le premier tour, la taille effective par ligne (`ess_row`)
+  s'effondre et les queues sont mal approchées (docs/results/2026-11-24-premier-tour-fixe.md).
+
 Potentiel électoral (option `use_potential`, désactivée par défaut ; étude
 `back/studies/potential.py`). Un plafond c_i est une part des INSCRITS ; il est converti en
 part des exprimés du second tour avec le rapport exprimés / inscrits du second tour de la
@@ -150,6 +163,15 @@ SIGMA_V = {"analog": 0.25, "inedit": 0.40}
 # Un analogue plus ancien que cela est moyenné avec la matrice (cas traité comme inédit)
 ANALOG_MAX_AGE = 20
 MIN_MEAN = 0.005  # plancher des moyennes de Dirichlet (évite des paramètres nuls)
+
+# --- mode « premier tour fixé » (option `fixed_first_round` de `sample_pair`)
+
+FIXED_PROPOSALS = 64  # tirages du prior des reports par tirage de premier tour
+FIXED_CHUNK = 1 << 17  # propositions traitées à la fois (mémoire bornée)
+# Avertissement : plus de FIXED_LOW_SHARE des lignes ont une taille effective sous
+# FIXED_MIN_ROW_ESS (le report retenu est alors presque l'argmax de la vraisemblance)
+FIXED_MIN_ROW_ESS = 2.0
+FIXED_LOW_SHARE = 0.05
 
 # Rapport (inscrits − exprimés) / exprimés au premier tour quand aucun scrutin antérieur n'est
 # au registre (2002) : valeur approchée de 1995 (≈ 0,31), arrondie.
@@ -1030,6 +1052,8 @@ class SecondRoundDraws:
     transfers: np.ndarray  # (n, G, 3) reports (i, j, ni) en fraction de l'électorat
     weights: np.ndarray  # (n, G) poids de premier tour des groupes
     prior_share: np.ndarray  # (M,) part de i sous le prior (tirages avant pondération)
+    # taille effective (Kish, 1 / Σ p²) du vecteur des poids normalisés de toutes les
+    # propositions ; en mode premier tour fixé, chaque ligne pèse 1/n (voir `sample_pair`)
     ess: float
     polls: tuple[float, float, float] | None
     horizon: float
@@ -1038,6 +1062,11 @@ class SecondRoundDraws:
     turnout: np.ndarray | None = None
     coupling: float = 0.0  # κ : décalage de l'erreur de duel par unité de composante partagée
     shared: np.ndarray | None = None  # composante partagée z des tirages retenus (couplage)
+    # mode premier tour fixé : taille effective par ligne (n,), entre 1 et FIXED_PROPOSALS ;
+    # None en mode conjoint
+    ess_row: np.ndarray | None = None
+    # mode premier tour fixé : indice de la ligne de `first_round` de chaque tirage (n,)
+    rows: np.ndarray | None = None
 
 
 def duel_share(weights: np.ndarray, transfers: np.ndarray) -> np.ndarray:
@@ -1101,6 +1130,124 @@ def _weights_matrix(
     return groups, w
 
 
+def _propose(
+    fit: PairFit,
+    priors: list[GroupPrior],
+    shift: np.ndarray,
+    w: np.ndarray,
+    z: np.ndarray | None,
+    summary: tuple[float, float, float] | None,
+    kappa: float,
+    rng: np.random.Generator,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray | None]:
+    """Propositions des deux modes : un tirage du prior des reports par ligne de `w` (poids de
+    premier tour, (m, G)), participation tirée (option), puis log-poids : sondages de duel
+    (couplage par `z`, composante partagée de chaque ligne), plafonds. Rend (reports, part_i,
+    log-poids, participation tirée ou None)."""
+    m = len(w)
+    t = draw_transfers(priors, fit.sigma_u, fit.sigma_v, rng, m)
+    tau2 = None
+    if fit.turnout2 is not None:
+        z2 = fit.turnout2[0] + fit.turnout2[1] * rng.standard_normal(m)
+        tau2 = 1.0 / (1.0 + np.exp(-z2))
+        t = match_turnout(w, t, shift, tau2)
+    g = duel_share(w, t)
+    if summary is None:
+        lw = np.zeros(m)
+    else:
+        ybar, var, mu = summary
+        if z is not None:
+            lw = -0.5 * (ybar - mu - kappa * z - g) ** 2 / (var - kappa**2)
+        else:
+            lw = -0.5 * (ybar - mu - g) ** 2 / var
+    tau_c = fit.ceiling_tau if tau2 is None else tau2
+    lw = lw + ceiling_log_weight(fit.ceilings, g, tau_c)
+    return t, g, lw, tau2
+
+
+def _sample_fixed(
+    fit: PairFit,
+    groups: list[str],
+    w_all: np.ndarray,
+    priors: list[GroupPrior],
+    shift: np.ndarray,
+    summary: tuple[float, float, float] | None,
+    kappa: float,
+    z_all: np.ndarray | None,
+    horizon: float,
+    rng: np.random.Generator,
+    n: int,
+    k: int,
+) -> SecondRoundDraws:
+    """Mode premier tour fixé de `sample_pair`.
+
+    Lignes : tous les tirages de premier tour dans l'ordre si `n` vaut leur nombre (sortie
+    alignée ligne à ligne), sinon `n` lignes tirées uniformément avec remise. Pour chaque
+    ligne, `k` propositions du prior des reports (`_propose`, même log-vraisemblance que le
+    mode conjoint), une retenue avec probabilité proportionnelle à son poids. La loi des
+    parts de premier tour n'est pas modifiée par les sondages de duel.
+
+    Taille effective. Par ligne, ess_r = 1 / Σ_j p_rj² ∈ [1, k]. `ess` applique la formule du
+    mode conjoint (Kish, 1 / Σ p²) au vecteur de poids de toutes les propositions, chaque
+    ligne pesant 1/n : ess = n² / Σ_r (1 / ess_r), soit n fois la moyenne harmonique des
+    ess_r. Comme en mode conjoint, `ess / n` est un nombre de propositions effectives par
+    tirage retenu ; il est ici compris entre 1 et k (au plus m / n en mode conjoint) et ne
+    signale plus de doublons : la dégénérescence se lit par ligne (`ess_row`). Avertissement
+    si plus de `FIXED_LOW_SHARE` des lignes ont ess_r < `FIXED_MIN_ROW_ESS`."""
+    if k < 1:
+        raise ValueError(f"propositions par ligne : {k} (au moins 1)")
+    s = len(w_all)
+    rows = np.arange(s) if n == s else rng.integers(0, s, size=n)
+    G = len(groups)
+    share = np.empty(n)
+    transfers = np.empty((n, G, 3))
+    ess_row = np.empty(n)
+    prior = np.empty(n * k)
+    step = max(1, FIXED_CHUNK // k)
+    for a in range(0, n, step):
+        r = rows[a : a + step]
+        rr = np.repeat(r, k)
+        w = w_all[rr]
+        t, g, lw, _ = _propose(
+            fit, priors, shift, w, None if z_all is None else z_all[rr], summary, kappa, rng
+        )
+        lw = lw.reshape(len(r), k)
+        p = np.exp(lw - lw.max(1, keepdims=True))
+        p /= p.sum(1, keepdims=True)
+        u = rng.random((len(r), 1))
+        pick = np.minimum((np.cumsum(p, 1) < u).sum(1), k - 1)
+        flat = np.arange(len(r)) * k + pick
+        share[a : a + len(r)] = g[flat]
+        transfers[a : a + len(r)] = t[flat]
+        ess_row[a : a + len(r)] = 1.0 / np.sum(p**2, 1)
+        prior[a * k : (a + len(r)) * k] = g
+    ess = float(n**2 / np.sum(1.0 / ess_row))
+    low = float(np.mean(ess_row < FIXED_MIN_ROW_ESS))
+    if low > FIXED_LOW_SHARE:
+        log.warning(
+            "%s : taille effective par ligne < %.0f pour %.1f %% des %d tirages (premier tour fixé)",
+            fit.pair, FIXED_MIN_ROW_ESS, 100 * low, n,
+        )
+    wp = w_all[rows]
+    turnout = (wp * (transfers[..., 0] + transfers[..., 1])).sum(-1) / wp.sum(-1)
+    return SecondRoundDraws(
+        pair=fit.pair,
+        share=share,
+        groups=groups,
+        transfers=transfers,
+        weights=wp,
+        prior_share=prior,
+        ess=ess,
+        polls=summary,
+        horizon=horizon,
+        turnout=turnout,
+        coupling=kappa,
+        shared=None if z_all is None else z_all[rows],
+        ess_row=ess_row,
+        rows=rows,
+    )
+
+
 def sample_pair(
     fit: PairFit,
     first_round: Mapping[str, np.ndarray],
@@ -1109,6 +1256,8 @@ def sample_pair(
     n: int = 4000,
     oversample: int = 8,
     shared_error: np.ndarray | float | None = None,
+    fixed_first_round: bool = False,
+    proposals: int | None = None,
 ) -> SecondRoundDraws:
     """Échantillonnage d'importance du duel (voir le docstring du module).
 
@@ -1121,7 +1270,12 @@ def sample_pair(
     tours). La loi marginale de l'erreur est inchangée ; sans `shared_error`, rien ne change.
 
     `fit.turnout2` : participation du second tour tirée par tirage (logit-normale) et imposée
-    aux reports par `match_turnout`, au lieu de la participation implicite des reports."""
+    aux reports par `match_turnout`, au lieu de la participation implicite des reports.
+
+    `fixed_first_round` (désactivé par défaut) : premier tour fixé, voir le docstring du
+    module et `_sample_fixed`. `proposals` : tirages du prior des reports par ligne dans ce
+    mode (défaut : `FIXED_PROPOSALS`, lu à l'appel) ; `oversample` ne sert qu'au mode
+    conjoint."""
     groups, w_all = _weights_matrix(fit, first_round)
     priors = [fit.groups[g] for g in groups]
     summary = fit.poll_summary(horizon)
@@ -1130,27 +1284,18 @@ def sample_pair(
         z_all = np.broadcast_to(np.asarray(shared_error, dtype=float), (len(w_all),))
         kappa = -fit.coupling_rho * fit.bias_sign * math.sqrt(fit.common_variance(horizon))
     shift = np.array([g.shift for g in priors], dtype=bool)
+    if fixed_first_round:
+        return _sample_fixed(
+            fit, groups, w_all, priors, shift, summary, kappa, z_all, horizon, rng, n,
+            FIXED_PROPOSALS if proposals is None else proposals,
+        )
     m = max(n * oversample, 1000)
     while True:
         idx = rng.integers(0, len(w_all), size=m)
         w = w_all[idx]
-        t = draw_transfers(priors, fit.sigma_u, fit.sigma_v, rng, m)
-        tau2 = None
-        if fit.turnout2 is not None:
-            z2 = fit.turnout2[0] + fit.turnout2[1] * rng.standard_normal(m)
-            tau2 = 1.0 / (1.0 + np.exp(-z2))
-            t = match_turnout(w, t, shift, tau2)
-        g = duel_share(w, t)
-        if summary is None:
-            lw = np.zeros(m)
-        else:
-            ybar, var, mu = summary
-            if z_all is not None:
-                lw = -0.5 * (ybar - mu - kappa * z_all[idx] - g) ** 2 / (var - kappa**2)
-            else:
-                lw = -0.5 * (ybar - mu - g) ** 2 / var
-        tau_c = fit.ceiling_tau if tau2 is None else tau2
-        lw = lw + ceiling_log_weight(fit.ceilings, g, tau_c)
+        t, g, lw, _ = _propose(
+            fit, priors, shift, w, None if z_all is None else z_all[idx], summary, kappa, rng
+        )
         p = np.exp(lw - lw.max())
         p /= p.sum()
         ess = float(1.0 / np.sum(p**2))
@@ -1570,11 +1715,15 @@ class SecondRoundModel:
         rng: np.random.Generator,
         n: int = 4000,
         shared_error: np.ndarray | float | None = None,
+        fixed_first_round: bool = False,
     ) -> SecondRoundDraws:
         """`shared_error` : composante d'extrême droite réduite du premier tour, alignée sur
-        les tirages `first_round_draws` (voir `sample_pair`)."""
+        les tirages `first_round_draws` (voir `sample_pair`). `fixed_first_round` : premier
+        tour fixé, tirages alignés ligne à ligne sur `first_round_draws` si `n` vaut leur
+        nombre (désactivé par défaut : échantillonnage conjoint)."""
         return sample_pair(
-            self.pair_fit(pair), first_round_draws, horizon, rng, n, shared_error=shared_error
+            self.pair_fit(pair), first_round_draws, horizon, rng, n, shared_error=shared_error,
+            fixed_first_round=fixed_first_round,
         )
 
     def predict(
@@ -1585,9 +1734,12 @@ class SecondRoundModel:
         rng: np.random.Generator,
         n: int = 4000,
         shared_error: np.ndarray | float | None = None,
+        fixed_first_round: bool = False,
     ) -> np.ndarray:
         """Tirages (n,) de la part de `pair[0]` au second tour, en points d'exprimés."""
-        return self.sample(pair, first_round_draws, horizon, rng, n, shared_error).share
+        return self.sample(
+            pair, first_round_draws, horizon, rng, n, shared_error, fixed_first_round
+        ).share
 
     def summary(self, draws: SecondRoundDraws) -> dict:
         return summarize(self.pair_fit(draws.pair), draws)

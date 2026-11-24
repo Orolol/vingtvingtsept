@@ -39,14 +39,33 @@ de l'ajustement (78 semaines). Règle, par candidat de l'univers des scénarios 
   dernière présidentielle, à défaut `SPARSE_DEFAULT_SHARE`, d'écart-type `SPARSE_SD` en log ;
   les autres candidats sont réduits proportionnellement (IIA), puis η s'applique à tous.
 
-Second tour. `SecondRoundModel.sample` rééchantillonne les tirages de premier tour qu'on lui
-donne (échantillonnage d'importance pondéré par les sondages de duel) : ses tirages ne sont
-pas alignés ligne à ligne sur les nôtres. On l'appelle donc par cellule (configuration,
-paire) avec les tirages de premier tour de la cellule, et on affecte ses `n` tirages aux `n`
-tirages de la cellule. Les probabilités de victoire par paire et par condition sont exactes au
-bruit Monte-Carlo près ; seule la corrélation, à l'intérieur d'une cellule, entre la part de
-premier tour d'un tirage et son second tour est perdue. Les configurations hors des plus
-probables (`CONFIG_MASS` de la masse) sont regroupées en une cellule « autres » par paire.
+Second tour. `SecondRoundModel.sample` est appelé par cellule (configuration, paire) avec les
+tirages de premier tour de la cellule, et ses `n` tirages sont affectés aux `n` tirages de la
+cellule. Les configurations hors des plus probables (`CONFIG_MASS` de la masse) sont
+regroupées en une cellule « autres » par paire. Deux modes (`second_round.sample_pair`) :
+
+- conjoint (défaut, `fixed_first_round=False`) : les tirages de premier tour de la cellule
+  sont rééchantillonnés avec les reports, avec des poids donnés par les sondages de duel.
+  Les parts de second tour rendues suivent une loi où les sondages de duel déplacent aussi
+  le premier tour à l'intérieur de la cellule (ils favorisent les premiers tours compatibles
+  avec eux), alors que les parts de premier tour publiées ne sont pas rééchantillonnées et
+  que les tirages rendus ne sont pas alignés sur ceux de la cellule. Une ligne associe donc
+  un premier tour et un second tour calculé sur un autre premier tour : la loi jointe des
+  deux tours d'une ligne est incohérente, et la loi marginale du second tour n'est pas celle
+  qu'on obtiendrait sachant les premiers tours publiés. L'écart n'est pas qu'une corrélation
+  perdue : le 2026-11-24, le duel Le Pen – Mélenchon était calculé avec Le Pen à 36,5 % au
+  premier tour au lieu de 30,8 % dans les tirages de la cellule, soit +2,4 points sur la
+  part publiée (runs/2026-11-24-duel-diagnostic). Les probabilités de paire et le premier
+  tour publiés ne sont pas touchés ;
+- premier tour fixé (option `fixed_first_round`, désactivée) : pour chaque tirage de la
+  cellule, `second_round.FIXED_PROPOSALS` tirages des reports, pondérés par la même
+  vraisemblance des sondages de duel sachant son premier tour ; un seul est retenu et rendu
+  sur la même ligne. La loi jointe des deux tours est cohérente ligne à ligne et les sondages
+  de duel ne modifient pas la loi du premier tour (même convention que les poids des duels,
+  docs/10). Quand les sondages de duel contredisent le prior des reports sachant le premier
+  tour, la taille effective par ligne s'effondre et les queues sont mal approchées avec 64
+  propositions (docs/results/2026-11-24-premier-tour-fixe.md) ; elle est résumée dans le
+  manifeste (`second_round_model.fixed_first_round_row_ess`).
 
 Biais RN du second tour. Option `rn_bias_curve` : biais estimé par âge des sondages de duel
 (`second_round.bias_curve`, leave-one-election-out au backtest, rétréci vers 0 et monotone),
@@ -59,9 +78,10 @@ retenu est écrit dans le manifeste (`second_round_model.bias_mode`).
 Couplage premier tour / duel (option `couple_far_right`). La composante de bloc far_right de
 η de chaque tirage (`ErrorModel.sample_eta_parts`, réduite, avant λ) est passée au second tour
 (`SecondRoundModel.sample(shared_error=…)`), qui corrèle avec elle l'erreur commune des
-sondages de duel (ρ estimé par `second_round.far_right_coupling` sur 2002, 2017, 2022). Le
-second tour rééchantillonnant les tirages de la cellule, le couplage agit sur la loi de la
-cellule, pas ligne à ligne (même limite que ci-dessus).
+sondages de duel (ρ estimé par `second_round.far_right_coupling` sur 2002, 2017, 2022). En
+mode conjoint, le second tour rééchantillonnant les tirages de la cellule, le couplage agit
+sur la loi de la cellule, pas ligne à ligne (même limite que ci-dessus) ; en mode premier
+tour fixé, il agit ligne à ligne.
 
 Participation. Le poids des abstentionnistes, blancs et nuls du premier tour vient de la part
 d'exprimés du premier tour (point 3). Celle du second tour (exprimés / inscrits) est, sans
@@ -114,6 +134,9 @@ RN_BIAS_ZERO_DAYS = 180
 RN_BIAS_CURVE = False
 COUPLE_FAR_RIGHT = False
 SECOND_ROUND_TURNOUT = False
+# second tour à premier tour fixé (`second_round.sample_pair(fixed_first_round=True)`) ;
+# désactivé : docs/results/2026-11-24-premier-tour-fixe.md
+FIXED_FIRST_ROUND = False
 TURNOUT_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 ERROR_ELECTIONS = (2002, 2007, 2012, 2017, 2022)
 # η calibré aussi sur les erreurs finales des scrutins de liste (ErrorModel.fit(with_lists=…),
@@ -640,6 +663,7 @@ def simulate(
     rn_bias_curve: bool = RN_BIAS_CURVE,
     couple_far_right: bool = COUPLE_FAR_RIGHT,
     second_round_turnout: bool = SECOND_ROUND_TURNOUT,
+    fixed_first_round: bool = FIXED_FIRST_ROUND,
     error_with_lists: bool = ERROR_WITH_LISTS,
     min_hypotheses: int = MIN_HYPOTHESES,
     share_rule: ShareRule | None = None,
@@ -654,7 +678,8 @@ def simulate(
 
     `rn_bias` : part du biais RN du second tour appliquée (défaut : 1 avec la courbe par
     horizon, `rn_bias_scale` à l'horizon sinon). `rn_bias_curve`, `couple_far_right`,
-    `second_round_turnout` : options du second tour (docstring du module).
+    `second_round_turnout`, `fixed_first_round` : options du second tour (docstring du
+    module).
     `error_with_lists` : η calibré aussi sur les scrutins de liste (`ErrorModel.fit`).
     `n_condition_configs` : configurations résumées individuellement (défaut : celles qui
     couvrent `config_mass`). `error_model`, `second_round_errors`, `scenarios`, `registry` :
@@ -662,7 +687,12 @@ def simulate(
     `second_round_settings` : réglages du prior des reports (`SecondRoundSettings` : σ_u, σ_v,
     matrice de proximité ; défaut : constantes de second_round.py), écrits dans le manifeste."""
     from vvs.model.error import ErrorModel
-    from vvs.model.second_round import SecondRoundModel, calibrate_errors
+    from vvs.model.second_round import (
+        FIXED_MIN_ROW_ESS,
+        FIXED_PROPOSALS,
+        SecondRoundModel,
+        calibrate_errors,
+    )
 
     started = time.time()
     reg = registry or default_registry()
@@ -746,6 +776,7 @@ def simulate(
         cells.setdefault(key, []).append(i)
     transfer_acc: dict[tuple[str, str], dict[str, dict]] = {}
     pair_ess: dict[tuple[str, str], float] = {}
+    row_ess: list[np.ndarray] = []  # tailles effectives par ligne (premier tour fixé)
     for (_, code), idx in cells.items():
         rows = np.array(idx)
         pair = pair_list[code]
@@ -753,7 +784,10 @@ def simulate(
         frd = {uni.ids[u]: shares[rows, u] for u in cols}
         frd["abstain"] = abstain[rows]
         shared = None if far_right_z is None else far_right_z[rows]
-        d = model.sample(pair, frd, horizon, rng, n=len(rows), shared_error=shared)
+        d = model.sample(pair, frd, horizon, rng, n=len(rows), shared_error=shared,
+                         fixed_first_round=fixed_first_round)
+        if d.ess_row is not None:
+            row_ess.append(d.ess_row)
         share_a[rows] = d.share
         turnout2[rows] = d.turnout
         pair_ess[pair] = min(pair_ess.get(pair, math.inf), d.ess / len(rows))
@@ -848,6 +882,13 @@ def simulate(
                 k: v for k, v in model.coupling.items() if k != "pairs"
             },
             "second_round_turnout": second_round_turnout,
+            "fixed_first_round": fixed_first_round,
+            "fixed_first_round_proposals": FIXED_PROPOSALS if fixed_first_round else None,
+            "fixed_first_round_row_ess": None if not row_ess else {
+                **quantile_dict(np.concatenate(row_ess)),
+                "share_below_min": float(np.mean(np.concatenate(row_ess) < FIXED_MIN_ROW_ESS)),
+                "min_row_ess": FIXED_MIN_ROW_ESS,
+            },
             "turnout2": model.turnout2,
             "turnout2_draws": quantile_dict(turnout2),
             "calibrated_on": list(errors.calibrated_on),
